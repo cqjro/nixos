@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
+      # inputs.xremap-flake.nixosModules.default
     ];
 
   hardware.firmware = [
@@ -69,8 +70,6 @@
   # services.xserver.xkb.layout = "us";
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
 
-
-
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
@@ -94,7 +93,6 @@
       tree
     ];
   };
-
   
   home-manager = {
     extraSpecialArgs = {inherit inputs;};
@@ -105,6 +103,11 @@
     useGlobalPkgs = true;
     backupFileExtension = "backup"; # backups existing config file into back up file when home manager is ran
   };
+
+  # Options needed to enabling xremap
+  hardware.uinput.enable = true;
+  users.groups.uinput.members = ["cairo"];
+  users.groups.input.members = ["cairo"];
 
 
   programs.firefox.enable = true;
@@ -119,7 +122,7 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-    environment.systemPackages = with pkgs; [
+  environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     neovim
@@ -132,7 +135,7 @@
     gh
     discord
     inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
-    xremap # keybind remaping
+    # xremap # keybind remaping
     obsidian
     spotify
     obs-studio

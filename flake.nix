@@ -1,4 +1,6 @@
 {
+  description = "main system flake";
+
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nixos-hardware.url = "github:nixos/nixos-hardware";
@@ -17,18 +19,31 @@
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
-    };    
+    };
+
+    xremap-flake.url = "github:xremap/nix-flake";
   };
 
-  outputs = {nixpkgs, nixos-hardware, ...}@inputs: {
-    nixosConfigurations.SystemConfig = nixpkgs.lib.nixosSystem {
+  outputs = {nixpkgs, nixos-hardware, home-manager, ...}@inputs:
+    let
       system = "x86_64-linux";
-      specialArgs = {inherit inputs;};
-      modules = [
-        ./hosts/LittleNix/configuration.nix
-	nixos-hardware.nixosModules.apple-t2
-	inputs.home-manager.nixosModules.default
-      ];
+      pkgs = nixpkgs.legacyPackages.${system};
+    in { 
+      nixosConfigurations.SystemConfig = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = {inherit inputs;};
+        modules = [
+          ./hosts/LittleNix/configuration.nix
+          nixos-hardware.nixosModules.apple-t2
+	  inputs.home-manager.nixosModules.default
+        ];
+      };
+      homeConfigurations.cairo = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [
+	  ./hosts/LittleNix/home.nix # need to find a way to have this flexible between machines.
+	  inputs.xremap-flake.homeManagerModules.default
+	];
+      };
     };
-  };
 }  
