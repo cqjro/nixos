@@ -93,16 +93,6 @@
       tree
     ];
   };
-  
-  home-manager = {
-    extraSpecialArgs = {inherit inputs;};
-    users = {
-      "cairo" = import ./home.nix;
-    };
-    useUserPackages = true;
-    useGlobalPkgs = true;
-    backupFileExtension = "backup"; # backups existing config file into back up file when home manager is ran
-  };
 
   # Options needed to enabling xremap
   hardware.uinput.enable = true;
