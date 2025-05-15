@@ -23,10 +23,10 @@
       }))
     ];
 
-
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.extraModprobeConfig = "options hid-appletb-kbd mode=2";
 
   networking.hostName = "LittleNix"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -136,6 +136,7 @@
     font-awesome # used for waybar and other icons ?
     # kdePackages.qtsvg # used for svg rendering (might help yazi)
     bat # cli tool to display file contents
+    tiny-dfr # can be used to configure the mac touchbar
   ];
 
 
