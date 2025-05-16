@@ -113,30 +113,35 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    wget # pulls data from web servers
+
+    # text editors
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    wget
     neovim
-    neofetch
-    kitty # default terminal for hyprland
-    alacritty # terminal
-    btop
     vscode
+
+    #cli tools
+    neofetch # displays setup specs
+    btop # activity monitor
     git
-    gh
+    zsh # shell
+    ffmpeg
+    bat # displays file content with syntax highlighting
+
+    # terminals
+    kitty # default terminal for hyprland
+    alacritty
+    ghostty 
+
+    # main apps
     discord
     inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
-    # xremap # keybind remaping
     obsidian
     spotify
     obs-studio
-    yazi # terminal fire manager (very fast)
-    zsh
-    ffmpeg
-    pcmanfm # minimal file manager
+
+    # other
     font-awesome # used for waybar and other icons ?
-    # kdePackages.qtsvg # used for svg rendering (might help yazi)
-    bat # cli tool to display file contents
-    tiny-dfr # can be used to configure the mac touchbar
   ];
 
 
