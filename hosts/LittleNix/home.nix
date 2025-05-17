@@ -21,11 +21,13 @@
   imports = [
     # ../../modules/home-manager/shells/zsh.nix
     ../../modules/home-manager/desktop/hyprland.nix
+    # ../../modules/home-manager/desktop/hyprpanel.nix
     ../../modules/home-manager/xremap.nix
   ];
 
   # zsh.enable = true; # fix this when I can figure out how to get modules working
 
+  # move this to a sepreate file later
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -37,6 +39,12 @@
     };
   };
 
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  # move this to a seperate file later
   programs.git = {
     enable = true;
     userName  = "cqjro";
@@ -44,21 +52,36 @@
   };
 
   home.packages = with pkgs; [
-    hello
-    # xremap
+    # editors
+    neovim
+    vscode
 
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
+    #cli tools
+    neofetch # displays setup specs
+    btop # activity monitor
+    git
+    zsh # shell
+    ffmpeg
+    bat # displays file content with syntax highlighting
+    yazi # fast file manager
+    fzf # fuzzy text search
+    zoxide # smarter cd command
+    eza # better ls
 
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
+    # terminals
+    alacritty
+    ghostty 
+
+    # main apps
+    discord
+    inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
+    obsidian
+    spotify
+    obs-studio
+
+    # other
+    font-awesome # used for waybar and other icons ?
+
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage

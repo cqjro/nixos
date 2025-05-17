@@ -21,13 +21,24 @@
       inputs.hyprland.follows = "hyprland";
     };
 
+    hyprpanel = {
+      url = "github:jas-singhfsu/hyprpanel";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     xremap-flake.url = "github:xremap/nix-flake";
   };
 
   outputs = {nixpkgs, nixos-hardware, home-manager, ...}@inputs:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = import nixpkgs {
+        inherit system;
+        config = {
+          allowUnfree = true;
+          allowUnfreePredicate = _: true;
+        };
+      };
     in { 
       nixosConfigurations.SystemConfig = nixpkgs.lib.nixosSystem {
         inherit system;
@@ -37,6 +48,7 @@
           nixos-hardware.nixosModules.apple-t2
         ];
       };
+
       homeConfigurations.cairo = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 	extraSpecialArgs = {inherit inputs;};
