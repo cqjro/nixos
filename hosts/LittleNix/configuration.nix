@@ -12,6 +12,7 @@
       # inputs.xremap-flake.nixosModules.default
     ];
 
+  # T2 Mac Hardware Import
   hardware.firmware = [
       (pkgs.stdenvNoCC.mkDerivation (final: {
         name = "brcm-firmware";
@@ -23,21 +24,36 @@
       }))
     ];
 
+  # Bluetooth Settings
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.extraModprobeConfig = "options hid-appletb-kbd mode=2";
+  boot.extraModprobeConfig = "options hid-appletb-kbd mode=2"; # sets default state of touchbar
 
   networking.hostName = "LittleNix"; # Define your hostname.
-  # Pick only one of the below networking options.
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
   networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
   time.timeZone = "America/Toronto";
+
+  # Nix Settings
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.auto-optimise-store = true; # if this takes too long then switch to periodic
+  # nix.optimise.automatic = true;
+  # nix.optimise.dates = ["03:45"];
+ 
+  # Automatic Garbage Collection
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -51,13 +67,6 @@
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
 
-  # Enable the X11 windowing system
-  # services.xserver.enable = true;
-  
-  # Enabling Gnome - if Hyprland is being silly
-  # services.xserver.displayManager.gdm.enable = true;
-  # services.xserver.desktopManager.gnome.enable = true;
-
   # Enabling Hyprland
   programs.hyprland = {
     enable = true;
@@ -66,12 +75,11 @@
     package = inputs.hyprland.packages."${pkgs.system}".hyprland;
   };
 
-  # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
+  # wayland support for chromium/electron apps
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  services.printing.enable = true;
 
   # Enable sound.
   # services.pulseaudio.enable = true;
@@ -99,8 +107,6 @@
   users.groups.uinput.members = ["cairo"];
   users.groups.input.members = ["cairo"];
 
-
-  programs.firefox.enable = true;
   programs.zsh.enable = true;
 
   fonts.packages = with pkgs; [ 
@@ -117,31 +123,9 @@
 
     # text editors
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    neovim
-    vscode
-
-    #cli tools
-    neofetch # displays setup specs
-    btop # activity monitor
-    git
-    zsh # shell
-    ffmpeg
-    bat # displays file content with syntax highlighting
 
     # terminals
     kitty # default terminal for hyprland
-    alacritty
-    ghostty 
-
-    # main apps
-    discord
-    inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
-    obsidian
-    spotify
-    obs-studio
-
-    # other
-    font-awesome # used for waybar and other icons ?
   ];
 
 

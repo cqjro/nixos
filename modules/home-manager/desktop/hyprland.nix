@@ -1,26 +1,37 @@
-{pkgs, lib, ...}:
+{pkgs, lib, inputs, ...}:
 {
 
 	home.packages = with pkgs; [
 
-			# desktop basics 
-			waybar
+			# desktop basics
+			waybar # recomended bar (delete later)
 			rofi-wayland
-			swww
-			dunst
-			libnotify
-			hyprpaper
-			hyprshot
+
+			# Hyprland/HyprPanel
+			inputs.hyprpanel.packages.${pkgs.system}.default
+			ags
+			wireplumber
+			libgtop
+			dart-sass
 			wl-clipboard
 			wl-clip-persist
+			upower
+			gvfs
+			power-profiles-daemon # power profiles on battery
+			grimblast # screen shots
+			hyprpicker # colour picker
+			swww # wallpapers (animated)
+			matugen # colour themeing (might swap for nix based instead)
 
 			# utils
-			brightnessctl
-			playerctl
 			networkmanagerapplet
-			# pavucontrol
+			blueman
+    			playerctl
+   			brightnessctl
+   			bluez
 	];
-
+        # services.blueman.enable = true;
+        
 			wayland.windowManager.hyprland = {
 				enable = true;
 				settings = {
@@ -40,9 +51,9 @@
 # See https://wiki.hyprland.org/Configuring/Keywords/
 
 # Set programs that you use
-					"$terminal" = "alacritty";
-					"$fileManager" = "alacritty -e yazi";
-					"$menu" = "rofi -show drun";
+					"$terminal" = "ghostty";
+					"$fileManager" = "ghostty -e yazi";
+					"$menu" = "rofi -show drun -show-icons";
 					"$browser" = "zen";
 
 #################
@@ -54,8 +65,9 @@
 
 					exec-once = [ 
 						"$terminal"
-						"nm-applet"
-						"waybar"
+						# "nm-applet & blueman-applet &"
+						# "waybar &"
+						"hyprpanel &"
 					];
 
 
