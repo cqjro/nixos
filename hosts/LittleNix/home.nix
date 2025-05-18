@@ -19,13 +19,10 @@
   # environment.
 
   imports = [
-    # ../../modules/home-manager/shells/zsh.nix
     ../../modules/home-manager/desktop/hyprland.nix
-    # ../../modules/home-manager/desktop/hyprpanel.nix
+    ../../modules/home-manager/desktop/hyprpanel.nix
     ../../modules/home-manager/xremap.nix
   ];
-
-  # zsh.enable = true; # fix this when I can figure out how to get modules working
 
   # move this to a sepreate file later
   programs.zsh = {

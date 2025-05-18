@@ -38,6 +38,9 @@
           allowUnfree = true;
           allowUnfreePredicate = _: true;
         };
+	overlays = [
+          inputs.hyprpanel.overlay
+	];
       };
     in { 
       nixosConfigurations.SystemConfig = nixpkgs.lib.nixosSystem {
@@ -53,7 +56,7 @@
         inherit pkgs;
 	extraSpecialArgs = {inherit inputs;};
         modules = [
-	  ./hosts/LittleNix/home.nix # need to find a way to have this flexible between machines.
+	  ./hosts/LittleNix/home.nix # need to find a way to have this flexible between machines. 
 	];
       };
     };
