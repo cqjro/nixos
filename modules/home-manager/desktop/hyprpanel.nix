@@ -5,14 +5,9 @@
   ];
 
   programs.hyprpanel = {
-    enable = true; 
+    enable = false; 
     hyprland.enable = true;
     overwrite.enable = true;
-    overlay.enable = true;
-    # theme = "Monochrome";
-    override = {
-      # theme.bar.menus.text = "#123ABC";
-    };
 
     # Configure and theme almost all options from the GUI.
     # Options that require '{}' or '[]' are not yet implemented,
@@ -23,9 +18,9 @@
       layout = {
         "bar.layouts" = {
           "*" = {
-            left = [ "dashboard" "workspaces" "windowtitle" "media" "cava" ];
-            middle = [ "windowtitle" ];
-            right = [ "volume" "network" "bluetooth" "cpu" "ram" "battery" "clock" "power" "notifications" ];
+            left = [ "dashboard" "cpu" "ram" "cputemp" "storage" "media" ];
+            middle = [ "windowtitle" "workspaces" ];
+            right = [ "network" "bluetooth" "battery" "clock" "power" "notifications" ];
           };
         };
       };
@@ -56,8 +51,12 @@
 	font = {
           name = "JetBrainsMono Nerd Font";
 	  size = "16px";
-	};
 
+	};
+        osd = {
+          muted_zero = true;
+	  location = "bottom";
+	};
 
       };
 
