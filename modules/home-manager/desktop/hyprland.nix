@@ -23,6 +23,7 @@
 			hyprpicker # colour picker
 			swww # wallpapers (animated)
 			matugen # colour themeing (might swap for nix based instead)
+			cava
 
 			# utils
 			networkmanagerapplet
