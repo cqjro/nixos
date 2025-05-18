@@ -1,47 +1,18 @@
-# *.nix
-{ pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 {
-  imports = [ inputs.hyprpanel.homeManagerModules.hyprpanel ];
+  imports = [ 
+    inputs.hyprpanel.homeManagerModules.hyprpanel 
+  ];
 
   programs.hyprpanel = {
-
-    # Enable the module.
-    # Default: false
     enable = true; 
-
-    # Add '/nix/store/.../hyprpanel' to your
-    # Hyprland config 'exec-once'.
-    # Default: false
     hyprland.enable = true;
-
-    # Fix the overwrite issue with HyprPanel.
-    # See below for more information.
-    # Default: false
     overwrite.enable = true;
-
-    # Import a theme from './themes/*.json'.
-    # Default: ""
-    # theme = "gruvbox_split";
-
-    # Override the final config with an arbitrary set.
-    # Useful for overriding colors in your selected theme.
-    # Default: {}
+    overlay.enable = true;
+    # theme = "Monochrome";
     override = {
       # theme.bar.menus.text = "#123ABC";
     };
-
-    # Configure bar layouts for monitors.
-    # See 'https://hyprpanel.com/configuration/panel.html'.
-    # Default: null
-    # layout = {
-    #  "bar.layouts" = {
-    #    "0" = {
-    #      left = [ "dashboard" "workspaces" ];
-    #      middle = [ "media" ];
-    #      right = [ "volume" "systray" "notifications" ];
-    #    };
-    #  };
-    #};
 
     # Configure and theme almost all options from the GUI.
     # Options that require '{}' or '[]' are not yet implemented,
@@ -49,6 +20,16 @@
     # See 'https://hyprpanel.com/configuration/settings.html'.
     # Default: <same as gui>
     settings = {
+      layout = {
+        "bar.layouts" = {
+          "*" = {
+            left = [ "dashboard" "workspaces" "windowtitle" "media" "cava" ];
+            middle = [ "windowtitle" ];
+            right = [ "volume" "network" "bluetooth" "cpu" "ram" "battery" "clock" "power" "notifications" ];
+          };
+        };
+      };
+
       bar.launcher.autoDetectIcon = true;
       bar.workspaces.show_icons = true;
 
@@ -58,17 +39,29 @@
           hideSeconds = false;
         };
         weather.unit = "metric";
+	weather.location = "Toronto";
       };
 
       menus.dashboard.directories.enabled = false;
-      menus.dashboard.stats.enable_gpu = true;
+      menus.dashboard.stats.enable_gpu = false;
 
-      theme.bar.transparent = true;
+      theme = {
+        bar = {
+          transparent = true;
+	  buttons = {
+            radius = "0.7em";
+	  };
+	};
 
-      theme.font = {
-        name = "Jetbrains Mono";
-        size = "16px";
+	font = {
+          name = "JetBrainsMono Nerd Font";
+	  size = "16px";
+	};
+
+
       };
+
+
     };
   };
 }
