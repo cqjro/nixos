@@ -21,6 +21,7 @@
   imports = [
     ../../modules/home-manager/desktop/hyprland.nix
     ../../modules/home-manager/desktop/hyprpanel.nix
+    ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/xremap.nix
   ];
 

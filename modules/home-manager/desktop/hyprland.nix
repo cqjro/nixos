@@ -4,26 +4,28 @@
 	home.packages = with pkgs; [
 
 			# desktop basics
-			waybar # recomended bar (delete later)
+			waybar # recomended
 			rofi-wayland
+			rofi-power-menu
+			rofi-network-manager
 
-			# Hyprland/HyprPanel
-			# inputs.hyprpanel.packages.${pkgs.system}.default
-			hyprpanel
+			# Config Dependencies
+			hyprpanel # remove this an unused dependencies later
 			ags
 			wireplumber
 			libgtop
 			dart-sass
 			wl-clipboard
-			wl-clip-persist
+			wl-clip-persist # not a dependency for hyprpanel
 			upower
 			gvfs
-			power-profiles-daemon # power profiles on battery
+			power-profiles-daemon
 			grimblast # screen shots
 			hyprpicker # colour picker
 			swww # wallpapers (animated)
-			matugen # colour themeing (might swap for nix based instead)
 			cava
+			dunst # waybar dependency
+			libnotify # dunsy dependency
 
 			# utils
 			networkmanagerapplet
@@ -32,8 +34,6 @@
    			brightnessctl
    			bluez
 	];
-        # services.blueman.enable = true;
-        
 			wayland.windowManager.hyprland = {
 				enable = true;
 				settings = {
@@ -68,8 +68,8 @@
 					exec-once = [ 
 						"$terminal"
 						# "nm-applet & blueman-applet &"
-						# "waybar &"
-						"hyprpanel &"
+						"waybar &"
+						# "hyprpanel &"
 					];
 
 
