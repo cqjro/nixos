@@ -10,13 +10,12 @@
 			rofi-network-manager
 
 			# Config Dependencies
-			hyprpanel # remove this an unused dependencies later
 			ags
 			wireplumber
 			libgtop
 			dart-sass
 			wl-clipboard
-			wl-clip-persist # not a dependency for hyprpanel
+			wl-clip-persist
 			upower
 			gvfs
 			power-profiles-daemon

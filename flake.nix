@@ -21,11 +21,6 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    hyprpanel = {
-      url = "github:jas-singhfsu/hyprpanel";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     xremap-flake.url = "github:xremap/nix-flake";
   };
 
@@ -38,9 +33,6 @@
           allowUnfree = true;
           allowUnfreePredicate = _: true;
         };
-	overlays = [
-          inputs.hyprpanel.overlay
-	];
       };
     in { 
       nixosConfigurations.SystemConfig = nixpkgs.lib.nixosSystem {
