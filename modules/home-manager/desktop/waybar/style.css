@@ -3,7 +3,7 @@
     border-radius: 0;
     font-family: JetBrainsMono Nerd Font, monospace;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 15px;
     min-height: 0;
 }
 
@@ -50,7 +50,8 @@ window#waybar {
 #workspaces,
 #tray,
 #backlight,
-#custom-start {
+#custom-start,
+#disk {
     background: #1e1e2e;
     padding: 0px 10px;
     margin: 3px 0px;
@@ -68,11 +69,11 @@ window#waybar {
 }
 
 #custom-start {
-    background: #1e1e2e;
     border-radius: 10px;
     margin-left: 5px;
-    padding-right: 10px;
+    padding-right: 15px;
     padding-left: 10px;
+    font-size: 20px;
 }
 
 #workspaces {
@@ -83,12 +84,16 @@ window#waybar {
     padding-left: 5px;
 }
 
-#cpu {
-    border-radius: 0px 10px 10px 0px;
-    margin-right: 10px;
+#disk {
+  margin-right: 10px;
+  border-radius: 0px 10px 10px 0px;
 }
 
 #memory {
+    border-radius: 0px 0px 0px 0px;
+}
+
+#cpu {
     border-radius: 10px 0px 0px 10px;
 }
 
