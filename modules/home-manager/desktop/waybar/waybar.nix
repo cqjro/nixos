@@ -2,6 +2,7 @@
 { pkgs, lib, inputs, ... }: {
   programs.waybar = {
     enable = true;
+    style = ./style.css;
     settings = [
       {
         margin-top = 10;
@@ -11,41 +12,50 @@
         position = "top";
 
         modules-left = [
-          "custom/start"
-          "hyprland/submap"
+	  "custom/start"
+          "clock"
           "hyprland/workspaces"
         ];
 	modules-center = [
           "hyprland/window"
 	];
         modules-right = [
-          "tray"
-          "temperature"
-          "cpu"
-          "memory"
-          "disk"
+          # "tray"
+	  "cpu"
+	  "memory"
+	  "disk"
           "network"
+	  "battery"
+          "backlight"
           "pulseaudio"
-          "battery"
-          "power-profiles-daemon"
-          "clock"
+	  "pulseaudio#microphone"
         ];
+
         "cpu" = {
           states = {
             critical = 85;
           };
           interval = 1;
-          format = " {usage:2}%";
+          format = " {usage}%";
+	  format-alt = "{icon0}{icon1}{icon2}{icon3}";
+	  format-icons = ["▁" "▂" "▃" "▄" "▅" "▆" "▇" "█"];
           on-click = "ghostty btop";
         };
+
         "memory" = {
           states = {
-            critical = 85;
+            c = 90; # critical
+            h = 60; # high
+	    m = 30; # medium
           };
           interval = 1;
           format = " {percentage}%";
           on-click = "ghostty btop";
+	  max-length = 10;
+	  tooltip = true;
+	  tooltip-format = "󰾆 {percentage}%\n {used:0.1f}GB/{total:0.1f}GB";
         };
+
         "disk" = {
           states = {
             critical = 85;
@@ -54,20 +64,28 @@
           format = " {percentage_used}%";
           on-click = "ghostty btop";
         };
+
         "network" = {
           format-ethernet = " {bandwidthDownOctets}";
-          format-wifi = " {signalStrength}%";
-          format-disconnected = "";
-          format-disabled = "";
-          tooltip = false;
+          format-wifi = " {essid}%";
+          format-disconnected = "󰖪 ";
+	  tooltip-format-disconneted = "Disconnected";
+          format-disabled = "󰖪 ";
+	  format-linked = " {ifname} (No IP)";
+          tooltip = true;
+	  tooltip-format =  "Network: <big><b>{essid}</b></big>\nSignal strength: <b>{signaldBm}dBm ({signalStrength}%)</b>\nFrequency: <b>{frequency}MHz</b>\nInterface: <b>{ifname}</b>\nIP: <b>{ipaddr}/{cidr}</b>\nGateway: <b>{gwaddr}</b>\nNetmask: <b>{netmask}</b>";
+	  format-alt =  "<span foreground='#99ffdd'> {bandwidthDownBytes}</span> <span foreground='#ffcc66'> {bandwidthUpBytes}</span>";
           on-click = "rofi-network-manager";
+	  interval = 2;
         };
+
         "temperature" = {
           critical-threshold = 80;
           format = " {temperatureC}°C";
           interval = 1;
           on-click = "ghostty btop";
         };
+
         "power-profiles-daemon" = {
           format = "{icon} {profile}";
           format-icons = {
@@ -76,6 +94,7 @@
             balanced = "";
           };
         };
+
         "hyprland/workspaces" = {
           format = "{name}";
           format-icons = {
@@ -83,9 +102,13 @@
             active = " ";
             urgent = " ";
           };
-          on-scroll-down = "hyprctl dispatch workspace e+1";
-          on-scroll-up = "hyprctl dispatch workspace e-1";
+	  on-click = "activate";
+	  all-outputs = true;
+	  disable_scroll = true;
+          # on-scroll-down = "hyprctl dispatch workspace e+1";
+          # on-scroll-up = "hyprctl dispatch workspace e-1";
         };
+
         "hyprland/window" = {
           icon = true;
           max-length = 45;
@@ -98,16 +121,40 @@
           on-click-middle = "hyprctl dispatch killactive";
           on-click = "hyprctl dispatch fullscreen 1";
         };
-        "hyprland/submap" = {
-          format = " {}";
-          on-click = "hyprctl dispatch submap reset";
-        };
+
         "clock" = {
-          format = "{:%b %d, %I:%M %p}";
+          format = "{:%A    %B-%d-%Y    %I:%M:%S %p}";
+	  interval = 1;
+	  rotate = 0;
+	  tooltip-format = "<tt>{calendar}</tt>";
+	  calendar = {
+            mode = "month";
+	    mode-mon-col = 3;
+	    on-scroll = 1;
+	    on-click-right = "mode";
+	    format = {
+              month = "<span color='#a6adc8'><b>{}</b></span>";
+	      weekdays = "<span color='#a6adc8'><b>{}</b></span>";
+	      today =  "<span color='#a6adc8'><b>{}</b></span>";
+	      days =  "<span color='#555869'><b>{}</b></span>";
+	    };
+	  };
         };
+
+	"backlight" = {
+           device = "apci_video0";
+	   format = "{icon} {percent}%";
+	   format-icons =  ["󰃞" "󰃟" "󰃠"];
+           on-scroll-up = "brightnessctl set 1%+";
+	   on-scroll-down = "brightnessctl set 1%-";
+	   min-length = 6;
+	};
+
         "tray" = {
-          spacing = 12;
+	  icon-size = 13;
+          spacing = 10;
         };
+
         "taskbar" = {
           icon-size = 10;
           icon-theme = "Papirus-Dark";
@@ -117,7 +164,9 @@
           on-scroll-up = "maximize";
           on-scroll-down = "minimize";
         };
+
         "pulseaudio" = {
+	  tooltip = false;
           format = "{icon} {volume}% {format_source}";
           format-bluetooth = "{volume}% {icon} {format_source}";
           format-bluetooth-muted = " {icon} {volume}% {format_source_muted}";
@@ -125,108 +174,45 @@
           format-source = "";
           format-source-muted = "";
           format-icons = {
-            headphone = "";
-            hands-free = "";
-            headset = "";
+            headphone = "";
+            hands-free = "";
+            headset = "";
             phone = "";
             portable = "";
             car = "";
-            default = [
-              ""
-              ""
-              ""
-            ];
+            default =  ["" "" "" ""];
           };
           on-click = "pavucontrol";
           on-click-right = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
         };
+
+	"pulseaudio#microphone" = {
+          format = "{format_source}";
+	  format-source =  " {volume}%";
+	  format-source-muted =  "  Muted";
+	};
+
         "battery" = {
           states = {
+	    good = 95;
             warning = 30;
             critical = 15;
           };
           format = "{icon} {capacity}%";
           format-charging = " {capacity}%";
           format-plugged = " {capacity}%";
-          format-icons = [
-            ""
-            ""
-            ""
-            ""
-            ""
-          ];
+	  format-alt = "{time} {icon}";
+          format-icons =  ["󰂃" "󰁺" "󰁻" "󰁼" "󰁽" "󰁾" "󰁿" "󰂀" "󰂁" "󰂂" "󰁹"];
           interval = 1;
           on-click = "";
         };
+
         "custom/start" = {
-          format = "";
-          on-click-right = "rofi -show power-menu -modi power-menu:rofi-power-menu";
-          on-click = "rofi -show drun";
+          format = "{icon}";
+	  format-icons = ["󱄅"];
+          on-click = "rofi -show power-menu -modi power-menu:rofi-power-menu";
         };
       }
     ];
-    style = ''
-      * {
-        font-size: 12px;
-        font-family: Font Awesome, monospace;
-        font-weight: bold;
-        color: @text;
-        transition: none;
-      }
-
-      window#waybar {
-        background: rgba(0,0,0,0);
-        border: none;
-      }
-      
-      #workspaces button {
-        border-radius: 0px;
-        margin: 0px;
-        background: none;
-        border: none;
-      }
-
-      #workspaces button:hover, #custom-start:hover, #window:hover {
-        border: none;
-        outline: none;
-        background: none;
-        color: @text;
-        background-size: 300% 300%;
-        background: @surface0;
-      }
-
-      #workspaces button.active, #submap {
-        background: @surface1;
-      }
-
-      #custom-start {
-        padding: 0px 5px;
-        color: @sky;
-        font-size: 16px;
-      }
-
-      #window, #submap {
-        padding: 0px 5px;
-      }
-
-      .modules-left, .modules-right {
-        background-color: @base;
-        border: 2px solid @surface1;
-        border-radius: 10px;
-        padding: 0 5px;
-      }
-      #submap, #workspaces, #cpu, #memory, #disk, #clock, #window, #tray, #pulseaudio, #battery, #network, #temperature, #power-profiles-daemon, #custom-exit, #custom-start {
-        margin: 0 5px;
-      }
-      .critical, .muted, .performance {
-        color: @red;
-      }
-      .warning, .urgent {
-        color: @yellow;
-      }
-      .charging, .plugged, .power-saver {
-        color: @green;
-      }
-    '';
   };
 }

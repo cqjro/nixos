@@ -68,7 +68,7 @@
 						"$terminal"
 						# "nm-applet & blueman-applet &"
 						"waybar &"
-						# "hyprpanel &"
+                                                # "zsh ./start.sh"
 					];
 
 
