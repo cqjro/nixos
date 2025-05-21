@@ -22,6 +22,7 @@
     };
 
     xremap-flake.url = "github:xremap/nix-flake";
+    nix-colors.url = "github:misterio77/nix-colors";
   };
 
   outputs = {nixpkgs, nixos-hardware, home-manager, ...}@inputs:
