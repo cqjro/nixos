@@ -110,7 +110,7 @@
 # https://wiki.hyprland.org/Configuring/Variables/#general
 					general = {
 						gaps_in = 5;
-						gaps_out = 20;
+						gaps_out = 15;
 						border_size = 1;
 # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
 						"col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
@@ -206,7 +206,8 @@
 # https://wiki.hyprland.org/Configuring/Variables/#misc
 					misc = {
 						force_default_wallpaper = -1; 
-						disable_hyprland_logo = false; 
+						disable_hyprland_logo = true;
+						background_color = "rgba(841F17FF)";
 					};
 
 
