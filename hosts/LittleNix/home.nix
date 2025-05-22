@@ -20,7 +20,7 @@
 
   imports = [
     ../../modules/home-manager/desktop/hyprland.nix
-    ../../modules/home-manager/desktop/waybar/waybar.nix
+    ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/desktop/dunst.nix
     ../../modules/home-manager/desktop/nix-colours.nix
     ../../modules/home-manager/xremap.nix
