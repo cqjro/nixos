@@ -1,4 +1,4 @@
-{pkgs, lib, inputs, ...}:
+{pkgs, lib, config, inputs, ...}:
 {
   services.dunst = {
     enable = true;
@@ -13,7 +13,7 @@
         horizontal_padding = 8;
         text_icon_padding = 0;
         frame_width = 2;
-        frame_color = "#a6adc8";
+        frame_color = "#${config.colorScheme.palette.base05}";
         separator_color = "frame";
         sort = "yes";
         idle_threshold = 120;
@@ -45,19 +45,19 @@
       };
   
       urgency_low ={
-        background = "#1e1e2e";
-        foreground = "#CDD6F4";
+        background = "#${config.colorScheme.palette.base00}";
+        foreground = "#${config.colorScheme.palette.base05}";
       };
   
       urgency_normal = {
-        background = "#1e1e2e";
-        foreground = "#CDD6F4";
+        background = "#${config.colorScheme.palette.base00}";
+        foreground = "#${config.colorScheme.palette.base05}";
       };
   
       urgency_critical = {
-        background = "#1e1e2e";
-        foreground = "#CDD6F4";
-        frame_color = "#FAB387";
+        background = "#${config.colorScheme.palette.base00}";
+        foreground = "#${config.colorScheme.palette.base05}";
+        frame_color = "#${config.colorScheme.palette.base08}";
       };
     };
   };

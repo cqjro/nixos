@@ -2,7 +2,12 @@
 {
 
   #TODO: Create a way to save my personal theme and swap with preset ones on the fly
-  #TODO: pick white colours
+  
+
+  imports = [
+    inputs.nix-colors.homeManagerModules.default
+  ];
+
 
   # import preset themes available with nix-colors
   # colorScheme = inputs.nix-colors.colorSchemes.gruvbox-dark-medium;

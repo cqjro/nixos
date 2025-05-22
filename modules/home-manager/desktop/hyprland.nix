@@ -1,4 +1,4 @@
-{pkgs, lib, inputs, ...}:
+{pkgs, lib, config, inputs, ...}:
 {
 
 	home.packages = with pkgs; [
@@ -8,6 +8,7 @@
 			rofi-wayland
 			rofi-power-menu
 			rofi-network-manager
+			rofi-bluetooth
 
 			# Config Dependencies
 			ags
@@ -25,6 +26,8 @@
 			cava
 			dunst # waybar dependency
 			libnotify # dunsy dependency
+			hyprcursor # better cursors
+			inputs.rose-pine-hyprcursor.packages.${pkgs.system}.default #cursor theme
 
 			# utils
 			networkmanagerapplet
@@ -79,8 +82,9 @@
 # See https://wiki.hyprland.org/Configuring/Environment-variables/
 
 					env = [ 
-						"XCURSOR_SIZE,24"
-						"HYPRCURSOR_SIZE,24"
+						# "XCURSOR_SIZE,35"
+						"HYPRCURSOR_SIZE,27"
+						"HYPRCURSOR_THEME,rose-pine-hyprcursor"
 					];
 
 
@@ -111,9 +115,9 @@
 					general = {
 						gaps_in = 5;
 						gaps_out = 15;
-						border_size = 1;
+						border_size = 5;
 # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-						"col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
+						"col.active_border" = "rgba(${config.colorScheme.palette.base05}FF)";
 						"col.inactive_border" = "rgba(595959aa)";
 # Set to true enable resizing windows by clicking and dragging on borders and gaps
 						resize_on_border = false;

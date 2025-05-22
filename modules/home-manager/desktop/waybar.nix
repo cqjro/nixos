@@ -1,8 +1,8 @@
-# Stole this from https://github.com/SX-9/nix-conf/blob/master/rice/waybar.nix
-{ pkgs, lib, inputs, ... }: {
+# Stole this from Simple Hyprland
+{ pkgs, lib, config, inputs, ... }: {
   programs.waybar = {
     enable = true;
-    style = ./style.css;
+    # style = ./style.css;
     settings = [
       {
         margin-top = 10;
@@ -25,6 +25,7 @@
 	  "memory"
 	  "disk"
           "network"
+	  "bluetooth"
 	  "battery"
           "backlight"
           "pulseaudio"
@@ -50,7 +51,7 @@
           };
           interval = 1;
           format = " {percentage}%";
-          on-click = "ghostty btop";
+          on-click = "ghostty -e btop";
 	  max-length = 10;
 	  tooltip = true;
 	  tooltip-format = "󰾆 {percentage}%\n {used:0.1f}GB/{total:0.1f}GB";
@@ -62,7 +63,7 @@
           };
           interval = 5;
           format = " {percentage_used}%";
-          on-click = "ghostty btop";
+          on-click = "ghostty -e btop";
         };
 
         "network" = {
@@ -83,7 +84,7 @@
           critical-threshold = 80;
           format = " {temperatureC}°C";
           interval = 1;
-          on-click = "ghostty btop";
+          on-click = "ghostty -e btop";
         };
 
         "power-profiles-daemon" = {
@@ -212,7 +213,159 @@
 	  format-icons = ["󱄅"];
           on-click = "rofi -show power-menu -modi power-menu:rofi-power-menu";
         };
+
+	"bluetooth" = {
+	# "controller": "controller1", // specify the alias of the controller if there are more than 1 on the system
+	format = " {status}";
+	format-disabled =""; # an empty format will hide the module
+	format-connected = " {num_connections}";
+	max-length = 20;
+	tooltip-format = "{controller_alias}\t{controller_address}";
+	tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
+	tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
+	on-click = "rofi-bluetooth";
+        };
       }
     ];
+    style = ''
+    * {
+        border: none;
+        border-radius: 0;
+        font-family: JetBrainsMono Nerd Font, monospace;
+        font-weight: bold;
+        font-size: 15px;
+        min-height: 0;
+    }
+    
+    window#waybar {
+        background: rgba(21, 18, 27, 0);
+        color: #cdd6f4;
+    }
+    
+    #workspaces button {
+        padding: 5px;
+        color: #${config.colorScheme.palette.base03};
+        margin-right: 5px;
+    }
+    
+    #workspaces button.active {
+        color: #${config.colorScheme.palette.base05};
+    }
+    
+    #workspaces button.focused {
+        color: #${config.colorScheme.palette.base05};
+        /* background: #eba0ac; */
+        border-radius: 10px;
+    }
+    
+    #workspaces button.urgent {
+        /* color: #11111b; */
+        /* background: #a6e3a1; */
+        border-radius: 10px;
+    }
+    
+    #workspaces button:hover {
+        /* background: #${config.colorScheme.palette.base0E}; */
+        color: #${config.colorScheme.palette.base00}; 
+	text-decoration: underline;
+        border-radius: 10px;
+    }
+    
+    #window,
+    #clock,
+    #battery,
+    #pulseaudio,
+    #network,
+    #cpu,
+    #memory,
+    #workspaces,
+    #tray,
+    #backlight,
+    #custom-start,
+    #bluetooth,
+    #disk {
+        background: #${config.colorScheme.palette.base00};
+	color: #${config.colorScheme.palette.base05};
+        padding: 0px 10px;
+        margin: 3px 0px;
+        margin-top: 5px;
+        /* border: 1px solid #181825; */
+    }
+    
+    #backlight {
+        border-radius: 10px 0px 0px 10px;
+    }
+    
+    #tray {
+        border-radius: 10px;
+        margin-right: 10px;
+    }
+    
+    #custom-start {
+        border-radius: 10px;
+        margin-left: 5px;
+        padding-right: 15px;
+        padding-left: 10px;
+        font-size: 20px;
+    }
+    
+    #workspaces {
+        border-radius: 10px;
+        margin-left: 10px;
+        padding-right: 0px;
+        padding-left: 5px;
+    }
+    
+    #disk {
+        margin-right: 10px;
+        border-radius: 0px 10px 10px 0px;
+    }
+    
+    #memory {
+        border-radius: 0px 0px 0px 0px;
+    }
+    
+    #cpu {
+        border-radius: 10px 0px 0px 10px;
+    }
+    
+    #window {
+        border-radius: 10px;
+        margin-left: 60px;
+        margin-right: 60px;
+    }
+    
+    #clock {
+        border-radius: 10px 10px 10px 10px;
+        margin-left: 10px;
+        border-right: 0px;
+    }
+    
+    #network {
+        border-radius: 10px 0px 0px 10px;
+    }
+
+    #bluetooth {
+       border-left: 0px;
+       border-right: 0px;
+    }
+    
+    #pulseaudio {
+        border-left: 0px;
+        border-right: 0px;
+    }
+    
+    #pulseaudio.microphone {
+        border-radius: 0px 10px 10px 0px;
+        border-left: 0px;
+        border-right: 0px;
+        margin-right: 5px;
+    }
+    
+    #battery {
+        border-radius: 0px 10px 10px 0px;
+        margin-right: 10px;
+    }
+    '';
   };
 }
