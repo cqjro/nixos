@@ -66,9 +66,12 @@
     fzf # fuzzy text search
     zoxide # smarter cd command
     eza # better ls
+    dust # disk use analyzer
+    dua # interative disk use analyzer
+    fselect # use sql queries to look for files
+    ncspot # terminal spotify client (uses less ram)
 
     # terminals
-    alacritty
     ghostty 
 
     # main apps

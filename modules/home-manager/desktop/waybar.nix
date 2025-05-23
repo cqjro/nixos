@@ -14,6 +14,7 @@
         modules-left = [
 	  "custom/start"
           "clock"
+	  "mpris"
           "hyprland/workspaces"
         ];
 	modules-center = [
@@ -29,7 +30,7 @@
 	  "battery"
           "backlight"
           "pulseaudio"
-	  "pulseaudio#microphone"
+	  #"pulseaudio#microphone"
         ];
 
         "cpu" = {
@@ -40,7 +41,7 @@
           format = " {usage}%";
 	  format-alt = "{icon0}{icon1}{icon2}{icon3}";
 	  format-icons = ["▁" "▂" "▃" "▄" "▅" "▆" "▇" "█"];
-          on-click = "ghostty btop";
+          on-click = "ghostty -e btop";
         };
 
         "memory" = {
@@ -52,7 +53,6 @@
           interval = 1;
           format = " {percentage}%";
           on-click = "ghostty -e btop";
-	  max-length = 10;
 	  tooltip = true;
 	  tooltip-format = "󰾆 {percentage}%\n {used:0.1f}GB/{total:0.1f}GB";
         };
@@ -67,8 +67,9 @@
         };
 
         "network" = {
-          format-ethernet = " {bandwidthDownOctets}";
-          format-wifi = " {essid}%";
+          # format-ethernet = " {bandwidthDownOctets}";
+	  format-ethernet = " Ethernet"; 
+          format-wifi = " {essid}";
           format-disconnected = "󰖪 ";
 	  tooltip-format-disconneted = "Disconnected";
           format-disabled = "󰖪 ";
@@ -124,7 +125,9 @@
         };
 
         "clock" = {
-          format = "{:%A    %B-%d-%Y    %I:%M:%S %p}";
+          # format = "{:%A    %B-%d-%Y    %I:%M:%S %p}";
+          format = " {:%B-%d-%Y   %I:%M:%S %p}";
+
 	  interval = 1;
 	  rotate = 0;
 	  tooltip-format = "<tt>{calendar}</tt>";
@@ -168,10 +171,10 @@
 
         "pulseaudio" = {
 	  tooltip = false;
-          format = "{icon} {volume}% {format_source}";
-          format-bluetooth = "{volume}% {icon} {format_source}";
-          format-bluetooth-muted = " {icon} {volume}% {format_source_muted}";
-          format-muted = " {volume}% {format_source_muted}";
+          format = "{icon} {volume}%";
+          format-bluetooth = " {icon} {volume}%";
+          format-bluetooth-muted = " {icon} {volume}%";
+          format-muted = "  {volume}%";
           format-source = "";
           format-source-muted = "";
           format-icons = {
@@ -189,8 +192,8 @@
 
 	"pulseaudio#microphone" = {
           format = "{format_source}";
-	  format-source =  " {volume}%";
-	  format-source-muted =  "  Muted";
+	  format-source =  "{volume}%";
+	  format-source-muted =  " Muted";
 	};
 
         "battery" = {
@@ -199,7 +202,7 @@
             warning = 30;
             critical = 15;
           };
-          format = "{icon} {capacity}%";
+          format = "{icon}{capacity}%";
           format-charging = " {capacity}%";
           format-plugged = " {capacity}%";
 	  format-alt = "{time} {icon}";
@@ -215,16 +218,33 @@
         };
 
 	"bluetooth" = {
-	# "controller": "controller1", // specify the alias of the controller if there are more than 1 on the system
-	format = " {status}";
-	format-disabled =""; # an empty format will hide the module
-	format-connected = " {num_connections}";
-	max-length = 20;
-	tooltip-format = "{controller_alias}\t{controller_address}";
-	tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
-	tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
-	on-click = "rofi-bluetooth";
+          # "controller": "controller1", // specify the alias of the controller if there are more than 1 on the system
+	  format = " {status}";
+	  format-disabled =""; # an empty format will hide the module
+	  format-connected = "{num_connections}";
+          # format-connected = " {device_alias}";
+	  max-length = 20;
+	  tooltip-format = "{controller_alias}\t{controller_address}";
+	  tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
+	  tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
+	  on-click = "rofi-bluetooth";
         };
+
+	"mpris" = {
+	  format = "{player_icon} {artist} - {title}";
+	  format-paused = "{status_icon} {artist} - {title}";
+	  max-length = 45;
+	  player-icons = {
+	    default = "";
+	    mpv= "";
+	  };
+	  status-icons = {
+	    paused = "󰏤";
+	  };
+	  ignored-players = ["firefox"];
+        };
+
+
       }
     ];
     style = ''
@@ -283,6 +303,7 @@
     #backlight,
     #custom-start,
     #bluetooth,
+    #mpris,
     #disk {
         background: #${config.colorScheme.palette.base00};
 	color: #${config.colorScheme.palette.base05};
@@ -314,6 +335,11 @@
         margin-left: 10px;
         padding-right: 0px;
         padding-left: 5px;
+    }
+
+    #mpris {
+       border-radius: 10px;
+       margin-left: 10px;
     }
     
     #disk {
@@ -353,6 +379,8 @@
     #pulseaudio {
         border-left: 0px;
         border-right: 0px;
+	border-radius: 0px 10px 10px 0px;
+	margin-right: 5px;
     }
     
     #pulseaudio.microphone {
