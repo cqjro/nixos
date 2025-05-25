@@ -8,8 +8,8 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      # inputs.home-manager.nixosModules.default
-      # inputs.xremap-flake.nixosModules.default
+      ../../modules/nixos/stylix.nix
+      inputs.home-manager.nixosModules.default
     ];
 
   # T2 Mac Hardware Import
@@ -23,6 +23,18 @@
         '';
       }))
     ];
+
+  # Home-Manager
+  home-manager = {
+    extraSpecialArgs = {inherit inputs;};
+    users = {
+      "cairo" = import ./home.nix;
+    };
+    useUserPackages = true;
+    useGlobalPkgs = true;
+    backupFileExtension = "backup";
+  };
+
 
   # Bluetooth Settings
   hardware.bluetooth = {
@@ -115,6 +127,7 @@
   ];
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfreePredicate = _: true; # needed for home-manager
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
