@@ -202,7 +202,7 @@
             warning = 30;
             critical = 15;
           };
-          format = "{icon}{capacity}%";
+          format = "{icon} {capacity}%";
           format-charging = " {capacity}%";
           format-plugged = " {capacity}%";
 	  format-alt = "{time} {icon}";
@@ -264,16 +264,16 @@
     
     #workspaces button {
         padding: 5px;
-        color: #${config.colorScheme.palette.base03};
+        color: #${config.stylix.base16Scheme.base03};
         margin-right: 5px;
     }
     
     #workspaces button.active {
-        color: #${config.colorScheme.palette.base05};
+        color: #${config.stylix.base16Scheme.base05};
     }
     
     #workspaces button.focused {
-        color: #${config.colorScheme.palette.base05};
+        color: #${config.stylix.base16Scheme.base05};
         /* background: #eba0ac; */
         border-radius: 10px;
     }
@@ -285,8 +285,8 @@
     }
     
     #workspaces button:hover {
-        /* background: #${config.colorScheme.palette.base0E}; */
-        color: #${config.colorScheme.palette.base00}; 
+        /* background: #${config.stylix.base16Scheme.base0E}; */
+        color: #${config.stylix.base16Scheme.base00}; 
 	text-decoration: underline;
         border-radius: 10px;
     }
@@ -305,8 +305,8 @@
     #bluetooth,
     #mpris,
     #disk {
-        background: #${config.colorScheme.palette.base00};
-	color: #${config.colorScheme.palette.base05};
+        background: #${config.stylix.base16Scheme.base00};
+	color: #${config.stylix.base16Scheme.base05};
         padding: 0px 10px;
         margin: 3px 0px;
         margin-top: 5px;

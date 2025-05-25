@@ -13,7 +13,7 @@
         horizontal_padding = 8;
         text_icon_padding = 0;
         frame_width = 2;
-        frame_color = "#${config.colorScheme.palette.base05}";
+        frame_color = "#${config.stylix.base16Scheme.base05}";
         separator_color = "frame";
         sort = "yes";
         idle_threshold = 120;
@@ -45,19 +45,19 @@
       };
   
       urgency_low ={
-        background = "#${config.colorScheme.palette.base00}";
-        foreground = "#${config.colorScheme.palette.base05}";
+        background = "#${config.stylix.base16Scheme.base00}";
+        foreground = "#${config.stylix.base16Scheme.base05}";
       };
   
       urgency_normal = {
-        background = "#${config.colorScheme.palette.base00}";
-        foreground = "#${config.colorScheme.palette.base05}";
+        background = "#${config.stylix.base16Scheme.base00}";
+        foreground = "#${config.stylix.base16Scheme.base05}";
       };
   
       urgency_critical = {
-        background = "#${config.colorScheme.palette.base00}";
-        foreground = "#${config.colorScheme.palette.base05}";
-        frame_color = "#${config.colorScheme.palette.base08}";
+        background = "#${config.stylix.base16Scheme.base00}";
+        foreground = "#${config.stylix.base16Scheme.base05}";
+        frame_color = "#${config.stylix.base16Scheme.base08}";
       };
     };
   };

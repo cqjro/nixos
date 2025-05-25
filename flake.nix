@@ -32,10 +32,17 @@
     };
 
     xremap-flake.url = "github:xremap/nix-flake";
-    nix-colors.url = "github:misterio77/nix-colors";
+
+    # colour configuration
+    stylix = {
+      url = "github:danth/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-colors.url = "github:misterio77/nix-colors"; # remove this when stylix is configured
   };
 
-  outputs = {nixpkgs, nixos-hardware, home-manager, ...}@inputs:
+  outputs = {nixpkgs, nixos-hardware, home-manager, stylix, ...}@inputs:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -52,15 +59,18 @@
         modules = [
           ./hosts/LittleNix/configuration.nix
           nixos-hardware.nixosModules.apple-t2
+	  inputs.stylix.nixosModules.stylix
+	  inputs.home-manager.nixosModules.default
         ];
       };
 
-      homeConfigurations.cairo = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-	extraSpecialArgs = {inherit inputs;};
-        modules = [
-	  ./hosts/LittleNix/home.nix # need to find a way to have this flexible between machines. 
-	];
-      };
+      #  homeConfigurations.cairo = home-manager.lib.homeManagerConfiguration {
+        #  inherit pkgs;
+	#  extraSpecialArgs = {inherit inputs;};
+        #  modules = [
+	  #  ./hosts/LittleNix/home.nix # need to find a way to have this flexible between machines.
+	  #  inputs.stylix.homeModules.stylix
+	#  ];
+      #  };
     };
 }  

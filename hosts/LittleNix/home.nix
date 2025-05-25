@@ -22,8 +22,10 @@
     ../../modules/home-manager/desktop/hyprland.nix
     ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/desktop/dunst.nix
-    ../../modules/home-manager/desktop/nix-colours.nix
     ../../modules/home-manager/xremap.nix
+    ../../modules/home-manager/terminal/ghostty.nix
+    ../../modules/home-manager/desktop/rofi.nix
+    # ../../modules/nixos/stylix.nix
   ];
 
   # move this to a sepreate file later
@@ -34,7 +36,9 @@
     syntaxHighlighting.enable = true;
 
     shellAliases = {
-      ll = "ls -l";
+      ll = "eza -l --header";
+      llt = "eza -l --tree --header";
+      cd = "z";
     };
   };
 
@@ -76,6 +80,7 @@
 
     # main apps
     discord
+    vesktop # alternative discord client
     inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
     obsidian
     spotify
