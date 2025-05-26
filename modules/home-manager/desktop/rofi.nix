@@ -22,15 +22,15 @@
         in
         {
           "*" = {
-            bg = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base00}");
-            bg-alt = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base09}");
-            foreground = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base01}");
-            selected = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base08}");
-            active = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base0B}");
-            text-selected = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base00}");
-            text-color = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base05}");
-            border-color = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base0F}");
-            urgent = lib.mkForce (mkLiteral "#${config.stylix.base16Scheme.base0E}");
+            bg = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base00}");
+            bg-alt = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base09}");
+            foreground = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base01}");
+            selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base08}");
+            active = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0B}");
+            text-selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base00}");
+            text-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
+            border-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0F}");
+            urgent = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0E}");
           };
           "window" = {
             width = mkLiteral "50%";

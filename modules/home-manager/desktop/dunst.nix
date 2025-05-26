@@ -13,11 +13,11 @@
         horizontal_padding = 8;
         text_icon_padding = 0;
         frame_width = 2;
-        frame_color = "#${config.stylix.base16Scheme.base05}";
-        separator_color = "frame";
+        frame_color = lib.mkForce "#${config.lib.stylix.colors.base05}";
+        separator_color = lib.mkForce "frame";
         sort = "yes";
         idle_threshold = 120;
-        font = "monospace 10";
+        # font = "monospace 10";
         line_height = 0;
         markup = "full";
         alignment = "left";
@@ -45,19 +45,19 @@
       };
   
       urgency_low ={
-        background = "#${config.stylix.base16Scheme.base00}";
-        foreground = "#${config.stylix.base16Scheme.base05}";
+        background = lib.mkForce "#${config.lib.stylix.colors.base00}";
+        foreground = lib.mkForce "#${config.lib.stylix.colors.base05}";
       };
   
       urgency_normal = {
-        background = "#${config.stylix.base16Scheme.base00}";
-        foreground = "#${config.stylix.base16Scheme.base05}";
+        background = lib.mkForce "#${config.lib.stylix.colors.base00}";
+        foreground = lib.mkForce "#${config.lib.stylix.colors.base05}";
       };
   
       urgency_critical = {
-        background = "#${config.stylix.base16Scheme.base00}";
-        foreground = "#${config.stylix.base16Scheme.base05}";
-        frame_color = "#${config.stylix.base16Scheme.base08}";
+        background = lib.mkForce "#${config.lib.stylix.colors.base00}";
+        foreground = lib.mkForce "#${config.lib.stylix.colors.base05}";
+        frame_color = lib.mkForce "#${config.lib.stylix.colors.base08}";
       };
     };
   };
