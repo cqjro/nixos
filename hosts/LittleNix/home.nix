@@ -25,7 +25,8 @@
     ../../modules/home-manager/xremap.nix
     ../../modules/home-manager/terminal/ghostty.nix
     ../../modules/home-manager/desktop/rofi.nix
-    # ../../modules/nixos/stylix.nix
+    ../../modules/home-manager/terminal/btop.nix
+    ../../modules/home-manager/terminal/yazi.nix
   ];
 
   # move this to a sepreate file later
