@@ -3,7 +3,7 @@
   programs.ghostty = {
     enable = true;
     settings = {
-      theme = "Banana Blueberry";
+      # theme = "Banana Blueberry";
     };
   };
 }

@@ -15,11 +15,11 @@
       base07 = "#ffffff"; # Bright White | Lightest Foreground      ANSI 15
       base08 = "#e54b4b"; # Red                                     ANSI: 1
       base09 = "#f09c5e"; # Orange                                  ANSI: ~3
-      base0A = "#f0c05e"; # Yellow Alt e6c62f                       ANSI: 3
+      base0A = "#f0c05e"; # Yellow     Alt e6c62f                   ANSI: 3
       base0B = "#3ad900"; # Green                                   ANSI: 2
       base0C = "#00BD9C"; # Cyan                                    ANSI: 6 
       base0D = "#007bd3"; # Blue                                    ANSI: 4
-      base0E = "#dc396a"; # Magenta    Alt is #cf256d               ANSI: 5
+      base0E = "#dc396a"; # Magenta    Alt cf256d                   ANSI: 5
       base0F = "#e54b4b"; # Dark Red/Brown                          ANSI: None
     };
 

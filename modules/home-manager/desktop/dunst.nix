@@ -14,7 +14,7 @@
         text_icon_padding = 0;
         frame_width = 2;
         frame_color = lib.mkForce "#${config.lib.stylix.colors.base05}";
-        separator_color = lib.mkForce "frame";
+        # separator_color = lib.mkForce "frame";
         sort = "yes";
         idle_threshold = 120;
         # font = "monospace 10";
@@ -57,7 +57,7 @@
       urgency_critical = {
         background = lib.mkForce "#${config.lib.stylix.colors.base00}";
         foreground = lib.mkForce "#${config.lib.stylix.colors.base05}";
-        frame_color = lib.mkForce "#${config.lib.stylix.colors.base08}";
+        # frame_color = lib.mkForce "#${config.lib.stylix.colors.base08}";
       };
     };
   };
