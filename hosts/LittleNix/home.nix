@@ -74,6 +74,7 @@
     dua # interative disk use analyzer
     fselect # use sql queries to look for files
     ncspot # terminal spotify client (uses less ram)
+    zathura # pdf viewer
 
     # terminals
     ghostty 

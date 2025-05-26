@@ -264,17 +264,16 @@
     
     #workspaces button {
         padding: 5px;
-        color: #${config.stylix.base16Scheme.base03};
+        color: #${config.lib.stylix.colors.base03};
         margin-right: 5px;
     }
     
     #workspaces button.active {
-        color: #${config.stylix.base16Scheme.base05};
+        color: #${config.lib.stylix.colors.base05};
     }
     
     #workspaces button.focused {
-        color: #${config.stylix.base16Scheme.base05};
-        /* background: #eba0ac; */
+        color: #${config.lib.stylix.colors.base05};
         border-radius: 10px;
     }
     
@@ -285,10 +284,9 @@
     }
     
     #workspaces button:hover {
-        /* background: #${config.stylix.base16Scheme.base0E}; */
-        color: #${config.stylix.base16Scheme.base00}; 
+        background: #${config.lib.stylix.colors.base00};  
+        color: #${config.lib.stylix.colors.base05}; 
 	text-decoration: underline;
-        border-radius: 10px;
     }
     
     #window,
@@ -305,8 +303,8 @@
     #bluetooth,
     #mpris,
     #disk {
-        background: #${config.stylix.base16Scheme.base00};
-	color: #${config.stylix.base16Scheme.base05};
+        background: #${config.lib.stylix.colors.base00};
+	color: #${config.lib.stylix.colors.base05};
         padding: 0px 10px;
         margin: 3px 0px;
         margin-top: 5px;

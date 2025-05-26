@@ -2,7 +2,7 @@
 { # TODO update colors to tooltip & maybe set up cursor package here?
   stylix = {
     enable = true;
-    autoEnable = false;
+    autoEnable = true;
 
     base16Scheme = { # these are the personal colours i picked out, swap to banana blueberry later maybe?
       base00 = "#191324"; # Default Background                      ANSI: None

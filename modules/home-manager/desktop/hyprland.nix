@@ -117,8 +117,8 @@
 						gaps_out = 15;
 						border_size = 5;
 # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-						"col.active_border" = "rgba(${config.stylix.base16Scheme.base05}FF)";
-						"col.inactive_border" = "rgba(595959aa)";
+						"col.active_border" = lib.mkForce "rgba(${config.lib.stylix.colors.base05}FF)";
+						# "col.inactive_border" = "rgba(595959aa)"; # change if stylix messes this up
 # Set to true enable resizing windows by clicking and dragging on borders and gaps
 						resize_on_border = false;
 # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
@@ -139,7 +139,7 @@
 							enabled = true;
 							range = 4;
 							render_power = 3;
-							color = "rgba(1a1a1aee)";
+							# color = "rgba(1a1a1aee)"; # change if stylix messes this up
 						};
 
 # https://wiki.hyprland.org/Configuring/Variables/#blur
@@ -211,7 +211,7 @@
 					misc = {
 						force_default_wallpaper = -1; 
 						disable_hyprland_logo = true;
-						background_color = "rgba(841F17FF)";
+						background_color = lib.mkForce "rgba(841F17FF)";
 					};
 
 
