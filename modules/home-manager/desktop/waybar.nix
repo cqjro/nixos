@@ -234,6 +234,7 @@
 	  format = "{player_icon} {artist} - {title}";
 	  format-paused = "{status_icon} {artist} - {title}";
 	  max-length = 45;
+	  interval = 1;
 	  player-icons = {
 	    default = "";
 	    mpv= "";

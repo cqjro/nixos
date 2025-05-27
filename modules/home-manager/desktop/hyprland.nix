@@ -9,16 +9,15 @@
 			rofi-power-menu
 			rofi-network-manager
 			rofi-bluetooth
+			hypridle
+			hyprlock
 
 			# Config Dependencies
 			ags
 			wireplumber
-			libgtop
-			dart-sass
 			wl-clipboard
 			wl-clip-persist
 			upower
-			gvfs
 			power-profiles-daemon
 			grimblast # screen shots
 			hyprpicker # colour picker
