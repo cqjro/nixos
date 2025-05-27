@@ -27,6 +27,7 @@
     ../../modules/home-manager/desktop/rofi.nix
     ../../modules/home-manager/terminal/btop.nix
     ../../modules/home-manager/terminal/yazi.nix
+    ../../modules/home-manager/terminal/starship.nix
   ];
 
   # move this to a sepreate file later
@@ -62,6 +63,7 @@
 
     #cli tools
     neofetch # displays setup specs
+    nitch # display setup specs
     btop # activity monitor
     git
     zsh # shell
@@ -76,6 +78,8 @@
     fselect # use sql queries to look for files
     ncspot # terminal spotify client (uses less ram)
     zathura # pdf viewer
+    starship # shell prompt (supports multiple shells)
+
 
     # terminals
     ghostty 
