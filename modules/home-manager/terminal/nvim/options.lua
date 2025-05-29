@@ -1,7 +1,7 @@
 
 -- general
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
 
 -- indentation
 vim.o.tabstop = 2
