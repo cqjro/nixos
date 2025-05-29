@@ -139,6 +139,9 @@
 
     # terminals
     kitty # default terminal for hyprland
+
+    #t2 stuff
+    tiny-dfr # for macbook touchbar
   ];
 
 
