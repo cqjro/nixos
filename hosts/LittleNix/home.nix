@@ -18,6 +18,7 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
 
+  #TODO group these togeher with default import files like in example configs
   imports = [
     ../../modules/home-manager/desktop/hyprland.nix
     ../../modules/home-manager/desktop/waybar.nix
@@ -28,6 +29,7 @@
     ../../modules/home-manager/terminal/btop.nix
     ../../modules/home-manager/terminal/yazi.nix
     ../../modules/home-manager/terminal/starship.nix
+    ../../modules/home-manager/terminal/nvim/neovim.nix
   ];
 
   # move this to a sepreate file later
@@ -58,7 +60,7 @@
 
   home.packages = with pkgs; [
     # editors
-    neovim
+    # neovim
     vscode
 
     #cli tools
