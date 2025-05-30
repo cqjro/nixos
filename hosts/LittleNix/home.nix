@@ -31,6 +31,7 @@
     ../../modules/home-manager/terminal/starship.nix
     ../../modules/home-manager/terminal/nvim/neovim.nix
     ../../modules/home-manager/terminal/bat.nix
+		../../modules/home-manager/apps/vesktop.nix
   ];
 
 	# get rid of mismatch version error on rebuild	
