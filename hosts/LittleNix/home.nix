@@ -30,7 +30,11 @@
     ../../modules/home-manager/terminal/yazi.nix
     ../../modules/home-manager/terminal/starship.nix
     ../../modules/home-manager/terminal/nvim/neovim.nix
+    ../../modules/home-manager/terminal/bat.nix
   ];
+
+	# get rid of mismatch version error on rebuild	
+  stylix.enableReleaseChecks = false;
 
   # move this to a sepreate file later
   programs.zsh = {
