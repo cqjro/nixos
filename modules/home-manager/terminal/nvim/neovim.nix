@@ -88,6 +88,11 @@
 					plugin = obsidian-nvim;
 					# config = toLuaFile ./plugins/obsidian.lua
 				}
+
+				{
+					plugin = lualine-nvim;
+					config = toLuaFile ./plugins/lualine.lua;
+				}
 			];
 		};
 }
