@@ -31,12 +31,14 @@
 			# utils
 			networkmanagerapplet
 			blueman
-    			playerctl
-   			brightnessctl
-   			bluez
+    	playerctl
+   	  brightnessctl
+   		bluez
+
 	];
 			wayland.windowManager.hyprland = {
 				enable = true;
+				systemd.enable = true;
 				settings = {
 
 ################

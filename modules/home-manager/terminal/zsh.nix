@@ -1,19 +1,21 @@
-{ pkgs, lib, config, ... }: {
-  options = {
-    zsh.enable = 
-      lib.mkEnableOption "enable zsh";
-  };
+{pkgs, lib, config, inputs, ...}:
+{
+	programs.zsh = {
+		enable = true;
+		enableCompletion = true;
+		autosuggestion.enable = true;
+		syntaxHighlighting.enable = true;
 
-  config = lib.mkIf config.zsh.enable {
-    programs.zsh = {
-      enable = true;
-      enableCompletion = true;
-      autosuggestions.enable = true;
-      sytanxHighlighting.enable = true;
+		shellAliases = {
+			ll = "eza -l --header";
+			llt = "eza -l --tree --header";
+			cd = "z";
+		};
 
-      shellAliases = {
-        ll = "ls -l";
-      };
-    };
-  };
+		profileExtra = ''
+			if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+  			exec Hyprland
+			fi
+		'';
+	};
 }

@@ -31,37 +31,14 @@
     ../../modules/home-manager/terminal/starship.nix
     ../../modules/home-manager/terminal/nvim/neovim.nix
     ../../modules/home-manager/terminal/bat.nix
+    ../../modules/home-manager/terminal/zsh.nix
+    ../../modules/home-manager/terminal/zoxide.nix
+    ../../modules/home-manager/terminal/git.nix
 		../../modules/home-manager/apps/vesktop.nix
   ];
 
 	# get rid of mismatch version error on rebuild	
   stylix.enableReleaseChecks = false;
-
-  # move this to a sepreate file later
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-
-    shellAliases = {
-      ll = "eza -l --header";
-      llt = "eza -l --tree --header";
-      cd = "z";
-    };
-  };
-
-  programs.zoxide = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-
-  # move this to a seperate file later
-  programs.git = {
-    enable = true;
-    userName  = "cqjro";
-    userEmail = "cairo.cristante@gmail.com";
-  };
 
   home.packages = with pkgs; [
     # editors
