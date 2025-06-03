@@ -34,7 +34,7 @@
     ../../modules/home-manager/terminal/zsh.nix
     ../../modules/home-manager/terminal/zoxide.nix
     ../../modules/home-manager/terminal/git.nix
-		../../modules/home-manager/apps/vesktop.nix
+		../../modules/home-manager/apps/discord/nixcord.nix
   ];
 
 	# get rid of mismatch version error on rebuild	
@@ -69,8 +69,8 @@
     ghostty 
 
     # main apps
-    discord
-    vesktop # alternative discord client
+		# discord
+    # vesktop # alternative discord client
     inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
     obsidian
     spotify
