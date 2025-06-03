@@ -40,6 +40,11 @@
     };
 
     nix-colors.url = "github:misterio77/nix-colors"; # remove this when stylix is configured
+
+		nixcord = {
+			url = "github:kaylorben/nixcord";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
   };
 
   outputs = {nixpkgs, nixos-hardware, home-manager, stylix, ...}@inputs:
