@@ -57,7 +57,7 @@ SOFTWARE. */
 .theme-darker,
 .theme-midnight,
 .visual-refresh {
-	--activity-card-background: var(--base00) !important;
+	--activity-card-background: var(--base01) !important;
   --background-accent: var(--base03) !important;
   --background-floating: var(--base01) !important;
   --background-mentioned-hover: var(--base0A) !important;
@@ -71,17 +71,18 @@ SOFTWARE. */
   --background-primary: var(--base00) !important;
   --background-secondary-alt: var(--base00) !important;
   --background-secondary: var(--base00) !important;
-  --background-surface-highest: var(--base01) !important;
-  --background-surface-higher: var(--base01) !important;
-  --background-surface-high: var(--base01) !important;
+  --background-surface-highest: var(--base00) !important;
+  --background-surface-higher: var(--base00) !important;
+  --background-surface-high: var(--base00) !important;
   --background-tertiary: var(--base00) !important;
-  --background-base-low: var(--base01) !important;
+  --background-base-low: var(--base0o) !important;
   --background-base-lower: var(--base00) !important;
   --background-base-lowest: var(--base00) !important;
   --background-base-tertiary: var(--base00) !important;
   --background-code: var(--base00) !important;
   --background-mod-subtle: var(--base02) !important;
-  --bg-base-secondary: var(--base00) !important;
+	--bg-base-primary: var(--base00) !important;
+	--bg-base-secondary: var(--base00) !important;
   --bg-base-tertiary: var(--base00) !important;
   --bg-brand: var(--base03) !important;
   --bg-mod-faint: var(--base01) !important;
@@ -92,7 +93,7 @@ SOFTWARE. */
 	--bg-surface-overlay: var(--base00) !important;
 	--black: var(--base00) !important;
 	--blurple-50: var(--base0B) !important;
-	--border-faint: var(--base02) !important;
+	--border-faint: var(--base01) !important;
 	--brand-05a: var(--base01) !important;
 	--brand-10a: var(--base01) !important;
 	--brand-15a: var(--base01) !important;
@@ -155,7 +156,7 @@ SOFTWARE. */
 	--primary-300: var(--base05) !important;
 	--primary-500: var(--base02) !important;
 	--primary-600: var(--base00) !important;
-	--primary-630: var(--base01) !important;
+	--primary-630: var(--base00) !important;
 	--primary-660: var(--base00) !important;
 	--primary-800: var(--base00) !important;
 	--red-400: var(--base08) !important;
@@ -227,13 +228,14 @@ svg[class^="closeIcon__"] path {
 
 /*--- Activity Card Background Recolor ---*/
 .card__73069 {
-	background-color: var(--base01);
+	background-color: var(--base00);
 }
 
 div[class^="bar__"] {
-	background-color: var(--base01) !important;
-	border-color: var(--base02) !important;
+	background-color: var(--base00) !important;
+	border-color: var(--base01) !important;
 }
+
 /*--- Voice Bar Text Recolor ---*/
 .barText__7aaec {
 	color: var(--base0B) !important;
@@ -357,7 +359,7 @@ svg.guildBoostBadge__5dba5 path {
 
 /*--- Store Gradient Recolors ---*/
 .gradient_e9ef78 {
-	background: var(--base01) !important;
+	background: var(--base00) !important;
 }
 .bannerGradient__955a3 {
 	background: var(--base00) !important;
@@ -418,36 +420,51 @@ svg.guildBoostBadge__5dba5 path {
 	div[class^="autocomplete__"] {
 		background-color: var(--base02) !important;
 	}
+
 	path[fill^="rgba(88, 101, 242, 1)"] {
 		fill: var(--base0B) !important;
 	}
+
 	div[class^="topicsPillContainer"] {
 		--bg-overlay-2: var(--base02) !important;
 	}
+
 	.bg__960e4 {
 		background: var(--base00) !important;
 	}
+
 	.wrapper_ef3116 {
 		background-color: var(--base00) !important;
 	}
+
 	.sidebar_c48ade {
 		background-color: var(--base00) !important;
 	}
+
 	.searchBar__97492 {
-		background-color: var(--base02) !important;
-	}
-	.channelTextArea_f75fb0 {
-		background: var(--base02) !important;
-	}
-	.chatContent_f75fb0 {
 		background-color: var(--base01) !important;
 	}
+
+	.channelTextArea_f75fb0 {
+		background: var(--base00) !important;
+	}
+
+	.chatContent_f75fb0 {
+		background-color: var(--base00) !important;
+	}
+
+	.title_f75fb0 {
+		background-color: var(--base00) !important;
+		border-color: var(--base02) !important;
+	}
+
 	.members_c8ffbb,
 	.member_c8ffbb {
 		background: var(--base00) !important;
 	}
-	.voiceBar__7aaec {
-		background-color: var(--base02) !important;
+	.voiceBar__7aaec, 
+	.panels_c48ade {
+		background-color: var(--base00) !important;
 	}
 	button.button__67645.redGlow__67645,
 	span.button__67645.redGlow__67645 {
