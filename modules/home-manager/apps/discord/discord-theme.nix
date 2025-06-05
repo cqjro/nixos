@@ -60,8 +60,8 @@ SOFTWARE. */
 	--activity-card-background: var(--base01) !important;
   --background-accent: var(--base03) !important;
   --background-floating: var(--base01) !important;
-  --background-mentioned-hover: var(--base0A) !important;
-  --background-mentioned: var(--base09) !important;
+  --background-mentioned-hover: rgba(var(--base0A), 0.8) !important;
+  --background-mentioned: rgba(var(--base09), 0.8) !important;
   --background-message-highlight: var(--base02) !important;
   --background-message-hover: var(--base02) !important;
   --background-modifier-accent: var(--base01) !important;
@@ -116,9 +116,9 @@ SOFTWARE. */
 	--card-primary-bg: var(--base02) !important;
 	--channel-icon: var(--base04) !important;
 	--channels-default: var(--base04) !important;
-	--channel-text-area-placeholder: var(--base00) !important;
+	--channel-text-area-placeholder: var(--base02) !important;
 	--channeltextarea-background: var(--base00) !important;
-	--chat-background-default: var(--base01) !important;
+	--chat-background-default: var(--base00) !important;
 	--checkbox-background-checked: var(--base0D) !important;
 	--checkbox-border-checked: var(--base0D) !important;
 	--checkbox-background-default: var(--base02) !important;
@@ -453,9 +453,16 @@ svg.guildBoostBadge__5dba5 path {
 		background-color: var(--base00) !important;
 	}
 
-	.title_f75fb0 {
+	/* channel title bar and nav bar */
+	.title_f75fb0, 
+	.container__9293f{
 		background-color: var(--base00) !important;
-		border-color: var(--base02) !important;
+		border-color: var(--base03) !important;
+	}
+
+	/* activity bar for friends */
+	.nowPlayingColumn_133bf {	
+		background-color: var(--base00) !important;
 	}
 
 	.members_c8ffbb,
@@ -465,6 +472,7 @@ svg.guildBoostBadge__5dba5 path {
 	.voiceBar__7aaec, 
 	.panels_c48ade {
 		background-color: var(--base00) !important;
+		border-color: var(--base03) !important;
 	}
 	button.button__67645.redGlow__67645,
 	span.button__67645.redGlow__67645 {
