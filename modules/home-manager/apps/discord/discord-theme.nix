@@ -64,7 +64,7 @@ SOFTWARE. */
   --background-mentioned: rgba(var(--base09), 0.8) !important;
   --background-message-highlight: var(--base02) !important;
   --background-message-hover: var(--base02) !important;
-  --background-modifier-accent: var(--base01) !important;
+  --background-modifier-accent: var(--base03) !important; /* change back to 1 if L */
   --background-modifier-active: var(--base02) !important;
   --background-modifier-hover: var(--base02) !important;
   --background-modifier-selected: var(--base08) !important;
@@ -80,7 +80,7 @@ SOFTWARE. */
   --background-base-lowest: var(--base00) !important;
   --background-base-tertiary: var(--base00) !important;
   --background-code: var(--base00) !important;
-  --background-mod-subtle: var(--base02) !important;
+  --background-mod-subtle: var(--base01) !important;
 	--bg-base-primary: var(--base00) !important;
 	--bg-base-secondary: var(--base00) !important;
   --bg-base-tertiary: var(--base00) !important;
@@ -132,7 +132,7 @@ SOFTWARE. */
 	--green-330: var(--base0B) !important;
 	--green-360: var(--base0B) !important;
 	--header-primary: var(--base05) !important;
-	--header-secondary: var(--base00) !important;
+	--header-secondary: var(--base04) !important;
 	--home-background: var(--base00) !important;
 	--info-warning-foreground: var(--base0A) !important;
 	--input-background: var(--base02) !important;
@@ -455,15 +455,22 @@ svg.guildBoostBadge__5dba5 path {
 
 	/* channel title bar and nav bar */
 	.title_f75fb0, 
-	.container__9293f{
+	.container__9293f {
 		background-color: var(--base00) !important;
 		border-color: var(--base03) !important;
 	}
 
 	/* activity bar for friends */
-	.nowPlayingColumn_133bf {	
+	.nowPlayingColumn__133bf,
+	.container__7d20c {	
 		background-color: var(--base00) !important;
 	}
+
+	/* activity bar items border */		
+	.outer_bf1984 {
+		border-color: var(--base03) !important;
+	}
+	/* .body__00943 {	background-color: var(--base02) !important;	} */
 
 	.members_c8ffbb,
 	.member_c8ffbb {
