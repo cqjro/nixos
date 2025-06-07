@@ -21,7 +21,7 @@
 					"hyprland/window"
 				];
 				modules-right = [
-					# "tray"
+					"tray"
 					"cpu"
 					"memory"
 					"disk"

@@ -5,6 +5,7 @@
     rofi = {
       enable = true;
       package = pkgs.rofi-wayland;
+			terminal = "ghostty";
       extraConfig = {
         modi = "drun,filebrowser,run";
         show-icons = true;
