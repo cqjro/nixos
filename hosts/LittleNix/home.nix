@@ -34,8 +34,16 @@
     ../../modules/home-manager/terminal/zsh.nix
     ../../modules/home-manager/terminal/zoxide.nix
     ../../modules/home-manager/terminal/git.nix
+    ../../modules/home-manager/terminal/ncspot.nix
 		../../modules/home-manager/apps/discord/nixcord.nix
   ];
+
+	home.sessionVariables = {
+    EDITOR = "nvim";
+    BROWSER = "zen";
+    TERMINAL = "ghostty";
+  };
+
 
 	# get rid of mismatch version error on rebuild	
   stylix.enableReleaseChecks = false;
@@ -64,20 +72,17 @@
     zathura # pdf viewer
     starship # shell prompt (supports multiple shells)
 
-
     # terminals
     ghostty 
 
     # main apps
-		# discord
-    # vesktop # alternative discord client
     inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
     obsidian
     spotify
     obs-studio
 
     # other
-    font-awesome # used for waybar and other icons ?
+    font-awesome # used for waybar and other icons maybe?
 
   ];
 
@@ -95,26 +100,6 @@
     #   org.gradle.console=verbose
     #   org.gradle.daemon.idletimeout=3600000
     # '';
-  };
-
-  # Home Manager can also manage your environment variables through
-  # 'home.sessionVariables'. These will be explicitly sourced when using a
-  # shell provided by Home Manager. If you don't want to manage your shell
-  # through Home Manager then you have to manually source 'hm-session-vars.sh'
-  # located at either
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  ~/.local/state/nix/profiles/profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  /etc/profiles/per-user/root/etc/profile.d/hm-session-vars.sh
-  #
-  home.sessionVariables = {
-    # EDITOR = "emacs";
   };
 
   # Let Home Manager install and manage itself.
