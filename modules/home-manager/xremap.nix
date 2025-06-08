@@ -21,22 +21,34 @@
 
 			keymap = [
 				{
-					name = "Opening Programs";
+					name = "Program Workflow Remaps";
 					remap = {
-						super-o = {
+						super-t.remap.t.launch = ["ghostty"]; # want to open terminal fast
+						super-o = { # open
 							remap = {
 								z.launch = ["zen"];
 								t.launch = ["ghostty"];
-								# r.launch = ["rofi"];
 								d.launch = ["vesktop"];
 								s.launch = ["ghostty" "-e" "ncspot"];
-								f.launch = ["ghostty" "-e" "yazi"];
+								y.launch = ["ghostty" "-e" "yazi"];
+								b.launch = ["ghostty" "-e" "btop"];
+								e.launch = ["ghostty" "-e" "nvim"];
+								n.launch = ["obsidian"];
 							};
-						};	
+						};
+						super-r = { #rofi
+							remap = {
+								o.launch = ["rofi" "-show" "drun" "-show-icons"]; # open apps	
+								f.launch = ["rofi" "-show" "file-browser-extended" "~/"];
+								c.launch = ["rofi" "-show" "calc" "-modi" "calc" "-no-show-match" "-no-sort" "-calc-command" "'echo -n '{result}' | xclip'"];	
+								n.launch = ["rofi-network-manager"]; # network manager
+								p.launch = ["rofi" "-show" "power-menu" "-modi" "power-menu:rofi-power-menu"]; # power menu
+								b.launch = ["rofi-bluetooth"]; # bluetooth menu
+							};
+						};
 					};
 				}
 			];
-
 		};
 	};
 }

@@ -5,10 +5,10 @@
 
 		# desktop basics
 		waybar # recomended
-		rofi-wayland
-		rofi-power-menu
-		rofi-network-manager
-		rofi-bluetooth
+		# rofi-wayland
+		# rofi-power-menu
+		# rofi-network-manager
+		# rofi-bluetooth
 		hypridle
 		hyprlock
 
@@ -258,7 +258,7 @@
 				"$mainMod, M, exit,"
 				"$mainMod, E, exec, $fileManager"
 				"$mainMod, V, togglefloating,"
-				"$mainMod, R, exec, $menu"
+				# "$mainMod, R, exec, $menu"
 				"$mainMod, P, pseudo,"
 				"$mainMod, J, togglesplit,"
 				"$mainMod, left, movefocus, l"
