@@ -24,7 +24,8 @@ in
 				splashColor = "rgb(186, 194, 222)";
 				splashBackground = "rgb(30, 30, 46)";
 				# arRPC = false;
-				minimizeToTray = false;	
+				minimizeToTray = false;
+  			tray = false;	
 			};
 		};
 		

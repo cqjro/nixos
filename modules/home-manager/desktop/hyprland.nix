@@ -66,7 +66,7 @@
 			# Or execute your favorite apps at launch like this:
 
 			exec-once = [ 
-				"$terminal"
+				# "$terminal"
 				"waybar &"
 				# "zsh ./start.sh"
 			];
@@ -82,6 +82,8 @@
 				# "XCURSOR_SIZE,35"
 				"HYPRCURSOR_SIZE,27"
 				"HYPRCURSOR_THEME,rose-pine-hyprcursor"
+				"ELECTRON_OZONE_PLATFORM_HINT,wayland"
+				"OZONE_PLATFORM_HINT,wayland"
 			];
 
 
