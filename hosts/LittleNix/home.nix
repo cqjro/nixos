@@ -23,6 +23,7 @@
     ../../modules/home-manager/desktop/hyprland.nix
     ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/desktop/dunst.nix
+    ../../modules/home-manager/desktop/xdg-desktop-entries.nix
     ../../modules/home-manager/xremap.nix
     ../../modules/home-manager/terminal/ghostty.nix
     ../../modules/home-manager/desktop/rofi.nix
@@ -42,6 +43,9 @@
     EDITOR = "nvim";
     BROWSER = "zen";
     TERMINAL = "ghostty";
+		NIXOS_OZONE_WL = "1";
+		ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+		OZONE_PLATFORM_HINT = "wayland";
   };
 
 
