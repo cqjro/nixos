@@ -22,7 +22,6 @@ PS3="Please select a host: "
 select dir in "${dir_list[@]}"; do
     if [[ -n "$dir" ]]; then
         echo "You selected: $dir"
-        # You can now use $dir for further processing
         break
     else
         echo "Invalid selection."
@@ -30,7 +29,7 @@ select dir in "${dir_list[@]}"; do
 done
 
 # Early return if no changes were detected (thanks @singiamtel!)
-if git diff --quiet '*.nix'; then
+if git diff --quiet; then
     echo "No changes detected, exiting."
 		popd	
     exit 0
@@ -41,21 +40,34 @@ fi
 #   || ( alejandra . ; echo "formatting failed!" && exit 1)
 
 # Shows your changes
-git diff -U0 '*.nix'
+git diff -U0
+
+read -p "Please provide a commit message: " message
+
+# echo $message
 
 echo "About to rebuild NixOS for host: $dir"
 
-# Rebuild, output simplified errors, log trackebacks
-sudo nixos-rebuild switch --flake ".#$dir" &>nixos-switch.log || (cat nixos-switch.log | grep --color error && exit 1)
+while true; do
+    read -p "Do you want to proceed? (y/n) " yn
+    case $yn in
+        [Yy]* ) echo "Proceeding..."; break;; # User entered 'y' or 'Y'
+        [Nn]* ) echo "Exiting..."; exit;;     # User entered 'n' or 'N', script exits
+        * ) echo "Invalid response. Please answer y or n.";; # Invalid input, prompt again
+    esac
+done
 
 echo "NixOS Rebuilding..."
+
+# Rebuild, output simplified errors, log trackebacks
+sudo nixos-rebuild switch --flake ".#$dir" &>nixos-switch.log || (cat nixos-switch.log | grep --color error && exit 1)
 
 # Get current generation metadata
 current=$(nixos-rebuild list-generations | grep current)
 
 # Commit all changes witih the generation metadata
 git add --all
-git commit -am "$current"
+git commit -am "$dir: $current || $message"
 
 # Notify all OK!
 echo "NixOS Rebuilt OK!"
