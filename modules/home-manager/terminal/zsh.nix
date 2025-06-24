@@ -10,6 +10,7 @@
 			ll = "eza -l --header";
 			llt = "eza -l --tree --header";
 			cd = "z";
+			rebuild = "bash ~/.nixos/rebuild.sh";
 		};
 
 		profileExtra = ''
