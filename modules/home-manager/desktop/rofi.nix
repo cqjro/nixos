@@ -40,9 +40,9 @@
 							bg = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base00}");
 							bg-alt = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base09}");
 							foreground = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base01}");
-							selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base08}");
+							selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
 							active = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0B}");
-							text-selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
+							text-selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base00}");
 							text-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
 							border-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
 							urgent = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0E}");
