@@ -71,6 +71,7 @@
     ncspot # terminal spotify client (uses less ram)
     zathura # pdf viewer
     starship # shell prompt (supports multiple shells)
+		delta # better syntax highlighting for git diff
 
     # terminals
     ghostty 

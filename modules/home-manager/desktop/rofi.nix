@@ -44,7 +44,7 @@
 							active = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0B}");
 							text-selected = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base00}");
 							text-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
-							border-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0F}");
+							border-color = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base05}");
 							urgent = lib.mkForce (mkLiteral "#${config.lib.stylix.colors.base0E}");
 						};
 						"window" = {
