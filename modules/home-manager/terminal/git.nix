@@ -16,6 +16,9 @@
 
 			delta = {
 				navigate = true; # use n and N to move between sections
+				line-numbers = true;
+				hyprlinks = true;
+				side-by-side = true;
 			};
 
 			merge = {
