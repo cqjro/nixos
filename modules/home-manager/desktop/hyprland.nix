@@ -5,10 +5,6 @@
 
 		# desktop basics
 		waybar # recomended
-		# rofi-wayland
-		# rofi-power-menu
-		# rofi-network-manager
-		# rofi-bluetooth
 		hypridle
 		hyprlock
 
@@ -79,11 +75,14 @@
 			# See https://wiki.hyprland.org/Configuring/Environment-variables/
 
 			env = [ 
-				# "XCURSOR_SIZE,35"
+				"XCURSOR_SIZE,27"
 				"HYPRCURSOR_SIZE,27"
 				"HYPRCURSOR_THEME,rose-pine-hyprcursor"
 				"ELECTRON_OZONE_PLATFORM_HINT,wayland"
 				"OZONE_PLATFORM_HINT,wayland"
+				"XDG_SESSION_TYPE,wayland"
+				"XDG_CURRENT_DESKTOP,Hyprland"
+				"XDG_SESSION_DESKTOP,Hyprland"
 			];
 
 
