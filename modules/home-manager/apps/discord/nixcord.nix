@@ -18,7 +18,7 @@ in
 		vesktop = {
 			enable = true;
 			settings = {
-				# discordBranch = "canary";
+				discordBranch = "canary";
 				staticTitle = false;
 				splashTheming = true;
 				# splashColor = "rgb(186, 194, 222)";
