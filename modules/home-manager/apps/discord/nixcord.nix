@@ -14,16 +14,16 @@ in
 
 	programs.nixcord = {
 		enable = true;
-		discord.enable = false;
+		discord.enable = true;
 		vesktop = {
 			enable = true;
 			settings = {
 				# discordBranch = "canary";
 				staticTitle = false;
 				splashTheming = true;
-				splashColor = "rgb(186, 194, 222)";
-				splashBackground = "rgb(30, 30, 46)";
-				# arRPC = false;
+				# splashColor = "rgb(186, 194, 222)";
+				# splashBackground = "rgb(30, 30, 46)";
+				arRPC = false;
 				minimizeToTray = false;
   			tray = false;	
 			};
