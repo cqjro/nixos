@@ -59,6 +59,8 @@ done
 
 echo "NixOS Rebuilding..."
 
+git add --all # to ensure there isnt issues during build
+
 # Rebuild, output simplified errors, log trackebacks
 sudo nixos-rebuild switch --flake ".#$dir" &>nixos-switch.log || (cat nixos-switch.log | grep --color error && exit 1)
 
@@ -66,8 +68,7 @@ sudo nixos-rebuild switch --flake ".#$dir" &>nixos-switch.log || (cat nixos-swit
 current=$(nixos-rebuild list-generations | grep current)
 
 # Commit all changes witih the generation metadata
-git add --all
-git commit -am "$dir: $current || $message"
+git commit -m "$dir: $current || $message"
 
 # Notify all OK!
 echo "NixOS Rebuilt OK!"

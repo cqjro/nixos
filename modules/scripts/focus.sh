@@ -13,7 +13,8 @@ echo $running
 if [[ $running != "" ]]
 then
 	echo "focus"
-	hyprctl dispatch workspace $running    
+	# hyprctl dispatch workspace $running # this works
+	hyprctl dispatch focuswindow class:$className
 else 
 	echo "start"
 	hyprctl dispatch workspace $workspaceOnStart 
