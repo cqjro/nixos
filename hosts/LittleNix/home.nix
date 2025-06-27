@@ -21,7 +21,7 @@
     ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/desktop/dunst.nix
     ../../modules/home-manager/desktop/xdg-desktop-entries.nix
-    ../../modules/home-manager/xremap.nix
+    ../../modules/home-manager/keyboard/xremap.nix
     ../../modules/home-manager/terminal/ghostty.nix
     ../../modules/home-manager/desktop/rofi.nix
     ../../modules/home-manager/terminal/btop.nix
@@ -72,6 +72,7 @@
     zathura # pdf viewer
     starship # shell prompt (supports multiple shells)
 		delta # better syntax highlighting for git diff
+		jq # json command line processor
 
     # terminals
     ghostty 
