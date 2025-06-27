@@ -10,7 +10,7 @@
 
 		# Config Dependencies
 		ags
-		wireplumber
+		# wireplumber
 		wl-clipboard
 		wl-clip-persist
 		upower
@@ -80,9 +80,9 @@
 				"HYPRCURSOR_THEME,rose-pine-hyprcursor"
 				"ELECTRON_OZONE_PLATFORM_HINT,wayland"
 				"OZONE_PLATFORM_HINT,wayland"
-				"XDG_SESSION_TYPE,wayland"
-				"XDG_CURRENT_DESKTOP,Hyprland"
-				"XDG_SESSION_DESKTOP,Hyprland"
+				# "XDG_SESSION_TYPE,wayland"
+				# "XDG_CURRENT_DESKTOP,Hyprland"
+				# "XDG_SESSION_DESKTOP,Hyprland"
 			];
 
 

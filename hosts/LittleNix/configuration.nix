@@ -99,10 +99,14 @@
 	# Enable sound.
 	# services.pulseaudio.enable = true;
 	# OR
-	# services.pipewire = {
-	#   enable = true;
-	#   pulse.enable = true;
-	# };
+	services.pipewire = {
+	  enable = true;
+	  pulse.enable = true;
+		audio.enable = true;
+		wireplumber.enable = true;
+	};
+
+	services.dbus.enable = true;
 
 	# Enable touchpad support (enabled default in most desktopManager).
 	# services.libinput.enable = true;
@@ -145,6 +149,8 @@
 
 		#t2 stuff
 		tiny-dfr # for macbook touchbar
+
+		wireplumber
 	];
 
 
