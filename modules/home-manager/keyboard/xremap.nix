@@ -32,8 +32,9 @@
 								d.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "vesktop --ozone-platform-hint=wayland" "vesktop" "3"];
 								# s.launch = ["ghostty" "-e" "ncspot"];
 								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "4"];
-								y.launch = ["ghostty" "-e" "yazi"];
-								b.launch = ["ghostty" "-e" "btop"];
+								# y.launch = ["ghostty" "-e" "yazi"];
+								y.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e yazi" "yazi" "1"];
+								b.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e btop" "" "6"];
 								e.launch = ["ghostty" "-e" "nvim"];
 								n.launch = ["obsidian"];
 							};
