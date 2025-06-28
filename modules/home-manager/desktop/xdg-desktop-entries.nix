@@ -4,7 +4,7 @@
 		vesktop = {	
 			name="Vesktop";
 			categories =["Network" "InstantMessaging" "Chat"];
-			exec ="vesktop --ozone-platform-hint=wayland %U";
+			exec ="vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland %U";
 			genericName="Internet Messenger";
 			icon ="vesktop";
 			# keywords = ["discord" "vencord" "electron" "chat"];
