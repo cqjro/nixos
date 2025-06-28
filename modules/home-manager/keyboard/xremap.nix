@@ -26,11 +26,12 @@
 						super-t.remap.t.launch = ["ghostty"]; # want to open terminal fast
 						super-o = { # open
 							remap = {
-								z.launch = ["bash" "~/.nixos/modules/scripts/focus.sh" "zen" "zen-beta" "2"];
-								t.launch = ["ghostty"];
+								z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-initialtitle.sh" "zen" "Zen Browser" "2"];
+								t.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "ghostty" "com.mitchellh.ghostty" "1"];
 								# d.launch = ["vesktop"];
-								d.launch = ["bash" "~/.nixos/modules/scripts/focus.sh" "vesktop --ozone-platform-hint=wayland" "vesktop" "3"];
-								s.launch = ["ghostty" "-e" "ncspot"];
+								d.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "vesktop --ozone-platform-hint=wayland" "vesktop" "3"];
+								# s.launch = ["ghostty" "-e" "ncspot"];
+								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "4"];
 								y.launch = ["ghostty" "-e" "yazi"];
 								b.launch = ["ghostty" "-e" "btop"];
 								e.launch = ["ghostty" "-e" "nvim"];
