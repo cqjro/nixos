@@ -51,11 +51,16 @@
   stylix.enableReleaseChecks = false;
 
   home.packages = with pkgs; [
-    # editors
-    # neovim
+		# editors
     vscode
 
-    #cli tools
+		# languages
+		typescript
+		go
+		miktex
+		typst
+
+    # cli tools
     neofetch # displays setup specs
     nitch # display setup specs
     btop # activity monitor
@@ -74,7 +79,7 @@
     zathura # pdf viewer
     starship # shell prompt (supports multiple shells)
 		delta # better syntax highlighting for git diff
-		jq # json command line processor
+		jq # json command line processor	
 
     # terminals
     ghostty 

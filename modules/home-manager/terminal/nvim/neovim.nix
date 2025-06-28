@@ -16,17 +16,27 @@
 			# packages required by neovim
 			extraPackages = with pkgs; [
 				# language servers, etc here
+				lua-language-server
+				pyright
+				nixd
+				rust-analyzer
+				gopls
+				texlab
+				typescript-language-server
 			];
 
 			plugins = with pkgs.vimPlugins; [ 
 
 				# Fake Vim Plugin - to load options before other plugins?
 				# https://discourse.nixos.org/t/specify-the-order-in-which-lua-files-are-evaluated-when-configuring-neovim/48113
-        { plugin = fakeVimPlugin; config = toLuaFile ./options.lua; }
+        {
+					plugin = fakeVimPlugin; 
+					config = toLuaFile ./options.lua; 
+				}
 
 				{
 					plugin = nvim-lspconfig;
-					config = toLuaFile ./plugins/lsp.lua;
+					config = toLuaFile ./lsp/lsp.lua;
 				}
 
 				{
