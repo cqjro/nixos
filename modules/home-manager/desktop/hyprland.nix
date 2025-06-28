@@ -10,7 +10,8 @@
 
 		# Config Dependencies
 		ags
-		# wireplumber
+	  grim
+		slurp
 		wl-clipboard
 		wl-clip-persist
 		upower
@@ -65,6 +66,7 @@
 				# "$terminal"
 				"waybar &"
 				# "zsh ./start.sh"
+				"dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
 			];
 
 
