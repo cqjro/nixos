@@ -84,7 +84,7 @@
     obsidian
     spotify
     obs-studio
-		chromium # testing out chrome flags
+		firefox # backup browser
 
     # other
     font-awesome # used for waybar and other icons maybe?
@@ -98,7 +98,7 @@
   };
 
 	home.sessionPath = [ 
-		"$HOME/.nixos"
+		"/homes/cairo/.nixos"
 	];
 
   # Let Home Manager install and manage itself.

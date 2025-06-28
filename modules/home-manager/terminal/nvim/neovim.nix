@@ -8,7 +8,6 @@
 		in
 			{
 			enable = true;
-
 			defaultEditor = true;
 			viAlias = true;
 			vimAlias = true;
@@ -54,6 +53,9 @@
 						p.tree-sitter-rust
 						p.tree-sitter-javascript
 						p.tree-sitter-typescript
+						p.tree-sitter-go
+						p.tree-sitter-latex
+						p.tree-sitter-typst
 					]));
 					config = toLuaFile ./plugins/treesitter.lua;
 				}
@@ -69,6 +71,7 @@
 					plugin = telescope-nvim;
 					config = toLuaFile ./plugins/telescope.lua;
 				}
+				
 				telescope-fzf-native-nvim
 
 				# Harpoon
