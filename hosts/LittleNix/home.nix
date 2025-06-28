@@ -84,6 +84,7 @@
     obsidian
     spotify
     obs-studio
+		ungoogled-chromium # testing out chrome flags
 
     # other
     font-awesome # used for waybar and other icons maybe?
