@@ -338,7 +338,7 @@
 				"float, title:^(Picture-in-Picture)$"
 				"pin, title:^(Picture-in-Picture)$"
    			"size 690 396, title:^(Picture-in-Picture)$"
-   			"move exact 1388 72, title:^(Picture-in-Picture)$"
+   			"move 1338 72, title:^(Picture-in-Picture)$"
    			"suppressevent maximize, title:^(Picture-in-Picture)$"
    			"suppressevent fullscreen, title:^(Picture-in-Picture)$"
 			];
