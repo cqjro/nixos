@@ -13,10 +13,10 @@
 			rebuild = "bash ~/.nixos/rebuild.sh";
 		};
 
-		profileExtra = ''
-			if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
-  			exec Hyprland
-			fi
-		'';
+		# profileExtra = ''
+		# 	if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+  # 			exec Hyprland
+		# 	fi
+		# '';
 	};
 }
