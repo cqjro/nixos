@@ -334,16 +334,14 @@
 				"nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
 
 				# Picture-in-Picture Window Rules
+				# TODO - add keybinds to move pnp bewteen the four corners of the screen
 				"float, title:^(Picture-in-Picture)$"
 				"pin, title:^(Picture-in-Picture)$"
-   			"size 690 396, title:^(Picture-in-Picture)$"
-   			"move 1388 72, title:^(Picture-in-Picture)$"
+   			"resizewindowpixel 690 396, title:^(Picture-in-Picture)$"
+   			"movewindowpixel exact 1388 72, title:^(Picture-in-Picture)$"
    			"suppressevent maximize, title:^(Picture-in-Picture)$"
    			"suppressevent fullscreen, title:^(Picture-in-Picture)$"
 			];
-
-
-
 		};
 	};
 }
