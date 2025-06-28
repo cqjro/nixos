@@ -336,8 +336,8 @@
 				# Picture-in-Picture Window Rules
 				"float, title:^(Picture-in-Picture)$"
 				"pin, title:^(Picture-in-Picture)$"
-   			"size 400 225, title:^(Picture-in-Picture)$"
-   			"move 1508 65, title:^(Picture-in-Picture)$"
+   			"size 690 396, title:^(Picture-in-Picture)$"
+   			"move 1388 72, title:^(Picture-in-Picture)$"
    			"suppressevent maximize, title:^(Picture-in-Picture)$"
    			"suppressevent fullscreen, title:^(Picture-in-Picture)$"
 			];
