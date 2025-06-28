@@ -332,12 +332,14 @@
 			windowrule = [ 
 				"suppressevent maximize, class:.*"
 				"nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+
+				# Picture-in-Picture Window Rules
 				"float, title:^(Picture-in-Picture)$"
-				"pin, title:(Picture-in-Picture)"
-   			"size 400 225, title:(Picture-in-Picture)"
-   			"move 1508 65, title:(Picture-in-Picture)"
-   			"nofullscreenrequest, title:(Picture-in-Picture)"
-   			"nomaximizerequest, title:(Picture-in-Picture)"
+				"pin, title:^(Picture-in-Picture)$"
+   			"size 400 225, title:^(Picture-in-Picture)$"
+   			"move 1508 65, title:^(Picture-in-Picture)$"
+   			"suppressevent maximize, title:^(Picture-in-Picture)$"
+   			"suppressevent fullscreen, title:^(Picture-in-Picture)$"
 			];
 
 
