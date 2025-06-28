@@ -18,28 +18,22 @@
 				# language servers, etc here
 			];
 
-			# extraLuaConfig = ''
-				# ${builtins.readFile ./options.lua}
-			# '';
-
 			plugins = with pkgs.vimPlugins; [ 
 
 				# Fake Vim Plugin - to load options before other plugins?
+				# https://discourse.nixos.org/t/specify-the-order-in-which-lua-files-are-evaluated-when-configuring-neovim/48113
         { plugin = fakeVimPlugin; config = toLuaFile ./options.lua; }
 
-				# LSP - Language Server Protocol
 				{
 					plugin = nvim-lspconfig;
 					# config = toLuaFile ./plugins/lsp.lua
 				}
 
-				# Cmp - Completion
 				{
 					plugin = nvim-cmp;
 					# config = toLuaFile ./plugins/cmp.lua
 				}
 
-				# Tree Sitter
 				{
 					plugin = (nvim-treesitter.withPlugins (p: [
 						p.tree-sitter-nix
@@ -60,33 +54,28 @@
 					config = toLuaFile ./plugins/treesitter.lua;
 				}
 
-				# Comment Nvim
 				{
 					plugin = comment-nvim;
 					config = toLua "require(\"Comment\").setup()";
 				}
 
-				# Telescope
 				{
 					plugin = telescope-nvim;
 					config = toLuaFile ./plugins/telescope.lua;
-				}
-				
+				}	
+
 				telescope-fzf-native-nvim
 
-				# Harpoon
-				{
+				{ 
 					plugin = harpoon2;
 					config = toLuaFile ./plugins/harpoon.lua;
 				}
 
-				# Undotree
-				{
+				{ 
 					plugin = undotree;
 					config = toLuaFile ./plugins/undotree.lua;
 				}
 
-				# Obsidian
 				{
 					plugin = obsidian-nvim;
 					# config = toLuaFile ./plugins/obsidian.lua
@@ -96,6 +85,12 @@
 					plugin = lualine-nvim;
 					config = toLuaFile ./plugins/lualine.lua;
 				}
+
+				{
+					plugin = nvim-highlight-colors;
+					config = toLua "require(\"nvim-highlight-colors\").setup()"; # maybe make a file later if more setup needed
+				}
+
 			];
 		};
 }
