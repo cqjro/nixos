@@ -99,7 +99,7 @@
 				{
 					plugin = nvim-highlight-colors;
 					config = toLua "require(\"nvim-highlight-colors\").setup()"; # maybe make a file later if more setup needed
-				}
+				}	
 
 			];
 		};

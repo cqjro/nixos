@@ -3,9 +3,9 @@ vim.lsp.enable({
     "lua_ls",
 		"nixd",
 		"pyright",
-		"rust-analyzer",
+		"rust_analyzer",
 		"texlab",
-		"ts_lua",
+		"ts_ls",
 })
 
 vim.diagnostic.config({
