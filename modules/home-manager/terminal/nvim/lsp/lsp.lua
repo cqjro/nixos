@@ -8,6 +8,15 @@ vim.lsp.enable({
 		"ts_ls",
 })
 
+-- Importing the configuration files for each lsp
+require("lua_ls.lua")
+require("gopls.lua")
+require("nixd.lua")
+require("pyright.lua")
+require("rust_analyzer.lua")
+require("texlab.lua")
+require("ts_ls.lua")
+
 vim.diagnostic.config({
     virtual_lines = true,
     -- virtual_text = true,
