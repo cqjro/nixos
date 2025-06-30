@@ -36,7 +36,7 @@
 
 				{
 					plugin = nvim-lspconfig;
-					config = toLuaFile ./lsp/lsp.lua;
+					config = toLuaFile ./plugins/lsp.lua;
 				}
 
 				{
@@ -60,6 +60,8 @@
 						p.tree-sitter-go
 						p.tree-sitter-latex
 						p.tree-sitter-typst
+						p.tree-sitter-bash
+						p.tree-sitter-regex
 					]));
 					config = toLuaFile ./plugins/treesitter.lua;
 				}
@@ -104,6 +106,11 @@
 				{
 					plugin = noice-nvim;
 					config = toLuaFile ./plugins/noice.lua;
+				}
+
+				{
+					plugin = nvim-notify;
+					config = toLuaFile ./plugins/nvim-notify.lua;
 				}
 			];
 		};
