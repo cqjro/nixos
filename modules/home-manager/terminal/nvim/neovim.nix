@@ -24,7 +24,7 @@
 				texlab
 				typescript-language-server
 			];
-
+	
 			plugins = with pkgs.vimPlugins; [ 
 
 				# Fake Vim Plugin - to load options before other plugins?
