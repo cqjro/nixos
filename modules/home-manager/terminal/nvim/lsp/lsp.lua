@@ -9,7 +9,7 @@ vim.lsp.enable({
 })
 
 -- Importing the configuration files for each lsp
--- require("lua_ls.lua")
+require("lsp.lua_ls")
 -- require("gopls.lua")
 -- require("nixd.lua")
 -- require("pyright.lua")
