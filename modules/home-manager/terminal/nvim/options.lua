@@ -1,4 +1,3 @@
-
 -- general
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -14,4 +13,7 @@ vim.o.relativenumber = true;
 -- keymaps
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
-
+-- silence depreciation messages
+vim.deprecate = function()
+    -- Do nothing, effectively silencing the deprecation message
+end
