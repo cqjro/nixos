@@ -8,15 +8,6 @@ vim.lsp.enable({
 		"ts_ls",
 })
 
--- Importing the configuration files for each lsp
-require("lsp.lua_ls")
--- require("gopls.lua")
--- require("nixd.lua")
--- require("pyright.lua")
--- require("rust_analyzer.lua")
--- require("texlab.lua")
--- require("ts_ls.lua")
-
 vim.diagnostic.config({
     virtual_lines = true,
     -- virtual_text = true,
@@ -40,3 +31,14 @@ vim.diagnostic.config({
         },
     },
 })
+
+vim.lsp.config('lua_ls', {
+	settings = {
+		Lua = {
+      diagnostics = {
+        globals = { 'vim' },
+      },
+		},
+	},
+})
+
