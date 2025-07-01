@@ -17,7 +17,3 @@ vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 vim.deprecate = function()
     -- Do nothing, effectively silencing the deprecation message
 end
-
--- fixing background on cmp borders
-vim.api.nvim_set_hl(0, "NormalFloat", {fg="#b8b0c6", bg="#191324" })
-
