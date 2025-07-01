@@ -25,9 +25,10 @@
 				typescript-language-server
 			];
 
+			# place lines into this function such that it gets called after everything to avoid race conditions
 			extraLuaConfig = ''
 				vim.defer_fn(function()
-					vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#b8b0c6", bg = "#191324" })
+					vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#b8b0c6", bg = "NONE" })
 				end, 0)
 			'';
 			
