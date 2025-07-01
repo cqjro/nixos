@@ -1,4 +1,5 @@
 local cmp = require('cmp')
+
 cmp.setup({
     snippet = {
       -- REQUIRED - you must specify a snippet engine
@@ -17,7 +18,9 @@ cmp.setup({
       end,
     },
     window = {
-      completion = cmp.config.window.bordered(),
+      completion = cmp.config.window.bordered({
+				border = "double",
+			}),
       documentation = cmp.config.window.bordered(),
     },
     mapping = cmp.mapping.preset.insert({
