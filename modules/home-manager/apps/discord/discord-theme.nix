@@ -60,10 +60,10 @@ SOFTWARE. */
 	--activity-card-background: var(--base01) !important;
   --background-accent: var(--base03) !important;
   --background-floating: var(--base01) !important;
-  --background-mentioned-hover: rgba(240, 156, 94, 0.2) !important;
-  --background-mentioned: rgba(240, 156, 94, 0.5) !important;
+  --background-mentioned-hover: rgba(240, 156, 94, 0.5) !important;
+  --background-mentioned: rgba(240, 156, 94, 0.2) !important;
   --background-message-highlight: var(--base02) !important;
-  --background-message-hover: var(--base02) !important;
+  --background-message-hover: rgba(82, 71, 99, 0.5) !important;
   --background-modifier-accent: var(--base03) !important;
   --background-modifier-active: var(--base02) !important;
   --background-modifier-hover: var(--base02) !important;
