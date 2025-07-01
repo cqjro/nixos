@@ -24,12 +24,20 @@
 				texlab
 				typescript-language-server
 			];
-	
+
+			extraLuaConfig = ''
+			vim.api.nvim_create_autocmd("VimEnter", {
+				callback = function()
+					vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#b8b0c6", bg = "#191324" })
+				end,
+			})
+			'';
+
 			plugins = with pkgs.vimPlugins; [ 
 
 				# Fake Vim Plugin - to load options before other plugins?
 				# https://discourse.nixos.org/t/specify-the-order-in-which-lua-files-are-evaluated-when-configuring-neovim/48113
-        {
+				{
 					plugin = fakeVimPlugin; 
 					config = toLuaFile ./options.lua; 
 				}
@@ -45,7 +53,7 @@
 				}
 				cmp-nvim-lsp
 
-				
+
 				{
 					plugin = luasnip;
 					config = toLuaFile ./plugins/luasnip.lua;
@@ -110,7 +118,7 @@
 					plugin = nvim-highlight-colors;
 					config = toLua "require(\"nvim-highlight-colors\").setup()"; # maybe make a file later if more setup needed
 				}	
-				
+
 				{
 					plugin = noice-nvim;
 					config = toLuaFile ./plugins/noice.lua;
@@ -119,6 +127,11 @@
 				{
 					plugin = nvim-notify;
 					config = toLuaFile ./plugins/nvim-notify.lua;
+				}
+
+				{
+					plugin = mini-base16;
+					config = toLuaFile ./plugins/mini-base16.lua;
 				}
 			];
 		};
