@@ -62,9 +62,9 @@ SOFTWARE. */
   --background-floating: var(--base01) !important;
   --background-mentioned-hover: rgba(var(--base0A), 0.8) !important;
   --background-mentioned: rgba(var(--base09), 0.8) !important;
-  --background-message-highlight: var(--base02) !important;
+  --background-message-highlight: var(--base03) !important;
   --background-message-hover: var(--base02) !important;
-  --background-modifier-accent: var(--base03) !important; /* change back to 1 if L */
+  --background-modifier-accent: var(--base03) !important;
   --background-modifier-active: var(--base02) !important;
   --background-modifier-hover: var(--base02) !important;
   --background-modifier-selected: var(--base08) !important;
@@ -135,7 +135,7 @@ SOFTWARE. */
 	--header-secondary: var(--base04) !important;
 	--home-background: var(--base00) !important;
 	--info-warning-foreground: var(--base0A) !important;
-	--input-background: var(--base02) !important;
+	--input-background: var(--base01) !important;
 	--interactive-active: var(--base05) !important;
 	--interactive-hover: var(--base05) !important;
 	--interactive-muted: var(--base03) !important;
@@ -196,6 +196,7 @@ SOFTWARE. */
 	--text-warning: var(--base09) !important;
 	--textbox-markdown-syntax: var(--base05) !important;
 	--theme-base-color: var(--base00) !important;
+	--user-profile-overlay-background(--base03) !important;
 	--white-100: var(--base05) !important;
 	--white-200: var(--base05) !important;
 	--white-500: var(--base05) !important;
@@ -451,6 +452,10 @@ svg.guildBoostBadge__5dba5 path {
 
 	.chatContent_f75fb0 {
 		background-color: var(--base00) !important;
+	}
+
+	.user-profile-sidebar {
+		background-color: var(--base03) !important;
 	}
 
 	/* channel title bar and nav bar */
