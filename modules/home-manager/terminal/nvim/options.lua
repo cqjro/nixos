@@ -19,5 +19,5 @@ vim.deprecate = function()
 end
 
 -- fixing background on cmp borders
-vim.api.nvim_set_hl(0, "NormalFloat", {bg="#191324", fg="#b8b0c6"})
+vim.api.nvim_set_hl(0, "NormalFloat", {fg="#b8b0c6", bg="#191324" })
 
