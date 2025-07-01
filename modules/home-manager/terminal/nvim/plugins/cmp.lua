@@ -1,8 +1,4 @@
 local cmp = require('cmp')
-
--- fixing background on cmp borders
-vim.api.nvim_set_hl(0, "NormalFloat", {fg="#b8b0c6", bg="#191324" })
-
 cmp.setup({
     snippet = {
       -- REQUIRED - you must specify a snippet engine
