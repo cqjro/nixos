@@ -32,7 +32,11 @@ vim.diagnostic.config({
     },
 })
 
+  -- Set up cmp
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
 vim.lsp.config('lua_ls', {
+	capabilities = capabilities,
 	settings = {
 		Lua = {
       diagnostics = {
@@ -41,4 +45,35 @@ vim.lsp.config('lua_ls', {
 		},
 	},
 })
+
+
+vim.lsp.config('nixd', {
+	capabilities = capabilities,
+})
+
+
+vim.lsp.config('pyright', {
+	capabilities = capabilities,
+})
+
+
+vim.lsp.config('rust_analyzer', {
+	capabilities = capabilities,
+})
+
+
+vim.lsp.config('texlab', {
+	capabilities = capabilities,
+})
+
+
+vim.lsp.config('ts_ls', {
+	capabilities = capabilities,
+})
+
+
+vim.lsp.config('gopls', {
+	capabilities = capabilities,
+})
+
 

@@ -41,7 +41,14 @@
 
 				{
 					plugin = nvim-cmp;
-					# config = toLuaFile ./plugins/cmp.lua
+					config = toLuaFile ./plugins/cmp.lua;
+				}
+				cmp-nvim-lsp
+
+				
+				{
+					plugin = luasnip;
+					config = toLuaFile ./plugins/luasnip.lua;
 				}
 
 				{
@@ -112,12 +119,6 @@
 					plugin = nvim-notify;
 					config = toLuaFile ./plugins/nvim-notify.lua;
 				}
-
-				{
-					plugin = nui-nvim;
-					# config = ;
-				}
-
 			];
 		};
 }
