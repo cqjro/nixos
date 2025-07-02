@@ -128,10 +128,11 @@
 					config = toLuaFile ./plugins/nvim-notify.lua;
 				}
 
-				# {
-				# 	plugin = mini-base16;
-				# 	config = toLuaFile ./plugins/mini-base16.lua;
-				# }
+				{
+					plugin = trouble-nvim;
+					config = toLuaFile ./plugins/trouble.lua;
+				}
+				
 			];
 		};
 }
