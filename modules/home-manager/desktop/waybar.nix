@@ -338,27 +338,7 @@
 
 		#mpris {
 			 border-radius: 10px;
-			 margin-left: 10px;
-			 
-			 \* testing *\
-			 overflow: hidden;
-			 white-space: nowrap;
-		}
-
-		\* also testing *\
-		#mpris > label {
-			display: inline-block;
-			padding-left: 100%;
-			animation: scroll-text 10s linear infinite;
-		}
-
-		@keyframes scroll-text {
-			0% {
-				transform: translateX(0%);
-			}
-			100% {
-				transform: translateX(-100%);
-			}
+			 margin-left: 10px;	
 		}
 
 		#disk {
