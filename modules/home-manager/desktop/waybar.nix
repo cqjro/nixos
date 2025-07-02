@@ -1,5 +1,5 @@
-# Stole this from Simple Hyprland
-{ pkgs, lib, config, inputs, ... }: {
+# https://github.com/gaurav23b/simple-hyprland
+{ config, ... }: {
 	programs.waybar = {
 		enable = true;
 		# style = ./style.css;
@@ -339,6 +339,26 @@
 		#mpris {
 			 border-radius: 10px;
 			 margin-left: 10px;
+			 
+			 \* testing *\
+			 overflow: hidden;
+			 white-space: nowrap;
+		}
+
+		\* also testing *\
+		#mpris > label {
+			display: inline-block;
+			padding-left: 100%;
+			animation: scroll-text 10s linear infinite;
+		}
+
+		@keyframes scroll-text {
+			0% {
+				transform: translateX(0%);
+			}
+			100% {
+				transform: translateX(-100%);
+			}
 		}
 
 		#disk {
