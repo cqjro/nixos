@@ -1,4 +1,5 @@
-{pkgs, lib, config, inputs, ...}:
+# https://github.com/gaurav23b/simple-hyprland
+{lib, config, ...}:
 {
   services.dunst = {
     enable = true;
@@ -29,14 +30,7 @@
         show_indicators = "yes";
         min_icon_size = 0;
         max_icon_size = 64;
-        width = "500";
-      # Not sure what this is used for but I don't have it set up
-      # icon_path = /usr/share/icons/Papirus-Dark/16x16/status/:/usr/share/icons/Papirus-Dark/16x16/devices/:/usr/share/icons/Papirus-Dark/16x16/actions/:/usr/share/icons/Papirus-Dark/16x16/animations/:/usr/share/icons/Papirus-Dark/16x16/apps/:/usr/share/icons/Papirus-Dark/16x16/categories/:/usr/share/icons/Papirus-Dark/16x16/emblems/:/usr/share/icons/Papirus-Dark/16x16/emotes/:/usr/share/icons/Papirus-Dark/16x16/devices/mimetypes:/usr/share/icons/Papirus-Dark/16x16/panel/:/usr/share/icons/Papirus-Dark/16x16/places/
-  
-      # I don't have this setup either, change to rofi and zen-browser 
-      # dmenu = /usr/bin/wofi -p dunst:
-      # browser = /usr/bin/firefox --new-tab
-  
+        width = "500"; 
         title = "Dunst";
         class = "Dunst";
   
