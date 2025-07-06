@@ -2,7 +2,6 @@
 {
 
 	home.packages = with pkgs; [
-
 		# desktop basics
 		waybar # recomended
 		hypridle
@@ -18,8 +17,6 @@
 		power-profiles-daemon
 		grimblast # screen shots
 		hyprpicker # colour picker
-		dunst # waybar dependency
-		libnotify # dunsy dependency
 		hyprcursor # better cursors
 		inputs.rose-pine-hyprcursor.packages.${pkgs.system}.default #cursor theme
 
@@ -29,8 +26,8 @@
 		playerctl
 		brightnessctl
 		bluez
-
 	];
+
 	wayland.windowManager.hyprland = {
 		enable = true;
 		systemd.enable = true;
@@ -41,6 +38,7 @@
 			################
 
 			# See https://wiki.hyprland.org/Configuring/Monitors/
+			# LittleNix Specific
 			monitor = "eDP-1,2560x1600@60,0x0,1.25";
 
 			###################
@@ -256,18 +254,17 @@
 			# Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 
 			bind = [ 
-				# "$mainMod, C, exec, $terminal"
 				"$mainMod, Q, killactive,"
 				"$mainMod, M, exit,"
-				"$mainMod, E, exec, $fileManager"
-				"$mainMod, V, togglefloating,"
-				# "$mainMod, R, exec, $menu"
+				# "$mainMod, V, togglefloating,"
 				"$mainMod, P, pseudo,"
 				"$mainMod, J, togglesplit,"
-				"$mainMod, left, movefocus, l"
-				"$mainMod, right, movefocus, r"
-				"$mainMod, up, movefocus, u"
-				"$mainMod, down, movefocus, d"
+				
+				"$mainMod, H, movefocus, l"
+				"$mainMod, J, movefocus, d"
+				"$mainMod, K, movefocus, u"
+				"$mainMod, L, movefocus, r"
+
 				"$mainMod, 1, workspace, 1"
 				"$mainMod, 2, workspace, 2"
 				"$mainMod, 3, workspace, 3"
@@ -278,6 +275,7 @@
 				"$mainMod, 8, workspace, 8"
 				"$mainMod, 9, workspace, 9"
 				"$mainMod, 0, workspace, 10"
+
 				"$mainMod SHIFT, 1, movetoworkspace, 1"
 				"$mainMod SHIFT, 2, movetoworkspace, 2"
 				"$mainMod SHIFT, 3, movetoworkspace, 3"
@@ -288,8 +286,10 @@
 				"$mainMod SHIFT, 8, movetoworkspace, 8"
 				"$mainMod SHIFT, 9, movetoworkspace, 9"
 				"$mainMod SHIFT, 0, movetoworkspace, 10"
+
 				# "$mainMod, S, togglespecialworkspace, magic"
 				# "$mainMod SHIFT, S, movetoworkspace, special:magic"
+
 				"$mainMod, mouse_down, workspace, e+1"
 				"$mainMod, mouse_up, workspace, e-1"
 			];
@@ -299,6 +299,7 @@
 				"$mainMod, mouse:273, resizewindow"
 			];
 
+			# LittleNix Specific
 			bindel = [ 
 				",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
 				",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"

@@ -13,15 +13,63 @@
 						CapsLock = {
 							held = "Super_L";
 							alone = "esc";
-							alone_timeout_millis = 150;
+							alone_timeout_millis = 800;
 						};
 					};
 				}
+
+				# {
+				# 	name = "Homerow Mods";
+				# 	remap = {
+				# 		a = {
+				# 			held = "Super_L";
+				# 			alone = "a";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		s = {
+				# 			held = "Alt_L";
+				# 			alone = "s";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		d = {
+				# 			held = "Shift_L";
+				# 			alone = "d";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		f = {
+				# 			held = "Control_L";
+				# 			alone = "f";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				#
+				# 		j = {
+				# 			held = "Control_R";
+				# 			alone = "j";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		k = {
+				# 			held = "Shift_R";
+				# 			alone = "k";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		l = {
+				# 			held = "Alt_R";
+				# 			alone = "l";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 		semicolon = {
+				# 			held = "Super_R";
+				# 			alone = "semicolon";
+				# 			alone_timeout_millis = 800;
+				# 		};
+				# 	};
+				# }
 			];
 
 			keymap = [
 				{
 					name = "Program Workflow Remaps";
+					exact_match = true;
 					remap = {
 						super-t.remap.t.launch = ["ghostty"]; # want to open terminal fast
 						super-o = { # focus app and open if not already open.
