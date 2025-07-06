@@ -454,7 +454,8 @@ svg.guildBoostBadge__5dba5 path {
 		background-color: var(--base00) !important;
 	}
 
-	.user-profile-sidebar {
+	.outer_c0bea0 {
+		border-left: 2px;
 		border-color: var(--base03) !important;
 	}
 
