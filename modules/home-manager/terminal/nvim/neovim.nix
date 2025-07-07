@@ -104,7 +104,7 @@
 
 				{
 					plugin = obsidian-nvim;
-					# config = toLuaFile ./plugins/obsidian.lua
+					config = toLuaFile ./plugins/obsidian.lua;
 				}
 				plenary-nvim # just incase because obsidian-nvim has this as a required dependency
 

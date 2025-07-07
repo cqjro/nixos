@@ -7,25 +7,21 @@ require("obsidian").setup({
   -- current markdown file being edited.
   workspaces = {
     {
-      name = "personal",
-      path = "~/vaults/personal", --TODO: update with path to my valut or split up different workspaces for coding/eng notes 
+      name = "cerebrum",
+      path = "~/Documents/cerebrum",
     },
-    {
-      name = "work",
-      path = "~/vaults/work",
-      -- Optional, override certain settings.
-      overrides = {
-        notes_subdir = "notes",
-      },
-    },
+    -- {
+    --   name = "work",
+    --   path = "~/vaults/work",
+    --   -- Optional, override certain settings.
+    --   overrides = {
+    --     notes_subdir = "notes",
+    --   },
+    -- },
   },
 
-  -- Alternatively - and for backwards compatibility - you can set 'dir' to a single path instead of
-  -- 'workspaces'. For example:
-  -- dir = "~/vaults/work",
-
   -- Optional, if you keep notes in a specific subdirectory of your vault.
-  notes_subdir = "notes",
+  notes_subdir = "Notes",
 
   -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
   -- levels defined by "vim.log.levels.*".
@@ -33,7 +29,7 @@ require("obsidian").setup({
 
   daily_notes = {
     -- Optional, if you keep daily notes in a separate directory.
-    folder = "notes/dailies",
+    folder = "Notes/Daily",
     -- Optional, if you want to change the date format for the ID of daily notes.
     date_format = "%Y-%m-%d",
     -- Optional, if you want to change the date format of the default alias of daily notes.
@@ -284,17 +280,17 @@ require("obsidian").setup({
     hl_groups = {
       -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
 			-- TODO: change these colours to my personal theme
-      ObsidianTodo = { bold = true, fg = "#f78c6c" },
-      ObsidianDone = { bold = true, fg = "#89ddff" },
-      ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
-      ObsidianTilde = { bold = true, fg = "#ff5370" },
-      ObsidianImportant = { bold = true, fg = "#d73128" },
-      ObsidianBullet = { bold = true, fg = "#89ddff" },
-      ObsidianRefText = { underline = true, fg = "#c792ea" },
-      ObsidianExtLinkIcon = { fg = "#c792ea" },
-      ObsidianTag = { italic = true, fg = "#89ddff" },
-      ObsidianBlockID = { italic = true, fg = "#89ddff" },
-      ObsidianHighlightText = { bg = "#75662e" },
+      -- ObsidianTodo = { bold = true, fg = "#f78c6c" },
+      -- ObsidianDone = { bold = true, fg = "#89ddff" },
+      -- ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
+      -- ObsidianTilde = { bold = true, fg = "#ff5370" },
+      -- ObsidianImportant = { bold = true, fg = "#d73128" },
+      -- ObsidianBullet = { bold = true, fg = "#89ddff" },
+      -- ObsidianRefText = { underline = true, fg = "#c792ea" },
+      -- ObsidianExtLinkIcon = { fg = "#c792ea" },
+      -- ObsidianTag = { italic = true, fg = "#89ddff" },
+      -- ObsidianBlockID = { italic = true, fg = "#89ddff" },
+      -- ObsidianHighlightText = { bg = "#75662e" },
     },
   },
 
