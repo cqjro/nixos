@@ -80,6 +80,7 @@
     starship # shell prompt (supports multiple shells)
 		delta # better syntax highlighting for git diff
 		jq # json command line processor	
+		neomutt # terminal email client
 
     # terminals
     ghostty 
@@ -90,6 +91,7 @@
     spotify
     obs-studio
 		firefox # backup browser
+		protonmail-desktop
 
     # other
     font-awesome # used for waybar and other icons maybe?
