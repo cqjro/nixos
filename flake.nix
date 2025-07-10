@@ -47,16 +47,9 @@
 		};
 	};
 
-	outputs = {nixpkgs, nixos-hardware, home-manager, stylix, ...}@inputs:
+	outputs = {nixpkgs, nixos-hardware,...}@inputs:
 		let
 			system = "x86_64-linux";
-			pkgs = import nixpkgs {
-				inherit system;
-				config = {
-					allowUnfree = true;
-					allowUnfreePredicate = _: true;
-				};
-			};
 		in { 
 			nixosConfigurations.LittleNix = nixpkgs.lib.nixosSystem {
 				inherit system;
