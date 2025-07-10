@@ -15,6 +15,9 @@ vim.deprecate = function()
     -- Do nothing, effectively silencing the deprecation message
 end
 
+-- Needed for Obsidian UI features
+vim.opt.conceallevel = 1
+
 -- Vim Keybinds
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 

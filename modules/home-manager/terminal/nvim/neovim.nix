@@ -23,6 +23,13 @@
 				gopls
 				texlab
 				typescript-language-server
+
+				# ImageMagick
+				imagemagick
+			];
+
+			extraLuaPackages = ps: [ 
+				ps.magick
 			];
 
 			# place lines into this function such that it gets called after everything to avoid race conditions
@@ -132,6 +139,26 @@
 					plugin = trouble-nvim;
 					config = toLuaFile ./plugins/trouble.lua;
 				}
+
+				# {
+				# 	plugin = image-nvim;
+				# 	config = toLuaFile ./plugins/image.lua;
+				# }
+				
+				{
+					plugin = img-clip-nvim;
+					config = toLuaFile ./plugins/img-clip.lua;
+				}
+
+				{
+					plugin = snacks-nvim;
+					config = toLuaFile ./plugins/snacks.lua;
+				}
+
+				# {
+				# 	plugin = markdown-latex-render-nvim;
+ 			# 		config = toLuaFile ./plugins/markdown-latex-render.lua;
+				# }
 				
 			];
 		};

@@ -28,13 +28,14 @@
 						super-o = { # focus app and open if not already open.
 							remap = {	
 								t.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "ghostty" "com.mitchellh.ghostty" "1"];
-								z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-initialtitle.sh" "zen" "Zen Browser" "2"];
-								v.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland" "vesktop" "3"];
-								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "4"];
-								y.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e yazi" "yazi" "5"];
-								b.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e btop" "" "6"]; # this doesn't have a window name
 								e.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e nvim" "nvim" "1"];
-								n.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "obsidian" "1"];
+								n.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "obsidian" "1"];	
+								z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-initialtitle.sh" "zen" "Zen Browser" "2"];
+								p.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "proton-mail --ozone-platform-hint=wayland" "Proton Mail" "3"];
+								v.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland" "vesktop" "4"];
+								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "5"];
+								y.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e yazi" "yazi" "6"];
+								b.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e btop" "" "7"]; # this doesn't have a window name
 							};
 						};
 						super-r = { #rofi
