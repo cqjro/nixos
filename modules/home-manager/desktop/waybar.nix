@@ -1,5 +1,5 @@
 # https://github.com/gaurav23b/simple-hyprland
-{ config, ... }: {
+{ pkgs, config, ... }: {
 	programs.waybar = {
 		enable = true;
 		# style = ./style.css;
@@ -113,8 +113,9 @@
 
 				"hyprland/window" = {
 					icon = true;
+					icon-theme = pkgs.morewaita-icon-theme;
 					max-length = 45;
-					separate-outputs = false;
+					separate-outputs = true;
 					# rewrite = {
 					# "" = "${username}@${hostname}";
 					# "~" = "${username}@${hostname}";
@@ -358,6 +359,10 @@
 				border-radius: 10px;
 				margin-left: 60px;
 				margin-right: 60px;
+		}
+
+		window#waybar.empty #window {
+    	background-color: transparent;
 		}
 
 		#clock {

@@ -94,6 +94,7 @@
 		firefox # backup browser
 		protonmail-desktop
 		nemo-with-extensions
+		neovide # standalone neovim client
 
     # other
     font-awesome # used for waybar and other icons maybe?

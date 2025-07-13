@@ -30,6 +30,12 @@
 			size = 27;
 		};
 
+		# iconTheme = {
+		# 	enable = true;
+		# 	# name = "Gruvbox-Plus-Dark";
+		# 	package = pkgs.gruvbox-plus-icons;
+		# };
+
 		fonts = {
 			monospace = {
 				package = pkgs.nerd-fonts.jetbrains-mono;
