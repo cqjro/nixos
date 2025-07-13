@@ -91,6 +91,7 @@
 		NIXOS_OZONE_WL = "1";
 		ELECTRON_OZONE_PLATFORM_HINT = "wayland";
 		OZONE_PLATFORM_HINT = "wayland";
+		XCURSOR_SIZE = "27";
 	};
 
 	# Enable CUPS to print documents.
