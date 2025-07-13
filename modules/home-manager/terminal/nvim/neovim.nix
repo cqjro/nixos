@@ -1,5 +1,9 @@
 {pkgs, ...}:
 {
+	programs.neovide = {
+		enable = true;
+	};
+
 	programs.neovim = 
 		let
 			toLua = str: "lua << EOF\n${str}\nEOF\n";
