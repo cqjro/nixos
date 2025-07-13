@@ -1096,22 +1096,6 @@
         "type": "github"
       }
     },
-    "markdown-latex-render-nvim": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1736390059,
-        "narHash": "sha256-66QMvQ4dTf1GYGfScH0AvuvoZdUqOnqDhCYxNPmAC6Q=",
-        "owner": "Prometheus1400",
-        "repo": "markdown-latex-render.nvim",
-        "rev": "eedd9cbdc6e6cd5d6bd34bef1abf6451f97aa908",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Prometheus1400",
-        "repo": "markdown-latex-render.nvim",
-        "type": "github"
-      }
-    },
     "nix-colors": {
       "inputs": {
         "base16-schemes": "base16-schemes",
@@ -1402,7 +1386,6 @@
         "home-manager": "home-manager",
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
-        "markdown-latex-render-nvim": "markdown-latex-render-nvim",
         "nix-colors": "nix-colors",
         "nixcord": "nixcord",
         "nixos-hardware": "nixos-hardware",

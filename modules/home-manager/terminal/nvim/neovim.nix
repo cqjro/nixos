@@ -23,9 +23,12 @@
 				gopls
 				texlab
 				typescript-language-server
-
-				# ImageMagick
+			
+				# other program dependencies
 				imagemagick
+				ghostscript
+				mermaid-cli
+
 			];
 
 			extraLuaPackages = ps: [ 
@@ -83,6 +86,13 @@
 						p.tree-sitter-typst
 						p.tree-sitter-bash
 						p.tree-sitter-regex
+						p.tree-sitter-css
+						p.tree-sitter-html
+						p.tree-sitter-norg
+						p.tree-sitter-scss
+						p.tree-sitter-svelte
+						p.tree-sitter-tsx
+						p.tree-sitter-vue
 					]));
 					config = toLuaFile ./plugins/treesitter.lua;
 				}
