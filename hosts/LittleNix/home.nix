@@ -18,6 +18,7 @@
   #TODO group these togeher with default import files like in example configs
   imports = [
     ../../modules/home-manager/desktop/hyprland.nix
+    ../../modules/home-manager/desktop/gtk.nix
     ../../modules/home-manager/desktop/waybar.nix
     ../../modules/home-manager/desktop/dunst.nix
     ../../modules/home-manager/desktop/xdg-desktop-entries.nix

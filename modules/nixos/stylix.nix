@@ -1,11 +1,11 @@
-{pkgs, lib, config, inputs, ...}:
-{ # TODO update colors to tooltip & maybe set up cursor package here?
+{pkgs, config, ...}:
+{ 
 	stylix = {
 		enable = true;
 		autoEnable = true;
 		enableReleaseChecks = false; # stops the version mismatch error
 
-		base16Scheme = { # these are the personal colours i picked out, swap to banana blueberry later maybe?
+		base16Scheme = {
 			base00 = "#191324"; # Default Background                      ANSI: None
 			base01 = "#221d2b"; # Black | Lighter Background              ANSI: 0
 			base02 = "#524763"; # Bright Black | Selection Background     ANSI: 8
@@ -24,14 +24,22 @@
 			base0F = "#e54b4b"; # Dark Red/Brown                          ANSI: None
 		};
 
+		cursor = {
+			name = "Rose Pine";
+			package = pkgs.rose-pine-cursor;
+			size = 27;
+		};
+
 		fonts = {
 			monospace = {
 				package = pkgs.nerd-fonts.jetbrains-mono;
 				name = "JetBrainsMono Nerd Font Mono";
 			};
+
 			serif = config.stylix.fonts.monospace;
 			sansSerif = config.stylix.fonts.monospace;
 			emoji = config.stylix.fonts.monospace;
+				
 		};
 	};
 }
