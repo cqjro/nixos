@@ -92,6 +92,7 @@
     obs-studio
 		firefox # backup browser
 		protonmail-desktop
+		nemo
 
     # other
     font-awesome # used for waybar and other icons maybe?
