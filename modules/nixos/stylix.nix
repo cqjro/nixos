@@ -25,7 +25,7 @@
 		};
 
 		cursor = {
-			name = "Rose Pine";
+			name = "BreezeX-RosePine-Linux";
 			package = pkgs.rose-pine-cursor;
 			size = 27;
 		};

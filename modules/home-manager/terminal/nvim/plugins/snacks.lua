@@ -1,4 +1,4 @@
-require("snacks").setup({
+return {
 	opts = {
 		-- your configuration comes here
 		-- or leave it empty to use the default settings
@@ -169,4 +169,4 @@ require("snacks").setup({
 			}
 		},
 	},
-})
+}

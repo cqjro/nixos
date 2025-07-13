@@ -93,7 +93,7 @@
     obs-studio
 		firefox # backup browser
 		protonmail-desktop
-		nemo
+		nemo-with-extensions
 
     # other
     font-awesome # used for waybar and other icons maybe?
