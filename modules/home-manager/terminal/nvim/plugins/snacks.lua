@@ -1,4 +1,5 @@
-return {
+local snacks = require("snacks")
+snacks.setup({
 	opts = {
 		-- your configuration comes here
 		-- or leave it empty to use the default settings
@@ -16,7 +17,7 @@ return {
 		statuscolumn = { enabled = false },
 		words = { enabled = false },
 
-		scroll = { 
+		scroll = {
 			enabled = true,
 			---@class snacks.scroll.Config
 			---@field animate snacks.animate.Config|{}
@@ -169,4 +170,4 @@ return {
 			}
 		},
 	},
-}
+})
