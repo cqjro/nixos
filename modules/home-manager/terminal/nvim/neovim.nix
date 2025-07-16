@@ -32,7 +32,7 @@
 				imagemagick
 				ghostscript
 				mermaid-cli
-
+				# xdotool # for zathura switch on latex complie	
 			];
 
 			extraLuaPackages = ps: [ 
@@ -153,12 +153,7 @@
 					plugin = trouble-nvim;
 					config = toLuaFile ./plugins/trouble.lua;
 				}
-
-				# {
-				# 	plugin = image-nvim;
-				# 	config = toLuaFile ./plugins/image.lua;
-				# }
-				
+	
 				{
 					plugin = img-clip-nvim;
 					config = toLuaFile ./plugins/img-clip.lua;
@@ -169,11 +164,11 @@
 					config = toLuaFile ./plugins/snacks.lua;
 				}
 
-				# {
-				# 	plugin = markdown-latex-render-nvim;
- 			# 		config = toLuaFile ./plugins/markdown-latex-render.lua;
-				# }
-				
+				{
+					plugin = vimtex;
+					config = toLuaFile ./plugins/vimtex.lua;
+				}
+	
 			];
 		};
 }
