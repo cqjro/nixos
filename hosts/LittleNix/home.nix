@@ -58,7 +58,8 @@
 		# languages
 		typescript
 		go
-		miktex
+		# miktex # apparently this is just L on linux
+		texlive.combined.scheme-full
 		typst
 
     # cli tools
@@ -82,6 +83,7 @@
 		delta # better syntax highlighting for git diff
 		jq # json command line processor	
 		neomutt # terminal email client
+		pstree
 
     # terminals
     ghostty 
@@ -95,6 +97,7 @@
 		protonmail-desktop
 		nemo-with-extensions
 		neovide # standalone neovim client
+		sioyek # pdf viewer for academic documents
 
     # other
     font-awesome # used for waybar and other icons maybe?
