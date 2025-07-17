@@ -16,32 +16,17 @@ snacks.setup({
 	statuscolumn = { enabled = false },
 	words = { enabled = false },
 
-	-- scroll = {
-	-- 	enabled = true,
-	-- 	---@class snacks.scroll.Config
-	-- 	---@field animate snacks.animate.Config|{}
-	-- 	---@field animate_repeat snacks.animate.Config|{}|{delay:number}
-	-- 	{
-	-- 		animate = {
-	-- 			duration = { step = 15, total = 250 },
-	-- 			easing = "linear",
-	-- 		},
-	-- 		-- faster animation when repeating scroll after delay
-	-- 		animate_repeat = {
-	-- 			delay = 100, -- delay in ms before using the repeat animation
-	-- 			duration = { step = 5, total = 50 },
-	-- 			easing = "linear",
-	-- 		},
-	-- 		-- what buffers to animate
-	-- 		filter = function(buf)
-	-- 			return vim.g.snacks_scroll ~= false and vim.b[buf].snacks_scroll ~= false and vim.bo[buf].buftype ~= "terminal"
-	-- 		end,
-	-- 	}
-	--
-	-- },
-	--
+	styles = {
+		snacks_image = {
+			relative = "editor",
+			border = "rounded",
+			focusable = false,
+			backdrop = false,
+		},
+	},
+
 	image = {
-		enable = true;
+		enable = true,
 		---@class snacks.image.Config
 		---@field enabled? boolean enable image viewer
 		---@field wo? vim.wo|{} options for windows showing the image
@@ -92,7 +77,7 @@ snacks.setup({
 				return type == "math"
 			end,
 		},
-		img_dirs = { "img", "images", "assets", "static", "public", "media", "attachments" },
+		img_dirs = { "img", "images", "assets", "static", "public", "media", "attachments", "Attachments" },
 		-- window options applied to windows displaying image buffers
 		-- an image buffer is a buffer with `filetype=image`
 		wo = {
@@ -154,10 +139,54 @@ snacks.setup({
 				font_size = "Large", -- see https://www.sascha-frank.com/latex-font-size.html
 				-- for latex documents, the doc packages are included automatically,
 				-- but you can add more packages here. Useful for markdown documents.
-				packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools" },
+				header = [[
+          \newcommand{\al}[2]{\text{#1} & \hspace{1cm} #2 &}
+          \newcommand{\nought}[1]{_{#1, 0}}
+          \newcommand{\var}[2]{#1: & \hspace{1cm} \text{#2}}
+          \newcommand{\sub}[1]{_{\text{#1}}} % faster text subscripts
+          \newcommand{\supp}[1]{^{\text{#1}}} % faster text superscripts
+          \newcommand{\laplace}{\mathscr{L}} % laplace operator
+          \newcommand{\der}{\text{d}} % text derivative sign
+          \newcommand{\derivative}[2]{\frac{d #1}{d #2}}
+          \newcommand{\perivative}[2]{\frac{\partial #1}{\partial #2}}
+          \newcommand{\bvert}{\bigg\vert}
+        ]],
+
+				packages = {
+					"amsmath",
+					"amssymb",
+					"amsfonts",
+					"amscd",
+					"amsthm",
+					"esvect",
+					"cancel",
+					"mathrsfs",
+					"mathtools",
+					"mhchem",
+					"array",
+					"graphicx",
+					"textcomp",
+					"gensymb",
+					"enumitem",
+					"tikz",
+					"pgfplots",
+					"contour",
+					"ulem",
+					"upgreek",
+				},
 				tpl = [[
 				\documentclass[preview,border=0pt,varwidth,12pt]{standalone}
 				\usepackage{${packages}}
+				\newcommand{\al}[2]{\text{#1} & \hspace{1cm} #2 &}
+				\newcommand{\nought}[1]{_{#1, 0}}
+				\newcommand{\var}[2]{#1: & \hspace{1cm} \text{#2}}
+				\newcommand{\sub}[1]{_{\text{#1}}} % faster text subscripts
+				\newcommand{\supp}[1]{^{\text{#1}}} % faster text superscripts
+				\newcommand{\laplace}{\mathscr{L}} % laplace operator
+				\newcommand{\der}{\text{d}} % text derivative sign
+				\newcommand{\derivative}[2]{\frac{d #1}{d #2}}
+				\newcommand{\perivative}[2]{\frac{\partial #1}{\partial #2}}
+				\newcommand{\bvert}{\bigg\vert}
 				\begin{document}
 				${header}
 				{ \${font_size} \selectfont
