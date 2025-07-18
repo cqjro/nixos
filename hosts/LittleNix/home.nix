@@ -98,6 +98,7 @@
 		nemo-with-extensions
 		neovide # standalone neovim client
 		sioyek # pdf viewer for academic documents
+		signal-desktop
 
     # other
     font-awesome # used for waybar and other icons maybe?

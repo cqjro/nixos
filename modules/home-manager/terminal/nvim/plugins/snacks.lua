@@ -17,13 +17,22 @@ snacks.setup({
 	words = { enabled = false },
 
 	styles = {
-		snacks_image = {
+    snacks_image = {
 			relative = "editor",
 			border = "rounded",
 			focusable = false,
 			backdrop = false,
+			-- Centered vertically
+      row = function()
+        return math.floor(vim.o.lines / 2)
+      end,
+
+      -- Centered horizontally
+      col = function()
+        return math.floor(vim.o.columns / 2)
+      end,
 		},
-	},
+  },
 
 	image = {
 		enable = true,
@@ -65,8 +74,8 @@ snacks.setup({
 			inline = true,
 			-- render the image in a floating window
 			-- only used if `opts.inline` is disabled
-			float = true,
-			max_width = 80,
+			float = false,
+			max_width = 100,
 			max_height = 40,
 			-- Set to `true`, to conceal the image text when rendering inline.
 			-- (experimental)
@@ -136,21 +145,9 @@ snacks.setup({
 				${content}]],
 			},
 			latex = {
-				font_size = "Large", -- see https://www.sascha-frank.com/latex-font-size.html
+				font_size = "normalsize", -- see https://www.sascha-frank.com/latex-font-size.html
 				-- for latex documents, the doc packages are included automatically,
 				-- but you can add more packages here. Useful for markdown documents.
-				header = [[
-          \newcommand{\al}[2]{\text{#1} & \hspace{1cm} #2 &}
-          \newcommand{\nought}[1]{_{#1, 0}}
-          \newcommand{\var}[2]{#1: & \hspace{1cm} \text{#2}}
-          \newcommand{\sub}[1]{_{\text{#1}}} % faster text subscripts
-          \newcommand{\supp}[1]{^{\text{#1}}} % faster text superscripts
-          \newcommand{\laplace}{\mathscr{L}} % laplace operator
-          \newcommand{\der}{\text{d}} % text derivative sign
-          \newcommand{\derivative}[2]{\frac{d #1}{d #2}}
-          \newcommand{\perivative}[2]{\frac{\partial #1}{\partial #2}}
-          \newcommand{\bvert}{\bigg\vert}
-        ]],
 
 				packages = {
 					"amsmath",
