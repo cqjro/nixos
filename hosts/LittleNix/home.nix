@@ -35,6 +35,7 @@
     ../../modules/home-manager/terminal/git.nix
     ../../modules/home-manager/terminal/ncspot.nix
 		../../modules/home-manager/apps/discord/nixcord.nix
+		../../modules/home-manager/apps/zen-browser.nix
   ];
 
 	home.sessionVariables = {
@@ -89,7 +90,7 @@
     ghostty 
 
     # main apps
-    inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
+    # inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
     obsidian
     spotify
     obs-studio

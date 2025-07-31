@@ -16,6 +16,7 @@
 		zen-browser = {
 			url = "github:0xc000022070/zen-browser-flake";
 			inputs.nixpkgs.follows = "nixpkgs";
+			inputs.home-manager.follows = "home-manager";
 		};
 
 		hyprland.url = "github:hyprwm/Hyprland";
@@ -44,6 +45,12 @@
 		nixcord = {
 			url = "github:kaylorben/nixcord";
 			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+		# open bubbles
+		openbubbles = {
+			url = "github:OpenBubbles/openbubbles-app";
+			flake = false;
 		};
 	};
 
