@@ -103,6 +103,7 @@
 
     # other
     font-awesome # used for waybar and other icons maybe?
+		unzip
 
   ];
 
