@@ -24,3 +24,18 @@ vim.g.vimtex_view_method = 'sioyek'            -- Sioyek PDF viewer for academic
 -- Other settings
 -- vim.g.vimtex_mappings_enabled = false          -- Disable default mappings
 -- vim.g.tex_flavor = 'latex'                     -- Set file type for TeX fileui
+
+vim.g.vimtex_compiler_latexmk = {
+    build_dir = '',
+    callback = 1,
+    continuous = 1,
+    executable = 'latexmk',
+    options = {
+        '-xelatex',
+        '-file-line-error',
+        '-synctex=1',
+        '-interaction=nonstopmode',
+    },
+}
+
+

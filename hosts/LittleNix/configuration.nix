@@ -60,11 +60,11 @@
 	# nix.optimise.dates = ["03:45"];
 
 	# Automatic Garbage Collection
-	nix.gc = {
-		automatic = true;
-		dates = "weekly";
-		options = "--delete-older-than 30d";
-	};
+	# nix.gc = {
+	# 	automatic = true;
+	# 	dates = "weekly";
+	# 	options = "--delete-older-than 30d";
+	# };
 
 	# Configure network proxy if necessary
 	# networking.proxy.default = "http://user:password@proxy:port/";
