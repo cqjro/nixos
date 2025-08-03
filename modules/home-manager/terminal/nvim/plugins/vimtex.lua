@@ -38,4 +38,11 @@ vim.g.vimtex_compiler_latexmk = {
     },
 }
 
+vim.g.vimtex_grammar_textidote = {
+    jar = 'textidote',
+    args = '--check en',
+}
+
+vim.g.vimtex_grammar_enabled = 1
+
 
