@@ -99,7 +99,8 @@
 		nemo-with-extensions
 		neovide # standalone neovim client
 		sioyek # pdf viewer for academic documents
-		signal-desktop
+		signal-desktop # messaging
+		qutebrowser-qt5 # keyboard centric browser (chromium)
 
     # other
     font-awesome # used for waybar and other icons maybe?

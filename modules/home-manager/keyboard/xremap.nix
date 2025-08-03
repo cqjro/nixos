@@ -30,7 +30,7 @@
 								t.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "ghostty" "com.mitchellh.ghostty" "1"];
 								e.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e nvim" "nvim" "1"];
 								n.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "obsidian" "1"];	
-								z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-initialtitle.sh" "zen" "Zen Browser" "2"];
+								z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "zen-twilight" "zen-twilight" "2"];
 								p.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "proton-mail --ozone-platform-hint=wayland" "Proton Mail" "3"];
 								v.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland" "vesktop" "4"];
 								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "5"];
