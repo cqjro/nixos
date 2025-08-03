@@ -32,6 +32,7 @@
 				imagemagick
 				ghostscript
 				mermaid-cli
+				textidote
 				# xdotool # for zathura switch on latex complie	
 			];
 
