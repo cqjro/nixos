@@ -9,6 +9,7 @@
 		[ # Include the results of the hardware scan.
 			./hardware-configuration.nix
 			../../modules/nixos/stylix.nix
+			../../modules/home-manager/apps/flatpak.nix
 			inputs.home-manager.nixosModules.default
 		];
 

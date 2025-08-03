@@ -46,12 +46,6 @@
 			url = "github:kaylorben/nixcord";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
-
-		# open bubbles
-		openbubbles = {
-			url = "github:OpenBubbles/openbubbles-app";
-			flake = false;
-		};
 	};
 
 	outputs = {nixpkgs, nixos-hardware,...}@inputs:
