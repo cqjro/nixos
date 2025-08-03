@@ -56,10 +56,12 @@
 		# editors
     vscode
 
-		# languages
+		# languages & frameworks
 		typescript
 		go
-		# miktex # apparently this is just L on linux
+		# flutter
+
+		# latex/documents
 		texlive.combined.scheme-full
 		typst
 
