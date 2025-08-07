@@ -133,6 +133,8 @@
 	fonts.packages = with pkgs; [ 
 		nerd-fonts.jetbrains-mono
 		nerd-fonts.meslo-lg
+		corefonts
+		vistafonts
 	];
 
 	nixpkgs.config.allowUnfree = true;

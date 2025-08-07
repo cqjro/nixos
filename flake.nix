@@ -46,6 +46,10 @@
 			url = "github:kaylorben/nixcord";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
+
+		nix-flatpak = {
+			url = "github:gmodena/nix-flatpak";
+		};
 	};
 
 	outputs = {nixpkgs, nixos-hardware,...}@inputs:
@@ -60,6 +64,7 @@
 					nixos-hardware.nixosModules.apple-t2
 					inputs.stylix.nixosModules.stylix
 					inputs.home-manager.nixosModules.default
+					inputs.nix-flatpak.nixosModules.nix-flatpak
 				];
 			};
 
