@@ -87,27 +87,29 @@
 		jq # json command line processor	
 		neomutt # terminal email client
 		pstree
+		unzip
 
     # terminals
     ghostty 
 
-    # main apps
-    # inputs.zen-browser.packages."${system}".default # zen-browser (change when package added to nix packages)
+    # apps
     obsidian
     spotify
     obs-studio
 		firefox # backup browser
 		protonmail-desktop
+		protonvpn-cli
+		protonvpn-gui
 		nemo-with-extensions
 		neovide # standalone neovim client
 		sioyek # pdf viewer for academic documents
 		signal-desktop # messaging
 		qutebrowser-qt5 # keyboard centric browser (chromium)
+		freetube # open youtube client
+		localsend
 
     # other
     font-awesome # used for waybar and other icons maybe?
-		unzip
-
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage

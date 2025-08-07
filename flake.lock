@@ -1010,6 +1010,21 @@
         "type": "github"
       }
     },
+    "nix-flatpak": {
+      "locked": {
+        "lastModified": 1751276396,
+        "narHash": "sha256-oOYrnKStMsOXST+wKnzuSZ49h8Dr1Q3mIn2f5Kb5GAw=",
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
+        "rev": "59adb9ad1cbd915494fc35cd0e0a9d582ca9de74",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
+        "type": "github"
+      }
+    },
     "nixcord": {
       "inputs": {
         "flake-compat": "flake-compat_2",
@@ -1228,22 +1243,6 @@
         "type": "github"
       }
     },
-    "openbubbles": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1752707911,
-        "narHash": "sha256-SsNaiVDpUep197smY+/4QFvusfn8bypIPs3poSShyLE=",
-        "owner": "OpenBubbles",
-        "repo": "openbubbles-app",
-        "rev": "b8fc91863b29d8e1ac84e8ff13cf0bc8b05a58e7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "OpenBubbles",
-        "repo": "openbubbles-app",
-        "type": "github"
-      }
-    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -1297,10 +1296,10 @@
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
         "nix-colors": "nix-colors",
+        "nix-flatpak": "nix-flatpak",
         "nixcord": "nixcord",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",
-        "openbubbles": "openbubbles",
         "rose-pine-hyprcursor": "rose-pine-hyprcursor",
         "stylix": "stylix",
         "xremap-flake": "xremap-flake",
