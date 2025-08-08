@@ -17,26 +17,10 @@
 
   #TODO group these togeher with default import files like in example configs
   imports = [
-    ../../modules/home-manager/desktop/hyprland.nix
-    ../../modules/home-manager/desktop/gtk.nix
-    ../../modules/home-manager/desktop/waybar.nix
-    ../../modules/home-manager/desktop/dunst.nix
-    ../../modules/home-manager/desktop/xdg-desktop-entries.nix
-    ../../modules/home-manager/keyboard/xremap.nix
-    ../../modules/home-manager/terminal/ghostty.nix
-    ../../modules/home-manager/desktop/rofi.nix
-    ../../modules/home-manager/terminal/btop.nix
-    ../../modules/home-manager/terminal/yazi.nix
-    ../../modules/home-manager/terminal/starship.nix
-    ../../modules/home-manager/terminal/nvim/neovim.nix
-    ../../modules/home-manager/terminal/bat.nix
-    ../../modules/home-manager/terminal/zsh.nix
-    ../../modules/home-manager/terminal/zoxide.nix
-    ../../modules/home-manager/terminal/git.nix
-    ../../modules/home-manager/terminal/ncspot.nix
-		../../modules/home-manager/apps/discord/nixcord.nix
-		../../modules/home-manager/apps/zen-browser.nix
-		../../modules/home-manager/apps/nemo.nix
+    ../../modules/keyboard/default.nix
+    ../../modules/desktop/default.nix
+    ../../modules/terminal/default.nix
+		../../modules/apps/default.nix
   ];
 
 	home.sessionVariables = {
