@@ -36,6 +36,7 @@
 								s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e ncspot" "ncspot" "5"];
 								y.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e yazi" "yazi" "6"];
 								b.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-name.sh" "ghostty -e btop" "" "7"]; # this doesn't have a window name
+								f.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-class.sh" "nemo" "nemo" ""];
 							};
 						};
 						super-r = { #rofi
