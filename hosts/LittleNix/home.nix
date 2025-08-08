@@ -36,6 +36,7 @@
     ../../modules/home-manager/terminal/ncspot.nix
 		../../modules/home-manager/apps/discord/nixcord.nix
 		../../modules/home-manager/apps/zen-browser.nix
+		../../modules/home-manager/apps/nemo.nix
   ];
 
 	home.sessionVariables = {
@@ -100,7 +101,6 @@
 		protonmail-desktop
 		protonvpn-cli
 		protonvpn-gui
-		nemo-with-extensions
 		neovide # standalone neovim client
 		sioyek # pdf viewer for academic documents
 		signal-desktop # messaging
