@@ -135,6 +135,7 @@
 		nerd-fonts.meslo-lg
 		corefonts
 		vistafonts
+		font-awesome
 	];
 
 	nixpkgs.config.allowUnfree = true;

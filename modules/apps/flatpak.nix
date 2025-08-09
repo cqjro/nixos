@@ -5,6 +5,7 @@
 		uninstallUnmanaged = true;
 		packages = [
 			"app.openbubbles.OpenBubbles"
+			"com.github.tchx84.Flatseal"
 		];
 	};
 }

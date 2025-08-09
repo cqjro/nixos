@@ -93,7 +93,7 @@
 		localsend
 
     # other
-    font-awesome # used for waybar and other icons maybe?
+    libayatana-appindicator # for openbubbles to work?
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
