@@ -1,3 +1,4 @@
+{pkgs, ...}:
 {
 	imports = [
 		./bat.nix
@@ -11,4 +12,16 @@
 		./zoxide.nix
 		./zsh.nix
 	];
+
+	home.packages = with pkgs; [
+		nitch # neofetch replacement
+		ffmpeg # video handling
+		fzf # fuzzy text search
+		eza # better ls
+		dust # disk usage analyzer
+		dua # interactive disk use analyzer
+		jq # json command line processor
+		unzip # unzipping zip files from terminal
+	];
+
 }

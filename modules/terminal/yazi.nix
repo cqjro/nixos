@@ -1,5 +1,9 @@
-{pkgs, lib, config, inputs, ...}:
+{pkgs, ...}:
 {
+	home.packages = with pkgs; [
+		yazi
+	];
+
   programs.yazi = {
     enable = true;
   };

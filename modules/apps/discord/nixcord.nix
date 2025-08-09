@@ -1,11 +1,11 @@
-{pkgs, lib, config, inputs, ...}:
+{config, inputs, ...}:
 let
 	theme = import ./discord-theme.nix {
 		inherit (config.lib.stylix) colors;
 		inherit (config.stylix) fonts;
 	};
 in	
-	{
+{
 	imports = [
 		inputs.nixcord.homeModules.nixcord
 	];

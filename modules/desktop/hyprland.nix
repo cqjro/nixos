@@ -1,32 +1,31 @@
-{pkgs, lib, config, inputs, ...}:
+{lib, config, ...}:
 {
 
-	home.packages = with pkgs; [
-		# desktop basics
-		waybar # recomended
-		hypridle
-		hyprlock
-
-		# Config Dependencies
-		ags
-	  grim
-		slurp
-		wl-clipboard
-		wl-clip-persist
-		upower
-		power-profiles-daemon
-		grimblast # screen shots
-		hyprpicker # colour picker
-		hyprcursor # better cursors
-		inputs.rose-pine-hyprcursor.packages.${pkgs.system}.default #cursor theme
-
-		# utils
-		networkmanagerapplet
-		blueman
-		playerctl
-		brightnessctl
-		bluez
-	];
+	# home.packages = with pkgs; [
+	# 	# desktop basics
+	# 	hypridle
+	# 	hyprlock
+	#
+	# 	# Config Dependencies
+	# 	ags
+	#   grim
+	# 	slurp
+	# 	wl-clipboard
+	# 	wl-clip-persist
+	# 	upower
+	# 	power-profiles-daemon
+	# 	grimblast # screen shots
+	# 	hyprpicker # colour picker
+	# 	hyprcursor # better cursors
+	# 	inputs.rose-pine-hyprcursor.packages.${pkgs.system}.default #cursor theme
+	#
+	# 	# utils
+	# 	networkmanagerapplet
+	# 	blueman
+	# 	playerctl
+	# 	brightnessctl
+	# 	bluez
+	# ];
 
 	wayland.windowManager.hyprland = {
 		enable = true;
