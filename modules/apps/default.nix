@@ -12,11 +12,12 @@
     spotify
     obs-studio
 		firefox # backup browser
-		protonmail-desktop
-		protonvpn-cli
-		protonvpn-gui
+		protonmail-desktop # email
+		protonvpn-cli # vpn cli
+		protonvpn-gui # vpn gui
     zathura # pdf viewer
 		sioyek # pdf viewer for academic documents
-		localsend	
+		localsend # airdrop replacement	
+		remmina # remote desktop on linux
 	];
 }
