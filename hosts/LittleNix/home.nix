@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -37,64 +37,52 @@
 	# get rid of mismatch version error on rebuild	
   stylix.enableReleaseChecks = false;
 
-  home.packages = with pkgs; [
-		# editors
-    vscode
-
-		# languages & frameworks
-		typescript
-		go
-		# flutter
-
-		# latex/documents
-		texlive.combined.scheme-full
-		typst
-
-    # cli tools
-    neofetch # displays setup specs
-    nitch # display setup specs
-    btop # activity monitor
-    git
-    zsh # shell
-    ffmpeg
-    bat # displays file content with syntax highlighting
-    yazi # fast file manager
-    fzf # fuzzy text search
-    zoxide # smarter cd command
-    eza # better ls
-    dust # disk use analyzer
-    dua # interative disk use analyzer
-    fselect # use sql queries to look for files
-    ncspot # terminal spotify client (uses less ram)
-    zathura # pdf viewer
-    starship # shell prompt (supports multiple shells)
-		delta # better syntax highlighting for git diff
-		jq # json command line processor	
-		neomutt # terminal email client
-		pstree
-		unzip
-
-    # terminals
-    ghostty 
-
-    # apps
-    obsidian
-    spotify
-    obs-studio
-		firefox # backup browser
-		protonmail-desktop
-		protonvpn-cli
-		protonvpn-gui
-		neovide # standalone neovim client
-		sioyek # pdf viewer for academic documents
-		signal-desktop # messaging
-		qutebrowser-qt5 # keyboard centric browser (chromium)
-		freetube # open youtube client
-		localsend
-
-    # other
-    libayatana-appindicator # for openbubbles to work?
-  ];
+  # home.packages = with pkgs; [
+		# # languages & frameworks
+		# # # typescript
+		# # go
+		# # # flutter
+		# #
+		# # # latex/documents
+		# # texlive.combined.scheme-full
+		# # typst
+  #
+  #   # cli tools
+  #   # nitch # config stats/neofetch replacement
+  #   # btop # activity monitor
+  #   # git
+  #   # zsh # shell
+  #   # ffmpeg
+  #   # bat # displays file content with syntax highlighting
+  #   # yazi # fast file manager
+  #   # fzf # fuzzy text search
+  #   # zoxide # smarter cd command
+  #   # eza # better ls
+  #   # dust # disk use analyzer
+  #   # dua # interative disk use analyzer
+  #   # ncspot # terminal spotify client (uses less ram)
+  #   # starship # shell prompt (supports multiple shells)
+		# # delta # better syntax highlighting for git diff
+		# # jq # json command line processor
+		# # pstree
+		# # unzip # unzipping zip files from terminal
+  #
+  #   # terminals
+  #   # ghostty 
+  #
+  #   # apps
+		# # vlc
+  # #   obsidian
+  # #   spotify
+  # #   obs-studio
+		# # firefox # backup browser
+		# # protonmail-desktop
+		# # protonvpn-cli
+		# # protonvpn-gui
+  # #   zathura # pdf viewer
+		# # sioyek # pdf viewer for academic documents
+		# # localsend	
+  # ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.

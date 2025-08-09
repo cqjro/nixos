@@ -1,5 +1,9 @@
 # https://github.com/gaurav23b/simple-hyprland
-{ pkgs, config, ... }: {
+{ pkgs, config, ... }: 
+{
+	home.packages = with pkgs; [
+		waybar
+	];
 	programs.waybar = {
 		enable = true;
 		# style = ./style.css;

@@ -1,8 +1,8 @@
 {pkgs, ...}:
 {
-	programs.neovide = {
-		enable = true;
-	};
+	# home.packages = with pkgs; [
+	# 	neovim
+	# ];
 
 	programs.neovim = 
 		let
@@ -32,7 +32,8 @@
 				imagemagick
 				ghostscript
 				mermaid-cli
-				textidote
+				textidote # supposed to add grammar/spell check to latex but not working
+				pstree # needed for lsp's?
 				# xdotool # for zathura switch on latex complie	
 			];
 

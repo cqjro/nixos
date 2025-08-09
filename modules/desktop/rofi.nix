@@ -1,4 +1,4 @@
-{ pkgs, config, lib, inputs, ... }:
+{ pkgs, config, lib, ... }:
 {
 	home.packages = with pkgs; [
 		rofi-power-menu
