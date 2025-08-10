@@ -22,6 +22,7 @@
 		dua # interactive disk use analyzer
 		jq # json command line processor
 		unzip # unzipping zip files from terminal
+		youtube-tui
 	];
 
 }
