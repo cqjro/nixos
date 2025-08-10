@@ -65,12 +65,22 @@ git add --all # to ensure there isnt issues during build
 sudo nixos-rebuild switch --flake ".#$dir" &>nixos-switch.log || (bat nixos-switch.log | grep --color error && exit 1)
 
 # Get current generation metadata
-current=$(nixos-rebuild list-generations | grep current)
+if ! current=$(nixos-rebuild list-generations | awk '$NF == "True"'); then
+    echo "Failed to get current generation metadata!"
+    exit 1
+fi
 
 # Commit all changes witih the generation metadata
-git commit -m "$dir: $current || $message"
+if ! git commit -m "$dir: $current || $message"; then
+    echo "Failed to commit changes!"
+    exit 1
+fi
 
-git push orign main
+#Push to main repo
+if ! git push origin master; then
+    echo "Failed to push to remote repository!"
+    exit 1
+fi
 
 # Notify all OK!
 echo "NixOS Rebuilt OK!"
