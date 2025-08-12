@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
 	# Home Manager needs a bit of information about you and the paths it should
@@ -23,6 +23,10 @@
 		../../modules/apps/default.nix
 	];
 
+	home.packages = with pkgs; [
+		openrgb
+	];
+	
 	home.sessionVariables = {
 		EDITOR = "nvim";
 		BROWSER = "zen";
@@ -39,9 +43,10 @@
 
 	hyprland = {
 		enable = true;
-		# monitors = [
-		# 	"eDP-1,2560x1600@60,0x0,1.25"
-		# ];
+		monitors = [
+			"DP-5,3840x2160@160,3840x0,1.00"
+			"DP-6,3840x2160@60,0x0,1.00"
+		];
 	};
 
 
