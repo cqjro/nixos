@@ -2,7 +2,7 @@
 
 # Inspired by the script from the no boilerplate video
 
-set -e -x # exists the script if there is any error
+set -e # exists the script if there is any error
 
 # Edit your config
 # $EDITOR configuration.nix

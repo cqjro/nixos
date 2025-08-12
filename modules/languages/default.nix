@@ -4,7 +4,8 @@
 		typescript
 		go
 		rust
-		texlive.combined.scheme-full
+		# texlive.combined.scheme-full
+		texliveFull
 		typst
 	];
 
