@@ -1,6 +1,7 @@
 -- require("vimtex").setup()
 -- Viewer settings
-vim.g.vimtex_view_method = 'sioyek'            -- Sioyek PDF viewer for academic documents
+-- vim.g.vimtex_view_method = 'sioyek'            -- Sioyek PDF viewer for academic documents
+vim.g.vimtex_view_method = 'zathura'
 -- vim.g.vimtex_context_pdf_viewer = 'zathura'     -- External PDF viewer for the Vimtex menu
 
 -- Formatting settings
