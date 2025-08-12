@@ -75,6 +75,7 @@
 					./hosts/GOD-KILLER/configuration.nix
 					inputs.stylix.nixosModules.stylix
 					inputs.home-manager.nixosModules.default
+					inputs.nix-flatpak.nixosModules.nix-flatpak
 				];
 			};
 		};

@@ -21,5 +21,6 @@
 		sioyek # pdf viewer for academic documents
 		localsend # airdrop replacement	
 		remmina # remote desktop on linux
+		newsflash # RSS reader/news app
 	];
 }
