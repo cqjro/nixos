@@ -73,6 +73,10 @@
 	boot.loader.systemd-boot.enable = true;
 	boot.loader.efi.canTouchEfiVariables = true;
 
+
+	# Use latest kernel
+	boot.kernelPackages = pkgs.linuxPackages_latest;
+
 	networking.hostName = "GOD-KILLER"; # Define your hostname.
 	networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
 	networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
