@@ -22,5 +22,8 @@
 		localsend # airdrop replacement	
 		remmina # remote desktop on linux
 		newsflash # RSS reader/news app
+		onlyoffice-desktopeditors # microsoft suite replacement
+		zotero # research management software
+		gimp3-with-plugins
 	];
 }

@@ -74,7 +74,7 @@
 	boot.loader.efi.canTouchEfiVariables = true;
 
 
-	# Use latest kernel
+	# Use latest kernei - this was auto loaded on fresh install
 	boot.kernelPackages = pkgs.linuxPackages_latest;
 
 	networking.hostName = "GOD-KILLER"; # Define your hostname.
@@ -83,6 +83,9 @@
 
 	# Set your time zone.
 	time.timeZone = "America/Toronto";
+
+	# Select Internationalisation properties
+	i18n.defaultLocale = "en_CA.UTF-8";
 
 	# Nix Settings
 	nix.settings.experimental-features = [ "nix-command" "flakes" ];
