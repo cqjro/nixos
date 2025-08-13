@@ -70,9 +70,19 @@
 	};
 
 	# Use the systemd-boot EFI boot loader.
-	boot.loader.systemd-boot.enable = true;
-	boot.loader.efi.canTouchEfiVariables = true;
+	# boot.loader.systemd-boot.enable = true;
 
+	# Boot Loader	
+	boot.loader.efi.canTouchEfiVariables = true;
+	boot.loader.grub = {
+		enable = true;
+		devices = [ "nodev" ];
+		version = 2;
+		efiSupport = true;
+		useOSProber = true;
+		# gfxmodeEfi = "1920x1080";
+		# fontSize = 36;
+	};
 
 	# Use latest kernei - this was auto loaded on fresh install
 	boot.kernelPackages = pkgs.linuxPackages_latest;
