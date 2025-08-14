@@ -80,8 +80,8 @@
 		version = 2;
 		efiSupport = true;
 		useOSProber = true;
-		# gfxmodeEfi = "1920x1080";
-		# fontSize = 36;
+		gfxmodeEfi = "1920x1080";
+		fontSize = 36;
 	};
 
 	# Use latest kernei - this was auto loaded on fresh install
