@@ -10,6 +10,7 @@
 			./hardware-configuration.nix
 			../../modules/desktop/stylix.nix
 			../../modules/apps/flatpak.nix
+			../../modules/system/default.nix
 			inputs.home-manager.nixosModules.default
 		];
 
