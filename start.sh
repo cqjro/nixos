@@ -6,9 +6,10 @@ set -e #exists script if there is an error
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519"  # Adjust to your SSH key path
 NIXOS_CONFIG_DIR="$HOME/.nixos"  # Where you want to store the config	
 GITHUB_REPO="cqjro/nixos"  # your-username/your-repo
-LOG_FILE="$NIXOS_CONFIG_DIR/.log/.start.log"
+LOG_FILE="$NIXOS_CONFIG_DIR/.log/start.log"
 
-mkdir -p
+# Ensure the log file exists
+mkdir -p "$(dirname "$LOG_FILE")"
 
 # Logging functions that work without terminal
 log() {
@@ -25,18 +26,18 @@ error() {
 
 # Function to show GUI notifications
 notify() {
-	if command -v notify-send >/dev/null 2>&1; then
-		notify-send "SSH/NixOS Sync" "$1"
-	fi
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send "SSH/NixOS Sync" "$1"
+    fi
 }
 
 # Setup GUI ssh askpass
 setup_ssh_askpass() {
 	# Set SSH_ASKPASS environment variable to use GUI prompting
-	if command -v ksshaskpass >/dev/null 2>&1; then
-		export SSH_ASKPASS="ksshaskpass"
-		log "Using ksshaskpass for GUI password prompting"
-	elif command -v ssh-askpass-fullscreen >/dev/null 2>&1; then
+	# if command -v ksshaskpass >/dev/null 2>&1; then
+	# 	export SSH_ASKPASS="ksshaskpass"
+	# 	log "Using ksshaskpass for GUI password prompting"
+	if command -v ssh-askpass-fullscreen >/dev/null 2>&1; then
 		export SSH_ASKPASS="ssh-askpass-fullscreen"
 		log "Using ssh-askpass-fullscreen for GUI password prompting"
 	else
@@ -201,9 +202,11 @@ main() {
         if sync_nixos_config; then
             log "Startup script completed successfully!"
             notify "SSH and NixOS sync completed successfully"
+						exit 0
         else
             error "Config sync failed"
             notify "Warning: Config sync failed - check logs"
+						exit 1
         fi
     else
         error "Failed to add SSH key, skipping configuration sync"
@@ -213,4 +216,4 @@ main() {
 }
 
 # Run main function in background to not block startup
-main "$@" &
+main "$@"

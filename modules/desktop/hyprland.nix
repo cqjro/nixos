@@ -46,7 +46,7 @@
 				exec-once = [ 
 					# "$terminal"
 					"waybar &"
-					"bash ../../start.sh"
+					"bash $HOME/.nixos/start.sh"
 					"dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
 				];
 
