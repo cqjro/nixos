@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Inspired by the script from the no boilerplate video
+# Inspired by the script from the noboilerplate video
 
 set -e # exists the script if there is any error
 
@@ -84,7 +84,7 @@ fi
 
 # Notify all OK!
 echo "NixOS Rebuilt OK!"
-notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available
+notify-send -e "NixOS Rebuilt OK! \n ${current}" --icon=software-update-available
 
 #Move back to the orignial directory
 popd
