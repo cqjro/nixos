@@ -10,6 +10,7 @@
 			./hardware-configuration.nix
 			../../modules/desktop/stylix.nix
 			../../modules/apps/flatpak.nix
+			../../modules/system/default.nix
 			inputs.home-manager.nixosModules.default
 		];
 
@@ -80,7 +81,7 @@
 		version = 2;
 		efiSupport = true;
 		useOSProber = true;
-		gfxmodeEfi = "1920x1080";
+		gfxmodeEfi = "2560x1440";
 		fontSize = 36;
 	};
 
