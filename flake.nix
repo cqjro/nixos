@@ -40,8 +40,6 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
-		nix-colors.url = "github:misterio77/nix-colors"; # remove this when stylix is configured
-
 		nixcord = {
 			url = "github:kaylorben/nixcord";
 			inputs.nixpkgs.follows = "nixpkgs";
@@ -49,6 +47,11 @@
 
 		nix-flatpak = {
 			url = "github:gmodena/nix-flatpak";
+		};
+
+		openconnect-sso = {
+			url = "github:vlaci/openconnect-sso"; # wrapper for openconnect
+			inputs.nixpkgs.follows = "nixpkgs";
 		};
 	};
 
