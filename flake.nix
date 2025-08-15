@@ -48,6 +48,14 @@
 		nix-flatpak = {
 			url = "github:gmodena/nix-flatpak";
 		};
+	
+		nixpkgs-openconnect-sso.url = "github:nixos/nixpkgs/46397778ef1f73414b03ed553a3368f0e7e33c2f";
+
+		openconnect-sso ={
+			url = "github:jcszymansk/openconnect-sso";
+			inputs.nixpkgs.follows = "nixpkgs-openconnect-sso";
+		};
+
 	};
 
 	outputs = {nixpkgs, nixos-hardware,...}@inputs:
