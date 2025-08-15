@@ -48,16 +48,12 @@
 		nix-flatpak = {
 			url = "github:gmodena/nix-flatpak";
 		};
-
-		openconnect-sso = {
-			url = "github:vlaci/openconnect-sso"; # wrapper for openconnect
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
 	};
 
 	outputs = {nixpkgs, nixos-hardware,...}@inputs:
 		let
 			system = "x86_64-linux";
+			overlays = [];
 		in { 
 			nixosConfigurations.LittleNix = nixpkgs.lib.nixosSystem {
 				inherit system;
@@ -68,6 +64,7 @@
 					inputs.stylix.nixosModules.stylix
 					inputs.home-manager.nixosModules.default
 					inputs.nix-flatpak.nixosModules.nix-flatpak
+					{ nixpkgs.overlays = overlays; }
 				];
 			};
 
@@ -79,6 +76,7 @@
 					inputs.stylix.nixosModules.stylix
 					inputs.home-manager.nixosModules.default
 					inputs.nix-flatpak.nixosModules.nix-flatpak
+					{ nixpkgs.overlays = overlays; }
 				];
 			};
 		};
