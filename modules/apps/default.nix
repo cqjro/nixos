@@ -25,6 +25,5 @@
 		onlyoffice-desktopeditors # microsoft suite replacement
 		openconnect # vpn client that might work with uoft vpn
 		gpclient
-		networkmanager-openconnect
 	];
 }

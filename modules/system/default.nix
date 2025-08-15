@@ -1,6 +1,7 @@
 {...}:
 {
 	imports = [
-		./ssh.nix		
+		./ssh.nix
+		./networkmanager.nix
 	];
 }
