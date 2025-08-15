@@ -24,6 +24,6 @@
 		newsflash # RSS reader/news app
 		onlyoffice-desktopeditors # microsoft suite replacement
 		openconnect # vpn client that might work with uoft vpn
-		gpclient # gui that supports sso?
+		gpauth # gui that supports sso?
 	];
 }
