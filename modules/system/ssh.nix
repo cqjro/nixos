@@ -7,7 +7,6 @@
 	environment.systemPackages = with pkgs; [
 		ssh-askpass-fullscreen
 		kdePackages.ksshaskpass
-		zenity
 	];
 
 }
