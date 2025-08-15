@@ -23,7 +23,6 @@
 		remmina # remote desktop on linux
 		newsflash # RSS reader/news app
 		onlyoffice-desktopeditors # microsoft suite replacement
-		zotero # research management software
-		gimp3-with-plugins
+		openconnect # vpn client that might work with uoft vpn
 	];
 }
