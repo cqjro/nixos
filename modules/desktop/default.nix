@@ -33,5 +33,7 @@
 		playerctl
 		brightnessctl
 		bluez
+		pavucontrol
+		pwvucontrol
 	];
 }
