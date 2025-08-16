@@ -1,7 +1,9 @@
 {pkgs, inputs, ...}:
 {
 	environment.systemPackages = with pkgs; [
+		openconnect
 		inputs.openconnect-sso.packages.${pkgs.system}.openconnect-sso
+		gpclient
 	];
 
 	# Create a custom openssl config file
