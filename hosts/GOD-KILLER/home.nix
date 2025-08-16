@@ -41,7 +41,8 @@
 
 	# get rid of mismatch version error on rebuild	
 	stylix.enableReleaseChecks = false;
-
+	
+	# configuring pc specific hyprland settings
 	hyprland = {
 		enable = true;
 		monitors = [
@@ -49,7 +50,6 @@
 			"DP-6,3840x2160@60,0x0,1.00"
 		];
 	};
-
 
 	home.file = {};
 
