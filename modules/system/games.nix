@@ -11,6 +11,7 @@
 			itch # indie games
 			protonup # proton management
 			bottles # manager for wine programs (games or otherwise)
+			wineWowPackages.stable # wine
 		];
 
 		# specifies proton install location
