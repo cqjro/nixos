@@ -24,8 +24,6 @@
 		newsflash # RSS reader/news app
 		onlyoffice-desktopeditors # microsoft suite replacement
 		openconnect # vpn client that might work with uoft vpn
-		inputs.openconnect-sso.packages.${pkgs.system}.openconnect-sso
-		gpclient
-		gpauth
+		# inputs.openconnect-sso.packages.${pkgs.system}.openconnect-sso
 	];
 }
