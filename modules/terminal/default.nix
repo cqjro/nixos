@@ -23,6 +23,7 @@
 		jq # json command line processor
 		unzip # unzipping zip files from terminal
 		youtube-tui
+		nom # terminal rss reader
 	];
 
 }
