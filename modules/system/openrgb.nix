@@ -4,7 +4,7 @@
 		openrgb.enable = lib.mkEnableOption "enabling openrgb";
 	};
 
-	config = lib.mkIF config.opengrgb.enable {
+	config = lib.mkIf config.openrgb.enable {
 		
 		environment.systemPackages = with pkgs; [
 			openrgb-with-all-plugins
