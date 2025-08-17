@@ -25,7 +25,6 @@
 	];
 
 	home.packages = with pkgs; [
-		openrgb-with-all-plugins
 	];
 	
 	home.sessionVariables = {
