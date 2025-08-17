@@ -8,5 +8,6 @@
 		./nvidia.nix
 		./games.nix
 		./flatpak.nix
+		./openrgb.nix
 	];
 }

@@ -15,6 +15,7 @@
 	# system modules
 	nvidia.enable = true;
 	games.enable = true;
+	openrgb.enable = true;
 
 	# Home-Manager
 	home-manager = {
