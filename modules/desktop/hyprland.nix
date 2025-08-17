@@ -47,6 +47,7 @@
 					# "$terminal"
 					"waybar &"
 					"bash $HOME/.nixos/start.sh"
+					"hyprctl dispatch createworkspace special:magic" # games workspace
 					"dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
 				];
 
@@ -318,6 +319,9 @@
 				windowrule = [ 
 					"suppressevent maximize, class:.*"
 					"nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+
+					# games workspace switch
+					"workspace special:magic, class:^(?i)steam_app_.*"
 
 					# Picture-in-Picture Window Rules
 					# TODO - add keybinds to move pnp bewteen the four corners of the screen
