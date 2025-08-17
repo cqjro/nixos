@@ -8,11 +8,11 @@
 	imports =
 		[ # Include the results of the hardware scan.
 			./hardware-configuration.nix
-			../../modules/desktop/stylix.nix
-			../../modules/apps/flatpak.nix
 			../../modules/system/default.nix
 			inputs.home-manager.nixosModules.default
 		];
+
+		games.enable = true;
 
 	# T2 Mac Hardware Import
 	hardware.firmware = [
