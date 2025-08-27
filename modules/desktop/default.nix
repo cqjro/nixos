@@ -2,6 +2,8 @@
 {
 	imports = [
 		./hyprland.nix
+		./hypridle.nix
+		./hyprlock.nix
 		./gtk.nix
 		./waybar.nix
 		./dunst.nix
