@@ -23,5 +23,7 @@
 		remmina # remote desktop on linux
 		newsflash # RSS reader/news app
 		onlyoffice-desktopeditors # microsoft suite replacement
+		xfce.ristretto # image viewer
+		vimiv-qt # image viewer
 	];
 }
