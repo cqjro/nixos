@@ -25,5 +25,7 @@
 		onlyoffice-desktopeditors # microsoft suite replacement
 		xfce.ristretto # image viewer
 		vimiv-qt # image viewer
+		gthumb # Image viewer/editor
+		shotwell # Image viewer/editor
 	];
 }
