@@ -9,5 +9,6 @@
 		./games.nix
 		./flatpak.nix
 		./openrgb.nix
+		./power-profiles-daemon.nix
 	];
 }

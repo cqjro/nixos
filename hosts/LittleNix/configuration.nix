@@ -12,7 +12,8 @@
 			inputs.home-manager.nixosModules.default
 		];
 
-		games.enable = true;
+	games.enable = true;
+	power-profiles-daemon.enable = true;
 
 	# T2 Mac Hardware Import
 	hardware.firmware = [
@@ -103,8 +104,8 @@
 	# services.pulseaudio.enable = true;
 	# OR
 	services.pipewire = {
-	  enable = true;
-	  pulse.enable = true;
+		enable = true;
+		pulse.enable = true;
 		audio.enable = true;
 		wireplumber.enable = true;
 	};
