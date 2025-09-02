@@ -279,8 +279,8 @@
 					"$mainMod SHIFT, S, movetoworkspace, special:magic"
 
 					# screenshots
-					"ALT, S, exec, grimblast save screen"
-					"ALT SHIFT, S, exec, grimblast copy area"
+					"ALT, S, exec, grimblast copysave screen"
+					"ALT SHIFT, S, exec, grimblast copysave area"
 
 					"$mainMod, mouse_down, workspace, e+1"
 					"$mainMod, mouse_up, workspace, e-1"
