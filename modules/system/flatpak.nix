@@ -7,6 +7,7 @@
 			"app.openbubbles.OpenBubbles"
 			"com.github.tchx84.Flatseal"
 			"org.vinegarhq.Sober"
+			"me.proton.Mail"
 		];
 	};
 }
