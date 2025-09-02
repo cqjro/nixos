@@ -13,7 +13,7 @@
 		spotify
 		obs-studio
 		firefox # backup browser
-		# protonmail-desktop # email
+		protonmail-desktop # email
 		protonvpn-cli # vpn cli
 		protonvpn-gui # vpn gui
 		proton-pass # password managerd a desire for self-hosted deployments to their hardware/corporate cloud environments for added data security and controls. 
