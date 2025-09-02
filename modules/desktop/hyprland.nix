@@ -248,6 +248,10 @@
 					"$mainMod, J, movefocus, d"
 					"$mainMod, K, movefocus, u"
 					"$mainMod, L, movefocus, r"
+					
+					# lock screen
+					"$mainMod SHIFT, L, exec, hyprlock"
+
 
 					"$mainMod, 1, workspace, 1"
 					"$mainMod, 2, workspace, 2"
@@ -273,6 +277,10 @@
 
 					"$mainMod, S, togglespecialworkspace, magic"
 					"$mainMod SHIFT, S, movetoworkspace, special:magic"
+
+					# screenshots
+					"ALT, S, exec, grimblast save screen"
+					"ALT SHIFT, S, exec, grimblast copy area"
 
 					"$mainMod, mouse_down, workspace, e+1"
 					"$mainMod, mouse_up, workspace, e-1"
