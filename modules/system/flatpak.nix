@@ -8,6 +8,7 @@
 			"com.github.tchx84.Flatseal"
 			"org.vinegarhq.Sober"
 			"me.proton.Mail"
+			"me.proton.Pass"
 		];
 	};
 }
