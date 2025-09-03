@@ -27,5 +27,6 @@
 		vimiv-qt # image viewer
 		gthumb # Image viewer/editor
 		shotwell # Image viewer/editor
+		ungoogled-chromium # backup chrome browser if needed for some bs
 	];
 }
