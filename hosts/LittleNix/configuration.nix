@@ -12,7 +12,7 @@
 			inputs.home-manager.nixosModules.default
 		];
 
-	games.enable = true;
+	# games.enable = true;
 	power-profiles-daemon.enable = true;
 
 	# T2 Mac Hardware Import
