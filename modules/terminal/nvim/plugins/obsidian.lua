@@ -8,7 +8,7 @@ require("obsidian").setup({
   workspaces = {
     {
       name = "cerebrum",
-      path = "~/Documents/cerebrum",
+      path = "~/Documents/obsidian",
     },
     -- {
     --   name = "work",
