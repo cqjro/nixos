@@ -13,7 +13,7 @@
 		spotify
 		obs-studio
 		firefox # backup browser
-		# protonmail-desktop # email
+		protonmail-desktop # email
 		protonvpn-cli # vpn cli
 		protonvpn-gui # vpn gui
 		proton-pass # password manager
@@ -28,5 +28,6 @@
 		gthumb # Image viewer/editor
 		shotwell # Image viewer/editor
 		ungoogled-chromium # backup chrome browser if needed for some bs
+		vivaldi # to sync with the mobile app?
 	];
 }
