@@ -7,7 +7,7 @@ require("obsidian").setup({
   -- current markdown file being edited.
   workspaces = {
     {
-      name = "cerebrum",
+      name = "obsidian",
       path = "~/Documents/obsidian",
     },
     -- {
