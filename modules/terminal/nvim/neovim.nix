@@ -27,6 +27,7 @@
 				gopls
 				texlab
 				typescript-language-server
+				tinymist # typst lsp
 			
 				# other program dependencies
 				imagemagick
@@ -169,6 +170,11 @@
 				{
 					plugin = vimtex;
 					config = toLuaFile ./plugins/vimtex.lua;
+				}
+
+				{
+					plugin = typst-preview-nvim;
+					config = toLuaFile ./plugins/typst-preview.lua;
 				}
 	
 			];

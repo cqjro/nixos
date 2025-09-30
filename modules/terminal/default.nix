@@ -24,7 +24,7 @@
 		unzip # unzipping zip files from terminal
 		youtube-tui
 		nom # terminal rss reader
-		sops # secrets/encryption manager
+		# age # secrets/encryption manager
 	];
 
 }
