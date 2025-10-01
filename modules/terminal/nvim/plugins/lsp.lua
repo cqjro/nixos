@@ -77,4 +77,8 @@ vim.lsp.config('gopls', {
 	capabilities = capabilities,
 })
 
+vim.lsp.config('tinymist', {
+	capabilities = capabilities,
+})
+
 
