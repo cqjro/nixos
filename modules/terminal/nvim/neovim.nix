@@ -35,7 +35,8 @@
 				mermaid-cli
 				textidote # supposed to add grammar/spell check to latex but not working
 				pstree # needed for lsp's?
-				# xdotool # for zathura switch on latex complie	
+				# xdotool # for zathura switch on latex complie
+				websocat # typst-preview dependency 
 			];
 
 			extraLuaPackages = ps: [ 
