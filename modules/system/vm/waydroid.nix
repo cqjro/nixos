@@ -4,7 +4,7 @@
 		waydroid.enable = lib.mkEnableOption "enable waydroid module";
 	};
 
-	config = lib.mkIf config.nvidia.enable {
+	config = lib.mkIf config.waydroid.enable {
 		
 		environment.systemPackages = with pkgs; [
 			waydroid
