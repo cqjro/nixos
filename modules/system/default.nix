@@ -10,6 +10,6 @@
 		./flatpak.nix
 		./openrgb.nix
 		./power-profiles-daemon.nix
-		./vm/default.nix
+		./android/default.nix
 	];
 }
