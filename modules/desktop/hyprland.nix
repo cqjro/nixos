@@ -250,6 +250,7 @@
 					"$mainMod, L, movefocus, r"
 
 					"$mainMod, T, exec, $terminal"
+					"$mainMod, R, exec, $menu"
 					
 					# lock screen
 					"$mainMod SHIFT, L, exec, hyprlock"
