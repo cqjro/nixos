@@ -248,10 +248,11 @@
 					"$mainMod, J, movefocus, d"
 					"$mainMod, K, movefocus, u"
 					"$mainMod, L, movefocus, r"
+
+					"$mainMod, T, exec, $terminal"
 					
 					# lock screen
 					"$mainMod SHIFT, L, exec, hyprlock"
-
 
 					"$mainMod, 1, workspace, 1"
 					"$mainMod, 2, workspace, 2"
