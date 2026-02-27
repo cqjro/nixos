@@ -13,7 +13,7 @@
 						CapsLock = {
 							held = "Super_L";
 							alone = "esc";
-							alone_timeout_millis = 250;
+							alone_timeout_millis = 150;
 						};
 					};
 				}
@@ -22,7 +22,7 @@
 			keymap = [
 				{
 					name = "Program Workflow Remaps";
-					exact_match = true;
+					# exact_match = true;
 					remap = {
 						super-t.remap.t.launch = ["ghostty"]; # want to open terminal fast
 						super-o = { # focus app and open if not already open.
