@@ -14,7 +14,7 @@
 
 	# games.enable = true;
 	power-profiles-daemon.enable = true;
-	waydroid.enable = true;
+	# waydroid.enable = true;
 
 	# T2 Mac Hardware Import
 	hardware.firmware = [
