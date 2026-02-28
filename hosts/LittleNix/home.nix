@@ -15,7 +15,6 @@
 	# release notes.
 	home.stateVersion = "24.11"; # Please read the comment before changing.
 
-	#TODO group these togeher with default import files like in example configs
 	imports = [
 		../../modules/keyboard/default.nix
 		../../modules/desktop/default.nix

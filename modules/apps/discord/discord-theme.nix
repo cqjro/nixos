@@ -491,6 +491,11 @@ svg.guildBoostBadge__5dba5 path {
 		background-color: var(--base00) !important;
 		border-color: var(--base03) !important;
 	}
+
+.panels__5e434 {
+	background-color: var(--base00) !important;
+}
+
 	button.button__67645.redGlow__67645,
 	span.button__67645.redGlow__67645 {
 		background-color: var(--base02) !important;
