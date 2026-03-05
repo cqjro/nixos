@@ -216,9 +216,9 @@
 				};
 
 				# https://wiki.hyprland.org/Configuring/Variables/#gestures
-				gestures = {
-					workspace_swipe = true;
-				};
+				gesture = [
+					"3, horizontal, workspace"
+				];
 
 				# Example per-device config
 				# See https://wiki.hyprland.org/Configuring/Keywords/#per-device-input-configs for more
@@ -327,11 +327,11 @@
 
 
 				windowrule = [ 
-					"suppressevent maximize, class:.*"
+					# "suppressevent maximize, class:.*"
 					"nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
 
 					# games workspace switch
-					"workspace special:magic, class:^(?i)steam_app_.*"
+					# "workspace special:magic, class:^(?i)steam_app_.*"
 
 					# Picture-in-Picture Window Rules
 					# TODO - add keybinds to move pnp bewteen the four corners of the screen
@@ -339,8 +339,8 @@
 					"pin, title:^(Picture-in-Picture)$"
 					"size 690 396, title:^(Picture-in-Picture)$"
 					"move 1338 72, title:^(Picture-in-Picture)$"
-					"suppressevent maximize, title:^(Picture-in-Picture)$"
-					"suppressevent fullscreen, title:^(Picture-in-Picture)$"
+					# "suppressevent maximize, title:^(Picture-in-Picture)$"
+					# "suppressevent fullscreen, title:^(Picture-in-Picture)$"
 				];
 			};
 		};
