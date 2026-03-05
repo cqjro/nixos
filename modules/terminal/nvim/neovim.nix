@@ -77,30 +77,7 @@
 				}
 
 				{
-					plugin = (nvim-treesitter.withPlugins (p: [
-						p.tree-sitter-nix
-						p.tree-sitter-vim
-						p.tree-sitter-markdown
-						p.tree-sitter-markdown_inline
-						p.tree-sitter-bash
-						p.tree-sitter-lua
-						p.tree-sitter-python
-						p.tree-sitter-json
-						p.tree-sitter-rust
-						p.tree-sitter-javascript
-						p.tree-sitter-typescript
-						p.tree-sitter-go
-						p.tree-sitter-latex
-						p.tree-sitter-typst
-						p.tree-sitter-bash
-						p.tree-sitter-regex
-						p.tree-sitter-css
-						p.tree-sitter-html
-						p.tree-sitter-norg
-						p.tree-sitter-scss
-						p.tree-sitter-tsx
-						p.tree-sitter-vue
-					]));
+					plugin = nvim-treesitter.withAllGrammars;
 					config = toLuaFile ./plugins/treesitter.lua;
 				}
 
