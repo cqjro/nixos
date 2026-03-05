@@ -7,7 +7,7 @@
 	];
 
 	imports = [
-		# ./latex.nix	
+		./latex.nix	
 	];
 
 }
