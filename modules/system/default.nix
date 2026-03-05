@@ -7,7 +7,7 @@
 		./stylix.nix
 		./nvidia.nix
 		./games.nix
-		./flatpak.nix
+		# ./flatpak.nix
 		./openrgb.nix
 		./power-profiles-daemon.nix
 		./android/default.nix

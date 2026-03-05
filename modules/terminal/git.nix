@@ -6,10 +6,11 @@
 	];
 	programs.git = {
 		enable = true;
-		userName  = "cqjro";
-		userEmail = "cairo.cristante@gmail.com";
-
-		extraConfig = {
+		settings = {
+			user = {
+				name = "cqjro";
+				email = "github@cqjro.ca";
+			};
 			core = {
 				pager = "delta";
 			};
@@ -30,5 +31,4 @@
 			};
 		};
 	};
-
 }

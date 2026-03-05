@@ -51,15 +51,14 @@
 	boot.extraModprobeConfig = "options hid-appletb-kbd mode=2"; # sets default state of touchbar
 
 	networking.hostName = "LittleNix"; # Define your hostname.
-	networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
-	networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+	# networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
 
 	# Set your time zone.
 	time.timeZone = "America/Toronto";
 
 	# Nix Settings
 	nix.settings.experimental-features = [ "nix-command" "flakes" ];
-	nix.settings.auto-optimise-store = true; # if this takes too long then switch to periodic
+	# nix.settings.auto-optimise-store = true; # if this takes too long then switch to periodic
 	# nix.optimise.automatic = true;
 	# nix.optimise.dates = ["03:45"];
 
@@ -87,7 +86,7 @@
 		enable = true;
 		xwayland.enable = true;
 		withUWSM = true;
-		package = inputs.hyprland.packages."${pkgs.system}".hyprland;
+		package = inputs.hyprland.packages."${pkgs.stdenv.hostPlatform.system}".hyprland;
 	};
 
 	# wayland support for chromium/electron apps
@@ -137,7 +136,7 @@
 		nerd-fonts.jetbrains-mono
 		nerd-fonts.meslo-lg
 		corefonts
-		vistafonts
+		# vista-fonts
 		font-awesome
 	];
 
@@ -153,15 +152,13 @@
 		vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
 
 		# terminals
-		kitty # default terminal for hyprland
+		# kitty # default terminal for hyprland
 
 		#t2 stuff
 		tiny-dfr # for macbook touchbar
 
 		wireplumber
 	];
-
-
 
 	# Some programs need SUID wrappers, can be configured further or are
 	# started in user sessions.

@@ -1,4 +1,4 @@
-{pkgs, inputs, ...}:
+{pkgs, ...}:
 {
 	imports = [
 		./discord/nixcord.nix
@@ -7,27 +7,26 @@
 	];
 
 	home.packages = with pkgs; [
-		vlc
-		mpv
+		# vlc
+		# mpv
 		obsidian
 		spotify
-		obs-studio
+		# obs-studio
 		firefox # backup browser
 		protonmail-desktop # email
-		protonvpn-cli # vpn cli
-		protonvpn-gui # vpn gui
-		proton-pass # password manager
-		zathura # pdf viewer
-		sioyek # pdf viewer for academic documents
+		# proton-vpn-cli # vpn cli
+		# protonvpn-gui # vpn gui
+		# proton-pass # password manager
+		# zathura # pdf viewer
+		# sioyek # pdf viewer for academic documents
 		localsend # airdrop replacement	
 		remmina # remote desktop on linux
-		newsflash # RSS reader/news app
-		onlyoffice-desktopeditors # microsoft suite replacement
-		xfce.ristretto # image viewer
-		vimiv-qt # image viewer
-		gthumb # Image viewer/editor
+		# newsflash # RSS reader/news app
+		# onlyoffice-desktopeditors # microsoft suite replacement
+		# ristretto # image viewer
+		# vimiv-qt # image viewer
+		# gthumb # Image viewer/editor
 		shotwell # Image viewer/editor
 		ungoogled-chromium # backup chrome browser if needed for some bs
-		vivaldi # to sync with the mobile app?
 	];
 }
