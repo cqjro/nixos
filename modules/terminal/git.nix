@@ -6,10 +6,11 @@
 	];
 	programs.git = {
 		enable = true;
-		userName  = "cqjro";
-		userEmail = "108373187+cqjro@users.noreply.github.com";
-
-		extraConfig = {
+		settings = {
+			user = {
+				name = "cqjro";
+				email = "108373187+cqjro@users.noreply.github.com";
+			};
 			core = {
 				pager = "delta";
 			};
@@ -30,5 +31,4 @@
 			};
 		};
 	};
-
 }

@@ -93,7 +93,7 @@
 		enable = true;
 		xwayland.enable = true;
 		withUWSM = true;
-		package = inputs.hyprland.packages."${pkgs.system}".hyprland;
+		package = inputs.hyprland.packages."${pkgs.stdenv.hostPlatform.system}".hyprland;
 	};
 
 	# wayland support for chromium/electron apps
@@ -143,7 +143,7 @@
 		nerd-fonts.jetbrains-mono
 		nerd-fonts.meslo-lg
 		corefonts
-		vistafonts
+		vista-fonts
 		font-awesome
 	];
 

@@ -2,7 +2,7 @@
 {
 	environment.systemPackages = with pkgs; [
 		openconnect
-		inputs.openconnect-sso.packages.${pkgs.system}.openconnect-sso
+		inputs.openconnect-sso.packages.${pkgs.stdenv.hostPlatform.system}.openconnect-sso
 		gpclient
 	];
 

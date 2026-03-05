@@ -27,7 +27,7 @@
 		grimblast # screen shots
 		hyprpicker # colour picker
 		hyprcursor # better cursors
-		inputs.rose-pine-hyprcursor.packages.${pkgs.system}.default #cursor theme
+		inputs.rose-pine-hyprcursor.packages.${pkgs.stdenv.hostPlatform.system}.default #cursor theme
 
 		# utils
 		networkmanagerapplet

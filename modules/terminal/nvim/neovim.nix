@@ -44,7 +44,7 @@
 			];
 
 			# place lines into this function such that it gets called after everything to avoid race conditions
-			extraLuaConfig = ''
+			initLua = ''
 				vim.defer_fn(function()
 					vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#b8b0c6", bg = "NONE" })
 				end, 0)
@@ -98,7 +98,6 @@
 						p.tree-sitter-html
 						p.tree-sitter-norg
 						p.tree-sitter-scss
-						p.tree-sitter-svelte
 						p.tree-sitter-tsx
 						p.tree-sitter-vue
 					]));

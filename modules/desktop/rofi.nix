@@ -11,7 +11,7 @@
 		programs = {
 			rofi = {
 				enable = true;
-				package = pkgs.rofi-wayland;
+				package = pkgs.rofi;
 				terminal = "ghostty";
 				plugins = with pkgs; [
 					rofi-power-menu

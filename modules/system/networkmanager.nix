@@ -1,8 +1,11 @@
 { pkgs, ... }:
 {
-	networking.networkmanager.plugins = with pkgs; [
-		networkmanager-openconnect
-		networkmanager-openvpn
-		networkmanager-vpnc
-	];
+	networking.networkmanager = { 
+		enable = true;
+		plugins = with pkgs; [
+			networkmanager-openconnect
+			networkmanager-openvpn
+			networkmanager-vpnc
+		];
+	};
 }
