@@ -25,7 +25,6 @@
 		youtube-tui
 		nom # terminal rss reader
 		# age # secrets/encryption manager
-		impala # network manager tui
 		bluetui # bluetooh manager tui
 		ncdu # storage manager
 		wiremix # audio picker
