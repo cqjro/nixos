@@ -2,7 +2,7 @@
 {
 	imports = [
 		./ssh.nix
-		./networkmanager.nix
+		./networking.nix
 		./vpn.nix
 		./stylix.nix
 		./nvidia.nix
