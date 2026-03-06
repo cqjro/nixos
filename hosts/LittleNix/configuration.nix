@@ -152,7 +152,7 @@
 		vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
 
 		# terminals
-		# kitty # default terminal for hyprland
+		kitty # default terminal for hyprland
 
 		#t2 stuff
 		tiny-dfr # for macbook touchbar
