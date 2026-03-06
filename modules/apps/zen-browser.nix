@@ -36,7 +36,7 @@
 					};
 				};
 			spaces = {
-				"Rendezvous" = {
+				"Browsing" = {
 					id = "572910e1-4468-4832-a869-0b3a93e2f165";
 					icon = "🎭";
 					position = 1000;
@@ -46,39 +46,11 @@
 					id = "08be3ada-2398-4e63-bb8e-f8bf9caa8d10";
 					icon = "🐙";
 					position = 2000;
-					theme = {
-						type = "gradient";
-						colors = [
-						{
-							red = 185;
-							green = 200;
-							blue = 215;
-							algorithm = "floating";
-							type = "explicit-lightness";
-						}
-						];
-						opacity = 0.8;
-						texture = 0.5;
-					};
 				};
 				"Nix" = {
 					id = "2441acc9-79b1-4afb-b582-ee88ce554ec0";
 					icon = "❄️";
 					position = 3000;
-					theme = {
-						type = "gradient";
-						colors = [
-						{
-							red = 150;
-							green = 190;
-							blue = 230;
-							algorithm = "floating";
-							type = "explicit-lightness";
-						}
-						];
-						opacity = 0.2;
-						texture = 0.5;
-					};
 				};
 			};
 			pins = {
