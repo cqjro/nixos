@@ -15,6 +15,7 @@
 	};
 
 	environment.systemPackages = with pkgs; [
-		impala
+		# impala # need iwd to work, iwd does not work with school wifi
+		wifitui
 	];
 }
