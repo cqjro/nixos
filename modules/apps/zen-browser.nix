@@ -117,6 +117,10 @@
 						return-youtube-dislikes
 						# youtube-recommended-videos # not working because unfree
 				];
+
+				settings = {
+					"zen.view.use-single-toolbar" = false;
+				};
 			};	
 		};
 	};
