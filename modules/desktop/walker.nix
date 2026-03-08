@@ -1,11 +1,11 @@
-{pkgs, ...}:
+{inputs, ...}:
 {
-	home.packages = with pkgs; [
-		elephant
-		walker
-	];
 
-	services.walker = {
+imports = [
+	inputs.walker.homeManagerModules.default
+];
+
+	programs.walker = {
 		enable = true;
 		# package = pkgs.walker;
 	};

@@ -61,6 +61,14 @@
 			inputs.nixpkgs.follows = "nixpkgs-openconnect-sso";
 		};
 
+		elephant.url = "github:abenz1267/elephant"; # required for walker
+		
+		walker = {
+			url = "github:abenz1267/walker";
+  		inputs.elephant.follows = "elephant";
+		};
+
+
 	};
 
 	outputs = {nixpkgs, nixos-hardware,...}@inputs:
