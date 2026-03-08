@@ -7,11 +7,11 @@ imports = [
 
 	programs.walker = {
 		enable = true;
-		themes."mytheme".style = ''
-    window {
-      background-color: transparent;
-    }
-
+		runAsService = true;
+		config = {
+			theme = "default";
+		};
+		themes."default".style = ''
     #window {
       background-color: #${config.lib.stylix.colors.base00};
       /* border-radius: 12px; */
