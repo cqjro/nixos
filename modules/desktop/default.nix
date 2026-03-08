@@ -9,6 +9,7 @@
 		./dunst.nix
 		./xdg-desktop-entries.nix
 		./rofi.nix
+		./walker.nix
 	];
 
 	home.packages = with pkgs; [
