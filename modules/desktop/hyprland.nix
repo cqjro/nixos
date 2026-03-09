@@ -194,6 +194,7 @@
 					force_default_wallpaper = -1; 
 					disable_hyprland_logo = true;
 					background_color = lib.mkForce "rgba(841F17FF)";
+					focus_on_active = true;
 				};
 
 
