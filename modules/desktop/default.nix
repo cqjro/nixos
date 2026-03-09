@@ -10,6 +10,7 @@
 		./xdg-desktop-entries.nix
 		./rofi.nix
 		./walker.nix
+		./swaync.nix
 	];
 
 	home.packages = with pkgs; [
