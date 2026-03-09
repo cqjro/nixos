@@ -12,6 +12,7 @@ imports = [
 			theme = "default";
 		};
 		themes."default".style = ''
+		@import
     #window {
       background-color: #${config.lib.stylix.colors.base00};
       /* border-radius: 12px; */
