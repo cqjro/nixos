@@ -6,7 +6,7 @@
 		./hyprlock.nix
 		./gtk.nix
 		./waybar.nix
-		./dunst.nix
+		# ./dunst.nix
 		./xdg-desktop-entries.nix
 		./rofi.nix
 		./walker.nix
