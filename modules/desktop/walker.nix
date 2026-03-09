@@ -12,7 +12,7 @@ imports = [
 			theme = "default";
 		};
 		themes."default".style = ''
-		@import
+		@import url("resource:///dev/benz/walker/themes/default/style.css");
     #window {
       background-color: #${config.lib.stylix.colors.base00};
       /* border-radius: 12px; */
