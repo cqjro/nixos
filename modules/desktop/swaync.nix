@@ -7,8 +7,8 @@
 	services.swaync = {
 		enable = true;
 		settings = {
-			positionX = "right";
-			positionY = "top";
+			# positionX = "right";
+			# positionY = "top";
 			layer = "overlay";
 			control-center-layer = "overlay";
 			layer-shell = true;
@@ -51,6 +51,10 @@
 	outline: none;
 }
 
+.notification-content {
+	border: none;
+};
+
 .notification.low {
 	border: 5px solid @base05;
 	outline: none;
@@ -82,6 +86,11 @@ window {
 	border: none;
 	outline: none;
 	box-shadow: none;
+}
+
+.widget-title > button,
+.widget-dnd > switch {
+	border: 1px solid @base05;
 }
 		'';
 	};
