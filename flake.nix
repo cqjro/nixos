@@ -68,6 +68,10 @@
   		inputs.elephant.follows = "elephant";
 		};
 
+		waybar-module-music = {
+      url = "github:Andeskjerf/waybar-module-music";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
 	};
 

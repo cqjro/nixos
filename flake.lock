@@ -103,6 +103,21 @@
     },
     "crane": {
       "locked": {
+        "lastModified": 1763511871,
+        "narHash": "sha256-KKZWi+ij7oT0Ag8yC6MQkzfHGcytyjMJDD+47ZV1YNU=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "099f9014bc8d0cd6e445470ea1df0fd691d5a548",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
+    "crane_2": {
+      "locked": {
         "lastModified": 1766774972,
         "narHash": "sha256-8qxEFpj4dVmIuPn9j9z6NTbU+hrcGjBOvaxTzre5HmM=",
         "owner": "ipetkov",
@@ -132,6 +147,28 @@
       "original": {
         "owner": "abenz1267",
         "repo": "elephant",
+        "type": "github"
+      }
+    },
+    "fenix": {
+      "inputs": {
+        "nixpkgs": [
+          "waybar-module-music",
+          "nixpkgs"
+        ],
+        "rust-analyzer-src": "rust-analyzer-src"
+      },
+      "locked": {
+        "lastModified": 1763707297,
+        "narHash": "sha256-Bd9VGavwFBLpyU4pjiWfv73gUibNj8dc3xmOW8ff3bI=",
+        "owner": "nix-community",
+        "repo": "fenix",
+        "rev": "7c2d3a165a4a080fdcb6c191d8f9768281c99f75",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "fenix",
         "type": "github"
       }
     },
@@ -245,6 +282,24 @@
     "flake-parts_3": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib_2"
+      },
+      "locked": {
+        "lastModified": 1763759067,
+        "narHash": "sha256-LlLt2Jo/gMNYAwOgdRQBrsRoOz7BPRkzvNaI/fzXi2Q=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "2cccadc7357c0ba201788ae99c4dfa90728ef5e0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_4": {
+      "inputs": {
+        "nixpkgs-lib": "nixpkgs-lib_3"
       },
       "locked": {
         "lastModified": 1765835352,
@@ -811,6 +866,21 @@
     },
     "nixpkgs-lib_2": {
       "locked": {
+        "lastModified": 1761765539,
+        "narHash": "sha256-b0yj6kfvO8ApcSE+QmA6mUfu8IYG6/uU28OFn4PaC8M=",
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "rev": "719359f4562934ae99f5443f20aa06c2ffff91fc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "type": "github"
+      }
+    },
+    "nixpkgs-lib_3": {
+      "locked": {
         "lastModified": 1765674936,
         "narHash": "sha256-k00uTP4JNfmejrCLJOwdObYC9jHRrr/5M/a/8L2EIdo=",
         "owner": "nix-community",
@@ -1018,6 +1088,7 @@
         "rose-pine-hyprcursor": "rose-pine-hyprcursor",
         "stylix": "stylix",
         "walker": "walker",
+        "waybar-module-music": "waybar-module-music",
         "xremap-flake": "xremap-flake",
         "zen-browser": "zen-browser"
       }
@@ -1044,6 +1115,23 @@
       "original": {
         "owner": "ndom91",
         "repo": "rose-pine-hyprcursor",
+        "type": "github"
+      }
+    },
+    "rust-analyzer-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1763648203,
+        "narHash": "sha256-/WJdebbRD+m5vr2xy/bJdCpqd7YHSMapjuXAM/0lvtA=",
+        "owner": "rust-lang",
+        "repo": "rust-analyzer",
+        "rev": "eaaa2da9fbbfd7a79ff501e0563351cb2004574a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rust-lang",
+        "ref": "nightly",
+        "repo": "rust-analyzer",
         "type": "github"
       }
     },
@@ -1328,6 +1416,29 @@
         "type": "github"
       }
     },
+    "waybar-module-music": {
+      "inputs": {
+        "crane": "crane",
+        "fenix": "fenix",
+        "flake-parts": "flake-parts_3",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1771057637,
+        "narHash": "sha256-PvgCzGe1w3CvxgyX31XJYXuCtXLEA0wQBgzAY/TAXK0=",
+        "owner": "Andeskjerf",
+        "repo": "waybar-module-music",
+        "rev": "95d4ce70275dfec884f9fe0a4725ca3500b89f25",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Andeskjerf",
+        "repo": "waybar-module-music",
+        "type": "github"
+      }
+    },
     "xdph": {
       "inputs": {
         "hyprland-protocols": [
@@ -1388,8 +1499,8 @@
     },
     "xremap-flake": {
       "inputs": {
-        "crane": "crane",
-        "flake-parts": "flake-parts_3",
+        "crane": "crane_2",
+        "flake-parts": "flake-parts_4",
         "nixpkgs": "nixpkgs_5",
         "xremap": "xremap"
       },

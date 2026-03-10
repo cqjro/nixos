@@ -1,8 +1,9 @@
 # https://github.com/gaurav23b/simple-hyprland
-{ pkgs, config, ... }: 
+{ pkgs, config, inputs, ... }: 
 {
 	home.packages = with pkgs; [
 		waybar
+		inputs.waybar-module-music.packages.${pkgs.stdenv.hostPlatform.system}.waybar-module-music
 	];
 	programs.waybar = {
 		enable = true;
@@ -18,7 +19,8 @@
 			modules-left = [
 				"custom/start"
 					"clock"
-					"mpris"
+					# "mpris"
+					"custom/music"
 					"hyprland/workspaces"
 			];
 			modules-center = [
@@ -273,6 +275,12 @@
 				escape = true;
 			};
 
+			"custom/music" = {
+				format = {};
+				return-type = "json";
+				exec = "waybar-module-music";
+			};
+
 		}
 		];
 		style = ''
@@ -332,6 +340,7 @@ window#waybar {
 #mpris,
 #disk,
 #power-profiles-daemon,
+#custom-music,
 #custom-notification {
 	background: #${config.lib.stylix.colors.base00};
 	color: #${config.lib.stylix.colors.base05};
@@ -365,7 +374,8 @@ window#waybar {
 	padding-left: 5px;
 }
 
-#mpris {
+#mpris,
+#custom-music {
 	border-radius: 10px;
 	margin-left: 10px;	
 }
