@@ -437,8 +437,8 @@ window#waybar.empty #window {
 #custom-notification {
 	border-radius: 10px;
 	margin-right: 5px;
-	padding-right: 10px;
-	padding-left: 12px;
+	padding-right: 12px;
+	padding-left: 10px;
 	font-size: 20px;
 }
 
