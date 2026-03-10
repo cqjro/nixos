@@ -9,6 +9,8 @@
 		settings = {
 			# positionX = "right";
 			# positionY = "top";
+			notification-margin-top = 15;
+			notification-margin-right = 15;
 			layer = "overlay";
 			control-center-layer = "overlay";
 			layer-shell = true;
@@ -41,11 +43,6 @@
 		};
 
 		style = ''
-.notification-window {
-	margin-top: 75px;
-	margin-right: 25px;
-}
-
 .notification {
 	border: 5px solid @base05;
 	outline: none;
