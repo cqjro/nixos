@@ -10,8 +10,8 @@
 		settings = {
 			positionX = "right";
 			positionY = "top";
-			notification-margin-top = 40;
-			notification-margin-left = 10;
+			notification-margin-top = 45;
+			notification-margin-left = 15;
 			layer = "overlay";
 			control-center-layer = "overlay";
 			layer-shell = true;
