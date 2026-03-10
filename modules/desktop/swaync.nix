@@ -1,7 +1,8 @@
 { pkgs, ... }:
 {
 	home.packages = with pkgs; [ 
-		swaynotificationcenter 
+		swaynotificationcenter
+		libnotify
 	];
 
 	services.swaync = {
