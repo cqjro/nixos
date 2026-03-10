@@ -95,7 +95,8 @@
 			};
 
 			"power-profiles-daemon" = {
-				format = "{icon} {profile}";
+				# format = "{icon} {profile}";
+				format = "{icon}";
 				format-icons = {
 					performance = "";
 					power-saver = "";
@@ -329,7 +330,8 @@ window#waybar {
 #custom-start,
 #bluetooth,
 #mpris,
-#disk
+#disk,
+#power-profiles-daemon,
 #custom-notification {
 	background: #${config.lib.stylix.colors.base00};
 	color: #${config.lib.stylix.colors.base05};
