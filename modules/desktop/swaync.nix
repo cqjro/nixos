@@ -4,14 +4,11 @@
 		swaynotificationcenter
 		libnotify
 	];
-
 	services.swaync = {
 		enable = true;
 		settings = {
 			positionX = "right";
 			positionY = "top";
-			notification-margin-top = 55;
-			notification-margin-left = 20;
 			layer = "overlay";
 			control-center-layer = "overlay";
 			layer-shell = true;
@@ -42,5 +39,27 @@
 				};
 			};
 		};
+		style = ''
+			.notification-window {
+				margin-top: 55px;
+				margin-right: 15px;
+			}
+
+			.notification {
+				border: 5px solid @base05;
+			}
+
+			.notification.low {
+				border: 5px solid @base05;
+			}
+
+			.notification.normal {
+				border: 5px solid @base05;
+			}
+
+			.notification.critical {
+				border: 5px solid @base05;
+			}
+		'';
 	};
 }
