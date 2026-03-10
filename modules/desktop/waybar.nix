@@ -411,7 +411,7 @@ window#waybar.empty #window {
 #battery {
 	border-left: 0px;
 	border-right: 0px;
-	padding-right: 5px;
+	padding-right: 2px;
 }
 
 #pulseaudio {
@@ -431,14 +431,13 @@ window#waybar.empty #window {
 #power-profiles-daemon {
 	border-radius: 0px 10px 10px 0px;
 	margin-right: 10px;
-	padding-right: 10px;
+	padding-right: 20px;
 }
-
 
 #custom-notification {
 	border-radius: 10px;
 	margin-right: 5px;
-	padding-right: 15px;
+	padding-right: 10px;
 	padding-left: 10px;
 	font-size: 20px;
 }
