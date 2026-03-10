@@ -278,7 +278,7 @@
 			"custom/music" = {
 				format = {};
 				return-type = "json";
-				exec = "waybar-module-music --marquee --title-width 15 --effect-speed 150 --whitelist spotify ncspot --format [%icon%] %position%/%length% %artist% - %title%";
+				exec = "waybar-module-music --marquee --title-width 15 --effect-speed 150 --format [%icon%] %position%/%length% %artist% - %title%";
 			};
 
 		}
