@@ -39,27 +39,50 @@
 				};
 			};
 		};
+
 		style = ''
-			.notification-window {
-				margin-top: 55px;
-				margin-right: 15px;
-			}
+.notification-window {
+	margin-top: 75px;
+	margin-right: 25px;
+}
 
-			.notification {
-				border: 5px solid @base05;
-			}
+.notification {
+	border: 5px solid @base05;
+	outline: none;
+}
 
-			.notification.low {
-				border: 5px solid @base05;
-			}
+.notification.low {
+	border: 5px solid @base05;
+	outline: none;
+	}
 
-			.notification.normal {
-				border: 5px solid @base05;
-			}
+.notification.normal {
+	border: 5px solid @base05;
+	outline: none;
+}
 
-			.notification.critical {
-				border: 5px solid @base05;
-			}
+.notification.critical {
+	border: 5px solid @base05;
+	outline: none;
+}
+
+		/* Control center border */
+.control-center {
+	border: 5px solid @base05;
+	outline: none;
+}
+
+/* Override GTK's default blue focus/inner border */
+* {
+	outline: none;
+	box-shadow: none;
+}
+
+window {
+	border: none;
+	outline: none;
+	box-shadow: none;
+}
 		'';
 	};
 }
