@@ -9,9 +9,9 @@
 			lutris # linxu game launcher
 			heroic # epic games launcher for linux
 			itch # indie games
-			protonup # proton management
-			bottles # manager for wine programs (games or otherwise)
-			wineWowPackages.stable # wine
+			protonup-ng # proton management
+			# bottles # manager for wine programs (games or otherwise)
+			# wineWowPackages.stable # wine
 			# minecraft # this is not working on nixos currently
 			prismlauncher # open source minecraft launcher
 		];
