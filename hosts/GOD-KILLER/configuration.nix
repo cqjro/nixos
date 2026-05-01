@@ -43,7 +43,6 @@
 	boot.loader.grub = {
 		enable = true;
 		devices = [ "nodev" ];
-		version = 2;
 		efiSupport = true;
 		useOSProber = true;
 		gfxmodeEfi = "2560x1440";

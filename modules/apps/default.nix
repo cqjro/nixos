@@ -15,7 +15,7 @@
 		firefox # backup browser
 		protonmail-desktop # email
 		proton-vpn-cli # vpn cli
-		protonvpn-gui # vpn gui
+		proton-vpn # vpn gui
 		proton-pass # password manager
 		zathura # pdf viewer
 		sioyek # pdf viewer for academic documents
@@ -28,5 +28,6 @@
 		gthumb # Image viewer/editor
 		shotwell # Image viewer/editor
 		ungoogled-chromium # backup chrome browser if needed for some bs
+		brave # also chromium backup
 	];
 }

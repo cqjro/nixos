@@ -7,6 +7,8 @@
 			package = pkgs.gruvbox-plus-icons;
 		};
 
+		gtk4.theme = null; # new default behaviour?
+
 		# cursorTheme = {
 		# 	name = "Rose Pine";
 		# 	package = pkgs.rose-pine-cursor;
