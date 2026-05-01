@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
 	# Home Manager needs a bit of information about you and the paths it should
@@ -24,9 +24,6 @@
 		../../modules/languages/default.nix
 	];
 
-	home.packages = with pkgs; [
-	];
-	
 	home.sessionVariables = {
 		EDITOR = "nvim";
 		BROWSER = "zen";
@@ -45,7 +42,7 @@
 	hyprland = {
 		enable = true;
 		monitors = [	
-		"DP-5,3840x2160@60,-1920x-1080,2.00" # BENQ 
+		"DP-5,3840x2160@60,960x-1080,2.00" # BENQ 
 		"DP-6,3840x2160@160,3840x0,1.00" # MSI OLED
 		];
 	};
