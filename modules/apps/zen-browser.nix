@@ -1,4 +1,4 @@
-{ inputs, pkgs, config, ... }:
+{ inputs, pkgs, ... }:
 {
 	imports = [ inputs.zen-browser.homeModules.twilight ];
 	programs.zen-browser = {
@@ -18,6 +18,13 @@
 				Locked = true;
 				Cryptomining = true;
 				Fingerprinting = true;
+			};
+
+			ExtensionSettings = {
+				"myallychou@gmail.com" = {
+      		install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/youtube-recommended-videos/latest.xpi";
+      		installation_mode = "normal_installed";
+    		};
 			};
 		};
 
