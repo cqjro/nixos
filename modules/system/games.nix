@@ -6,7 +6,7 @@
 	config = lib.mkIf config.games.enable {
 		environment.systemPackages = with pkgs; [
 			mangohud # minial performance hud
-			lutris # linxu game launcher
+			# lutris # linxu game launcher
 			heroic # epic games launcher for linux
 			itch # indie games
 			protonup-ng # proton management
