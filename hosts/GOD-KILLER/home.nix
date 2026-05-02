@@ -45,6 +45,10 @@
 		"DP-5,3840x2160@60,960x-1080,2.00" # BENQ 
 		"DP-6,3840x2160@160,0x0,1.00" # MSI OLED
 		];
+		bindel = [
+		",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
+    ",XF86MonBrightnessDown, exec, ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"
+		];
 	};
 
 	home.file = {};
