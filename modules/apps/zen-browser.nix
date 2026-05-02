@@ -20,6 +20,7 @@
 				Fingerprinting = true;
 			};
 
+			# for browser extensions that are not packaged by rycee
 			ExtensionSettings = {
 				"myallychou@gmail.com" = {
       		install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/youtube-recommended-videos/latest.xpi";
@@ -44,15 +45,16 @@
 				};
 			spaces = {
 				"Browsing" = {
-					id = "572910e1-4468-4832-a869-0b3a93e2f165";
-					icon = "🎭";
+					id = "7653bf48-e638-47fe-be29-ce1e70cce6f7";
+					icon = "🔍";
 					position = 1000;
 					container = containers.Life.id;
 				};
-				"Github" = {
-					id = "08be3ada-2398-4e63-bb8e-f8bf9caa8d10";
-					icon = "🐙";
-					position = 2000;
+				"Entertainment" = {
+					id = "a6adea55-7eaf-4f65-8d93-93f8e42b552d";
+					icon = "🎭";
+					position = 1000;
+					container = containers.Life.id;
 				};
 				"Nix" = {
 					id = "2441acc9-79b1-4afb-b582-ee88ce554ec0";
@@ -61,55 +63,44 @@
 				};
 			};
 			pins = {
-				"mail" = {
-					id = "9d8a8f91-7e29-4688-ae2e-da4e49d4a179";
-					container = containers.Life.id;
-					url = "https://outlook.live.com/mail/";
-					isEssential = true;
-					position = 101;
-				};
-				"Notion" = {
-					id = "8af62707-0722-4049-9801-bedced343333";
-					container = containers.Life.id;
-					url = "https://notion.com";
-					isEssential = true;
-					position = 102;
-				};
-				"Folo" = {
-					id = "fb316d70-2b5e-4c46-bf42-f4e82d635153";
-					container = containers.Life.id;
-					url = "https://app.folo.is/";
-					isEssential = true;
-					position = 103;
-				};
-				"Nix awesome" = {
-					id = "d85a9026-1458-4db6-b115-346746bcc692";
-					workspace = spaces.Nix.id;
-					isGroup = true;
-					isFolderCollapsed = false;
-					editedTitle = true;
+			# Entertainment Workspace
+				"Youtube" = {
+					id = "2ebbc066-e21f-45f0-a55c-64b0f28736c8";
+					workspace = spaces.Entertainment.id;
+					url = "https://www.youtube.com/";
 					position = 200;
 				};
+				"Reddit" = {
+					id = "ccb383d6-fed6-4bde-be9a-3a582b4d9cb5";
+					workspace = spaces.Entertainment.id;
+					url = "https://www.reddit.com/";
+					position = 201;
+				};
+				
+				"Instagram" = {
+					id = "6306288b-8033-48a8-90ea-8160cbae7d69";
+					workspace = spaces.Entertainment.id;
+					url = "https://www.instagram.com/";
+					position = 202;
+				};
+			# Nix Workspace
 				"Nix Packages" = {
 					id = "f8dd784e-11d7-430a-8f57-7b05ecdb4c77";
 					workspace = spaces.Nix.id;
-					folderParentId = pins."Nix awesome".id;
 					url = "https://search.nixos.org/packages";
-					position = 201;
+					position = 200;
 				};
 				"Nix Options" = {
 					id = "92931d60-fd40-4707-9512-a57b1a6a3919";
 					workspace = spaces.Nix.id;
-					folderParentId = pins."Nix awesome".id;
 					url = "https://search.nixos.org/options";
-					position = 202;
+					position = 201;
 				};
 				"Home Manager Options" = {
 					id = "2eed5614-3896-41a1-9d0a-a3283985359b";
 					workspace = spaces.Nix.id;
-					folderParentId = pins."Nix awesome".id;
 					url = "https://home-manager-options.extranix.com";
-					position = 203;
+					position = 202;
 				};
 			};
 			in {
@@ -122,7 +113,6 @@
 						proton-pass
 						darkreader
 						return-youtube-dislikes
-						# youtube-recommended-videos # not working because unfree
 				];
 
 				settings = {
