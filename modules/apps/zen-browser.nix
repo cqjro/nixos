@@ -53,7 +53,7 @@
 				"Entertainment" = {
 					id = "a6adea55-7eaf-4f65-8d93-93f8e42b552d";
 					icon = "🎭";
-					position = 1000;
+					position = 2000;
 					container = containers.Life.id;
 				};
 				"Nix" = {
@@ -75,8 +75,7 @@
 					workspace = spaces.Entertainment.id;
 					url = "https://www.reddit.com/";
 					position = 201;
-				};
-				
+				};	
 				"Instagram" = {
 					id = "6306288b-8033-48a8-90ea-8160cbae7d69";
 					workspace = spaces.Entertainment.id;
