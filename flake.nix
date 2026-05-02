@@ -12,18 +12,6 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
-		# not on nixpkgs yet
-		zen-browser = {
-			url = "github:0xc000022070/zen-browser-flake";
-			inputs.nixpkgs.follows = "nixpkgs";
-			inputs.home-manager.follows = "home-manager";
-		};
-
-		firefox-addons = {
-			url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
-   		inputs.nixpkgs.follows = "nixpkgs";
-		};
-
 		hyprland.url = "github:hyprwm/Hyprland";
 		hyprland-plugins = {
 			url = "github:hyprwm/hyprland-plugins";
@@ -43,6 +31,23 @@
 		stylix = {
 			url = "github:danth/stylix";
 			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+		# not on nixpkgs yet
+		zen-browser = {
+			url = "github:0xc000022070/zen-browser-flake";
+			inputs.nixpkgs.follows = "nixpkgs";
+			inputs.home-manager.follows = "home-manager";
+		};
+
+		firefox-addons = {
+			url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+   		inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+		helium = {
+  		url = "github:schembriaiden/helium-browser-nix-flake";
+  		inputs.nixpkgs.follows = "nixpkgs";
 		};
 
 		nixcord = {

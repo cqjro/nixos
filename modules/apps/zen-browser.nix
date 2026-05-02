@@ -57,7 +57,7 @@
 					container = containers.Life.id;
 				};
 				"Nix" = {
-					id = "2441acc9-79b1-4afb-b582-ee88ce554ec0";
+					id = "f026db84-f49d-462f-b9bb-4f84f9d713f7";
 					icon = "❄️";
 					position = 3000;
 				};
