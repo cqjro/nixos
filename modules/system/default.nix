@@ -1,4 +1,4 @@
-{...}:
+{pkgs, ...}:
 {
 	imports = [
 		./ssh.nix
@@ -11,5 +11,9 @@
 		./openrgb.nix
 		./power-profiles-daemon.nix
 		./android/default.nix
+	];
+
+	environment.systemPackages = with pkgs; [
+		ddcutil
 	];
 }
