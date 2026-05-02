@@ -1,4 +1,4 @@
-{pkgs, ...}:
+{pkgs, inputs, ...}:
 {
 	imports = [
 		./discord/nixcord.nix
@@ -7,27 +7,37 @@
 	];
 
 	home.packages = with pkgs; [
+		# media viewers
 		vlc
 		mpv
-		obsidian
 		spotify
-		obs-studio
-		firefox # backup browser
-		protonmail-desktop # email
-		proton-vpn-cli # vpn cli
-		proton-vpn # vpn gui
-		proton-pass # password manager
 		zathura # pdf viewer
 		sioyek # pdf viewer for academic documents
-		localsend # airdrop replacement	
-		remmina # remote desktop on linux
-		newsflash # RSS reader/news app
-		onlyoffice-desktopeditors # microsoft suite replacement
+
+		# image viewers (TODO delete like all of these when settled on one in particular)
 		ristretto # image viewer
 		vimiv-qt # image viewer
 		gthumb # Image viewer/editor
 		shotwell # Image viewer/editor
-		ungoogled-chromium # backup chrome browser if needed for some bs
-		brave # also chromium backup
+
+		# productivity & utilities
+		obsidian
+		protonmail-desktop # email
+		proton-vpn-cli # vpn cli
+		proton-vpn # vpn gui
+		proton-pass # password manager
+		obs-studio
+		localsend # airdrop replacement
+		remmina # remote desktop on linux
+		onlyoffice-desktopeditors # microsoft suite replacement
+
+		# browsers
+		inputs.helium.packages.${pkgs.stdenv.hostPlatform.system}.default
+		firefox
+		brave
+		ungoogled-chromium
+
+		# other
+		newsflash # RSS reader/news app
 	];
 }
