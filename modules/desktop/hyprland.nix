@@ -8,6 +8,10 @@
 			];
 			description = "allowing monitor options within the module";
 		};
+		hyprland.bindel = lib.mkOption {
+			default = [];
+			description = "inputs for hardware specific brightness, audio, and keyboard brightness controls";
+		};
 	};
 
 	config = lib.mkIf config.hyprland.enable { 
@@ -297,15 +301,13 @@
 				];
 
 				# LittleNix Specific
-				bindel = [ 
-					",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
-					",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-					",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-					",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
-					",XF86MonBrightnessUp, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
-					",XF86MonBrightnessDown, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%-"
-					",XF86KbdBrightnessUp, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%+"
-					",XF86KbdBrightnessDown, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%-"
+				bindel = [
+									",XF85MonBrightnessUp, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
+					",XF85MonBrightnessDown, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%-"
+					",XF85KbdBrightnessUp, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%+"
+					",XF85KbdBrightnessDown, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%-"
+
+					config.hyprland.bindel
 				];
 
 

@@ -42,6 +42,12 @@
 		monitors = [
 			"eDP-1,2560x1600@60,0x0,1.25"
 		];
+		bindel = [
+			",XF85MonBrightnessUp, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
+			",XF85MonBrightnessDown, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%-"
+			",XF85KbdBrightnessUp, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%+"
+			",XF85KbdBrightnessDown, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%-"
+		];
 	};
 
 
