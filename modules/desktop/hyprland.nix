@@ -243,23 +243,26 @@
 				# Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 
 				bind = [ 
+					# hyprland general
 					"$mainMod, Q, killactive,"
 					"$mainMod, M, exit,"
-					# "$mainMod, V, togglefloating,"
-					"$mainMod, P, pseudo,"
-					"$mainMod, J, togglesplit,"
-
-					"$mainMod, H, movefocus, l"
-					"$mainMod, J, movefocus, d"
-					"$mainMod, K, movefocus, u"
-					"$mainMod, L, movefocus, r"
-
-					"$mainMod, T, exec, $terminal"
-					"$mainMod, R, exec, $menu"
+					"$mainMod, V, togglefloating,"
+					# "$mainMod, P, pseudo,"
+					# "$mainMod, J, togglesplit,"
 					
 					# lock screen
 					"$mainMod SHIFT, L, exec, hyprlock"
 
+					# screenshots
+					"ALT, S, exec, grimblast copysave screen"
+					"ALT SHIFT, S, exec, grimblast copysave area"
+					
+					# focus switching & workspaces
+					"$mainMod, H, movefocus, l"
+					"$mainMod, J, movefocus, d"
+					"$mainMod, K, movefocus, u"
+					"$mainMod, L, movefocus, r"
+		
 					"$mainMod, 1, workspace, 1"
 					"$mainMod, 2, workspace, 2"
 					"$mainMod, 3, workspace, 3"
@@ -285,14 +288,15 @@
 					"$mainMod, S, togglespecialworkspace, magic"
 					"$mainMod SHIFT, S, movetoworkspace, special:magic"
 
-					# screenshots
-					"ALT, S, exec, grimblast copysave screen"
-					"ALT SHIFT, S, exec, grimblast copysave area"
-
 					"$mainMod, mouse_down, workspace, e+1"
 					"$mainMod, mouse_up, workspace, e-1"
 					"$mainMod, F, fullscreen, 1" # fullscreen toggle
 
+					# PiP corner cycling
+					"$mainMod ALT, H, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh left"
+					"$mainMod ALT, J, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh down"
+					"$mainMod ALT, K, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh up"
+					"$mainMod ALT, L, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh right"
 				];
 
 				bindm = [ 
@@ -300,16 +304,13 @@
 					"$mainMod, mouse:273, resizewindow"
 				];
 
-				# LittleNix Specific
 				bindel = [
-									",XF85MonBrightnessUp, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
+					",XF85MonBrightnessUp, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
 					",XF85MonBrightnessDown, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%-"
 					",XF85KbdBrightnessUp, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%+"
 					",XF85KbdBrightnessDown, exec, brightnessctl --device :white:kbd_backlight -e4 set 5%-"
-
 					config.hyprland.bindel
 				];
-
 
 				bindl = [ 
 					", XF86AudioNext, exec, playerctl next"
@@ -322,28 +323,19 @@
 				### WINDOWS AND WORKSPACES ###
 				##############################
 
-				# See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
-				# See https://wiki.hyprland.org/Configuring/Workspace-Rules/ for workspace rules
-
-				# Example windowrule
-				# windowrule = float,class:^(kitty)$,title:^(kitty)$
-
-
 				windowrule = [ 
 					# "suppressevent maximize, class:.*"
 					# "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
 
 					# games workspace switch
-					# "workspace special:magic, class:^(?i)steam_app_.*"
+					"workspace special:magic, class:^(steam_app_\\d+)$"
 
 					# Picture-in-Picture Window Rules
-					# TODO - add keybinds to move pnp bewteen the four corners of the screen
-					# "float, title:^(Picture-in-Picture)$"
-					# "pin, title:^(Picture-in-Picture)$"
-					# "size 690 396, title:^(Picture-in-Picture)$"
-					# "move 1338 72, title:^(Picture-in-Picture)$"
-					# "suppressevent maximize, title:^(Picture-in-Picture)$"
-					# "suppressevent fullscreen, title:^(Picture-in-Picture)$"
+					"float, title:^(Picture-in-Picture)$"
+					"pin, title:^(Picture-in-Picture)$"
+					"move 100%-w-20 100%-w-20, title:^(Picture-in-Picture)$"
+					"keepaspectratio, title:^(Picture-in-Picture)$"
+					"size 30% 30%, title:^(Picture-in-Picture)$"
 				];
 			};
 		};
