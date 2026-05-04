@@ -243,26 +243,24 @@
 				# Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 
 				bind = [ 
-					# hyprland general
 					"$mainMod, Q, killactive,"
 					"$mainMod, M, exit,"
 					"$mainMod, V, togglefloating,"
-					# "$mainMod, P, pseudo,"
+					# # "$mainMod, P, pseudo,"
 					# "$mainMod, J, togglesplit,"
-					
+
 					# lock screen
 					"$mainMod SHIFT, L, exec, hyprlock"
 
 					# screenshots
 					"ALT, S, exec, grimblast copysave screen"
 					"ALT SHIFT, S, exec, grimblast copysave area"
-					
-					# focus switching & workspaces
+
 					"$mainMod, H, movefocus, l"
 					"$mainMod, J, movefocus, d"
 					"$mainMod, K, movefocus, u"
-					"$mainMod, L, movefocus, r"
-		
+					"$mainMod, L, movefocus, r"	
+
 					"$mainMod, 1, workspace, 1"
 					"$mainMod, 2, workspace, 2"
 					"$mainMod, 3, workspace, 3"
@@ -292,11 +290,11 @@
 					"$mainMod, mouse_up, workspace, e-1"
 					"$mainMod, F, fullscreen, 1" # fullscreen toggle
 
-					# PiP corner cycling
-					"$mainMod ALT, H, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh left"
-					"$mainMod ALT, J, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh down"
-					"$mainMod ALT, K, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh up"
-					"$mainMod ALT, L, exec, bash $HOME/.nixos/modules/scripts/pip-move.sh right"
+					"$mainMod ALT, H, exec, bash $HOME/.nixos/scripts/pip-move.sh left"
+					"$mainMod ALT, J, exec, bash $HOME/.nixos/scripts/pip-move.sh down"
+					"$mainMod ALT, K, exec, bash $HOME/.nixos/scripts/pip-move.sh up"
+					"$mainMod ALT, L, exec, bash $HOME/.nixos/scripts/pip-move.sh right"
+
 				];
 
 				bindm = [ 
@@ -312,6 +310,7 @@
 					config.hyprland.bindel
 				];
 
+
 				bindl = [ 
 					", XF86AudioNext, exec, playerctl next"
 					", XF86AudioPause, exec, playerctl play-pause"
@@ -322,13 +321,17 @@
 				##############################
 				### WINDOWS AND WORKSPACES ###
 				##############################
-				windowrule = [
-					# Steam games
-					"workspace special:magic, match:class ^(steam_app_\\d+)$"
 
-					# Picture-in-Picture
+				# See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
+				# See https://wiki.hyprland.org/Configuring/Workspace-Rules/ for workspace rules
+
+				# Example windowrule
+				# windowrule = float,class:^(kitty)$,title:^(kitty)$
+				windowrule = [
+					"workspace special:magic, match:class ^(steam_app_\\d+)$"
 					"float on, pin on, size 30% 30%, move 100%-w-20 100%-w-20, match:title ^(Picture-in-Picture)$"
 				];
+
 			};
 		};
 	};
