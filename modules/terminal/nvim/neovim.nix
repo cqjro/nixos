@@ -6,29 +6,24 @@
 
 # Injections:
 # Drop the injections query into nvim's config dir
-  home.file."${config.xdg.configHome}/nvim/queries/nix/injections.scm".text = ''
-    ; extends
+home.file."${config.xdg.configHome}/nvim/queries/nix/injections.scm".text = ''
+  ; extends
 
-    ; Lua injections — toLua "..." and toLuaFile "..."
-    (apply_expression
-      function: (select_expression
-        attrpath: (attrpath
-          attr: (identifier) @_func
-            (#match? @_func "^toLua$")))
-      argument: (string_expression
-        (string_parts) @injection.content)
-      (#set! injection.language "lua"))
+  ((comment) @_comment
+    (#match? @_comment "^#lua$")
+    .
+    (indented_string_expression
+      (string_parts) @injection.content)
+    (#set! injection.language "lua")
+    (#set! injection.include-children true))
 
-    ; CSS injections — bindings whose key contains css/style
-    (binding
-      attrpath: (attrpath
-        attr: (identifier) @_key
-          (#match? @_key "(css|CSS|style)"))
-      expression: (string_expression
-        (string_parts) @injection.content)
-      (#set! injection.language "css"))
-  '';
-
+  (apply_expression
+    function: (_) @_fn
+    (#match? @_fn "toLua")
+    argument: (string_expression
+      (string_parts) @injection.content)
+    (#set! injection.language "lua"))
+'';
 
 	programs.neovim = 
 		let
