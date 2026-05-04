@@ -324,7 +324,7 @@
 				##############################
 				windowrule = [
 					# Steam games
-					"workspace special:magic silent, match:class ^(steam_app_\\d+)$"
+					"workspace special:magic, match:class ^(steam_app_\\d+)$"
 
 					# Picture-in-Picture
 					"float on, pin on, size 30% 30%, move 100%-w-20 100%-w-20, match:title ^(Picture-in-Picture)$"
