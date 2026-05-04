@@ -322,20 +322,12 @@
 				##############################
 				### WINDOWS AND WORKSPACES ###
 				##############################
+				windowrule = [
+					# Steam games
+					"workspace special:magic silent, match:class ^(steam_app_\\d+)$"
 
-				windowrulev2 = [ 
-					# "suppressevent maximize, class:.*"
-					# "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
-
-					# games workspace switch
-					"workspace special:magic, class:^(steam_app_\\d+)$"
-
-					# Picture-in-Picture Window Rules
-					"float, title:^(Picture-in-Picture)$"
-					"pin, title:^(Picture-in-Picture)$"
-					"move 100%-w-20 100%-w-20, title:^(Picture-in-Picture)$"
-					"keepaspectratio, title:^(Picture-in-Picture)$"
-					"size 30% 30%, title:^(Picture-in-Picture)$"
+					# Picture-in-Picture
+					"float on, pin on, keepaspectratio on, size 30% 30%, move 100%-w-20 100%-w-20, match:title ^(Picture-in-Picture)$"
 				];
 			};
 		};
