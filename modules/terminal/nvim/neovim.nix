@@ -5,35 +5,6 @@
 # ];
 
 # Injections?
-xdg.configFile."nvim/queries/nix/injections.scm".text = ''
-  ; extends
-
-  ; Inject a language into any indented Nix string preceded by an adjacent
-  ; block comment naming the language, e.g.:
-  ;
-  ;   someAttr = /* lua */ ''''
-  ;     ...lua code...
-  ;   '''';
-  ;
-  ; The comment child node is "source", and the string child is "chunk".
-  ; Both sit as siblings inside a function_expression body.
-
-  ((comment
-      (source) @_lang)
-    .
-    (indented_string_expression
-      (chunk) @injection.content)
-    (#match? @_lang "lua")
-    (#set! injection.language "lua"))
-
-  ((comment
-      (source) @_lang)
-    .
-    (indented_string_expression
-      (chunk) @injection.content)
-    (#match? @_lang "css")
-    (#set! injection.language "css"))
-'';
 
 	programs.neovim = 
 		let
