@@ -4,26 +4,8 @@
 # 	neovim
 # ];
 
-# Injections:
-# Drop the injections query into nvim's config dir
-home.file."${config.xdg.configHome}/nvim/queries/nix/injections.scm".text = ''
-  ; extends
-
-  ((comment) @_comment
-    (#match? @_comment "^#lua$")
-    .
-    (indented_string_expression
-      (string_parts) @injection.content)
-    (#set! injection.language "lua")
-    (#set! injection.include-children true))
-
-  (apply_expression
-    function: (_) @_fn
-    (#match? @_fn "toLua")
-    argument: (string_expression
-      (string_parts) @injection.content)
-    (#set! injection.language "lua"))
-'';
+home.file."${config.xdg.configHome}/nvim/queries/nix/injections.scm".source = 
+  ./injections.scm;
 
 	programs.neovim = 
 		let
