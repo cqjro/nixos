@@ -8,25 +8,32 @@
 xdg.configFile."nvim/queries/nix/injections.scm".text = ''
   ; extends
 
-  ; Inject Lua into indented strings whose binding path ends in .lua" .text
-  ; e.g. home.file.".config/hypr/hyprland.lua".text = '''' ... ''''
-  (binding
-    attrpath: (attrpath) @_path
-    (#match? @_path "\.lua\"\.text$")
-    expression: (indented_string_expression
-      (string_fragment) @injection.content
-      (#set! injection.language "lua")))
+  ; Inject a language into any indented Nix string preceded by an adjacent
+  ; block comment naming the language, e.g.:
+  ;
+  ;   someAttr = /* lua */ ''''
+  ;     ...lua code...
+  ;   '''';
+  ;
+  ; The comment child node is "source", and the string child is "chunk".
+  ; Both sit as siblings inside a function_expression body.
 
-  ; Inject CSS into indented strings whose binding path ends in .css" .text
-  ; e.g. home.file.".config/something.css".text = '''' ... ''''
-  (binding
-    attrpath: (attrpath) @_path
-    (#match? @_path "\.css\"\.text$")
-    expression: (indented_string_expression
-      (string_fragment) @injection.content
-      (#set! injection.language "css")))
+  ((comment
+      (source) @_lang)
+    .
+    (indented_string_expression
+      (chunk) @injection.content)
+    (#match? @_lang "lua")
+    (#set! injection.language "lua"))
+
+  ((comment
+      (source) @_lang)
+    .
+    (indented_string_expression
+      (chunk) @injection.content)
+    (#match? @_lang "css")
+    (#set! injection.language "css"))
 '';
-
 
 	programs.neovim = 
 		let
