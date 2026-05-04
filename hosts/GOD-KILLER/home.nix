@@ -41,13 +41,19 @@
 	# configuring pc specific hyprland settings
 	hyprland = {
 		enable = true;
-		monitors = [	
-		"DP-5,3840x2160@60,960x-1080,2.00" # BENQ 
-		"DP-6,3840x2160@160,0x0,1.00" # MSI OLED
+		monitors = [
+		{ output = "DP-5"; mode = "3840x2160@60";  position = "960x-1080"; scale = 2; }
+		{ output = "DP-6"; mode = "3840x2160@160"; position = "0x0";       scale = 1; }
 		];
 		bindel = [
-		",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
-    ",XF86MonBrightnessDown, exec, ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"
+			{
+				key = "XF86MonBrightnessUp";
+				cmd = "ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1";
+			}
+			{
+				key = "XF86MonBrightnessDown";
+				cmd = "ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1";
+			}
 		];
 	};
 
