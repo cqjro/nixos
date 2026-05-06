@@ -49,7 +49,7 @@
 
 				exec-once = [ 
 					# "$terminal"
-					"waybar &"
+					# "waybar &"
 					"bash $HOME/.nixos/start.sh"
 					"hyprctl dispatch createworkspace special:magic" # games workspace
 					"dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
