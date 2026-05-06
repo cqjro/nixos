@@ -136,20 +136,23 @@ in
     force = true;
   };
 
-  xdg.configFile."caelestia/shell.json".text = builtins.toJSON {
-    bar = {
-      activeWindow = {
-        rotateCounterClockwise = true;
-      };
-      status = {
-        showBattery = false;
-      };
+xdg.configFile."caelestia/shell.json".text = builtins.toJSON {
+  bar = {
+    activeWindow = {
+      inverted = true;  # was wrongly named "rotateCounterClockwise"
     };
-    services = {
-      wallpaperEnabled = false;
-      smartScheme = false;
+    status = {
+      showBattery = false;
     };
   };
+  background = {
+    enabled = false;  # was wrongly placed under "services.wallpaperEnabled"
+  };
+  services = {
+    smartScheme = false;
+  };
+};
+
 
   programs.caelestia = {
     enable = true;
