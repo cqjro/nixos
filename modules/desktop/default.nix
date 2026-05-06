@@ -11,6 +11,7 @@
 		./rofi.nix
 		./walker.nix
 		./swaync.nix
+		./caelestia-shell.nix
 	];
 
 	home.packages = with pkgs; [
