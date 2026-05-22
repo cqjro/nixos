@@ -25,7 +25,7 @@
 			enable = true;
 			extest.enable = true;
 			
-			gamescopeSession.enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
+			# gamescopeSession.enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
 
 			extraPackages = with pkgs; [
 				hidapi # fixes steam controller firmware update issues
