@@ -14,6 +14,7 @@
 			# wineWowPackages.stable # wine
 			# minecraft # this is not working on nixos currently
 			prismlauncher # open source minecraft launcher
+			gamescope-wsi # HDR support with gamescope
 		];
 
 		# specifies proton install location
@@ -24,6 +25,9 @@
 		programs.steam = {
 			enable = true;
 			extest.enable = true;
+
+			remotePlay.openFirewall = true;
+			dedicatedServer.openFirewall = true;
 			
 			gamescopeSession.enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
 
@@ -35,6 +39,11 @@
 			];
 		};
 
+		programs.gamescope = {
+			enable = true;
+			capSysNice = false;
+		};
+		
 		programs.appimage.enable = true;
 		programs.gamemode.enable = true;
 	};
