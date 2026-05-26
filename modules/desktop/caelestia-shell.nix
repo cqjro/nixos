@@ -27,7 +27,7 @@
 			showOnFullscreen = true;      # show toasts/notifications over fullscreen
 		};
 		launcher = {
-			showOnHover = true;           # show launcher on hover
+			showOnHover = false;           # show launcher on hover
 			vimKeybinds = true;           # enable vim keybinds in launcher
 		};
 		background = {
