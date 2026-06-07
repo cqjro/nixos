@@ -5,7 +5,7 @@
 		./hypridle.nix
 		./hyprlock.nix
 		./gtk.nix
-		./waybar.nix
+		# ./waybar.nix
 		# ./dunst.nix
 		./xdg-desktop-entries.nix
 		./rofi.nix

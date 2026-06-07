@@ -15,5 +15,6 @@
 
 	environment.systemPackages = with pkgs; [
 		ddcutil
+		usbmuxd # utility for connecting to ios devices
 	];
 }

@@ -73,15 +73,17 @@
   		inputs.elephant.follows = "elephant";
 		};
 
-		waybar-module-music = {
-      url = "github:Andeskjerf/waybar-module-music";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
 		caelestia-shell = {
       url = "github:caelestia-dots/shell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+		iloader = {
+			url = "github:nab138/iloader";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+
 
 	};
 
