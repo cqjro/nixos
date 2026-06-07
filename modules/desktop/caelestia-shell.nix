@@ -15,6 +15,7 @@
 				showSpeaker = true;       # add speaker/volume to taskbar
 				showMicrophone = true;    # add microphone to taskbar
 				showCapsLock = false;     # remove capslock indicator
+				showKeepAwake = true;
 			};
 			clock = {
 				showIcon = false;         # hide the clock icon
@@ -35,6 +36,7 @@
 		};
 		services = {
 			smartScheme = false;
+			keepAwake = true;
 		};
 	};
 
