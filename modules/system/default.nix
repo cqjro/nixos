@@ -11,10 +11,10 @@
 		./openrgb.nix
 		./power-profiles-daemon.nix
 		./android/default.nix
+		./ios-sideloading.nix
 	];
 
 	environment.systemPackages = with pkgs; [
 		ddcutil
-		usbmuxd # utility for connecting to ios devices
 	];
 }
