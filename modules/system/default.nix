@@ -11,6 +11,7 @@
 		./openrgb.nix
 		./power-profiles-daemon.nix
 		./android/default.nix
+		./audio/default.nix
 		./ios-sideloading.nix
 	];
 
