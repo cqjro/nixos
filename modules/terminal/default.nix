@@ -28,6 +28,7 @@
 		bluetui # bluetooh manager tui
 		ncdu # storage manager
 		wiremix # audio picker
+		_7zz # 7zip terminal utility
 	];
 
 }
