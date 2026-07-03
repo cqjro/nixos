@@ -19,6 +19,7 @@
 			enable = true;
 			systemd.enable = true;
 			settings = {
+				splash = false;
 
 				################
 				### MONITORS ###
