@@ -11,6 +11,12 @@
 			../../modules/system/default.nix
 			inputs.home-manager.nixosModules.default
 		];
+	
+	#TODO REMOVE THIS WHEN POSSIBLEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	# Allow the insecure pnpm version
+  nixpkgs.config.permittedInsecurePackages = [
+    "pnpm-10.29.2" 
+  ];
 
 	# system modules
 	nvidia.enable = true;
