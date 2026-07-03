@@ -19,7 +19,6 @@
 			enable = true;
 			systemd.enable = true;
 			settings = {
-				splash = false;
 
 				################
 				### MONITORS ###
@@ -200,6 +199,7 @@
 					disable_hyprland_logo = true;
 					background_color = lib.mkForce "rgba(841F17FF)";
 					focus_on_activate = true;
+					disable_splash_rendering = true;
 				};
 
 
