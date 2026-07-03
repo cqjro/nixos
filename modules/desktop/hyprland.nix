@@ -184,7 +184,7 @@
 
 				# See https://wiki.hyprland.org/Configuring/Dwindle-Layout/ for more
 				dwindle = {
-					pseudotile = true;
+					# pseudotile = true;
 					preserve_split = true;
 				};
 
