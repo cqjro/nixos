@@ -42,8 +42,8 @@
 	hyprland = {
 		enable = true;
 		monitors = [	
-		"HDMI-A-2,3840x2160@60,960x-1080,2.00" # BENQ 
-		"DP-6,3840x2160@160,0x0,1.00" # MSI OLED
+		"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,960x-1080,2.00" # BENQ
+		"desc:Microstep MAG321UP OLED,3840x2160@160,0x0,1.00" # MSI OLED
 		];
 		bindel = [
 		",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
