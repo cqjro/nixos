@@ -32,6 +32,7 @@
 		onlyoffice-desktopeditors # microsoft suite replacement
 		lunatask # end to end crypted task app
 		koreader # ereader os that apparently can run on linux?
+		wealthfolio # budget and investment tracker
 
 		# browsers
 		inputs.helium.packages.${pkgs.stdenv.hostPlatform.system}.default
