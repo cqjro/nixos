@@ -109,6 +109,7 @@
 		ELECTRON_OZONE_PLATFORM_HINT = "wayland";
 		OZONE_PLATFORM_HINT = "wayland";
 		XCURSOR_SIZE = "27";
+		GTK_CSD = "0";
 	};
 
 	# Enable CUPS to print documents.
