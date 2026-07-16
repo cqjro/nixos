@@ -116,5 +116,19 @@
 					{ nixpkgs.overlays = overlays; }
 				];
 			};
+
+			nixosConfigurations.REDRUM = nixpkgs.lib.nixosSystem {
+				inherit system;
+				specialArgs = {inherit inputs;};
+				modules = [
+					./hosts/REDRUM/configuration.nix
+					nixos-hardware.nixosModules.apple-t2
+					# inputs.stylix.nixosModules.stylix
+					inputs.home-manager.nixosModules.default
+					# inputs.nix-flatpak.nixosModules.nix-flatpak
+					{ nixpkgs.overlays = overlays; }
+				];
+			};
+
 		};
 }  
