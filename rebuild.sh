@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Inspired by the script from the noboilerplate video
-set -e # exists the script if there is any error
+set -e # exits the script if there is any error
 # Edit your config
 # $EDITOR configuration.nix
 # cd to your config dir
@@ -47,19 +47,27 @@ git add --all # to ensure there isnt issues during build
 
 # Determine whether we're rebuilding locally or remotely
 current_hostname="$(hostname)"
-rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir")
+is_remote=false
 
 if [[ "$current_hostname" != "$dir" ]]; then
     echo "Current hostname ('$current_hostname') differs from selected host ('$dir')."
     read -p "Enter target user: " target_user
     read -p "Enter target IP address: " target_ip
-    rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir" --target-host "${target_user}@${target_ip}")
+    is_remote=true
+    # Remote rebuild: no local sudo. nixos-rebuild SSHes out as target_user
+    # and escalates privileges on the remote side via --use-remote-sudo.
+    rebuild_cmd=(nixos-rebuild switch --flake ".#$dir" --target-host "${target_user}@${target_ip}" --use-remote-sudo)
+    generations_cmd=(nixos-rebuild list-generations --target-host "${target_user}@${target_ip}")
+else
+    # Local rebuild: needs local sudo.
+    rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir")
+    generations_cmd=(nixos-rebuild list-generations)
 fi
 
 # Rebuild, output simplified errors, log trackebacks
 "${rebuild_cmd[@]}" &>./.log/nixos-switch.log || (bat ./.log/nixos-switch.log | grep --color error && exit 1)
-# Get current generation metadata
-if ! current=$(nixos-rebuild list-generations | awk '$NF == "True"'); then
+# Get current generation metadata (from whichever machine was actually rebuilt)
+if ! current=$("${generations_cmd[@]}" | awk '$NF == "True"'); then
     echo "Failed to get current generation metadata!"
     exit 1
 fi

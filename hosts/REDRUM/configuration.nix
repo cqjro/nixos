@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, inputs, ... }:
+{pkgs, inputs, ... }:
 
 {
   imports =
@@ -10,6 +10,8 @@
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
     ];
+	
+	services.logind.settings.Login.HandleLidSwitch = "ignore";
 
   nix.settings.experimental-features = ["nix-command" "flakes"];  
 
@@ -27,9 +29,9 @@
       name = "brcm-firmware";
       src = ./firmware/brcm;
       installPhase = ''
-	mkdir -p $out/lib/firmware/brcm
-	cp ${final.src}/* "$out/lib/firmware/brcm"
-	'';
+				mkdir -p $out/lib/firmware/brcm
+				cp ${final.src}/* "$out/lib/firmware/brcm"
+			'';
     }))
   ];
 
@@ -118,8 +120,10 @@
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
-    permitRootLogin = "prohibit-password";
-    passwordAuthentication = false;
+		settings = {
+			PermitRootLogin = "prohibit-password";
+			PasswordAuthentication = false;
+		};
   };
 
   users.users.root.openssh.authorizedKeys.keys = [
