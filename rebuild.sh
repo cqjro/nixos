@@ -57,20 +57,28 @@ if [[ "$current_hostname" != "$dir" ]]; then
     # Remote rebuild: no local sudo. nixos-rebuild SSHes out as target_user
     # and escalates privileges on the remote side via --use-remote-sudo.
     rebuild_cmd=(nixos-rebuild switch --flake ".#$dir" --target-host "${target_user}@${target_ip}" --use-remote-sudo)
-    generations_cmd=(nixos-rebuild list-generations --target-host "${target_user}@${target_ip}")
 else
     # Local rebuild: needs local sudo.
     rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir")
-    generations_cmd=(nixos-rebuild list-generations)
 fi
 
 # Rebuild, output simplified errors, log trackebacks
 "${rebuild_cmd[@]}" &>./.log/nixos-switch.log || (bat ./.log/nixos-switch.log | grep --color error && exit 1)
-# Get current generation metadata (from whichever machine was actually rebuilt)
-if ! current=$("${generations_cmd[@]}" | awk '$NF == "True"'); then
-    echo "Failed to get current generation metadata!"
-    exit 1
+
+# Get current generation metadata (list-generations doesn't support --target-host,
+# so for remote builds we run it over SSH on the target instead)
+if $is_remote; then
+    if ! current=$(ssh "${target_user}@${target_ip}" "nixos-rebuild list-generations" | awk '$NF == "True"'); then
+        echo "Failed to get current generation metadata!"
+        exit 1
+    fi
+else
+    if ! current=$(nixos-rebuild list-generations | awk '$NF == "True"'); then
+        echo "Failed to get current generation metadata!"
+        exit 1
+    fi
 fi
+
 # Commit all changes witih the generation metadata
 if ! git commit -m "$dir: $current || $message"; then
     echo "Failed to commit changes!"
