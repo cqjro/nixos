@@ -7,6 +7,7 @@
 {
 	imports =
 		[ # Include the results of the hardware scan.
+			../../modules/server/tailscale.nix
 			./hardware-configuration.nix
 			../../modules/system/default.nix
 			inputs.home-manager.nixosModules.default
