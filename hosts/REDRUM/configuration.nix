@@ -1,5 +1,4 @@
 {pkgs, inputs, ... }:
-
 {
   imports =
     [
@@ -61,6 +60,8 @@
   #   keyMap = "us";
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
+
+	nix.settings.trusted-users = [ "root" "cairo" ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
 	users.users.cairo = {
