@@ -18,7 +18,7 @@
 			credentialsFile = "/var/lib/cloudflared/actual-budget.json";
 			default = "http_status:404";
 			ingress = {
-				"budget.cqjro.ca" = "https://localhost:5006";
+				"budget.cqjro.ca" = "http://localhost:5006";
 			};
 
 		};
