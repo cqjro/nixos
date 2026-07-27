@@ -136,7 +136,7 @@
 	users.users.cairo = {
 		isNormalUser = true;
 		shell = pkgs.zsh;
-		extraGroups = [ "wheel" "networkmanager" "video" "audio" ]; # Enable ‘sudo’ for the user.
+		extraGroups = [ "wheel" "networkmanager" "video" "audio" "dialout"]; # Enable ‘sudo’ for the user.
 		packages = with pkgs; [
 			tree
 		];
