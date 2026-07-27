@@ -129,6 +129,8 @@
 	services.dbus.enable = true;
 
 	services.udisks2.enable = true;
+	services.gvfs.enable = true; # for automatic usb mounting
+
 	# Enable touchpad support (enabled default in most desktopManager).
 	# services.libinput.enable = true;
 
