@@ -1,0 +1,8 @@
+{
+  "target_playlist_id": "PLxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "lookback_hours": 24,
+  "max_results_per_channel": 5,
+  "exclude_shorts": true,
+  "token_file": "token.json",
+  "state_file": "state.json"
+}
