@@ -4,6 +4,7 @@
 		./discord/nixcord.nix
 		./zen-browser.nix
 		./nemo.nix
+		./calibre.nix
 	];
 
 	home.packages = with pkgs; [

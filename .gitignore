@@ -1,3 +1,10 @@
 *.log
 
 firmware/
+
+client_secret.json
+token.json
+
+modules/server/youtube/client_secret.json
+modules/server/youtube/token.json
+modules/server/youtube/config.json
