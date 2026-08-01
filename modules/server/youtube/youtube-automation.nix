@@ -7,7 +7,7 @@ let
     google-auth-oauthlib
     requests
   ]);
-  workDir = "/var/lib/youtube-playlist-sync";
+  workDir = "/var/lib/nixos-config/modules/server/youtube";
 in
 {
   users.users.youtube-sync = {
