@@ -18,7 +18,7 @@
 	imports = [
 		# ../../modules/keyboard/default.nix
 		# ../../modules/desktop/default.nix
-		# ../../modules/terminal/default.nix
+		../../modules/terminal/default.nix
 		# ../../modules/apps/default.nix
 		# ../../modules/languages/default.nix
 	];
