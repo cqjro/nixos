@@ -10,6 +10,7 @@
 			../../modules/server/tailscale.nix
 			./hardware-configuration.nix
 			../../modules/system/default.nix
+			../../modules/doodads/default.nix
 			inputs.home-manager.nixosModules.default
 		];
 	
@@ -131,6 +132,8 @@
 	services.udisks2.enable = true;
 	services.gvfs.enable = true; # for automatic usb mounting
 
+	services.udev.packages = with pkgs; [mtkclient];
+
 	# Enable touchpad support (enabled default in most desktopManager).
 	# services.libinput.enable = true;
 
@@ -138,7 +141,7 @@
 	users.users.cairo = {
 		isNormalUser = true;
 		shell = pkgs.zsh;
-		extraGroups = [ "wheel" "networkmanager" "video" "audio" "dialout"]; # Enable ‘sudo’ for the user.
+		extraGroups = [ "wheel" "networkmanager" "video" "audio" "dialout" "plugdev"]; # Enable ‘sudo’ for the user.
 		packages = with pkgs; [
 			tree
 		];
