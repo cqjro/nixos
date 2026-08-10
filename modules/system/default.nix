@@ -13,6 +13,7 @@
 		./android/default.nix
 		./audio/default.nix
 		./ios-sideloading.nix
+		./minecraft.nix
 	];
 
 	environment.systemPackages = with pkgs; [
