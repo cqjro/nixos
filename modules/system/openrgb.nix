@@ -11,7 +11,10 @@
 		];
 
 		# adding this solves the "missing udev rules" issue
-		services.hardware.openrgb.enable = true;
+		services.hardware.openrgb = {
+			enable = true;
+			motherboard = "amd";
+		};
 	};
 
 }
