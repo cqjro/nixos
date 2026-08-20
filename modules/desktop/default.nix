@@ -11,7 +11,7 @@
 		./rofi.nix
 		./walker.nix
 		# ./swaync.nix
-		./caelestia-shell.nix
+		# ./caelestia-shell.nix
 	];
 
 	home.packages = with pkgs; [
@@ -40,5 +40,6 @@
 		bluez
 		pavucontrol
 		pwvucontrol
+		libnotify
 	];
 }
