@@ -1085,6 +1085,26 @@
         "type": "github"
       }
     },
+    "noctalia": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787182736,
+        "narHash": "sha256-SVGz15XX8CED7PiPAg9eR0WnqZtJw+/7hwN1BKbfmQ4=",
+        "owner": "noctalia-dev",
+        "repo": "noctalia",
+        "rev": "21a272f10ca157d11fa7acc75c2bc0a7cfd7eb23",
+        "type": "github"
+      },
+      "original": {
+        "owner": "noctalia-dev",
+        "repo": "noctalia",
+        "type": "github"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": [
@@ -1219,6 +1239,7 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-openconnect-sso": "nixpkgs-openconnect-sso",
+        "noctalia": "noctalia",
         "openconnect-sso": "openconnect-sso",
         "rose-pine-hyprcursor": "rose-pine-hyprcursor",
         "stylix": "stylix",
