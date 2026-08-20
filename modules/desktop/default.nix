@@ -12,6 +12,7 @@
 		./walker.nix
 		# ./swaync.nix
 		# ./caelestia-shell.nix
+		./noctalia-shell.nix
 	];
 
 	home.packages = with pkgs; [
