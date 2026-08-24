@@ -1,40 +1,20 @@
 { inputs, ...}:
 {
-
 	imports = [
 		inputs.noctalia.homeModules.default
 	];
-
   programs.noctalia = {
     enable = true;
 		systemd = {
 			enable = true;
 		};
-
     settings = {
-      # bar = {
-      #   position = "top";
-      #   density = "compact";
-      #   showCapsule = true;
-      #   widgets = {
-      #     left = [
-      #       { id = "SidePanelToggle"; useDistroLogo = true; }
-      #       { id = "ActiveWindow"; }
-      #     ];
-      #     center = [
-      #       { id = "Workspace"; hideUnoccupied = false; }
-      #     ];
-      #     right = [
-      #       { id = "Tray"; }
-      #       { id = "WiFi"; }
-      #       { id = "Bluetooth"; }
-      #       { id = "Battery"; warningThreshold = 30; }
-      #       { id = "Volume"; }
-      #       { id = "Clock"; formatHorizontal = "HH:mm"; }
-      #       { id = "ControlCenter"; }
-      #     ];
-      #   };
-      # };
+      bar.default.monitor."DP-3" = {
+        # `match` defaults to the subtable key ("DP-3") when omitted,
+        # so no need to set it explicitly here.
+        scale = 1.3;  # bump icons/text on DP-3; tweak to taste (clamped ~0.2–2.5)
+      };
+      # HDMI-A-1 gets no override entry, so it stays at bar.default's scale = 1.0
       #
       # general.radiusRatio = 0.6;
       #
@@ -43,6 +23,4 @@
       colorSchemes.useWallpaperColors = false;
     };
   };
-
-
 }
