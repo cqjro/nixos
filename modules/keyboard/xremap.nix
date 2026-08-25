@@ -137,7 +137,7 @@
 # Keybind Cheatsheets - Super+K
 					super-k = {
 						remap = {
-							x.launch = ["xremap-binds"];
+							x.launch = ["bash" "~/nixos/modules/scripts/keybind-cheatsheat.sh"];
 						};
 					};
 				};
