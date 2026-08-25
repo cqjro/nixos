@@ -80,7 +80,7 @@
 								"dummy"
 								"mode-switcher"
 							];
-							background-image = mkLiteral ''url("~/.cache/wall.png", width)'';
+							# background-image = mkLiteral ''url("~/.cache/wall.png", width)'';
 						};
 						"entry" = {
 							enabled = true;
