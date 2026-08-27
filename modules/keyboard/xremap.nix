@@ -112,8 +112,18 @@
 							n.launch = ["noctalia" "msg" "panel-toggle" "control-center" "network"]; # Open control center: network tab
 							s.launch = ["noctalia" "msg" "settings-toggle"]; # Toggle settings panel
 							t.launch = ["noctalia" "msg" "theme-mode-toggle"]; # Toggle light/dark theme
+							h.launch = ["noctalia" "msg" "panel-toggle" "control-center" "home"]; # Open control center: home tab
+							m.launch = ["noctalia" "msg" "panel-toggle" "control-center" "media"]; # Open control center: media tab
+							o.launch = ["noctalia" "msg" "panel-toggle" "control-center" "monitor"]; # Open control center: monitor tab
+							y.launch = ["noctalia" "msg" "panel-toggle" "control-center" "system"]; # Open control center: system tab
+							w.launch = ["noctalia" "msg" "panel-toggle" "control-center" "weather"]; # Open control center: weather tab
+							d.launch = ["noctalia" "msg" "panel-toggle" "control-center" "calendar"]; # Open control center: calendar tab
+							i.launch = ["noctalia" "msg" "panel-toggle" "control-center" "notifications"]; # Open control center: notifications tab
 						};
 					};
+
+# Clipboard - Super+C
+					super-c.remap.c.launch = ["noctalia" "msg" "panel-toggle" "clipboard"]; # Toggle clipboard history
 
 # Dock/Widgets - Super+D
 					super-d = {
@@ -134,12 +144,9 @@
 							w.launch = ["noctalia" "msg" "window-switcher"]; # Open window switcher
 						};
 					};
+
 # Keybind Cheatsheets - Super+K
-					super-k = {
-						remap = {
-							x.launch = ["bash" "/home/cairo/.nixos/modules/scripts/keybind-cheatsheet.sh"];
-						};
-					};
+					super-k.remap.x.launch = ["bash" "/home/cairo/.nixos/modules/scripts/keybind-cheatsheet.sh"]; # Show keybind cheatsheet
 				};
 			}
 			];
