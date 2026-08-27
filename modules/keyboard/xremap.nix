@@ -23,27 +23,27 @@
 			{
 				name = "Program Workflow Remaps";
 				remap = {
-					super-t.remap.t.launch = ["ghostty"]; # Open a new terminal
+					super-t.remap.t.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "ghostty"]; # Open a new terminal
 					super-o = {
 						remap = {
 # Terminal apps
-							t.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "ghostty" "com.mitchellh.ghostty" "1"]; # Focus or launch terminal
-							e.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e nvim" "nvim" "1"]; # Focus or launch Neovim
+							t.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "ghostty" "com.mitchellh.ghostty" "1"]; # Focus or launch terminal
+							e.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e nvim" "nvim" "1"]; # Focus or launch Neovim
 
 # Core applications
-							n.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "obsidian" "obsidian" "1"]; # Focus or launch Obsidian
-							z.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "zen-twilight" "zen-twilight" "2"]; # Focus or launch Zen browser
-							p.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "proton-mail --ozone-platform-hint=wayland" "Proton Mail" "3"]; # Focus or launch Proton Mail
-							v.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland" "vesktop" "4"]; # Focus or launch Discord (Vesktop)
+							n.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "obsidian" "obsidian" "1"]; # Focus or launch Obsidian
+							z.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "zen-twilight" "zen-twilight" "2"]; # Focus or launch Zen browser
+							p.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "proton-mail --ozone-platform-hint=wayland" "Proton Mail" "3"]; # Focus or launch Proton Mail
+							v.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "vesktop --enable-features=WebRTCPipeWireCapturer --ozone-platform-hint=wayland" "vesktop" "4"]; # Focus or launch Discord (Vesktop)
 
 # Terminal utilities
-							m.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e ncspot" "ncspot" "5"]; # Focus or launch ncspot (Spotify TUI)
-							y.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e yazi" "yazi" "6"]; # Focus or launch Yazi file manager
-							b.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e btop" "btop" "7"]; # Focus or launch btop system monitor
+							m.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e ncspot" "ncspot" "5"]; # Focus or launch ncspot (Spotify TUI)
+							y.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e yazi" "yazi" "6"]; # Focus or launch Yazi file manager
+							b.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "title" "ghostty -e btop" "btop" "7"]; # Focus or launch btop system monitor
 
 # Gaming & Files
-							s.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "steam" "steam" "8"]; # Focus or launch Steam
-							f.launch = ["bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "nemo" "nemo" ""]; # Focus or launch Nemo file manager
+							s.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "steam" "steam" "8"]; # Focus or launch Steam
+							f.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "/home/cairo/.nixos/modules/scripts/focus-window.sh" "--by" "class" "nemo" "nemo" ""]; # Focus or launch Nemo file manager
 						};
 					};
 
@@ -83,7 +83,7 @@
 							f.launch = ["noctalia" "msg" "settings-open-plugin" "nightwatch75/file-search"]; # Open file search plugin
 							c.launch = ["noctalia" "msg" "panel-toggle" "calculator"]; # Toggle calculator panel
 							n.launch = ["noctalia" "msg" "network-toggle"]; # Toggle network
-							p.launch = ["noctalia" "msg" "power-cycle"]; # Open power menu
+							p.launch = ["noctalia" "msg" "panel-toggle" "session"]; # Open power/session menu (lock, suspend, reboot, shutdown)
 							b.launch = ["noctalia" "msg" "bluetooth-toggle"]; # Toggle Bluetooth
 							v.launch = ["noctalia" "msg" "notification-dnd-toggle"]; # Toggle do-not-disturb
 							k.launch = ["noctalia" "msg" "caffeine-toggle"]; # Toggle caffeine (prevent sleep)

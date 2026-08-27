@@ -14,16 +14,18 @@
           "nightwatch75/file-search"
         ];
       };
-
       # Per-monitor scale overrides (others inherit from bar.default)
       bar.default.monitor."DP-3" = {
         scale = 1.3;
       };
-
       colorSchemes.useWallpaperColors = false;
-
       # Global clock widget config - applies to all monitors
-      widget.clock.format = "{:%-I:%M:%S %p}"; 
+      widget.clock.format = "{:%-I:%M:%S %p}";
+
+      wallpaper = {
+        useSolidColor = true;
+        solidColor = "#841f17";
+      };
     };
   };
 }
