@@ -1,3 +1,4 @@
+# https://www.reddit.com/r/NixOS/comments/1tg9cse/hyprland_hm_lua_config_migration/
 { lib, pkgs, config, ... }:
 {
   options = {
@@ -8,6 +9,7 @@
     };
     hyprland.bindel = lib.mkOption {
       default = [];
+      description = "Extra bindel entries as raw hl.bind() Lua calls";
       type = lib.types.listOf lib.types.str;
     };
   };
@@ -135,9 +137,11 @@
             name = "epic-mouse-v1";
             sensitivity = -0.5;
           }];
+
+          # FIX: Environment variables via hyprlang format (still works in Lua mode)
+          # These get written as raw env = statements, not converted through toLua
         };
 
-        # FIX: monitor needs table format, not raw strings
         monitor = map (m: {
           output = m;
           mode = "preferred";
@@ -145,14 +149,8 @@
           scale = 1;
         }) config.hyprland.monitors;
 
-        # FIX: env values must all be strings
-        env = [
-          "XCURSOR_SIZE,27"
-          "HYPRCURSOR_SIZE,27"
-          "HYPRCURSOR_THEME,rose-pine-hyprcursor"
-          "ELECTRON_OZONE_PLATFORM_HINT,wayland"
-          "OZONE_PLATFORM_HINT,wayland"
-        ];
+        # FIX: Removed env from settings - will add via extraConfig below
+        # env = [...];
 
         bind = lib.flatten [
           (bind "${mainMod} + Q" dsp.window.close { })
@@ -204,9 +202,6 @@
           (bind "XF86MonBrightnessDown" (dsp.exec_cmd "brightnessctl --device acpi_video0 -e4 -n2 set 5%-") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessUp" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%+") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessDown" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%-") { locked = true; repeating = true; })
-
-          # FIX: bindel must be proper hl.bind() calls, not raw strings
-          (map (e: { _args = [e]; }) config.hyprland.bindel)
         ];
 
         on = mkArgs [
@@ -220,7 +215,6 @@
           '')
         ];
 
-        # FIX: window_rule size and move need vec2 format
         window_rule = [
           {
             match.class = "^steam_app_\\d+$";
@@ -230,11 +224,21 @@
             match.title = "^Picture-In-Picture$";
             float = true;
             pin = true;
-            size = { x = 0.3; y = 0.3; };
-            move = { x = "100%-w-20"; y = "100%-h-20"; };
           }
         ];
       };
+
+      # FIX: Add environment variables as raw Lua (bypasses toLua conversion)
+      extraConfig = ''
+        hl.env("XCURSOR_SIZE", "27")
+        hl.env("HYPRCURSOR_SIZE", "27")
+        hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
+        hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
+        hl.env("OZONE_PLATFORM_HINT", "wayland")
+      '';
     };
+
+    # Append bindel entries
+    xdg.configFile."hypr/hyprland-bindel.lua".text = lib.concatStringsSep "\n" config.hyprland.bindel;
   };
 }
