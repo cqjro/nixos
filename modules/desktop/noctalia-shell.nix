@@ -18,14 +18,15 @@
       bar.default.monitor."DP-3" = {
         scale = 1.3;
       };
+			
+			wallpapers = [
+				"/home/cairo/.nixos/modules/desktop/wallpapers/blend-in.jpeg"
+			];
+
       colorSchemes.useWallpaperColors = false;
       # Global clock widget config - applies to all monitors
       widget.clock.format = "{:%-I:%M:%S %p}";
 
-      wallpaper = {
-        useSolidColor = true;
-        solidColor = "#841f17";
-      };
     };
   };
 }
