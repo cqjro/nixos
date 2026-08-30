@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ lib, pkgs, config, ... }:
 {
   options = {
     hyprland.enable = lib.mkEnableOption "enables hyprland module";
@@ -131,14 +131,21 @@
             workspace_action = "workspace";
           }];
 
-          device = {
+          device = [{
             name = "epic-mouse-v1";
             sensitivity = -0.5;
-          };
+          }];
         };
 
-        monitor = config.hyprland.monitors;
+        # FIX: monitor needs table format, not raw strings
+        monitor = map (m: {
+          output = m;
+          mode = "preferred";
+          position = "0x0";
+          scale = 1;
+        }) config.hyprland.monitors;
 
+        # FIX: env values must all be strings
         env = [
           "XCURSOR_SIZE,27"
           "HYPRCURSOR_SIZE,27"
@@ -148,23 +155,16 @@
         ];
 
         bind = lib.flatten [
-          # Window control
           (bind "${mainMod} + Q" dsp.window.close { })
           (bind "${mainMod} + M" dsp.window.kill { })
           (bind "${mainMod} + V" (dsp.window.float { action = "toggle"; }) { })
           (bind "${mainMod} + SHIFT + L" (dsp.exec_cmd "hyprlock") { })
-
-          # Screenshots
           (bind "ALT + S" (dsp.exec_cmd "grimblast copysave screen") { locked = true; })
           (bind "ALT + SHIFT + S" (dsp.exec_cmd "grimblast copysave area") { locked = true; })
-
-          # Focus movement
           (bind "${mainMod} + H" (dsp.focus { direction = "left"; }) { })
           (bind "${mainMod} + J" (dsp.focus { direction = "down"; }) { })
           (bind "${mainMod} + K" (dsp.focus { direction = "up"; }) { })
           (bind "${mainMod} + L" (dsp.focus { direction = "right"; }) { })
-
-          # Workspace navigation
           (bind "${mainMod} + 1" (dsp.focus { workspace = 1; }) { })
           (bind "${mainMod} + 2" (dsp.focus { workspace = 2; }) { })
           (bind "${mainMod} + 3" (dsp.focus { workspace = 3; }) { })
@@ -175,8 +175,6 @@
           (bind "${mainMod} + 8" (dsp.focus { workspace = 8; }) { })
           (bind "${mainMod} + 9" (dsp.focus { workspace = 9; }) { })
           (bind "${mainMod} + 0" (dsp.focus { workspace = 10; }) { })
-
-          # Move window to workspace
           (bind "${mainMod} + SHIFT + 1" (dsp.window.move { workspace = 1; }) { })
           (bind "${mainMod} + SHIFT + 2" (dsp.window.move { workspace = 2; }) { })
           (bind "${mainMod} + SHIFT + 3" (dsp.window.move { workspace = 3; }) { })
@@ -187,44 +185,28 @@
           (bind "${mainMod} + SHIFT + 8" (dsp.window.move { workspace = 8; }) { })
           (bind "${mainMod} + SHIFT + 9" (dsp.window.move { workspace = 9; }) { })
           (bind "${mainMod} + SHIFT + 0" (dsp.window.move { workspace = 10; }) { })
-
-          # Special workspace
           (bind "${mainMod} + S" (dsp.workspace.toggle_special "magic") { })
           (bind "${mainMod} + SHIFT + S" (dsp.window.move { workspace = "special:magic"; }) { })
-
-          # Mouse scroll workspace switching
           (bind "${mainMod} + mouse_down" (dsp.focus { workspace = "e+1"; }) { })
           (bind "${mainMod} + mouse_up" (dsp.focus { workspace = "e-1"; }) { })
-
-          # Fullscreen
           (bind "${mainMod} + F" (dsp.window.fullscreen { action = "toggle"; }) { })
-
-          # PiP window position
           (bind "${mainMod} + ALT + H" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh left") { locked = true; })
           (bind "${mainMod} + ALT + J" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh down") { locked = true; })
           (bind "${mainMod} + ALT + K" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh up") { locked = true; })
           (bind "${mainMod} + ALT + L" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh right") { locked = true; })
-
-          # Mouse drag/resize
           (bind "${mainMod} + mouse:272" dsp.window.drag { mouse = true; })
           (bind "${mainMod} + mouse:273" dsp.window.resize { mouse = true; })
-
-          # Media keys
           (bind "XF86AudioNext" (dsp.exec_cmd "playerctl next") { locked = true; })
           (bind "XF86AudioPause" (dsp.exec_cmd "playerctl play-pause") { locked = true; })
           (bind "XF86AudioPlay" (dsp.exec_cmd "playerctl play-pause") { locked = true; })
           (bind "XF86AudioPrev" (dsp.exec_cmd "playerctl previous") { locked = true; })
-
-          # Hardware controls
           (bind "XF86MonBrightnessUp" (dsp.exec_cmd "brightnessctl --device acpi_video0 -e4 -n2 set 5%+") { locked = true; repeating = true; })
           (bind "XF86MonBrightnessDown" (dsp.exec_cmd "brightnessctl --device acpi_video0 -e4 -n2 set 5%-") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessUp" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%+") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessDown" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%-") { locked = true; repeating = true; })
 
-          # Extra bindel from option
-          (map (e: let
-            parts = lib.splitString "," e;
-          in { _args = parts; }) config.hyprland.bindel)
+          # FIX: bindel must be proper hl.bind() calls, not raw strings
+          (map (e: { _args = [e]; }) config.hyprland.bindel)
         ];
 
         on = mkArgs [
@@ -238,6 +220,7 @@
           '')
         ];
 
+        # FIX: window_rule size and move need vec2 format
         window_rule = [
           {
             match.class = "^steam_app_\\d+$";
