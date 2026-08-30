@@ -1,5 +1,5 @@
 # https://www.reddit.com/r/NixOS/comments/1tg9cse/hyprland_hm_lua_config_migration/
-{ lib, pkgs, config, ... }:
+{ lib, config, ... }:
 {
   options = {
     hyprland.enable = lib.mkEnableOption "enables hyprland module";
@@ -15,54 +15,133 @@
     };
   };
 
-  config = lib.mkIf config.hyprland.enable {
+  config = lib.mkIf config.hyprland.enable (let
+    mkLuaInline = lib.generators.mkLuaInline;
+    toLua = lib.generators.toLua;
+    mkArgs = args: { _args = args; };
+
+    bind = keys: dispatcher: options:
+      mkArgs [ keys dispatcher options ];
+
+    dsp = {
+      exec_cmd = app: mkLuaInline "hl.dsp.exec_cmd(${toLua { } app})";
+      focus = arg: mkLuaInline "hl.dsp.focus(${toLua { } arg})";
+      workspace = {
+        toggle_special = name: mkLuaInline "hl.dsp.workspace.toggle_special(${toLua { } name})";
+      };
+      window = {
+        close = mkLuaInline "hl.dsp.window.close()";
+        kill = mkLuaInline "hl.dsp.window.kill()";
+        float = arg: mkLuaInline "hl.dsp.window.float(${toLua { } arg})";
+        fullscreen = arg: mkLuaInline "hl.dsp.window.fullscreen(${toLua { } arg})";
+        move = arg: mkLuaInline "hl.dsp.window.move(${toLua { } arg})";
+        drag = mkLuaInline "hl.dsp.window.drag()";
+        resize = mkLuaInline "hl.dsp.window.resize()";
+      };
+    };
+
+    mainMod = "SUPER";
+
+    activeBorderCol = "rgba(${toString config.lib.stylix.colors.base05}FF)";
+    inactiveBorderCol = "rgba(595959aa)";
+
+    # Parse monitor string: "desc:XYZ,1920x1080@60,0x0,1" -> {output, mode, position, scale}
+    parseMonitor = m: let
+      parts = lib.splitString "," m;
+      output = if lib.length parts >= 1 then builtins.elemAt parts 0 else "";
+      mode = if lib.length parts >= 2 then builtins.elemAt parts 1 else "preferred";
+      position = if lib.length parts >= 3 then builtins.elemAt parts 2 else "0x0";
+      scale = if lib.length parts >= 4 then builtins.elemAt parts 3 else "1";
+    in {
+      inherit output mode position scale;
+    };
+
+    ##########################################################
+    # NEW: animation/bezier handling
+    #
+    # hl.config({...}) only accepts general/decoration/input/
+    # gestures/group/binds/debug/misc/dwindle/master/scrolling/
+    # ecosystem. Animations are NOT one of those categories, so
+    # nesting them under `config` (as the old rewrite did) makes
+    # them silent no-ops and Hyprland falls back to its default
+    # (slower, spring-based) animation set.
+    #
+    # Curves and animations instead need direct hl.curve() /
+    # hl.animation() calls. These helpers convert your old
+    # hyprlang-style strings into those calls automatically.
+    ##########################################################
+
+    trim = s: let
+      trimLeft = str: if str == "" then str else
+        if builtins.substring 0 1 str == " "
+        then trimLeft (builtins.substring 1 (builtins.stringLength str - 1) str)
+        else str;
+      trimRight = str: if str == "" then str else
+        if builtins.substring (builtins.stringLength str - 1) 1 str == " "
+        then trimRight (builtins.substring 0 (builtins.stringLength str - 1) str)
+        else str;
+    in trimRight (trimLeft s);
+
+    # "name,x1,y1,x2,y2" -> hl.curve("name", { type = "bezier", points = { {x1,y1}, {x2,y2} } })
+    mkCurveLua = b: let
+      parts = map trim (lib.splitString "," b);
+      name = builtins.elemAt parts 0;
+      x1 = builtins.elemAt parts 1;
+      y1 = builtins.elemAt parts 2;
+      x2 = builtins.elemAt parts 3;
+      y2 = builtins.elemAt parts 4;
+    in ''hl.curve("${name}", { type = "bezier", points = { {${x1}, ${y1}}, {${x2}, ${y2}} } })'';
+
+    # "leaf, onoff, speed, curve[, style]" -> hl.animation({ leaf=..., enabled=..., speed=..., bezier=...[, style=...] })
+    mkAnimationLua = a: let
+      parts = map trim (lib.splitString "," a);
+      leaf = builtins.elemAt parts 0;
+      onoff = builtins.elemAt parts 1;
+      speed = builtins.elemAt parts 2;
+      curve = builtins.elemAt parts 3;
+      hasStyle = lib.length parts >= 5;
+      style = if hasStyle then builtins.elemAt parts 4 else null;
+      enabled = if onoff == "1" then "true" else "false";
+      styleField = if hasStyle then '', style = "${style}"'' else "";
+    in ''hl.animation({ leaf = "${leaf}", enabled = ${enabled}, speed = ${speed}, bezier = "${curve}"${styleField} })'';
+
+    bezierList = [
+      "easeOutQuint,0.23,1,0.32,1"
+      "easeInOutCubic,0.65,0.05,0.36,1"
+      "linear,0,0,1,1"
+      "almostLinear,0.5,0.5,0.75,1.0"
+      "quick,0.15,0,0.1,1"
+    ];
+
+    animationList = [
+      "global, 1, 10, default"
+      "border, 1, 5.39, easeOutQuint"
+      "windows, 1, 4.79, easeOutQuint"
+      "windowsIn, 1, 4.1, easeOutQuint, popin 87%"
+      "windowsOut, 1, 1.49, linear, popin 87%"
+      "fadeIn, 1, 1.73, almostLinear"
+      "fadeOut, 1, 1.46, almostLinear"
+      "fade, 1, 3.03, quick"
+      "layers, 1, 3.81, easeOutQuint"
+      "layersIn, 1, 4, easeOutQuint, fade"
+      "layersOut, 1, 1.5, linear, fade"
+      "fadeLayersIn, 1, 1.79, almostLinear"
+      "fadeLayersOut, 1, 1.39, almostLinear"
+      "workspaces, 1, 1.94, almostLinear, fade"
+      "workspacesIn, 1, 1.21, almostLinear, fade"
+      "workspacesOut, 1, 1.94, almostLinear, fade"
+    ];
+
+    animationsLua = lib.concatStringsSep "\n" (
+      (map mkCurveLua bezierList) ++ (map mkAnimationLua animationList)
+    );
+  in {
     wayland.windowManager.hyprland = {
       enable = true;
       configType = "lua";
       systemd.enable = true;
 
-      settings = let
-        mkLuaInline = lib.generators.mkLuaInline;
-        toLua = lib.generators.toLua;
-        mkArgs = args: { _args = args; };
-
-        bind = keys: dispatcher: options:
-          mkArgs [ keys dispatcher options ];
-
-        dsp = {
-          exec_cmd = app: mkLuaInline "hl.dsp.exec_cmd(${toLua { } app})";
-          focus = arg: mkLuaInline "hl.dsp.focus(${toLua { } arg})";
-          workspace = {
-            toggle_special = name: mkLuaInline "hl.dsp.workspace.toggle_special(${toLua { } name})";
-          };
-          window = {
-            close = mkLuaInline "hl.dsp.window.close()";
-            kill = mkLuaInline "hl.dsp.window.kill()";
-            float = arg: mkLuaInline "hl.dsp.window.float(${toLua { } arg})";
-            fullscreen = arg: mkLuaInline "hl.dsp.window.fullscreen(${toLua { } arg})";
-            move = arg: mkLuaInline "hl.dsp.window.move(${toLua { } arg})";
-            drag = mkLuaInline "hl.dsp.window.drag()";
-            resize = mkLuaInline "hl.dsp.window.resize()";
-          };
-        };
-
-        mainMod = "SUPER";
-        
-        activeBorderCol = "rgba(${toString config.lib.stylix.colors.base05}FF)";
-        inactiveBorderCol = "rgba(595959aa)";
-        
-        # Parse monitor string: "desc:XYZ,1920x1080@60,0x0,1" -> {output, mode, position, scale}
-        # FIX: Keep scale as string, Nix module will handle conversion
-        parseMonitor = m: let
-          parts = lib.splitString "," m;
-          output = if lib.length parts >= 1 then builtins.elemAt parts 0 else "";
-          mode = if lib.length parts >= 2 then builtins.elemAt parts 1 else "preferred";
-          position = if lib.length parts >= 3 then builtins.elemAt parts 2 else "0x0";
-          scale = if lib.length parts >= 4 then builtins.elemAt parts 3 else "1";
-        in {
-          inherit output mode position scale;
-        };
-      in {
+      settings = {
         config = {
           general = {
             gaps_in = 5;
@@ -93,34 +172,7 @@
             };
           };
 
-          animations = {
-            enabled = true;
-            bezier = [
-              "easeOutQuint,0.23,1,0.32,1"
-              "easeInOutCubic,0.65,0.05,0.36,1"
-              "linear,0,0,1,1"
-              "almostLinear,0.5,0.5,0.75,1.0"
-              "quick,0.15,0,0.1,1"
-            ];
-            animation = [
-              "global, 1, 10, default"
-              "border, 1, 5.39, easeOutQuint"
-              "windows, 1, 4.79, easeOutQuint"
-              "windowsIn, 1, 4.1, easeOutQuint, popin 87%"
-              "windowsOut, 1, 1.49, linear, popin 87%"
-              "fadeIn, 1, 1.73, almostLinear"
-              "fadeOut, 1, 1.46, almostLinear"
-              "fade, 1, 3.03, quick"
-              "layers, 1, 3.81, easeOutQuint"
-              "layersIn, 1, 4, easeOutQuint, fade"
-              "layersOut, 1, 1.5, linear, fade"
-              "fadeLayersIn, 1, 1.79, almostLinear"
-              "fadeLayersOut, 1, 1.39, almostLinear"
-              "workspaces, 1, 1.94, almostLinear, fade"
-              "workspacesIn, 1, 1.21, almostLinear, fade"
-              "workspacesOut, 1, 1.94, almostLinear, fade"
-            ];
-          };
+          # animations block removed from here — see extraConfig below
 
           dwindle = { preserve_split = true; };
           master = { new_status = "master"; };
@@ -158,7 +210,6 @@
           }];
         };
 
-        # Parse monitors into structured table format (scale stays as string)
         monitor = map parseMonitor config.hyprland.monitors;
 
         bind = lib.flatten [
@@ -243,9 +294,11 @@
         hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
         hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
         hl.env("OZONE_PLATFORM_HINT", "wayland")
+
+        ${animationsLua}
       '';
     };
 
     xdg.configFile."hypr/hyprland-bindel.lua".text = lib.concatStringsSep "\n" config.hyprland.bindel;
-  };
+  });
 }

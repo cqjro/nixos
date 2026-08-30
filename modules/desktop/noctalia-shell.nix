@@ -19,9 +19,9 @@
         scale = 1.3;
       };
 			
-			wallpapers = [
-				"/home/cairo/.nixos/modules/desktop/wallpapers/blend-in.jpeg"
-			];
+			# wallpapers = [
+			# 	"/home/cairo/.nixos/modules/desktop/wallpapers/blend-in.jpeg"
+			# ];
 
       colorSchemes.useWallpaperColors = false;
       # Global clock widget config - applies to all monitors
