@@ -50,6 +50,18 @@
         
         activeBorderCol = "rgba(${toString config.lib.stylix.colors.base05}FF)";
         inactiveBorderCol = "rgba(595959aa)";
+        
+        # Parse monitor string: "desc:XYZ,1920x1080@60,0x0,1" -> {output, mode, position, scale}
+        # FIX: Keep scale as string, Nix module will handle conversion
+        parseMonitor = m: let
+          parts = lib.splitString "," m;
+          output = if lib.length parts >= 1 then builtins.elemAt parts 0 else "";
+          mode = if lib.length parts >= 2 then builtins.elemAt parts 1 else "preferred";
+          position = if lib.length parts >= 3 then builtins.elemAt parts 2 else "0x0";
+          scale = if lib.length parts >= 4 then builtins.elemAt parts 3 else "1";
+        in {
+          inherit output mode position scale;
+        };
       in {
         config = {
           general = {
@@ -146,6 +158,9 @@
           }];
         };
 
+        # Parse monitors into structured table format (scale stays as string)
+        monitor = map parseMonitor config.hyprland.monitors;
+
         bind = lib.flatten [
           (bind "${mainMod} + Q" dsp.window.close { })
           (bind "${mainMod} + M" dsp.window.kill { })
@@ -222,12 +237,7 @@
         ];
       };
 
-      # FIX: Use 'output' field instead of 'raw'
       extraConfig = ''
-        -- MONITORS (table format with 'output' field)
-        ${lib.concatStringsSep "\n" (map (m: "hl.monitor({output = \"${m}\"})") config.hyprland.monitors)}
-
-        -- ENVIRONMENT VARIABLES
         hl.env("XCURSOR_SIZE", "27")
         hl.env("HYPRCURSOR_SIZE", "27")
         hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
