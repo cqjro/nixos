@@ -97,13 +97,14 @@
 	#   useXkbConfig = true; # use xkb.options in tty.
 	# };
 
-	# Enabling Hyprland
+	# # Enabling Hyprland
 	programs.hyprland = {
 		enable = true;
 		xwayland.enable = true;
 		withUWSM = true;
 		package = inputs.hyprland.packages."${pkgs.stdenv.hostPlatform.system}".hyprland;
 	};
+
 
 	# wayland support for chromium/electron apps
 	environment.sessionVariables = {
