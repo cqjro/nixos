@@ -29,11 +29,8 @@
         dsp = {
           exec_cmd = app: mkLuaInline "hl.dsp.exec_cmd(${toLua { } app})";
           focus = arg: mkLuaInline "hl.dsp.focus(${toLua { } arg})";
-          layout = cmd: arg: mkLuaInline "hl.dsp.layout(${toLua { } cmd}, ${toLua { } arg})";
           workspace = {
-            change = arg: mkLuaInline "hl.dsp.workspace.change(${toLua { } arg})";
             toggle_special = name: mkLuaInline "hl.dsp.workspace.toggle_special(${toLua { } name})";
-            move = arg: mkLuaInline "hl.dsp.window.move(${toLua { } arg})";
           };
           window = {
             close = mkLuaInline "hl.dsp.window.close()";
@@ -111,7 +108,6 @@
           misc = {
             force_default_wallpaper = -1;
             disable_hyprland_logo = true;
-            # REMOVED: Let Stylix or other modules handle background_color
             focus_on_activate = true;
             disable_splash_rendering = true;
           };
@@ -139,13 +135,9 @@
             name = "epic-mouse-v1";
             sensitivity = -0.5;
           };
-
-          # Stylix integration (from your original config)
-          "col.active_border" = lib.mkForce "rgba(${config.lib.stylix.colors.base05}FF)";
-          # "col.inactive_border" = lib.mkForce "rgba(595959aa)";
         };
 
-        monitor = map (m: m) config.hyprland.monitors;
+        monitor = config.hyprland.monitors;
 
         env = [
           "XCURSOR_SIZE,27"
@@ -156,67 +148,80 @@
         ];
 
         bind = lib.flatten [
+          # Window control
           (bind "${mainMod} + Q" dsp.window.close { })
           (bind "${mainMod} + M" dsp.window.kill { })
           (bind "${mainMod} + V" (dsp.window.float { action = "toggle"; }) { })
           (bind "${mainMod} + SHIFT + L" (dsp.exec_cmd "hyprlock") { })
 
+          # Screenshots
           (bind "ALT + S" (dsp.exec_cmd "grimblast copysave screen") { locked = true; })
           (bind "ALT + SHIFT + S" (dsp.exec_cmd "grimblast copysave area") { locked = true; })
 
-          (bind "${mainMod} + H" (dsp.layout "movefocus" "left") { })
-          (bind "${mainMod} + J" (dsp.layout "movefocus" "down") { })
-          (bind "${mainMod} + K" (dsp.layout "movefocus" "up") { })
-          (bind "${mainMod} + L" (dsp.layout "movefocus" "right") { })
+          # Focus movement
+          (bind "${mainMod} + H" (dsp.focus { direction = "left"; }) { })
+          (bind "${mainMod} + J" (dsp.focus { direction = "down"; }) { })
+          (bind "${mainMod} + K" (dsp.focus { direction = "up"; }) { })
+          (bind "${mainMod} + L" (dsp.focus { direction = "right"; }) { })
 
-          (bind "${mainMod} + 1" (dsp.workspace.change 1) { })
-          (bind "${mainMod} + 2" (dsp.workspace.change 2) { })
-          (bind "${mainMod} + 3" (dsp.workspace.change 3) { })
-          (bind "${mainMod} + 4" (dsp.workspace.change 4) { })
-          (bind "${mainMod} + 5" (dsp.workspace.change 5) { })
-          (bind "${mainMod} + 6" (dsp.workspace.change 6) { })
-          (bind "${mainMod} + 7" (dsp.workspace.change 7) { })
-          (bind "${mainMod} + 8" (dsp.workspace.change 8) { })
-          (bind "${mainMod} + 9" (dsp.workspace.change 9) { })
-          (bind "${mainMod} + 0" (dsp.workspace.change 10) { })
+          # Workspace navigation
+          (bind "${mainMod} + 1" (dsp.focus { workspace = 1; }) { })
+          (bind "${mainMod} + 2" (dsp.focus { workspace = 2; }) { })
+          (bind "${mainMod} + 3" (dsp.focus { workspace = 3; }) { })
+          (bind "${mainMod} + 4" (dsp.focus { workspace = 4; }) { })
+          (bind "${mainMod} + 5" (dsp.focus { workspace = 5; }) { })
+          (bind "${mainMod} + 6" (dsp.focus { workspace = 6; }) { })
+          (bind "${mainMod} + 7" (dsp.focus { workspace = 7; }) { })
+          (bind "${mainMod} + 8" (dsp.focus { workspace = 8; }) { })
+          (bind "${mainMod} + 9" (dsp.focus { workspace = 9; }) { })
+          (bind "${mainMod} + 0" (dsp.focus { workspace = 10; }) { })
 
-          (bind "${mainMod} + SHIFT + 1" (dsp.workspace.move { workspace = 1; }) { })
-          (bind "${mainMod} + SHIFT + 2" (dsp.workspace.move { workspace = 2; }) { })
-          (bind "${mainMod} + SHIFT + 3" (dsp.workspace.move { workspace = 3; }) { })
-          (bind "${mainMod} + SHIFT + 4" (dsp.workspace.move { workspace = 4; }) { })
-          (bind "${mainMod} + SHIFT + 5" (dsp.workspace.move { workspace = 5; }) { })
-          (bind "${mainMod} + SHIFT + 6" (dsp.workspace.move { workspace = 6; }) { })
-          (bind "${mainMod} + SHIFT + 7" (dsp.workspace.move { workspace = 7; }) { })
-          (bind "${mainMod} + SHIFT + 8" (dsp.workspace.move { workspace = 8; }) { })
-          (bind "${mainMod} + SHIFT + 9" (dsp.workspace.move { workspace = 9; }) { })
-          (bind "${mainMod} + SHIFT + 0" (dsp.workspace.move { workspace = 10; }) { })
+          # Move window to workspace
+          (bind "${mainMod} + SHIFT + 1" (dsp.window.move { workspace = 1; }) { })
+          (bind "${mainMod} + SHIFT + 2" (dsp.window.move { workspace = 2; }) { })
+          (bind "${mainMod} + SHIFT + 3" (dsp.window.move { workspace = 3; }) { })
+          (bind "${mainMod} + SHIFT + 4" (dsp.window.move { workspace = 4; }) { })
+          (bind "${mainMod} + SHIFT + 5" (dsp.window.move { workspace = 5; }) { })
+          (bind "${mainMod} + SHIFT + 6" (dsp.window.move { workspace = 6; }) { })
+          (bind "${mainMod} + SHIFT + 7" (dsp.window.move { workspace = 7; }) { })
+          (bind "${mainMod} + SHIFT + 8" (dsp.window.move { workspace = 8; }) { })
+          (bind "${mainMod} + SHIFT + 9" (dsp.window.move { workspace = 9; }) { })
+          (bind "${mainMod} + SHIFT + 0" (dsp.window.move { workspace = 10; }) { })
 
+          # Special workspace
           (bind "${mainMod} + S" (dsp.workspace.toggle_special "magic") { })
-          (bind "${mainMod} + SHIFT + S" (dsp.workspace.move { workspace = "special:magic"; }) { })
+          (bind "${mainMod} + SHIFT + S" (dsp.window.move { workspace = "special:magic"; }) { })
 
-          (bind "${mainMod} + mouse_down" (dsp.workspace.change "+1") { })
-          (bind "${mainMod} + mouse_up" (dsp.workspace.change "-1") { })
+          # Mouse scroll workspace switching
+          (bind "${mainMod} + mouse_down" (dsp.focus { workspace = "e+1"; }) { })
+          (bind "${mainMod} + mouse_up" (dsp.focus { workspace = "e-1"; }) { })
 
+          # Fullscreen
           (bind "${mainMod} + F" (dsp.window.fullscreen { action = "toggle"; }) { })
 
+          # PiP window position
           (bind "${mainMod} + ALT + H" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh left") { locked = true; })
           (bind "${mainMod} + ALT + J" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh down") { locked = true; })
           (bind "${mainMod} + ALT + K" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh up") { locked = true; })
           (bind "${mainMod} + ALT + L" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh right") { locked = true; })
 
+          # Mouse drag/resize
           (bind "${mainMod} + mouse:272" dsp.window.drag { mouse = true; })
           (bind "${mainMod} + mouse:273" dsp.window.resize { mouse = true; })
 
+          # Media keys
           (bind "XF86AudioNext" (dsp.exec_cmd "playerctl next") { locked = true; })
           (bind "XF86AudioPause" (dsp.exec_cmd "playerctl play-pause") { locked = true; })
           (bind "XF86AudioPlay" (dsp.exec_cmd "playerctl play-pause") { locked = true; })
           (bind "XF86AudioPrev" (dsp.exec_cmd "playerctl previous") { locked = true; })
 
+          # Hardware controls
           (bind "XF86MonBrightnessUp" (dsp.exec_cmd "brightnessctl --device acpi_video0 -e4 -n2 set 5%+") { locked = true; repeating = true; })
           (bind "XF86MonBrightnessDown" (dsp.exec_cmd "brightnessctl --device acpi_video0 -e4 -n2 set 5%-") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessUp" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%+") { locked = true; repeating = true; })
           (bind "XF86KbdBrightnessDown" (dsp.exec_cmd "brightnessctl --device kbd_backlight -e4 set 5%-") { locked = true; repeating = true; })
 
+          # Extra bindel from option
           (map (e: let
             parts = lib.splitString "," e;
           in { _args = parts; }) config.hyprland.bindel)
@@ -227,7 +232,7 @@
           (mkLuaInline ''
             function()
               hl.exec_cmd("bash $HOME/.nixos/start.sh")
-              hl.exec_cmd("hyprctl dispatch createworkspace special:magic")
+              hl.exec_cmd("hyprctl dispatch hl.dsp.focus workspace=special:magic")
               hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
             end
           '')
