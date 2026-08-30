@@ -5,11 +5,12 @@
     hyprland.enable = lib.mkEnableOption "enables hyprland module";
     hyprland.monitors = lib.mkOption {
       default = [ ",preferred,auto,auto" ];
+      description = "Raw Hyprland monitor strings (e.g., 'desc:XYZ,1920x1080@60,0x0,1')";
       type = lib.types.listOf lib.types.str;
     };
     hyprland.bindel = lib.mkOption {
       default = [];
-      description = "Extra bindel entries as raw hl.bind() Lua calls";
+      description = "Extra bindel entries as raw hyprlang format";
       type = lib.types.listOf lib.types.str;
     };
   };
@@ -46,6 +47,9 @@
         };
 
         mainMod = "SUPER";
+        
+        activeBorderCol = "rgba(${toString config.lib.stylix.colors.base05}FF)";
+        inactiveBorderCol = "rgba(595959aa)";
       in {
         config = {
           general = {
@@ -55,6 +59,8 @@
             resize_on_border = false;
             allow_tearing = false;
             layout = "dwindle";
+            "col.active_border" = lib.mkForce activeBorderCol;
+            "col.inactive_border" = lib.mkForce inactiveBorderCol;
           };
 
           decoration = {
@@ -110,6 +116,7 @@
           misc = {
             force_default_wallpaper = -1;
             disable_hyprland_logo = true;
+            background_color = lib.mkForce "rgba(841F17FF)";
             focus_on_activate = true;
             disable_splash_rendering = true;
           };
@@ -137,20 +144,7 @@
             name = "epic-mouse-v1";
             sensitivity = -0.5;
           }];
-
-          # FIX: Environment variables via hyprlang format (still works in Lua mode)
-          # These get written as raw env = statements, not converted through toLua
         };
-
-        monitor = map (m: {
-          output = m;
-          mode = "preferred";
-          position = "0x0";
-          scale = 1;
-        }) config.hyprland.monitors;
-
-        # FIX: Removed env from settings - will add via extraConfig below
-        # env = [...];
 
         bind = lib.flatten [
           (bind "${mainMod} + Q" dsp.window.close { })
@@ -228,8 +222,12 @@
         ];
       };
 
-      # FIX: Add environment variables as raw Lua (bypasses toLua conversion)
+      # FIX: Use 'output' field instead of 'raw'
       extraConfig = ''
+        -- MONITORS (table format with 'output' field)
+        ${lib.concatStringsSep "\n" (map (m: "hl.monitor({output = \"${m}\"})") config.hyprland.monitors)}
+
+        -- ENVIRONMENT VARIABLES
         hl.env("XCURSOR_SIZE", "27")
         hl.env("HYPRCURSOR_SIZE", "27")
         hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
@@ -238,7 +236,6 @@
       '';
     };
 
-    # Append bindel entries
     xdg.configFile."hypr/hyprland-bindel.lua".text = lib.concatStringsSep "\n" config.hyprland.bindel;
   };
 }
