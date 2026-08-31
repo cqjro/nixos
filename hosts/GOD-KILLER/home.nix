@@ -42,7 +42,7 @@
 	hyprland = {
 		enable = true;
 		monitors = [	
-		"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,960x-1080,2.00" # BENQ
+		"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,960x-1080,1.50" # BENQ
 		"desc:Microstep MAG321UP OLED,3840x2160@165,0x0,1.00" # MSI OLED
 		];
 		bindel = [
