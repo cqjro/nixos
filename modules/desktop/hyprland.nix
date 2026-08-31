@@ -276,7 +276,7 @@
           (mkLuaInline ''
             function()
               hl.exec_cmd("bash $HOME/.nixos/start.sh")
-              hl.exec_cmd("hyprctl dispatch hl.dsp.focus workspace=special:magic")
+              hl.dispatch(hl.dsp.focus({ workspace = "special:magic" }))
               hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
             end
           '')
