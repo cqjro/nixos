@@ -143,35 +143,37 @@
 
       settings = {
         config = {
-          general = {
-            gaps_in = 5;
-            gaps_out = 15;
-            border_size = 5;
-            resize_on_border = false;
-            allow_tearing = false;
-            layout = "dwindle";
-            "col.active_border" = lib.mkForce activeBorderCol;
-            "col.inactive_border" = lib.mkForce inactiveBorderCol;
-          };
+					general = {
+						gaps_in = 5;
+						gaps_out = 15;
+						border_size = 0;              # was 5 — no more border outline
+							resize_on_border = false;
+						allow_tearing = false;
+						layout = "dwindle";
+# col.active_border / col.inactive_border removed — moot with border_size = 0
+					};
 
-          decoration = {
-            rounding = 10;
-            rounding_power = 2;
-            active_opacity = 1.0;
-            inactive_opacity = 1.0;
-            shadow = {
-              enabled = true;
-              range = 4;
-              render_power = 3;
-            };
-            blur = {
-              enabled = true;
-              size = 3;
-              passes = 1;
-              vibrancy = 0.1696;
-            };
-          };
+					decoration = {
+						rounding = 10;
+						rounding_power = 2;
+						active_opacity = 1.0;
+						inactive_opacity = 1.0;
 
+						shadow = {
+							enabled = true;
+							range = 40;                  # bigger spread = softer "glow" vs. a hard shadow
+								render_power = 4;            # higher = smoother falloff
+								color = lib.mkForce "rgba(00000090)";    # focused window: visible soft shadow
+								color_inactive = lib.mkForce "rgba(00000000)";  # unfocused: fully transparent = no shadow
+						};
+
+						blur = {
+							enabled = true;
+							size = 3;
+							passes = 1;
+							vibrancy = 0.1696;
+						};
+					};
           # animations block removed from here — see extraConfig below
 
           dwindle = { preserve_split = true; };
