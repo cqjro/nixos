@@ -1,28 +1,28 @@
 { ... }:
 
 {
-	# Home Manager needs a bit of information about you and the paths it should
-	# manage.
+# Home Manager needs a bit of information about you and the paths it should
+# manage.
 	home.username = "cairo";
 	home.homeDirectory = "/home/cairo";
 
-	# This value determines the Home Manager release that your configuration is
-	# compatible with. This helps avoid breakage when a new Home Manager release
-	# introduces backwards incompatible changes.
-	#
-	# You should not change this value, even if you update Home Manager. If you do
-	# want to update the value, then make sure to first check the Home Manager
-	# release notes.
+# This value determines the Home Manager release that your configuration is
+# compatible with. This helps avoid breakage when a new Home Manager release
+# introduces backwards incompatible changes.
+#
+# You should not change this value, even if you update Home Manager. If you do
+# want to update the value, then make sure to first check the Home Manager
+# release notes.
 	home.stateVersion = "24.11"; # Please read the comment before changing.
 
-	#TODO group these togeher with default import files like in example configs
-	imports = [
+#TODO group these togeher with default import files like in example configs
+		imports = [
 		../../modules/keyboard/default.nix
-		../../modules/desktop/default.nix
-		../../modules/terminal/default.nix
-		../../modules/apps/default.nix
-		../../modules/languages/default.nix
-	];
+			../../modules/desktop/default.nix
+			../../modules/terminal/default.nix
+			../../modules/apps/default.nix
+			../../modules/languages/default.nix
+		];
 
 	home.sessionVariables = {
 		EDITOR = "nvim";
@@ -35,19 +35,19 @@
 		XDG_SESSION_DESKTOP = "Hyprland";
 	};
 
-	# get rid of mismatch version error on rebuild	
+# get rid of mismatch version error on rebuild	
 	stylix.enableReleaseChecks = false;
-	
-	# configuring pc specific hyprland settings
+
+# configuring pc specific hyprland settings
 	hyprland = {
 		enable = true;
 		monitors = [	
-		"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,960x-1080,1.50" # BENQ
-		"desc:Microstep MAG321UP OLED,3840x2160@165,0x0,1.00" # MSI OLED
+			"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,640x-1440,1.50" # BENQ
+			"desc:Microstep MAG321UP OLED,3840x2160@165,0x0,1.00" # MSI OLED
 		];
 		bindel = [
-		",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
-    ",XF86MonBrightnessDown, exec, ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"
+			",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
+				",XF86MonBrightnessDown, exec, ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"
 		];
 	};
 
@@ -57,6 +57,6 @@
 		"/homes/cairo/.nixos"
 	];
 
-	# Let Home Manager install and manage itself.
+# Let Home Manager install and manage itself.
 	programs.home-manager.enable = true;
 }
