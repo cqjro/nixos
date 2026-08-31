@@ -143,6 +143,11 @@
 
       settings = {
         config = {
+				# TODO remove debug option if it causes gpu performance issues
+					debug = {
+						damage_tracking = 0; # full-frame redraw every frame to stop stale pixel errors
+					};
+
 					general = {
 						gaps_in = 5;
 						gaps_out = 15;
