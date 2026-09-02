@@ -187,9 +187,10 @@
           misc = {
             force_default_wallpaper = -1;
             disable_hyprland_logo = true;
-            background_color = lib.mkForce "rgba(841F17FF)";
+            # background_color = lib.mkForce "rgba(841F17FF)";
             focus_on_activate = true;
             disable_splash_rendering = true;
+						vrr = 0; # disabling variable refresh rate (try to solve kvm isues)
           };
 
           input = {
