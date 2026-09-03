@@ -14,6 +14,7 @@
 		./audio/default.nix
 		./ios-sideloading.nix
 		./minecraft.nix
+		./../desktop/noctalia-greeter.nix
 	];
 
 	environment.systemPackages = with pkgs; [
