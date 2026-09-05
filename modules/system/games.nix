@@ -29,7 +29,12 @@
 			remotePlay.openFirewall = true;
 			dedicatedServer.openFirewall = true;
 			
-			gamescopeSession.enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
+			gamescopeSession = {
+				enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
+				env = {
+					__GL_VRR_ALLOWED = "0";
+				};
+			};
 
 			extraPackages = with pkgs; [
 				hidapi # fixes steam controller firmware update issues
