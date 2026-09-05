@@ -31,9 +31,16 @@
 			
 			gamescopeSession = {
 				enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
+				
 				env = {
 					__GL_VRR_ALLOWED = "0";
 				};
+				
+				args = [
+					"-w" "3840"
+					"-h" "2160"
+					"-r" "165"
+				];
 			};
 
 			extraPackages = with pkgs; [
