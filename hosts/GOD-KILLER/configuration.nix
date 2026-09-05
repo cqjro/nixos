@@ -45,6 +45,9 @@
 
 	# Use the systemd-boot EFI boot loader.
 	# boot.loader.systemd-boot.enable = true;
+	services.seatd = {
+			enable = true; # required for steam boot?
+	};
 
 	# Boot Loader	
 	boot.loader.efi.canTouchEfiVariables = true;
@@ -142,7 +145,7 @@
 	users.users.cairo = {
 		isNormalUser = true;
 		shell = pkgs.zsh;
-		extraGroups = [ "wheel" "networkmanager" "video" "audio" "dialout" "plugdev"]; # Enable ‘sudo’ for the user.
+		extraGroups = [ "seat" "wheel" "networkmanager" "video" "audio" "dialout" "plugdev"]; # Enable ‘sudo’ for the user.
 		packages = with pkgs; [
 			tree
 		];
