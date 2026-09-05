@@ -42,7 +42,7 @@
 		programs.gamescope = {
 			enable = true;
 			enableWsi = true;
-			capSysNice = true;
+			capSysNice = false;
 		};
 		
 		programs.appimage.enable = true;
