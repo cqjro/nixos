@@ -1,0 +1,27 @@
+{ ... }:
+{
+	flake.modules.nixos."REDRUM-hardware" = { config, lib, modulesPath, ... }: {
+		imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
+
+		boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+		boot.initrd.kernelModules = [ ];
+		boot.kernelModules = [ "kvm-intel" ];
+		boot.extraModulePackages = [ ];
+
+		fileSystems."/" = {
+			device = "/dev/disk/by-uuid/1ec0f1e7-d729-4cb5-8081-016fb10f1732";
+			fsType = "ext4";
+		};
+
+		fileSystems."/boot" = {
+			device = "/dev/disk/by-uuid/BE93-9792";
+			fsType = "vfat";
+			options = [ "fmask=0022" "dmask=0022" ];
+		};
+
+		swapDevices = [ { device = "/dev/disk/by-uuid/bf45726f-bd1d-4278-96c0-eb95dc9b551f"; } ];
+
+		nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+		hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+	};
+}

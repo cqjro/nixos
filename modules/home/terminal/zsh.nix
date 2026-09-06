@@ -1,0 +1,29 @@
+{ ... }:
+{
+	flake.modules.homeManager."zsh" = { pkgs, ... }: {
+		home.packages = with pkgs; [
+			zsh
+		];
+
+		programs.zsh = {
+			enable = true;
+			enableCompletion = true;
+			autosuggestion.enable = true;
+			syntaxHighlighting.enable = true;
+
+			shellAliases = {
+				ll = "eza -l --header";
+				llt = "eza -l --tree --header";
+				cd = "z";
+				rebuild = "bash ~/.nixos/rebuild.sh";
+				xremap-binds = "bash ~/.nixos/modules/scripts/keybind-cheatsheet.sh";
+			};
+
+			profileExtra = ''
+				if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+  					exec start-hyprland
+				fi
+			'';
+		};
+	};
+}

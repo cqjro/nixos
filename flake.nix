@@ -2,6 +2,10 @@
 	description = "main system flake";
 
 	inputs = {
+		# dendritic scaffolding
+		flake-parts.url = "github:hercules-ci/flake-parts";
+		import-tree.url = "github:vic/import-tree";
+
 		# default nixos
 		nixpkgs.url = "nixpkgs/nixos-unstable";
 		nixos-hardware.url = "github:nixos/nixos-hardware";
@@ -42,12 +46,12 @@
 
 		firefox-addons = {
 			url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
-   		inputs.nixpkgs.follows = "nixpkgs";
+			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
 		helium = {
-  		url = "github:schembriaiden/helium-browser-nix-flake";
-  		inputs.nixpkgs.follows = "nixpkgs";
+			url = "github:schembriaiden/helium-browser-nix-flake";
+			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
 		nixcord = {
@@ -58,25 +62,25 @@
 		nix-flatpak = {
 			url = "github:gmodena/nix-flatpak";
 		};
-	
+
 		nixpkgs-openconnect-sso.url = "github:nixos/nixpkgs/46397778ef1f73414b03ed553a3368f0e7e33c2f";
 
-		openconnect-sso ={
+		openconnect-sso = {
 			url = "github:jcszymansk/openconnect-sso";
 			inputs.nixpkgs.follows = "nixpkgs-openconnect-sso";
 		};
 
 		elephant.url = "github:abenz1267/elephant"; # required for walker
-		
+
 		walker = {
 			url = "github:abenz1267/walker";
-  		inputs.elephant.follows = "elephant";
+			inputs.elephant.follows = "elephant";
 		};
 
 		caelestia-shell = {
-      url = "github:caelestia-dots/shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+			url = "github:caelestia-dots/shell";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
 
 		iloader = {
 			url = "github:nab138/iloader";
@@ -92,53 +96,14 @@
 			url = "github:noctalia-dev/noctalia-greeter";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
-
-
-
 	};
 
-	outputs = {nixpkgs, nixos-hardware,...}@inputs:
-		let
-			system = "x86_64-linux";
-			overlays = [];
-		in { 
-			nixosConfigurations.LittleNix = nixpkgs.lib.nixosSystem {
-				inherit system;
-				specialArgs = {inherit inputs;};
-				modules = [
-					./hosts/LittleNix/configuration.nix
-					nixos-hardware.nixosModules.apple-t2
-					inputs.stylix.nixosModules.stylix
-					inputs.home-manager.nixosModules.default
-					inputs.nix-flatpak.nixosModules.nix-flatpak
-					{ nixpkgs.overlays = overlays; }
-				];
-			};
-
-			nixosConfigurations.GOD-KILLER = nixpkgs.lib.nixosSystem {
-				inherit system;
-				specialArgs = {inherit inputs;};
-				modules = [
-					./hosts/GOD-KILLER/configuration.nix
-					inputs.stylix.nixosModules.stylix
-					inputs.home-manager.nixosModules.default
-					inputs.nix-flatpak.nixosModules.nix-flatpak
-					{ nixpkgs.overlays = overlays; }
-				];
-			};
-
-			nixosConfigurations.REDRUM = nixpkgs.lib.nixosSystem {
-				inherit system;
-				specialArgs = {inherit inputs;};
-				modules = [
-					./hosts/REDRUM/configuration.nix
-					nixos-hardware.nixosModules.apple-t2
-					# inputs.stylix.nixosModules.stylix
-					inputs.home-manager.nixosModules.default
-					# inputs.nix-flatpak.nixosModules.nix-flatpak
-					{ nixpkgs.overlays = overlays; }
-				];
-			};
-
+	outputs = inputs@{ ... }:
+		inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+			imports = [
+				inputs.flake-parts.flakeModules.modules
+				(inputs.import-tree ./modules)
+			];
+			systems = [ "x86_64-linux" ];
 		};
-}  
+}

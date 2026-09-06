@@ -1,11 +1,6 @@
-{lib, pkgs, config, ...}:
+{ ... }:
 {
-	options = {
-		openrgb.enable = lib.mkEnableOption "enabling openrgb";
-	};
-
-	config = lib.mkIf config.openrgb.enable {
-		
+	flake.modules.nixos.openrgb = { pkgs, ... }: {
 		environment.systemPackages = with pkgs; [
 			openrgb-with-all-plugins
 		];
@@ -16,5 +11,4 @@
 			motherboard = "amd";
 		};
 	};
-
 }

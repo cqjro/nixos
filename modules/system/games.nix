@@ -1,9 +1,6 @@
-{config, lib, pkgs, ...}:
+{ ... }:
 {
-	options = {
-		games.enable = lib.mkEnableOption "enable games";
-	};
-	config = lib.mkIf config.games.enable {
+	flake.modules.nixos.games = { pkgs, ... }: {
 		environment.systemPackages = with pkgs; [
 			mangohud # minial performance hud
 			# lutris # linxu game launcher
@@ -28,14 +25,12 @@
 
 			remotePlay.openFirewall = true;
 			dedicatedServer.openFirewall = true;
-			
+
 			gamescopeSession = {
 				enable = true; # starts game in a microcompositor if there is resolution/upscaling issues on DE/window manager
-				
 				env = {
 					__GL_VRR_ALLOWED = "0";
 				};
-				
 				args = [
 					"-w" "3840"
 					"-h" "2160"
@@ -47,7 +42,7 @@
 				hidapi # fixes steam controller firmware update issues
 			];
 			extraCompatPackages = with pkgs; [
-			  proton-ge-bin #adding proton GE
+				proton-ge-bin # adding proton GE
 			];
 		};
 
@@ -56,7 +51,7 @@
 			enableWsi = true;
 			capSysNice = false;
 		};
-		
+
 		programs.appimage.enable = true;
 		programs.gamemode.enable = true;
 	};

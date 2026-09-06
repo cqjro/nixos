@@ -1,12 +1,12 @@
-{ pkgs, ...}:
+{ ... }:
 {
+	flake.modules.nixos.cloudflared = { pkgs, ... }: {
+		environment.systemPackages = with pkgs; [
+			cloudflared
+		];
 
-environment.systemPackages = with pkgs; [
-	cloudflared
-];
-
-services.cloudflared = {
-	enable = true;
-};
-
+		services.cloudflared = {
+			enable = true;
+		};
+	};
 }

@@ -1,28 +1,32 @@
-{pkgs, inputs, ...}:
+{ inputs, ... }:
+let
+	openconnectSso = inputs.openconnect-sso.packages.x86_64-linux.openconnect-sso;
+in
 {
-	environment.systemPackages = with pkgs; [
-		openconnect
-		inputs.openconnect-sso.packages.${pkgs.stdenv.hostPlatform.system}.openconnect-sso
-		gpclient
-	];
+	flake.modules.nixos.vpn = { pkgs, ... }: {
+		environment.systemPackages = with pkgs; [
+			openconnect
+			openconnectSso
+			gpclient
+		];
 
-	# Create a custom openssl config file
-	environment.etc."ssl/openssl_legacy.cnf".text = ''
-		openssl_conf = openssl_init
+		# Create a custom openssl config file
+		environment.etc."ssl/openssl_legacy.cnf".text = ''
+			openssl_conf = openssl_init
 
-		[openssl_init]
-		ssl_conf = ssl_sect
+			[openssl_init]
+			ssl_conf = ssl_sect
 
-		[ssl_sect]
-		system_default = system_default_sect
+			[ssl_sect]
+			system_default = system_default_sect
 
-		[system_default_sect]
-		Options = UnsafeLegacyRenegotiation
-	'';
+			[system_default_sect]
+			Options = UnsafeLegacyRenegotiation
+		'';
 
-	# Set the environment variable to use it
-	environment.variables = {
-		OPENSSL_CONF = "/etc/ssl/openssl_legacy.cnf";
+		# Set the environment variable to use it
+		environment.variables = {
+			OPENSSL_CONF = "/etc/ssl/openssl_legacy.cnf";
+		};
 	};
 }
-
