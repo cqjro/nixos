@@ -3,8 +3,6 @@
 	flake.modules.nixos."REDRUM" = { pkgs, ... }: {
 		services.logind.settings.Login.HandleLidSwitch = "ignore";
 
-		nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
 		# Use the systemd-boot EFI boot loader.
 		boot.loader = {
 			systemd-boot.enable = true;
@@ -54,9 +52,6 @@
 
 		# Configure network connections interactively with nmcli or nmtui.
 		networking.networkmanager.enable = true;
-
-		# Set your time zone.
-		time.timeZone = "America/Toronto";
 
 		nix.settings.trusted-users = [ "root" "cairo" ];
 

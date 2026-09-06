@@ -1,5 +1,21 @@
-{ ... }:
+{ inputs, ... }:
+let
+  system = "x86_64-linux";
+  pkgs = inputs.nixpkgs.legacyPackages.${system};
+in
 {
+  flake.devShells.${system}.youtube-sync =
+    pkgs.mkShell {
+      packages = [
+        (pkgs.python3.withPackages (ps: with ps; [
+          google-api-python-client
+          google-auth-httplib2
+          google-auth-oauthlib
+          requests
+        ]))
+      ];
+    };
+
   flake.modules.nixos.youtube = { pkgs, ... }:
   let
     pythonEnv = pkgs.python3.withPackages (ps: with ps; [

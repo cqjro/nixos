@@ -10,6 +10,14 @@
 			modules = [
 				inputs.self.modules.nixos.base
 				inputs.self.modules.nixos.system
+				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.time
+				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos.environment
+				inputs.self.modules.nixos.users
+				inputs.self.modules.nixos.printing
+				inputs.self.modules.nixos.dbus
+				inputs.self.modules.nixos.bluetooth
 				inputs.self.modules.nixos.ssh
 				inputs.self.modules.nixos.networking
 				inputs.self.modules.nixos.vpn
@@ -39,6 +47,14 @@
 			modules = [
 				inputs.self.modules.nixos.base
 				inputs.self.modules.nixos.system
+				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.time
+				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos.environment
+				inputs.self.modules.nixos.users
+				inputs.self.modules.nixos.printing
+				inputs.self.modules.nixos.dbus
+				inputs.self.modules.nixos.bluetooth
 				inputs.self.modules.nixos.ssh
 				inputs.self.modules.nixos.networking
 				inputs.self.modules.nixos.vpn
@@ -63,6 +79,9 @@
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
+				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.time
+				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos."REDRUM"
 				inputs.self.modules.nixos."REDRUM-hardware"
 				inputs.self.modules.nixos.tailscale

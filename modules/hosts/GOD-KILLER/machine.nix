@@ -16,8 +16,8 @@
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						base
 						GOD-KILLER
+						environment
 						hyprland
 						gtk
 						xdg-desktop-entries
@@ -95,9 +95,6 @@
 		services.gvfs.enable = true; # for automatic usb mounting
 
 		services.udev.packages = with pkgs; [ mtkclient ];
-
-		# Extra groups beyond the base (base provides wheel/networkmanager/video/audio)
-		users.users.cairo.extraGroups = [ "seat" "wheel" "networkmanager" "video" "audio" "dialout" "plugdev" ];
 
 		fonts.packages = with pkgs; [
 			nerd-fonts.jetbrains-mono

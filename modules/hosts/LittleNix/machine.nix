@@ -19,8 +19,8 @@
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						base
 						LittleNix
+						environment
 						hyprland
 						gtk
 						xdg-desktop-entries
