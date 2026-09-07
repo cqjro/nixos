@@ -25,7 +25,7 @@
 				inputs.self.modules.nixos.nvidia
 				inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.openrgb
-				inputs.self.modules.nixos.android
+				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.minecraft
@@ -61,7 +61,7 @@
 				inputs.self.modules.nixos.vpn
 				inputs.self.modules.nixos.stylix
 				inputs.self.modules.nixos.power-profiles
-				inputs.self.modules.nixos.android
+				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.minecraft
