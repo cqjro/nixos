@@ -8,8 +8,8 @@
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
-				inputs.self.modules.nixos.base
-				inputs.self.modules.nixos.system
+				inputs.self.modules.nixos.zsh
+				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
@@ -34,6 +34,7 @@
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos."GOD-KILLER"
 				inputs.self.modules.nixos."GOD-KILLER-hardware"
+				inputs.self.modules.nixos."GOD-KILLER-monitors"
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
 				inputs.nix-flatpak.nixosModules.nix-flatpak
@@ -45,8 +46,8 @@
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
-				inputs.self.modules.nixos.base
-				inputs.self.modules.nixos.system
+				inputs.self.modules.nixos.zsh
+				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
@@ -67,6 +68,7 @@
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos."LittleNix"
 				inputs.self.modules.nixos."LittleNix-hardware"
+				inputs.self.modules.nixos."LittleNix-monitors"
 				inputs.nixos-hardware.nixosModules.apple-t2
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
@@ -79,6 +81,7 @@
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
+				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features

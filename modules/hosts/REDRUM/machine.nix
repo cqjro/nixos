@@ -29,7 +29,7 @@
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						base
+						REDRUM
 						zsh
 						ghostty
 						git

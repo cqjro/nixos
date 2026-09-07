@@ -1,7 +1,6 @@
 { ... }:
 {
-	# shared home-manager base for the cairo user
-	flake.modules.homeManager.base = {
+	flake.modules.homeManager.REDRUM = {
 		home.username = "cairo";
 		home.homeDirectory = "/home/cairo";
 

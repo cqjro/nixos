@@ -1,6 +1,16 @@
 # https://www.reddit.com/r/NixOS/comments/1tg9cse/hyprland_hm_lua_config_migration/
-{ ... }:
+{ inputs, ... }:
 {
+  flake.modules.nixos.hyprland = { pkgs, ... }: {
+    # Enabling Hyprland
+    programs.hyprland = {
+      enable = true;
+      xwayland.enable = true;
+      withUWSM = true;
+      package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    };
+  };
+
   flake.modules.homeManager."hyprland" = { lib, config, ... }: {
     options = {
       hyprland.monitors = lib.mkOption {

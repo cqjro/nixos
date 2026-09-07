@@ -6,7 +6,7 @@ set -e # exits the script if there is any error
 # cd to your config dir
 pushd ~/.nixos
 # Get the list of directories and store them in an array
-TARGET_DIR="$HOME/.nixos/hosts"
+TARGET_DIR="$HOME/.nixos/modules/hosts"
 dir_list=()
 while IFS= read -r -d '' dir; do
     dir_list+=("$(basename "$dir")")
@@ -61,6 +61,19 @@ else
     # Local rebuild: needs local sudo.
     rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir")
 fi
+
+# Run a flake check before rebuilding and output the results
+echo "Running flake check..."
+if ! flake_check_output=$(nix flake check 2>&1); then
+    echo "flake check FAILED:"
+    echo "$flake_check_output"
+    exit 1
+fi
+echo "flake check passed:"
+echo "$flake_check_output"
+
+# Ensure the log directory exists
+mkdir -p .log
 
 # Rebuild, output simplified errors, log trackebacks
 "${rebuild_cmd[@]}" &>./.log/nixos-switch.log || (bat ./.log/nixos-switch.log | grep --color error && exit 1)

@@ -7,9 +7,6 @@
 			"pnpm-10.29.2"
 		];
 
-		# Feature enables
-		# waydroid.enable = true;
-
 		# Home-Manager
 		home-manager = {
 			extraSpecialArgs = { inherit inputs; };
@@ -17,6 +14,7 @@
 				imports = with inputs.self.modules.homeManager;
 					[
 						GOD-KILLER
+						GOD-KILLER-monitors
 						environment
 						hyprland
 						gtk

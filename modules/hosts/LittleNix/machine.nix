@@ -20,6 +20,7 @@
 				imports = with inputs.self.modules.homeManager;
 					[
 						LittleNix
+						LittleNix-monitors
 						environment
 						hyprland
 						gtk
