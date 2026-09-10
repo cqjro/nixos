@@ -34,7 +34,7 @@ in
 		};
 
 		services.cloudflared = {
-			tunnels."REPLACE_WITH_LINKWARDEN_TUNNEL_UUID" = {
+			tunnels."251c3fc1-0571-40a0-9b99-aefa81d37838" = {
 				credentialsFile = "/var/lib/cloudflared/linkwarden.json";
 				default = "http_status:404";
 				ingress = {
