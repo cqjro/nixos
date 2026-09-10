@@ -32,6 +32,7 @@
 						zoxide
 						bat
 						btop
+						opencode
 						terminal-packages
 						discord
 						discord-theme

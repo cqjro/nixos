@@ -43,6 +43,7 @@
 						zoxide
 						bat
 						btop
+						opencode
 						terminal-packages
 					];
 			};

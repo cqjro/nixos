@@ -18,7 +18,6 @@
 			wiremix # audio picker
 			_7zz # 7zip terminal utility
 			aider-chat # ai chat bot for coding
-			opencode # ai chat for coding
 		];
 	};
 }
