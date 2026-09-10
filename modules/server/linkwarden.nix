@@ -30,6 +30,7 @@ in
 
 			environment = {
 				NEXT_PUBLIC_URL = "https://link.cqjro.ca";
+				NEXTAUTH_URL = "https://link.cqjro.ca";
 			};
 		};
 
