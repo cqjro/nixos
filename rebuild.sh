@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Inspired by the script from the noboilerplate video
 set -e # exits the script if there is any error
 # Edit your config
@@ -56,15 +57,15 @@ if [[ "$current_hostname" != "$dir" ]]; then
     is_remote=true
     # Remote rebuild: no local sudo. nixos-rebuild SSHes out as target_user
     # and escalates privileges on the remote side via --use-remote-sudo.
-    rebuild_cmd=(nixos-rebuild switch --flake ".#$dir" --target-host "${target_user}@${target_ip}" --use-remote-sudo --ask-sudo-password)
+    rebuild_cmd=(nixos-rebuild switch --flake ".#$dir" --impure --target-host "${target_user}@${target_ip}" --use-remote-sudo --ask-sudo-password)
 else
     # Local rebuild: needs local sudo.
-    rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir")
+    rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir" --impure)
 fi
 
 # Run a flake check before rebuilding and output the results
 echo "Running flake check..."
-if ! flake_check_output=$(nix flake check 2>&1); then
+if ! flake_check_output=$(nix flake check --impure 2>&1); then
     echo "flake check FAILED:"
     echo "$flake_check_output"
     exit 1

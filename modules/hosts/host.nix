@@ -77,7 +77,12 @@
 			];
 		};
 
-		REDRUM = inputs.nixpkgs.lib.nixosSystem {
+		# REDRUM is built from pinned nixpkgs cac0c1ef (kernel 6.18.46) because
+		# linux >= 6.18.47 breaks the apple-t2 t2linux patchset
+		# (nixos-hardware#2027). TODO-remove: switch back to
+		# `inputs.nixpkgs.lib.nixosSystem` once 2027 is fixed on current nixpkgs.
+		# See modules/hosts/REDRUM/T2-PIN.md.
+		REDRUM = inputs.nixpkgs-redrum.lib.nixosSystem {
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
@@ -89,6 +94,7 @@
 				inputs.self.modules.nixos."REDRUM-hardware"
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.actual-budget
+				inputs.self.modules.nixos.linkwarden
 				inputs.self.modules.nixos.cloudflared
 				inputs.self.modules.nixos.youtube
 				inputs.nixos-hardware.nixosModules.apple-t2

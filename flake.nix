@@ -10,6 +10,13 @@
 		nixpkgs.url = "nixpkgs/nixos-unstable";
 		nixos-hardware.url = "github:nixos/nixos-hardware";
 
+		# REDRUM T2 kernel pin: cac0c1ef is the last nixpkgs rev whose kernel is
+		# still 6.18.46; linux >= 6.18.47 breaks the apple-t2 t2linux patchset
+		# (nixos-hardware#2027). TODO-remove: drop this input AND the `nixpkgs.pkgs`
+		# override in the REDRUM block of modules/hosts/host.nix once nixos-hardware
+		# is fixed on current nixpkgs. See modules/hosts/REDRUM/T2-PIN.md.
+		nixpkgs-redrum.url = "github:NixOS/nixpkgs/cac0c1ef61ab13dc82e5368e34de132a74336d79";
+
 		# home-manager
 		home-manager = {
 			url = "github:nix-community/home-manager/";

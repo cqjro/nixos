@@ -1,16 +1,26 @@
 { ... }:
+let
+	appUser = "actual";
+	workDir = "/var/lib/actual";
+in
 {
 	flake.modules.nixos.actual-budget = { pkgs, ... }: {
-		environment.systemPackages = with pkgs; [
-			actual-server
-		];
+		users.users.${appUser} = {
+			isSystemUser = true;
+			group = appUser;
+			home = workDir;
+			createHome = true;
+		};
+		users.groups.${appUser} = {};
 
 		services.actual = {
 			enable = true;
+			user = appUser;
+			group = appUser;
 			openFirewall = true;
 			settings = {
 				port = 5006; # default
-				# hostname = "0.0.0.0";
+				dataDir = workDir;
 			};
 		};
 

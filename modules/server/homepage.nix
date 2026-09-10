@@ -14,7 +14,8 @@
 			};
 
 			services = [
-				# insert services here?
+			# insert services here?
+			# TODO maybe use a service that automatically adds services enbled in nix to a dashboard?
 			];
 		};
 	};
