@@ -26,7 +26,7 @@ in
 			};
 
 			# allow creating the first account, flip to false after registering
-			enableRegistration = true;
+			enableRegistration = false;
 
 			environment = {
 				NEXT_PUBLIC_URL = "https://link.cqjro.ca";
