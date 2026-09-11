@@ -39,14 +39,16 @@
 						terminal-packages
 						discord
 						discord-theme
-						zen-browser
-						nemo
-						calibre
-						apps-packages
-						latex
-						languages-packages
-						xremap
-					];
+zen-browser
+					nemo
+					calibre
+					apps-packages
+					latex
+					languages-packages
+					xremap
+					spicetify
+					millennium
+				];
 			};
 			useUserPackages = true;
 			useGlobalPkgs = true;
@@ -56,6 +58,11 @@
 		services.seatd = {
 			enable = true; # required for steam boot?
 		};
+
+		# millennium-themed steam client; set to false for an untouched client
+		manifest.enableMillennium = true;
+		# spicetify-patched spotify client; set to false for an untouched client
+		manifest.enableSpicetify = true;
 
 		# Boot Loader
 		boot.loader.efi.canTouchEfiVariables = true;

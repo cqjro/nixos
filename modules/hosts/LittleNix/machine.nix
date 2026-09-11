@@ -52,6 +52,7 @@
 						latex
 						languages-packages
 						xremap
+						spicetify
 					];
 			};
 			useUserPackages = true;

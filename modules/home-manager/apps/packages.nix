@@ -5,7 +5,7 @@
 			# media viewers
 			vlc
 			mpv
-			spotify
+			# spotify # spicetify provides the patched client (modules/home-manager/apps/spicetify.nix)
 			zathura # pdf viewer
 			sioyek # pdf viewer for academic documents
 

@@ -44,6 +44,18 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
+		# spotify theming
+		spicetify-nix = {
+			url = "github:Gerg-L/spicetify-nix";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
+		# steam theming (millennium)
+		nixos-millennium = {
+			url = "github:re1n0/nixos-millennium";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
 		# not on nixpkgs yet
 		zen-browser = {
 			url = "github:0xc000022070/zen-browser-flake";
