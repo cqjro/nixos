@@ -22,17 +22,17 @@
 				"--st-accent-1" = hexToRGB c.base0D;
 				"--st-accent-2" = hexToRGB c.base0E;
 
-				"--st-color-1" = hexToRGB c.base05;
+				"--st-color-1" = hexToRGB c.base01;
 				"--st-color-2" = hexToRGB c.base00;
 				"--st-color-3" = hexToRGB c.base01;
 				"--st-color-4" = hexToRGB c.base02;
 				"--st-color-5" = hexToRGB c.base03;
 
 				"--st-blue" = hexToRGB c.base0D;
-				"--st-blue-hover" = hexToRGB c.base0C;
+				"--st-blue-hover" = hexToRGB c.base03;
 
 				"--st-green" = hexToRGB c.base0B;
-				"--st-green-hover" = hexToRGB c.base0C;
+				"--st-green-hover" = hexToRGB c.base03;
 
 				"--st-red" = hexToRGB c.base08;
 				"--st-red-hover" = hexToRGB c.base09;
