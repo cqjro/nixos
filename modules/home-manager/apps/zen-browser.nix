@@ -139,7 +139,7 @@
 						"  --stylix-danger: var(--stylix-base08);\n"
 						"  --stylix-warning: var(--stylix-base09);\n"
 						"}\n"
-						"body { background-color: var(--stylix-bg); color: var(--stylix-text); }\n"
+						"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
 					];
 				};	
 			};
