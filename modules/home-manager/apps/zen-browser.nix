@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-	flake.modules.homeManager."zen-browser" = { pkgs, ... }: {
+	flake.modules.homeManager."zen-browser" = { pkgs, config, lib, ... }: {
 		imports = [ inputs.zen-browser.homeModules.twilight ];
 		programs.zen-browser = {
 			enable = true;
@@ -103,6 +103,10 @@
 						position = 202;
 					};
 				};
+				in let
+					palette = lib.concatStringsSep "" (lib.mapAttrsToList
+						(name: value: ":root { --stylix-${name}: #${value}; }\n")
+						(lib.filterAttrs (name: _: builtins.match "base0[0-9a-fA-F]" name != null) config.lib.stylix.colors));
 				in {
 					containersForce = true;
 					pinsForce = true;
@@ -113,11 +117,30 @@
 							proton-pass
 							darkreader
 							return-youtube-dislikes
+							stylus
 					];
 
 					settings = {
 						"zen.view.use-single-toolbar" = false;
 					};
+
+					userContent = palette + lib.concatStringsSep "" [
+						":root {\n"
+						"  color-scheme: dark !important;\n"
+						"  --stylix-bg: var(--stylix-base00);\n"
+						"  --stylix-surface: var(--stylix-base01);\n"
+						"  --stylix-hover: var(--stylix-base02);\n"
+						"  --stylix-border: var(--stylix-base03);\n"
+						"  --stylix-text: var(--stylix-base05);\n"
+						"  --stylix-text-dim: var(--stylix-base04);\n"
+						"  --stylix-brand: var(--stylix-base0D);\n"
+						"  --stylix-secondary: var(--stylix-base0E);\n"
+						"  --stylix-success: var(--stylix-base0B);\n"
+						"  --stylix-danger: var(--stylix-base08);\n"
+						"  --stylix-warning: var(--stylix-base09);\n"
+						"}\n"
+						"body { background-color: var(--stylix-bg); color: var(--stylix-text); }\n"
+					];
 				};	
 			};
 		};
