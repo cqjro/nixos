@@ -7,7 +7,7 @@ in
 		home.packages = with pkgs; [
 			# desktop basics
 			hypridle
-			hyprlock
+			# hyprlock
 
 			# Config Dependencies
 			ags

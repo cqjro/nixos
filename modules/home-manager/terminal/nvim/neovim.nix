@@ -1,6 +1,6 @@
 { ... }:
 {
-	flake.modules.homeManager."nvim" = { pkgs, config, ... }: {
+	flake.modules.homeManager."nvim" = { pkgs, config, lib, ... }: {
 # home.packages = with pkgs; [
 # 	neovim
 # ];
@@ -51,10 +51,28 @@ home.file."${config.xdg.configHome}/nvim/queries/nix/injections.scm".source =
 		];
 
 # place lines into this function such that it gets called after everything to avoid race conditions
-		initLua = ''
+		initLua = let
+			stylixEnabled = config ? stylix && config.stylix.enable;
+			themify = let
+				wh = config.lib.stylix.colors.withHashtag;
+			in ''
+				local ok, _ = pcall(vim.cmd.colorscheme, 'minischeme')
+				if ok then
+					require('mini.base16').setup({
+						palette = {
+							base00 = '${wh.base00}', base01 = '${wh.base01}', base02 = '${wh.base02}', base03 = '${wh.base03}',
+							base04 = '${wh.base04}', base05 = '${wh.base05}', base06 = '${wh.base06}', base07 = '${wh.base07}',
+							base08 = '${wh.base08}', base09 = '${wh.base09}', base0A = '${wh.base0A}', base0B = '${wh.base0B}',
+							base0C = '${wh.base0C}', base0D = '${wh.base0D}', base0E = '${wh.base0E}', base0F = '${wh.base0F}'
+						}
+					})
+				end
+				vim.api.nvim_set_hl(0, "NormalFloat", { fg = '${wh.base05}', bg = "NONE" })
+			'';
+		in ''
 			vim.defer_fn(function()
-					vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#b8b0c6", bg = "NONE" })
-					end, 0)
+				${lib.optionalString stylixEnabled themify}
+			end, 0)
 			'';
 
 		plugins = with pkgs.vimPlugins; [ 

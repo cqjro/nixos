@@ -17,6 +17,9 @@
 						GOD-KILLER-monitors
 						environment
 						hyprland
+						mpv
+						sioyek
+						zathura
 						gtk
 						xdg-desktop-entries
 						walker

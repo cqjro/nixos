@@ -224,7 +224,7 @@
             (bind "${mainMod} + Q" dsp.window.close { })
             (bind "${mainMod} + M" dsp.window.kill { })
             (bind "${mainMod} + V" (dsp.window.float { action = "toggle"; }) { })
-            (bind "${mainMod} + SHIFT + L" (dsp.exec_cmd "hyprlock") { })
+            # (bind "${mainMod} + SHIFT + L" (dsp.exec_cmd "hyprlock") { })
             (bind "ALT + S" (dsp.exec_cmd "grimblast copysave screen") { locked = true; })
             (bind "ALT + SHIFT + S" (dsp.exec_cmd "grimblast copysave area") { locked = true; })
             (bind "${mainMod} + H" (dsp.focus { direction = "left"; }) { })
