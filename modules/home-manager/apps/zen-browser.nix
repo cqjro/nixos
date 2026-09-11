@@ -122,6 +122,8 @@
 
 					settings = {
 						"zen.view.use-single-toolbar" = false;
+						"zen.view.window.scheme" = lib.mkForce 0;
+						"ui.systemUsesDarkTheme" = lib.mkForce 1;
 					};
 
 					userContent = palette + lib.concatStringsSep "" [
