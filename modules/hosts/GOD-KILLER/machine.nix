@@ -37,11 +37,18 @@
 						btop
 						opencode
 						terminal-packages
-						discord
-						discord-theme
-zen-browser
+discord
+					zen-browser
 					nemo
-					calibre
+					github-web-styling
+					google-web-styling
+					brave-web-styling
+					youtube-web-styling
+					reddit-web-styling
+					instagram-web-styling
+					nixpkgs-web-styling
+					wikipedia-web-styling
+				calibre
 					apps-packages
 					latex
 					languages-packages

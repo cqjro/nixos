@@ -3,6 +3,7 @@
 	flake.modules.homeManager."discord" = {
 		imports = [
 			inputs.nixcord.homeModules.nixcord
+			inputs.self.modules.homeManager.discord-theme
 		];
 
 		programs.nixcord = {

@@ -2,7 +2,17 @@
 {
 	flake.modules.homeManager."zen-browser" = { pkgs, config, lib, ... }: {
 		imports = [ inputs.zen-browser.homeModules.twilight ];
-		programs.zen-browser = {
+
+		options.zenWebStyling = {
+			siteStyles = lib.mkOption {
+				type = lib.types.attrsOf lib.types.lines;
+				default = {};
+				description = "Per-domain CSS appended to userContent.css, wrapped in @-moz-document domain(<key>).";
+};
+		};
+
+		config = {
+			programs.zen-browser = {
 			enable = true;
 			policies = {
 				AutofilledAddressEnabled = true;
@@ -126,19 +136,6 @@
 						"}\n"
 						"html { background-color: var(--stylix-bg) !important; }\n"
 "body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
-"a:link, a:visited { color: var(--stylix-brand) !important; }\n"
-"a:hover { color: var(--stylix-brand) !important; text-decoration: underline !important; }\n"
-"h1, h2, h3, h4, h5, h6 { color: var(--stylix-text) !important; }\n"
-"input, textarea, select { background-color: var(--stylix-surface) !important; color: var(--stylix-text) !important; border-color: var(--stylix-border) !important; }\n"
-"button { background-color: var(--stylix-hover) !important; color: var(--stylix-text) !important; border-color: var(--stylix-border) !important; }\n"
-"input[type=\"checkbox\"], input[type=\"radio\"], input[type=\"range\"] { accent-color: var(--stylix-brand) !important; }\n"
-"hr { border-color: var(--stylix-border) !important; }\n"
-"pre, code { background-color: var(--stylix-surface) !important; color: var(--stylix-text-dim) !important; }\n"
-"blockquote { border-left: 3px solid var(--stylix-brand) !important; }\n"
-"mark { background-color: var(--stylix-warning) !important; color: var(--stylix-bg) !important; }\n"
-"::selection { background-color: var(--stylix-brand) !important; color: var(--stylix-bg) !important; }\n"
-"input::placeholder, textarea::placeholder { color: var(--stylix-text-dim) !important; }\n"
-"html { scrollbar-color: var(--stylix-hover) var(--stylix-bg) !important; }\n"
 						"\n"
 						"@media (prefers-color-scheme: dark) {\n"
 						"  /* Common variables affecting all pages */\n"
@@ -239,6 +236,9 @@
 						"  }\n"
 						"}\n"
 					];
+					webSites = lib.concatStringsSep "" (lib.mapAttrsToList
+						(domain: css: "@-moz-document domain(\"${domain}\") {\n${css}}\n")
+						config.zenWebStyling.siteStyles);
 				in {
 					containersForce = true;
 					pinsForce = true;
@@ -257,7 +257,6 @@
 						"zen.view.window.scheme" = lib.mkForce 0;
 						"ui.systemUsesDarkTheme" = lib.mkForce 1;
 						"toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-						"layout.css.prefers-color-scheme.content-override" = 1;
 					};
 
 					userChrome = (import "${inputs.stylix}/modules/zen-browser/userChrome.nix") {
@@ -265,14 +264,15 @@
 						opacityHex = lib.toHexString (builtins.ceil (config.stylix.opacity.applications * 255));
 					};
 
-					userContent = palette + zenContent;
+					userContent = palette + zenContent + webSites;
 				};	
 			};
 		};
 
 		stylix.targets.zen-browser = {
-			profileNames = ["default"];
-			enableCss = false;
+				profileNames = ["default"];
+				enableCss = false;
+			};
 		};
 	};
 }
