@@ -12,13 +12,14 @@
 	/* Primer design tokens (new) */
 	--bgColor-default: #${c.base00} !important;
 	--bgColor-muted: #${c.base01} !important;
-	--bgColor-inset: #${c.base01} !important;
+	--bgColor-inset: #${c.base00} !important;
 	--bgColor-neutral-muted: #${c.base02} !important;
 	--bgColor-neutral-subtle: #${c.base01} !important;
 	--bgColor-emphasis: #${c.base02} !important;
 	--bgColor-success-emphasis: #${c.base0B} !important;
 	--bgColor-danger-emphasis: #${c.base08} !important;
 	--bgColor-accent-emphasis: #${c.base0D} !important;
+	--overlay-bgColor: #${c.base01} !important;
 	--fgColor-default: #${c.base05} !important;
 	--fgColor-muted: #${c.base04} !important;
 	--fgColor-subtle: #${c.base04} !important;
@@ -115,7 +116,7 @@ body {
 }
 
 .Header {
-	background-color: #${c.base00} !important;
+	background-color: #${c.base01} !important;
 	border-bottom-color: #${c.base03} !important;
 }
 
@@ -145,6 +146,12 @@ body {
 .commit {
 	background-color: #${c.base01} !important;
 	border-color: #${c.base03} !important;
+}
+
+.ajax-pagination-form .ajax-pagination-btn {
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base0D} !important;
 }
 		'';
 	};
