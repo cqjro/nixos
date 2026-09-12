@@ -117,11 +117,11 @@
 colors = config.lib.stylix.colors;
 					withColors = colors;
 					zenContent = with withColors; lib.concatStringsSep "" [
-						"@media (prefers-color-scheme: dark) {\n"
-						"  /* Common variables affecting all pages */\n"
-						"  @-moz-document url-prefix(\"about:\") {\n"
-						"    :root {\n"
-						"      --in-content-page-color: #${base05-hex} !important;\n"
+						"/* Common variables affecting all pages */\n"
+						"@-moz-document url-prefix(\"about:\") {\n"
+						"  :root {\n"
+						"    color-scheme: dark !important;\n"
+						"    --in-content-page-color: #${base05-hex} !important;\n"
 						"      --color-accent-primary: #${base0D-hex} !important;\n"
 						"      --color-accent-primary-hover: #${base06-hex} !important;\n"
 						"      --color-accent-primary-active: #${base06-hex} !important;\n"
@@ -214,7 +214,6 @@ colors = config.lib.stylix.colors;
 						"\n"
 						"    .card { background-color: #${base02-hex} !important; }\n"
 						"  }\n"
-						"}\n"
 					];
 					webSites = lib.concatStringsSep "" (lib.mapAttrsToList
 						(domain: css: "@-moz-document domain(\"${domain}\") {\n${css}}\n")
@@ -236,7 +235,7 @@ colors = config.lib.stylix.colors;
 						"zen.view.use-single-toolbar" = false;
 						"zen.view.window.scheme" = lib.mkForce 0;
 						"ui.systemUsesDarkTheme" = lib.mkForce 1;
-						"layout.css.prefers-color-scheme.content-override" = 1;
+						"layout.css.prefers-color-scheme.content-override" = 0;
 						"toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 					};
 
