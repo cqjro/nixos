@@ -104,9 +104,127 @@
 					};
 				};
 				in let
+					colors = config.lib.stylix.colors;
 					palette = lib.concatStringsSep "" (lib.mapAttrsToList
 						(name: value: ":root { --stylix-${name}: #${value} !important; }\n")
-						(lib.filterAttrs (name: _: builtins.match "base0[0-9a-fA-F]" name != null) config.lib.stylix.colors));
+						(lib.filterAttrs (name: _: builtins.match "base0[0-9a-fA-F]" name != null) colors));
+					withColors = colors;
+					zenContent = with withColors; lib.concatStringsSep "" [
+						":root {\n"
+						"  color-scheme: dark !important;\n"
+						"  --stylix-bg: var(--stylix-base00) !important;\n"
+						"  --stylix-surface: var(--stylix-base01) !important;\n"
+						"  --stylix-hover: var(--stylix-base02) !important;\n"
+						"  --stylix-border: var(--stylix-base03) !important;\n"
+						"  --stylix-text: var(--stylix-base05) !important;\n"
+						"  --stylix-text-dim: var(--stylix-base04) !important;\n"
+						"  --stylix-brand: var(--stylix-base0D) !important;\n"
+						"  --stylix-secondary: var(--stylix-base0E) !important;\n"
+						"  --stylix-success: var(--stylix-base0B) !important;\n"
+						"  --stylix-danger: var(--stylix-base08) !important;\n"
+						"  --stylix-warning: var(--stylix-base09) !important;\n"
+						"}\n"
+						"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
+						"\n"
+						"@media (prefers-color-scheme: dark) {\n"
+						"  /* Common variables affecting all pages */\n"
+						"  @-moz-document url-prefix(\"about:\") {\n"
+						"    :root {\n"
+						"      --in-content-page-color: #${base05-hex} !important;\n"
+						"      --color-accent-primary: #${base0D-hex} !important;\n"
+						"      --color-accent-primary-hover: #${base06-hex} !important;\n"
+						"      --color-accent-primary-active: #${base06-hex} !important;\n"
+						"      background-color: #${base00-hex} !important;\n"
+						"      --in-content-page-background: #${base00-hex} !important;\n"
+						"    }\n"
+						"  }\n"
+						"\n"
+						"  /* Variables and styles specific to about:newtab and about:home */\n"
+						"  @-moz-document url(\"about:newtab\"), url(\"about:home\") {\n"
+						"    :root {\n"
+						"      --newtab-background-color: #${base00-hex} !important;\n"
+						"      --newtab-background-color-secondary: #${base02-hex} !important;\n"
+						"      --newtab-element-hover-color: #${base02-hex} !important;\n"
+						"      --newtab-text-primary-color: #${base05-hex} !important;\n"
+						"      --newtab-wordmark-color: #${base05-hex} !important;\n"
+						"      --newtab-primary-action-background: #${base0D-hex} !important;\n"
+						"    }\n"
+						"\n"
+						"    .icon { color: #${base0D-hex} !important; }\n"
+						"\n"
+						"    .search-wrapper .logo-and-wordmark .logo {\n"
+						"      display: inline-block !important;\n"
+						"      height: 82px !important;\n"
+						"      width: 82px !important;\n"
+						"      background-size: 82px !important;\n"
+						"    }\n"
+						"\n"
+						"    @media (max-width: 609px) {\n"
+						"      .search-wrapper .logo-and-wordmark .logo {\n"
+						"        background-size: 64px !important;\n"
+						"        height: 64px !important;\n"
+						"        width: 64px !important;\n"
+						"      }\n"
+						"    }\n"
+						"\n"
+						"    .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-title { color: #${base0D-hex} !important; }\n"
+						"    .top-site-outer .search-topsite { background-color: #${base0D-hex} !important; }\n"
+						"    .compact-cards .card-outer .card-context .card-context-icon.icon-download { fill: #${base0B-hex} !important; }\n"
+						"  }\n"
+						"\n"
+						"  /* Variables and styles specific to about:preferences */\n"
+						"  @-moz-document url-prefix(\"about:preferences\") {\n"
+						"    :root {\n"
+						"      --zen-colors-tertiary: #${base01-hex} !important;\n"
+						"      --in-content-text-color: #${base05-hex} !important;\n"
+						"      --link-color: #${base0D-hex} !important;\n"
+						"      --link-color-hover: #${base06-hex} !important;\n"
+						"      --zen-colors-primary: #${base02-hex} !important;\n"
+						"      --in-content-box-background: #${base02-hex} !important;\n"
+						"      --zen-primary-color: #${base0D-hex} !important;\n"
+						"    }\n"
+						"\n"
+						"    groupbox, moz-card { background: #${base00-hex} !important; }\n"
+						"    button, groupbox menulist { background: #${base02-hex} !important; color: #${base05-hex} !important; }\n"
+						"    .main-content { background-color: #${base01-hex} !important; }\n"
+						"\n"
+						"    .identity-color-blue { --identity-tab-color: #${base0D-hex} !important; --identity-icon-color: #${base0D-hex} !important; }\n"
+						"    .identity-color-turquoise { --identity-tab-color: #${base0C-hex} !important; --identity-icon-color: #${base0C-hex} !important; }\n"
+						"    .identity-color-green { --identity-tab-color: #${base0B-hex} !important; --identity-icon-color: #${base0B-hex} !important; }\n"
+						"    .identity-color-yellow { --identity-tab-color: #${base0A-hex} !important; --identity-icon-color: #${base0A-hex} !important; }\n"
+						"    .identity-color-orange { --identity-tab-color: #${base09-hex} !important; --identity-icon-color: #${base09-hex} !important; }\n"
+						"    .identity-color-red { --identity-tab-color: #${base08-hex} !important; --identity-icon-color: #${base08-hex} !important; }\n"
+						"    .identity-color-pink { --identity-tab-color: #${base0E-hex} !important; --identity-icon-color: #${base0E-hex} !important; }\n"
+						"    .identity-color-purple { --identity-tab-color: #${base0F-hex} !important; --identity-icon-color: #${base0F-hex} !important; }\n"
+						"  }\n"
+						"\n"
+						"  /* Variables and styles specific to about:addons */\n"
+						"  @-moz-document url-prefix(\"about:addons\") {\n"
+						"    :root {\n"
+						"      --zen-dark-color-mix-base: #${base01-hex} !important;\n"
+						"      --background-color-box: #${base00-hex} !important;\n"
+						"    }\n"
+						"  }\n"
+						"\n"
+						"  /* Variables and styles specific to about:protections */\n"
+						"  @-moz-document url-prefix(\"about:protections\") {\n"
+						"    :root {\n"
+						"      --zen-primary-color: #${base00-hex} !important;\n"
+						"      --social-color: #${base0E-hex} !important;\n"
+						"      --coockie-color: #${base0C-hex} !important;\n"
+						"      --fingerprinter-color: #${base0A-hex} !important;\n"
+						"      --cryptominer-color: #${base0D-hex} !important;\n"
+						"      --tracker-color: #${base0B-hex} !important;\n"
+						"      --in-content-primary-button-background-hover: #${base02-hex} !important;\n"
+						"      --in-content-primary-button-text-color-hover: #${base05-hex} !important;\n"
+						"      --in-content-primary-button-background: #${base03-hex} !important;\n"
+						"      --in-content-primary-button-text-color: #${base05-hex} !important;\n"
+						"    }\n"
+						"\n"
+						"    .card { background-color: #${base02-hex} !important; }\n"
+						"  }\n"
+						"}\n"
+					];
 				in {
 					containersForce = true;
 					pinsForce = true;
@@ -124,29 +242,22 @@
 						"zen.view.use-single-toolbar" = false;
 						"zen.view.window.scheme" = lib.mkForce 0;
 						"ui.systemUsesDarkTheme" = lib.mkForce 1;
+						"toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 					};
 
-					userContent = palette + lib.concatStringsSep "" [
-						":root {\n"
-						"  color-scheme: dark !important;\n"
-						"  --stylix-bg: var(--stylix-base00) !important;\n"
-						"  --stylix-surface: var(--stylix-base01) !important;\n"
-						"  --stylix-hover: var(--stylix-base02) !important;\n"
-						"  --stylix-border: var(--stylix-base03) !important;\n"
-						"  --stylix-text: var(--stylix-base05) !important;\n"
-						"  --stylix-text-dim: var(--stylix-base04) !important;\n"
-						"  --stylix-brand: var(--stylix-base0D) !important;\n"
-						"  --stylix-secondary: var(--stylix-base0E) !important;\n"
-						"  --stylix-success: var(--stylix-base0B) !important;\n"
-						"  --stylix-danger: var(--stylix-base08) !important;\n"
-						"  --stylix-warning: var(--stylix-base09) !important;\n"
-						"}\n"
-						"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
-					];
+					userChrome = (import "${inputs.stylix}/modules/zen-browser/userChrome.nix") {
+						colors = colors;
+						opacityHex = lib.toHexString (builtins.ceil (config.stylix.opacity.applications * 255));
+					};
+
+					userContent = palette + zenContent;
 				};	
 			};
 		};
 
-		stylix.targets.zen-browser.profileNames = ["default"];
+		stylix.targets.zen-browser = {
+			profileNames = ["default"];
+			enableCss = false;
+		};
 	};
 }
