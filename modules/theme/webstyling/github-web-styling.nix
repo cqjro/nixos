@@ -34,6 +34,37 @@
 	--borderColor-success-emphasis: #${c.base0B} !important;
 	--borderColor-danger-emphasis: #${c.base08} !important;
 
+	/* Button component tokens (Primer react components) */
+	--button-default-bgColor-rest: #${c.base01} !important;
+	--button-default-bgColor-hover: #${c.base02} !important;
+	--button-default-bgColor-active: #${c.base02} !important;
+	--button-default-fgColor-rest: #${c.base05} !important;
+	--button-default-fgColor-hover: #${c.base05} !important;
+	--button-default-fgColor-active: #${c.base06} !important;
+	--button-default-borderColor-rest: #${c.base03} !important;
+	--button-default-borderColor-hover: #${c.base02} !important;
+	--button-default-shadow-resting: 0 1px 0 0 #${c.base00} !important;
+	--button-default-shadow-hover: 0 1px 0 0 #${c.base00} !important;
+	--button-default-shadow-active: inset 0 0 0 1px #${c.base02} !important;
+
+	--button-primary-bgColor-rest: #${c.base0D} !important;
+	--button-primary-bgColor-hover: #${c.base0E} !important;
+	--button-primary-bgColor-active: #${c.base0E} !important;
+	--button-primary-fgColor-rest: #${c.base00} !important;
+	--button-primary-shadow-resting: 0 1px 0 0 #${c.base08} !important;
+
+	--button-danger-bgColor-rest: #${c.base01} !important;
+	--button-danger-bgColor-hover: #${c.base08} !important;
+	--button-danger-fgColor-rest: #${c.base08} !important;
+	--button-danger-fgColor-hover: #${c.base00} !important;
+	--button-danger-borderColor-rest: #${c.base03} !important;
+	--button-danger-shadow-resting: 0 1px 0 0 #${c.base03} !important;
+
+	--button-invisible-bgColor-rest: transparent !important;
+	--button-invisible-bgColor-hover: #${c.base02} !important;
+	--button-invisible-fgColor-rest: #${c.base0D} !important;
+	--button-invisible-fgColor-hover: #${c.base05} !important;
+
 	/* Primer legacy tokens */
 	--color-canvas-default: #${c.base00} !important;
 	--color-canvas-subtle: #${c.base01} !important;
@@ -54,7 +85,7 @@
 	--color-border-muted: #${c.base03} !important;
 	--color-neutral-muted: #${c.base02} !important;
 	--color-neutral-subtle: #${c.base01} !important;
-	--color-header-bg: #${c.base01} !important;
+	--color-header-bg: #${c.base00} !important;
 	--color-header-fg: #${c.base05} !important;
 	--color-header-border: #${c.base03} !important;
 	--color-btn-bg: #${c.base01} !important;

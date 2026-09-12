@@ -48,6 +48,7 @@ discord
 					instagram-web-styling
 					nixpkgs-web-styling
 					wikipedia-web-styling
+					claude-web-styling
 				calibre
 					apps-packages
 					latex
