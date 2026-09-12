@@ -13,11 +13,11 @@ html[dark] {
 	--yt-sys-color-baseline--base-background: #${c.base00} !important;
 	--yt-sys-color-baseline--raised-background: #${c.base01} !important;
 	--yt-sys-color-baseline--menu-background: #${c.base01} !important;
-	--yt-sys-color-baseline--tonal-background: color-mix(in srgb, #${c.base02} 55%, transparent) !important;
+	--yt-sys-color-baseline--tonal-background: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
 	--yt-sys-color-baseline--tonal-rim: color-mix(in srgb, #${c.base03} 55%, transparent) !important;
-	--yt-sys-color-baseline--button-chip-background-hover: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
-	--yt-sys-color-baseline--additive-background: color-mix(in srgb, #${c.base02} 35%, transparent) !important;
-	--yt-sys-color-baseline--mono-tonal-hover: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
+	--yt-sys-color-baseline--button-chip-background-hover: color-mix(in srgb, #${c.base02} 40%, transparent) !important;
+	--yt-sys-color-baseline--additive-background: color-mix(in srgb, #${c.base02} 30%, transparent) !important;
+	--yt-sys-color-baseline--mono-tonal-hover: color-mix(in srgb, #${c.base02} 40%, transparent) !important;
 	--yt-sys-color-baseline--suggested-action: color-mix(in srgb, #${c.base0D} 30%, #${c.base01}) !important;
 
 	--yt-sys-color-baseline--text-primary: #${c.base05} !important;
@@ -41,7 +41,7 @@ html[dark] {
 	--yt-sys-color-baseline--outline-inverse: color-mix(in srgb, #${c.base03} 55%, transparent) !important;
 
 	--yt-sys-color-baseline--overlay-background-solid: #${c.base00} !important;
-	--yt-sys-color-baseline--overlay-background-light: color-mix(in srgb, #${c.base00} 60%, transparent) !important;
+	--yt-sys-color-baseline--overlay-background-light: color-mix(in srgb, #${c.base01} 60%, transparent) !important;
 	--yt-sys-color-baseline--overlay-background-heavy: #${c.base00} !important;
 	--yt-sys-color-baseline--overlay-text-primary: #${c.base06} !important;
 	--yt-sys-color-baseline--overlay-text-secondary: #${c.base04} !important;
@@ -70,15 +70,21 @@ html[dark] {
 	--yt-spec-brand-subscribe-button-text: #${c.base00} !important;
 	--yt-spec-brand-button-background: #${c.base0D} !important;
 	--yt-spec-filled-button-text: #${c.base00} !important;
-	--yt-spec-10-percent-layer: color-mix(in srgb, #${c.base02} 55%, transparent) !important;
-	--yt-spec-15-percent-layer: color-mix(in srgb, #${c.base02} 55%, transparent) !important;
-	--yt-spec-30-percent-layer: color-mix(in srgb, #${c.base02} 60%, transparent) !important;
-	--yt-spec-60-percent-layer: color-mix(in srgb, #${c.base03} 60%, transparent) !important;
+	--yt-spec-10-percent-layer: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
+	--yt-spec-15-percent-layer: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
+	--yt-spec-30-percent-layer: color-mix(in srgb, #${c.base02} 50%, transparent) !important;
+	--yt-spec-60-percent-layer: color-mix(in srgb, #${c.base03} 50%, transparent) !important;
 	--yt-spec-tooltip-background: #${c.base01} !important;
 	--yt-spec-tooltip-text: #${c.base05} !important;
 }
 
-body {
+html,
+body,
+ytd-app,
+ytd-page-manager,
+ytd-browse,
+ytd-watch-flexy,
+#page-container {
 	background-color: #${c.base00} !important;
 	color: #${c.base05} !important;
 }

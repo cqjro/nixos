@@ -23,13 +23,12 @@ a {
 	color: #${c.base0D} !important;
 }
 
-/* google.com exposes only per-build hashed CSS variables, so theme via classes */
+/* google.com presents no stable CSS variables; let the site's own dark mode
+   paint the large surfaces and only restyle the individual elements below. */
 
-/* search box + omnibox + autocomplete dropdown */
-.RNNXgb,
-.A8SBwf,
-.gLFyf,
+/* the search field itself (not the surrounding pill / dropdown) */
 input[type="text"],
+input.gLFyf,
 textarea {
 	background-color: #${c.base01} !important;
 	color: #${c.base05} !important;
@@ -37,29 +36,12 @@ textarea {
 }
 
 input[type="text"]::placeholder,
+input.gLFyf::placeholder,
 textarea::placeholder {
 	color: #${c.base04} !important;
 }
 
-/* top tab bar */
-#hdtb,
-#searchform {
-	background-color: #${c.base01} !important;
-	border-color: #${c.base03} !important;
-}
-
-/* result cards */
-#rso > .g,
-#rso > .MjjYud,
-.hlcw0c,
-.Ww4FFb,
-.g-blk {
-	background-color: #${c.base01} !important;
-	border-color: #${c.base03} !important;
-	color: #${c.base05} !important;
-}
-
-/* titles, urls, snippets */
+/* result titles, urls, snippets */
 h3,
 .LC20lb,
 .DKV0Md {
@@ -80,33 +62,9 @@ cite,
 	color: #${c.base04} !important;
 }
 
-/* AI overview / featured answer containers */
-.M8OgIe,
-.Kevs9.SLPe5b,
-.olrp5b,
-.xpdopen,
-.kp-blk,
-[data-testid="ai-answer-wrapper"] {
-	background-color: #${c.base02} !important;
-	border-color: #${c.base03} !important;
-	color: #${c.base05} !important;
-}
-
-/* knowledge panel / right rail */
-.kp-wholepage,
-.rhsblk,
-.kno-kp {
-	background-color: #${c.base01} !important;
-	border-color: #${c.base03} !important;
-	color: #${c.base05} !important;
-}
-
-/* footer */
-#fbar,
-#fbarcnt {
-	background-color: #${c.base01} !important;
-	border-top-color: #${c.base03} !important;
-	color: #${c.base04} !important;
+mark {
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
 }
 		'';
 	};
