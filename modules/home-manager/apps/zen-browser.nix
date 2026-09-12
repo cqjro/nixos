@@ -124,7 +124,21 @@
 						"  --stylix-danger: var(--stylix-base08) !important;\n"
 						"  --stylix-warning: var(--stylix-base09) !important;\n"
 						"}\n"
-						"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
+						"html { background-color: var(--stylix-bg) !important; }\n"
+"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
+"a:link, a:visited { color: var(--stylix-brand) !important; }\n"
+"a:hover { color: var(--stylix-brand) !important; text-decoration: underline !important; }\n"
+"h1, h2, h3, h4, h5, h6 { color: var(--stylix-text) !important; }\n"
+"input, textarea, select { background-color: var(--stylix-surface) !important; color: var(--stylix-text) !important; border-color: var(--stylix-border) !important; }\n"
+"button { background-color: var(--stylix-hover) !important; color: var(--stylix-text) !important; border-color: var(--stylix-border) !important; }\n"
+"input[type=\"checkbox\"], input[type=\"radio\"], input[type=\"range\"] { accent-color: var(--stylix-brand) !important; }\n"
+"hr { border-color: var(--stylix-border) !important; }\n"
+"pre, code { background-color: var(--stylix-surface) !important; color: var(--stylix-text-dim) !important; }\n"
+"blockquote { border-left: 3px solid var(--stylix-brand) !important; }\n"
+"mark { background-color: var(--stylix-warning) !important; color: var(--stylix-bg) !important; }\n"
+"::selection { background-color: var(--stylix-brand) !important; color: var(--stylix-bg) !important; }\n"
+"input::placeholder, textarea::placeholder { color: var(--stylix-text-dim) !important; }\n"
+"html { scrollbar-color: var(--stylix-hover) var(--stylix-bg) !important; }\n"
 						"\n"
 						"@media (prefers-color-scheme: dark) {\n"
 						"  /* Common variables affecting all pages */\n"
@@ -243,6 +257,7 @@
 						"zen.view.window.scheme" = lib.mkForce 0;
 						"ui.systemUsesDarkTheme" = lib.mkForce 1;
 						"toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+						"layout.css.prefers-color-scheme.content-override" = 1;
 					};
 
 					userChrome = (import "${inputs.stylix}/modules/zen-browser/userChrome.nix") {
