@@ -114,29 +114,9 @@
 					};
 				};
 				in let
-					colors = config.lib.stylix.colors;
-					palette = lib.concatStringsSep "" (lib.mapAttrsToList
-						(name: value: ":root { --stylix-${name}: #${value} !important; }\n")
-						(lib.filterAttrs (name: _: builtins.match "base0[0-9a-fA-F]" name != null) colors));
+colors = config.lib.stylix.colors;
 					withColors = colors;
 					zenContent = with withColors; lib.concatStringsSep "" [
-						":root {\n"
-						"  color-scheme: dark !important;\n"
-						"  --stylix-bg: var(--stylix-base00) !important;\n"
-						"  --stylix-surface: var(--stylix-base01) !important;\n"
-						"  --stylix-hover: var(--stylix-base02) !important;\n"
-						"  --stylix-border: var(--stylix-base03) !important;\n"
-						"  --stylix-text: var(--stylix-base05) !important;\n"
-						"  --stylix-text-dim: var(--stylix-base04) !important;\n"
-						"  --stylix-brand: var(--stylix-base0D) !important;\n"
-						"  --stylix-secondary: var(--stylix-base0E) !important;\n"
-						"  --stylix-success: var(--stylix-base0B) !important;\n"
-						"  --stylix-danger: var(--stylix-base08) !important;\n"
-						"  --stylix-warning: var(--stylix-base09) !important;\n"
-						"}\n"
-						"html { background-color: var(--stylix-bg) !important; }\n"
-"body { background-color: var(--stylix-bg) !important; color: var(--stylix-text) !important; }\n"
-						"\n"
 						"@media (prefers-color-scheme: dark) {\n"
 						"  /* Common variables affecting all pages */\n"
 						"  @-moz-document url-prefix(\"about:\") {\n"
@@ -256,6 +236,7 @@
 						"zen.view.use-single-toolbar" = false;
 						"zen.view.window.scheme" = lib.mkForce 0;
 						"ui.systemUsesDarkTheme" = lib.mkForce 1;
+						"layout.css.prefers-color-scheme.content-override" = 1;
 						"toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 					};
 
@@ -264,7 +245,7 @@
 						opacityHex = lib.toHexString (builtins.ceil (config.stylix.opacity.applications * 255));
 					};
 
-					userContent = palette + zenContent + webSites;
+					userContent = zenContent + webSites;
 				};	
 			};
 		};

@@ -1,58 +1,60 @@
 { ... }:
 {
-	flake.modules.homeManager."wikipedia-web-styling" = { ... }:
+	flake.modules.homeManager."wikipedia-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."wikipedia.org" = ''
+		zenWebStyling.siteStyles."wikipedia.org" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root {
 	color-scheme: dark !important;
 
 	/* Wikipedia Codex design tokens */
-	--color-base: var(--stylix-text) !important;
-	--color-base--emphasized: var(--stylix-text) !important;
-	--color-subtle: var(--stylix-text-dim) !important;
-	--color-progressive: var(--stylix-brand) !important;
-	--color-progressive--hover: var(--stylix-text) !important;
-	--color-progressive--active: var(--stylix-text) !important;
-	--color-progressive--focus: var(--stylix-brand) !important;
-	--color-link: var(--stylix-brand) !important;
-	--color-link--visited: var(--stylix-secondary) !important;
-	--color-link--hover: var(--stylix-text) !important;
-	--color-link--active: var(--stylix-text) !important;
-	--color-destructive: var(--stylix-danger) !important;
-	--color-warning: var(--stylix-warning) !important;
-	--color-success: var(--stylix-success) !important;
-	--background-color-base: var(--stylix-bg) !important;
-	--background-color-canvas: var(--stylix-bg) !important;
-	--background-color-canvas--sub: var(--stylix-surface) !important;
-	--background-color-neutral: var(--stylix-hover) !important;
-	--background-color-neutral-subtle: var(--stylix-surface) !important;
-	--background-color-interactive: var(--stylix-hover) !important;
-	--background-color-interactive-subtle: var(--stylix-surface) !important;
-	--background-color-primary-subtle: var(--stylix-surface) !important;
-	--background-color-progressive-subtle: var(--stylix-hover) !important;
-	--background-color-destructive-subtle: var(--stylix-hover) !important;
-	--background-color-warning-subtle: var(--stylix-hover) !important;
-	--border-color-base: var(--stylix-border) !important;
-	--border-color-subtle: var(--stylix-border) !important;
+	--color-base: #${c.base05} !important;
+	--color-base--emphasized: #${c.base05} !important;
+	--color-subtle: #${c.base04} !important;
+	--color-progressive: #${c.base0D} !important;
+	--color-progressive--hover: #${c.base05} !important;
+	--color-progressive--active: #${c.base05} !important;
+	--color-progressive--focus: #${c.base0D} !important;
+	--color-link: #${c.base0D} !important;
+	--color-link--visited: #${c.base0E} !important;
+	--color-link--hover: #${c.base05} !important;
+	--color-link--active: #${c.base05} !important;
+	--color-destructive: #${c.base08} !important;
+	--color-warning: #${c.base09} !important;
+	--color-success: #${c.base0B} !important;
+	--background-color-base: #${c.base00} !important;
+	--background-color-canvas: #${c.base00} !important;
+	--background-color-canvas--sub: #${c.base01} !important;
+	--background-color-neutral: #${c.base02} !important;
+	--background-color-neutral-subtle: #${c.base01} !important;
+	--background-color-interactive: #${c.base02} !important;
+	--background-color-interactive-subtle: #${c.base01} !important;
+	--background-color-primary-subtle: #${c.base01} !important;
+	--background-color-progressive-subtle: #${c.base02} !important;
+	--background-color-destructive-subtle: #${c.base02} !important;
+	--background-color-warning-subtle: #${c.base02} !important;
+	--border-color-base: #${c.base03} !important;
+	--border-color-subtle: #${c.base03} !important;
 	--border-color-transparent: transparent !important;
-	--border-color-interactive: var(--stylix-brand) !important;
-	--border-color-progressive: var(--stylix-brand) !important;
-	--border-color-destructive: var(--stylix-danger) !important;
-	--emphasized-border-color: var(--stylix-border) !important;
-	--box-shadow-drag: 0 0 0 1px var(--stylix-border) !important;
-	--box-shadow-sticky-header: 0 1px color-mix(in srgb, var(--stylix-border) 70%, transparent) !important;
-	--box-shadow-inset-small: inset 0 0 0 1px var(--stylix-border) !important;
+	--border-color-interactive: #${c.base0D} !important;
+	--border-color-progressive: #${c.base0D} !important;
+	--border-color-destructive: #${c.base08} !important;
+	--emphasized-border-color: #${c.base03} !important;
+	--box-shadow-drag: 0 0 0 1px #${c.base03} !important;
+	--box-shadow-sticky-header: 0 1px color-mix(in srgb, #${c.base03} 70%, transparent) !important;
+	--box-shadow-inset-small: inset 0 0 0 1px #${c.base03} !important;
 }
 
 html,
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 h1, h2, h3, h4, h5, h6,
 .mw-headline {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 /* page container + title bars */
@@ -61,8 +63,8 @@ h1, h2, h3, h4, h5, h6,
 .mw-body,
 .vector-page-titlebar,
 .vector-sticky-header {
-	background-color: var(--stylix-bg) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base00} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* infoboxes, tables, navboxes */
@@ -70,9 +72,9 @@ h1, h2, h3, h4, h5, h6,
 .wikitable,
 table.metadata,
 .navbox {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 .wikitable th,
@@ -81,62 +83,62 @@ table.metadata,
 .infobox td,
 .navbox th,
 .navbox td {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 /* hatnotes / disambiguation / main-article boxes */
 .hatnote,
 .dablink {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* sidebars & portals */
 .navbox,
 .vertical-navbox,
 .sidebar {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* code blocks */
 pre,
 code,
 .mw-code {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* edit summary / search inputs */
 input,
 textarea,
 select {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-	color: var(--stylix-text-dim) !important;
+	color: #${c.base04} !important;
 }
 
 /* search suggestions box */
 .mw-searchresults-has-iw .results-info,
 .suggestions,
 .mw-rcfilters-ui-filterWrapperWidget {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* footer */
 .mw-footer-container,
 footer {
-	background-color: var(--stylix-surface) !important;
-	border-top-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-top-color: #${c.base03} !important;
 }
 		'';
 	};

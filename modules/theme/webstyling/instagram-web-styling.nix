@@ -1,24 +1,26 @@
 { ... }:
 {
-	flake.modules.homeManager."instagram-web-styling" = { ... }:
+	flake.modules.homeManager."instagram-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."instagram.com" = ''
+		zenWebStyling.siteStyles."instagram.com" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root {
 	color-scheme: dark !important;
 }
 
 html,
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 h1, h2, h3, h4 {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 a {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 /* Instagram paints almost everything with inline styles, so catch the common
@@ -30,7 +32,7 @@ div[style*="rgb(250,250,250)"],
 div[style*="rgb(255,255,255)"],
 div[style*="#FAFAFA"],
 div[style*="#fafafa"] {
-	background-color: var(--stylix-bg) !important;
+	background-color: #${c.base00} !important;
 }
 
 /* sidebar / rails / panels */
@@ -38,8 +40,8 @@ div[role="presentation"],
 aside,
 [role="navigation"],
 [role="main"] {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 /* inputs (login/search/direct message) */
@@ -47,30 +49,30 @@ input,
 textarea,
 [class*="x2lah0s"],
 [role="textbox"] {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-	color: var(--stylix-text-dim) !important;
+	color: #${c.base04} !important;
 }
 
 /* black icons/text get restyled */
 svg[stroke="#000"] {
-	stroke: var(--stylix-text) !important;
+	stroke: #${c.base05} !important;
 }
 
 svg[fill="#000"] {
-	fill: var(--stylix-text) !important;
+	fill: #${c.base05} !important;
 }
 
 div[style*="color: rgb(0, 0, 0)"],
 div[style*="color: rgb(38, 38, 38)"],
 div[style*="color: #000"],
 div[style*="color: #262626"] {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 		'';
 	};

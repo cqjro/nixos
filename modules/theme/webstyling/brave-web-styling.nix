@@ -1,24 +1,26 @@
 { ... }:
 {
-	flake.modules.homeManager."brave-web-styling" = { ... }:
+	flake.modules.homeManager."brave-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."search.brave.com" = ''
+		zenWebStyling.siteStyles."search.brave.com" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root {
 	color-scheme: dark !important;
 }
 
 html,
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 h1, h2, h3, h4 {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 a {
-	color: var(--stylix-brand) !important;
+	color: #${c.base0D} !important;
 }
 
 /* header / top bar */
@@ -26,8 +28,8 @@ header,
 .sidebar,
 .nav,
 [class*="header"] {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* search box */
@@ -36,16 +38,16 @@ textarea,
 select,
 [class*="search-input"],
 [class*="SearchBar"] {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 button,
 [type="button"] {
-	background-color: var(--stylix-hover) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base02} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* result cards */
@@ -53,36 +55,36 @@ button,
 .snippet,
 .card,
 [class*="result"] {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 .result-header .title,
 [class*="result"] [class*="title"],
 .snippet-title {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 /* summary box on top */
 [class*="summary"],
 [class*="answer"] {
-	background-color: var(--stylix-hover) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base02} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 /* footer */
 footer {
-	background-color: var(--stylix-surface) !important;
-	border-top-color: var(--stylix-border) !important;
-	color: var(--stylix-text-dim) !important;
+	background-color: #${c.base01} !important;
+	border-top-color: #${c.base03} !important;
+	color: #${c.base04} !important;
 }
 
 mark,
 ::selection {
-	background-color: var(--stylix-brand) !important;
-	color: var(--stylix-bg) !important;
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
 }
 		'';
 	};

@@ -1,24 +1,26 @@
 { ... }:
 {
-	flake.modules.homeManager."nixpkgs-web-styling" = { ... }:
+	flake.modules.homeManager."nixpkgs-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."search.nixos.org" = ''
+		zenWebStyling.siteStyles."search.nixos.org" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root {
 	color-scheme: dark !important;
 }
 
 html,
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 h1, h2, h3, h4 {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 a {
-	color: var(--stylix-brand) !important;
+	color: #${c.base0D} !important;
 }
 
 /* top search bar */
@@ -27,14 +29,14 @@ textarea,
 select,
 [class*="search"],
 [class*="Search"] {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-	color: var(--stylix-text-dim) !important;
+	color: #${c.base04} !important;
 }
 
 /* nav / header */
@@ -42,8 +44,8 @@ header,
 nav,
 [class*="header"],
 [class*="navbar"] {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* result list (packages/options tables) */
@@ -52,85 +54,87 @@ thead,
 tr,
 th,
 td {
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 th {
-	background-color: var(--stylix-surface) !important;
+	background-color: #${c.base01} !important;
 }
 
 tbody tr:hover {
-	background-color: var(--stylix-hover) !important;
+	background-color: #${c.base02} !important;
 }
 
 /* package/option rows */
 [class*="row"] {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 code,
 [class*="code"] {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text-dim) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base04} !important;
 }
 
 /* pill selectors / chips */
 [class*="chip"],
 [class*="badge"],
 [class*="pill"] {
-	background-color: var(--stylix-hover) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base02} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 mark,
 ::selection {
-	background-color: var(--stylix-brand) !important;
-	color: var(--stylix-bg) !important;
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
 }
 
 footer {
-	background-color: var(--stylix-surface) !important;
-	border-top-color: var(--stylix-border) !important;
-	color: var(--stylix-text-dim) !important;
+	background-color: #${c.base01} !important;
+	border-top-color: #${c.base03} !important;
+	color: #${c.base04} !important;
 }
 		'';
 
-		zenWebStyling.siteStyles."nixos.org" = ''
+		zenWebStyling.siteStyles."nixos.org" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root {
 	color-scheme: dark !important;
 }
 
 html,
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 h1, h2, h3, h4 {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 a {
-	color: var(--stylix-brand) !important;
+	color: #${c.base0D} !important;
 }
 
 header,
 nav,
 footer,
 [class*="header"] {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 input,
 textarea,
 select,
 button {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 		'';
 	};

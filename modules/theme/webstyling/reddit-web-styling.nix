@@ -1,8 +1,10 @@
 { ... }:
 {
-	flake.modules.homeManager."reddit-web-styling" = { ... }:
+	flake.modules.homeManager."reddit-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."reddit.com" = ''
+		zenWebStyling.siteStyles."reddit.com" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root,
 html[data-theme],
 html[data-theme="dark"],
@@ -10,62 +12,62 @@ html[data-theme="light"] {
 	color-scheme: dark !important;
 
 	/* Reddit design tokens */
-	--background-container: var(--stylix-bg) !important;
-	--background-container-hover: var(--stylix-hover) !important;
-	--background-raised: var(--stylix-surface) !important;
-	--background-secondary: var(--stylix-surface) !important;
-	--color-secondary-onlight: var(--stylix-text) !important;
-	--color-primary-onlight: var(--stylix-text) !important;
-	--color-primary-plain: var(--stylix-brand) !important;
-	--color-tertiary-plain: var(--stylix-text-dim) !important;
-	--color-tertiary-onlight: var(--stylix-text-dim) !important;
-	--color-neutral-header-text: var(--stylix-text) !important;
-	--color-neutral-body-text: var(--stylix-text) !important;
-	--color-neutral-secondary-text: var(--stylix-text-dim) !important;
-	--color-neutral-bg-weak: var(--stylix-surface) !important;
-	--color-neutral-bg-weaker: var(--stylix-bg) !important;
-	--color-neutral-border-strong: var(--stylix-border) !important;
-	--color-neutral-border-medium: var(--stylix-border) !important;
-	--color-neutral-border-weak: var(--stylix-border) !important;
-	--color-brand-primary: var(--stylix-brand) !important;
-	--color-brand-primary-hover: var(--stylix-secondary) !important;
-	--color-brand-primary-onlight: var(--stylix-brand) !important;
-	--color-brand-primary-plain: var(--stylix-brand) !important;
-	--color-brand-primary-plain-hover: var(--stylix-secondary) !important;
-	--color-interactive-hover: var(--stylix-hover) !important;
-	--color-ui-active: var(--stylix-hover) !important;
-	--color-highlight: var(--stylix-hover) !important;
-	--color-overlay: var(--stylix-surface) !important;
-	--color-global-bg-weak: var(--stylix-bg) !important;
+	--background-container: #${c.base00} !important;
+	--background-container-hover: #${c.base02} !important;
+	--background-raised: #${c.base01} !important;
+	--background-secondary: #${c.base01} !important;
+	--color-secondary-onlight: #${c.base05} !important;
+	--color-primary-onlight: #${c.base05} !important;
+	--color-primary-plain: #${c.base0D} !important;
+	--color-tertiary-plain: #${c.base04} !important;
+	--color-tertiary-onlight: #${c.base04} !important;
+	--color-neutral-header-text: #${c.base05} !important;
+	--color-neutral-body-text: #${c.base05} !important;
+	--color-neutral-secondary-text: #${c.base04} !important;
+	--color-neutral-bg-weak: #${c.base01} !important;
+	--color-neutral-bg-weaker: #${c.base00} !important;
+	--color-neutral-border-strong: #${c.base03} !important;
+	--color-neutral-border-medium: #${c.base03} !important;
+	--color-neutral-border-weak: #${c.base03} !important;
+	--color-brand-primary: #${c.base0D} !important;
+	--color-brand-primary-hover: #${c.base0E} !important;
+	--color-brand-primary-onlight: #${c.base0D} !important;
+	--color-brand-primary-plain: #${c.base0D} !important;
+	--color-brand-primary-plain-hover: #${c.base0E} !important;
+	--color-interactive-hover: #${c.base02} !important;
+	--color-ui-active: #${c.base02} !important;
+	--color-highlight: #${c.base02} !important;
+	--color-overlay: #${c.base01} !important;
+	--color-global-bg-weak: #${c.base00} !important;
 
 	/* legacy reddit tokens */
-	--newCommunityTheme-body: var(--stylix-bg) !important;
-	--newCommunityTheme-bodyText: var(--stylix-text) !important;
-	--newCommunityTheme-actionIcon: var(--stylix-text-dim) !important;
-	--newCommunityTheme-button: var(--stylix-brand) !important;
-	--newCommunityTheme-buttontext: var(--stylix-bg) !important;
-	--newCommunityTheme-line: var(--stylix-border) !important;
-	--newCommunityTheme-post: var(--stylix-surface) !important;
-	--newCommunityTheme-postInside: var(--stylix-surface) !important;
-	--newCommunityTheme-titleText: var(--stylix-text) !important;
-	--newCommunityTheme-linkText: var(--stylix-brand) !important;
-	--newCommunityTheme-header: var(--stylix-surface) !important;
-	--newCommunityTheme-banner-backgroundImage: var(--stylix-surface) !important;
-	--newCommunityTheme-canvas: var(--stylix-bg) !important;
+	--newCommunityTheme-body: #${c.base00} !important;
+	--newCommunityTheme-bodyText: #${c.base05} !important;
+	--newCommunityTheme-actionIcon: #${c.base04} !important;
+	--newCommunityTheme-button: #${c.base0D} !important;
+	--newCommunityTheme-buttontext: #${c.base00} !important;
+	--newCommunityTheme-line: #${c.base03} !important;
+	--newCommunityTheme-post: #${c.base01} !important;
+	--newCommunityTheme-postInside: #${c.base01} !important;
+	--newCommunityTheme-titleText: #${c.base05} !important;
+	--newCommunityTheme-linkText: #${c.base0D} !important;
+	--newCommunityTheme-header: #${c.base01} !important;
+	--newCommunityTheme-banner-backgroundImage: #${c.base01} !important;
+	--newCommunityTheme-canvas: #${c.base00} !important;
 }
 
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 a,
 .link .linkflairlabel {
-	color: var(--stylix-brand) !important;
+	color: #${c.base0D} !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 /* search bar + inputs */
@@ -74,33 +76,33 @@ textarea,
 select,
 #search-container,
 [class*="search"] input {
-	background-color: var(--stylix-surface) !important;
-	color: var(--stylix-text) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
 }
 
 /* main post cards */
 .shreddit-post,
 [class*="post"],
 .thing {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 .thing .entry .title {
-	color: var(--stylix-text) !important;
+	color: #${c.base05} !important;
 }
 
 .sidebar,
 [class*="sidebar"] {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
 }
 
 hr {
-	border-color: var(--stylix-border) !important;
+	border-color: #${c.base03} !important;
 }
 		'';
 	};

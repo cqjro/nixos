@@ -1,114 +1,116 @@
 { ... }:
 {
-	flake.modules.homeManager."github-web-styling" = { ... }:
+	flake.modules.homeManager."github-web-styling" = { config, ... }:
 	{
-		zenWebStyling.siteStyles."github.com" = ''
+		zenWebStyling.siteStyles."github.com" = let
+			c = config.lib.stylix.colors;
+		in ''
 :root,
 [data-color-mode],
 [data-color-mode="light"],
 [data-color-mode="dark"] {
 	/* Primer design tokens (new) */
-	--bgColor-default: var(--stylix-bg) !important;
-	--bgColor-muted: var(--stylix-surface) !important;
-	--bgColor-inset: var(--stylix-surface) !important;
-	--bgColor-neutral-muted: var(--stylix-hover) !important;
-	--bgColor-neutral-subtle: var(--stylix-surface) !important;
-	--bgColor-emphasis: var(--stylix-hover) !important;
-	--bgColor-success-emphasis: var(--stylix-success) !important;
-	--bgColor-danger-emphasis: var(--stylix-danger) !important;
-	--bgColor-accent-emphasis: var(--stylix-brand) !important;
-	--fgColor-default: var(--stylix-text) !important;
-	--fgColor-muted: var(--stylix-text-dim) !important;
-	--fgColor-subtle: var(--stylix-text-dim) !important;
-	--fgColor-onEmphasis: var(--stylix-bg) !important;
-	--fgColor-accent: var(--stylix-brand) !important;
-	--fgColor-link: var(--stylix-brand) !important;
-	--fgColor-success: var(--stylix-success) !important;
-	--fgColor-danger: var(--stylix-danger) !important;
-	--fgColor-completion-icon: var(--stylix-text-dim) !important;
-	--borderColor-default: var(--stylix-border) !important;
-	--borderColor-muted: var(--stylix-border) !important;
-	--borderColor-neutral-muted: var(--stylix-border) !important;
-	--borderColor-success-emphasis: var(--stylix-success) !important;
-	--borderColor-danger-emphasis: var(--stylix-danger) !important;
+	--bgColor-default: #${c.base00} !important;
+	--bgColor-muted: #${c.base01} !important;
+	--bgColor-inset: #${c.base01} !important;
+	--bgColor-neutral-muted: #${c.base02} !important;
+	--bgColor-neutral-subtle: #${c.base01} !important;
+	--bgColor-emphasis: #${c.base02} !important;
+	--bgColor-success-emphasis: #${c.base0B} !important;
+	--bgColor-danger-emphasis: #${c.base08} !important;
+	--bgColor-accent-emphasis: #${c.base0D} !important;
+	--fgColor-default: #${c.base05} !important;
+	--fgColor-muted: #${c.base04} !important;
+	--fgColor-subtle: #${c.base04} !important;
+	--fgColor-onEmphasis: #${c.base00} !important;
+	--fgColor-accent: #${c.base0D} !important;
+	--fgColor-link: #${c.base0D} !important;
+	--fgColor-success: #${c.base0B} !important;
+	--fgColor-danger: #${c.base08} !important;
+	--fgColor-completion-icon: #${c.base04} !important;
+	--borderColor-default: #${c.base03} !important;
+	--borderColor-muted: #${c.base03} !important;
+	--borderColor-neutral-muted: #${c.base03} !important;
+	--borderColor-success-emphasis: #${c.base0B} !important;
+	--borderColor-danger-emphasis: #${c.base08} !important;
 
 	/* Primer legacy tokens */
-	--color-canvas-default: var(--stylix-bg) !important;
-	--color-canvas-subtle: var(--stylix-surface) !important;
-	--color-canvas-inset: var(--stylix-surface) !important;
-	--color-canvas-overlay: var(--stylix-surface) !important;
-	--color-canvas-mobile: var(--stylix-bg) !important;
-	--color-fg-default: var(--stylix-text) !important;
-	--color-fg-muted: var(--stylix-text-dim) !important;
-	--color-fg-subtle: var(--stylix-text-dim) !important;
-	--color-fg-on-emphasis: var(--stylix-bg) !important;
-	--color-accent-fg: var(--stylix-brand) !important;
-	--color-link-fg: var(--stylix-brand) !important;
-	--color-link-hover: var(--stylix-text) !important;
-	--color-success-fg: var(--stylix-success) !important;
-	--color-danger-fg: var(--stylix-danger) !important;
-	--color-attention-fg: var(--stylix-warning) !important;
-	--color-border-default: var(--stylix-border) !important;
-	--color-border-muted: var(--stylix-border) !important;
-	--color-neutral-muted: var(--stylix-hover) !important;
-	--color-neutral-subtle: var(--stylix-surface) !important;
-	--color-header-bg: var(--stylix-surface) !important;
-	--color-header-fg: var(--stylix-text) !important;
-	--color-header-border: var(--stylix-border) !important;
-	--color-btn-bg: var(--stylix-surface) !important;
-	--color-btn-hover-bg: var(--stylix-hover) !important;
-	--color-btn-active-bg: var(--stylix-hover) !important;
-	--color-btn-fg: var(--stylix-text) !important;
-	--color-btn-border: var(--stylix-border) !important;
-	--color-btn-primary-bg: var(--stylix-brand) !important;
-	--color-btn-primary-hover-bg: var(--stylix-secondary) !important;
-	--color-btn-primary-fg: var(--stylix-bg) !important;
-	--color-btn-danger-bg: var(--stylix-danger) !important;
-	--color-btn-danger-fg: var(--stylix-bg) !important;
-	--color-input-bg: var(--stylix-bg) !important;
-	--color-input-border: var(--stylix-border) !important;
-	--color-input-fg: var(--stylix-text) !important;
-	--color-diff-blob-addition-line-bg: var(--stylix-success) !important;
-	--color-diff-blob-addition-num-text: var(--stylix-success) !important;
-	--color-diff-blob-deletion-line-bg: var(--stylix-danger) !important;
+	--color-canvas-default: #${c.base00} !important;
+	--color-canvas-subtle: #${c.base01} !important;
+	--color-canvas-inset: #${c.base01} !important;
+	--color-canvas-overlay: #${c.base01} !important;
+	--color-canvas-mobile: #${c.base00} !important;
+	--color-fg-default: #${c.base05} !important;
+	--color-fg-muted: #${c.base04} !important;
+	--color-fg-subtle: #${c.base04} !important;
+	--color-fg-on-emphasis: #${c.base00} !important;
+	--color-accent-fg: #${c.base0D} !important;
+	--color-link-fg: #${c.base0D} !important;
+	--color-link-hover: #${c.base05} !important;
+	--color-success-fg: #${c.base0B} !important;
+	--color-danger-fg: #${c.base08} !important;
+	--color-attention-fg: #${c.base09} !important;
+	--color-border-default: #${c.base03} !important;
+	--color-border-muted: #${c.base03} !important;
+	--color-neutral-muted: #${c.base02} !important;
+	--color-neutral-subtle: #${c.base01} !important;
+	--color-header-bg: #${c.base01} !important;
+	--color-header-fg: #${c.base05} !important;
+	--color-header-border: #${c.base03} !important;
+	--color-btn-bg: #${c.base01} !important;
+	--color-btn-hover-bg: #${c.base02} !important;
+	--color-btn-active-bg: #${c.base02} !important;
+	--color-btn-fg: #${c.base05} !important;
+	--color-btn-border: #${c.base03} !important;
+	--color-btn-primary-bg: #${c.base0D} !important;
+	--color-btn-primary-hover-bg: #${c.base0E} !important;
+	--color-btn-primary-fg: #${c.base00} !important;
+	--color-btn-danger-bg: #${c.base08} !important;
+	--color-btn-danger-fg: #${c.base00} !important;
+	--color-input-bg: #${c.base00} !important;
+	--color-input-border: #${c.base03} !important;
+	--color-input-fg: #${c.base05} !important;
+	--color-diff-blob-addition-line-bg: #${c.base0B} !important;
+	--color-diff-blob-addition-num-text: #${c.base0B} !important;
+	--color-diff-blob-deletion-line-bg: #${c.base08} !important;
 }
 
 body {
-	background-color: var(--stylix-bg) !important;
-	color: var(--stylix-text) !important;
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
 }
 
 .Header {
-	background-color: var(--stylix-surface) !important;
-	border-bottom-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-bottom-color: #${c.base03} !important;
 }
 
 .UnderlineNav-item[aria-current="page"],
 .UnderlineNav-item.selected {
-	border-bottom-color: var(--stylix-brand) !important;
+	border-bottom-color: #${c.base0D} !important;
 }
 
 .Box {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 
 .Box-row {
-	border-color: var(--stylix-border) !important;
+	border-color: #${c.base03} !important;
 }
 
 .avatar {
-	border-color: var(--stylix-border) !important;
+	border-color: #${c.base03} !important;
 }
 
 .markdown-body pre code,
 .highlight pre {
-	background-color: var(--stylix-surface) !important;
+	background-color: #${c.base01} !important;
 }
 
 .commit {
-	background-color: var(--stylix-surface) !important;
-	border-color: var(--stylix-border) !important;
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
 }
 		'';
 	};
