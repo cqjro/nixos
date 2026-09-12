@@ -96,6 +96,25 @@ ytd-masthead,
 	border-bottom-color: #${c.base03} !important;
 }
 
+/* search bar box (new searchbox component) */
+#container.ytd-searchbox,
+.ytSearchboxComponentInputBoxDark,
+.ytSearchboxComponentInputBoxLight,
+.ytSearchboxComponentInputBoxDark[expanded],
+.ytSearchboxComponentInputBoxLight[expanded] {
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+}
+
+#search-input,
+#search {
+	color: #${c.base05} !important;
+}
+
+#search-input::placeholder {
+	color: #${c.base04} !important;
+}
+
 #guide-inner-content,
 #chips,
 .app-header,
@@ -103,6 +122,40 @@ ytd-masthead,
 ytd-guide-renderer {
 	background-color: #${c.base01} !important;
 	border-color: #${c.base03} !important;
+}
+
+/* chip row (uses rotating hashed vars -- target the class shapes directly) */
+.ytChipShapeInactive,
+.ytChipBarViewModelChipWrapper {
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
+}
+
+.ytChipShapeActive,
+yt-chip-cloud-chip-renderer[selected] {
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
+	border-color: #${c.base0D} !important;
+}
+
+.ytChipShapeInactive:hover,
+.ytChipShapeActive:hover {
+	background-color: #${c.base02} !important;
+}
+
+/* playlist sort bar header (background comes from a rotating hashed var) */
+ytd-item-section-renderer[use-chip-bar-view-model-header][page-subtype="playlist"] #header.ytd-item-section-renderer,
+#header.ytd-item-section-renderer {
+	background-color: #${c.base01} !important;
+}
+
+/* account / profile popup menu (background comes from a rotating hashed var) */
+ytd-multi-page-menu-renderer,
+ytd-multi-page-menu-renderer > #menu,
+ytd-account-settings-menu-renderer {
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
 }
 
 ytd-video-primary-info-renderer h1.title,
@@ -113,6 +166,92 @@ ytd-video-primary-info-renderer h1.title,
 
 #content-text.ytd-comment-renderer,
 #author-text.ytd-comment-renderer {
+	color: #${c.base05} !important;
+}
+
+/* ambient "cinematics" reflection layer behind the player uses element-scoped
+   --yt-saturated-* tokens -- force the page colour on the whole layer */
+#cinematics.ytd-watch-flexy,
+#cinematics {
+	background: #${c.base00} !important;
+}
+
+/* the watch-page metadata / description section sits on that surface */
+#below.ytd-watch-flexy,
+ytd-watch-metadata,
+ytd-video-primary-info-renderer,
+ytd-text-inline-expander {
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
+}
+
+/* description box */
+ytd-text-inline-expander #expand {
+	color: #${c.base0D} !important;
+}
+
+/* action buttons (like / share / save / menu) */
+ytd-button-renderer yt-button-shape,
+ytd-menu-renderer yt-button-shape,
+ytd-segmented-like-dislike-button-renderer yt-button-shape {
+	background-color: #${c.base02} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
+}
+
+/* subscribe button */
+ytd-subscribe-button-renderer .yt-spec-button-shape-next--filled {
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
+}
+
+/* channel pages */
+ytd-browse[page-subtype="channels"],
+#channel-header-container,
+ytd-c4-tabbed-header-renderer,
+ytd-channel-header-renderer,
+ytd-tabbed-page-header {
+	background-color: #${c.base00} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
+}
+
+#text-container.ytd-channel-name,
+#title.ytd-channel-header-renderer,
+ytd-channel-name,
+#description.ytd-channel-header-renderer {
+	color: #${c.base05} !important;
+}
+
+/* channel tabs (home / videos / shows / ...) */
+#tabsContainer.ytd-c4-tabbed-header-renderer,
+yt-tab-shape,
+.yt-tab-group-shape__tab {
+	background-color: #${c.base02} !important;
+	color: #${c.base05} !important;
+	border-color: #${c.base03} !important;
+}
+
+yt-tab-shape[active],
+yt-tab-shape[aria-selected="true"],
+.yt-tab-group-shape__tab--active .yt-tab-group-shape__tab-label {
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
+}
+
+/* channel community posts (background/border come from rotating hashed vars) */
+ytd-post-renderer[uses-compact-lockup],
+ytd-post-renderer,
+ytd-backstage-post-renderer {
+	background-color: #${c.base02} !important;
+	border-color: #${c.base03} !important;
+	color: #${c.base05} !important;
+}
+
+#content-text.ytd-post-renderer,
+#author-text.ytd-post-renderer,
+#content-text.ytd-backstage-post-renderer,
+#author-text.ytd-backstage-post-renderer {
 	color: #${c.base05} !important;
 }
 

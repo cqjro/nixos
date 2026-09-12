@@ -7,6 +7,13 @@
 		in ''
 :root {
 	color-scheme: dark !important;
+
+	/* hashed surface tokens google.com uses for the header, chips and the AI
+	   "ask anything" gradient -- override so they resolve to the palette */
+	--xhUGwc: #${c.base00} !important;
+	--cIehld: #${c.base01} !important;
+	--XKMDxc: #${c.base02} !important;
+	--jINu6c: #${c.base04} !important;
 }
 
 html,
@@ -23,22 +30,42 @@ a {
 	color: #${c.base0D} !important;
 }
 
-/* google.com presents no stable CSS variables; let the site's own dark mode
-   paint the large surfaces and only restyle the individual elements below. */
+/* top header */
+header,
+#gb {
+	background-color: #${c.base00} !important;
+}
 
-/* the search field itself (not the surrounding pill / dropdown) */
+/* the search bar pill carries the surface */
+.RNNXgb {
+	background: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+}
+
+/* the text field inside stays transparent -- no background/border of its own */
 input[type="text"],
 input.gLFyf,
 textarea {
-	background-color: #${c.base01} !important;
+	background: transparent !important;
+	border: none !important;
 	color: #${c.base05} !important;
-	border-color: #${c.base03} !important;
 }
 
 input[type="text"]::placeholder,
 input.gLFyf::placeholder,
 textarea::placeholder {
 	color: #${c.base04} !important;
+}
+
+/* "people also ask" dropdown hover + "people also search for" chips + show-all */
+.fxvkXe,
+.p8Jhnd {
+	background-color: #${c.base02} !important;
+}
+
+/* page footer */
+.f6F9Be {
+	background: #${c.base01} !important;
 }
 
 /* result titles, urls, snippets */
