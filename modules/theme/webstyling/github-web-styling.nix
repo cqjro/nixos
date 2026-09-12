@@ -65,6 +65,9 @@
 	--button-invisible-fgColor-rest: #${c.base0D} !important;
 	--button-invisible-fgColor-hover: #${c.base05} !important;
 
+	--button-inactive-bgColor: #${c.base03} !important;
+	--button-inactive-fgColor: #${c.base04} !important;
+
 	/* Primer legacy tokens */
 	--color-canvas-default: #${c.base00} !important;
 	--color-canvas-subtle: #${c.base01} !important;
@@ -85,7 +88,7 @@
 	--color-border-muted: #${c.base03} !important;
 	--color-neutral-muted: #${c.base02} !important;
 	--color-neutral-subtle: #${c.base01} !important;
-	--color-header-bg: #${c.base00} !important;
+	--color-header-bg: #${c.base01} !important;
 	--color-header-fg: #${c.base05} !important;
 	--color-header-border: #${c.base03} !important;
 	--color-btn-bg: #${c.base01} !important;
@@ -112,7 +115,7 @@ body {
 }
 
 .Header {
-	background-color: #${c.base01} !important;
+	background-color: #${c.base00} !important;
 	border-bottom-color: #${c.base03} !important;
 }
 
