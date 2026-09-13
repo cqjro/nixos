@@ -164,7 +164,7 @@ ytd-video-primary-info-renderer h1.title,
 	color: #${c.base05} !important;
 }
 
-#content-text.ytd-comment-renderer,
+#content-text.ytdcomment-renderer,
 #author-text.ytd-comment-renderer {
 	color: #${c.base05} !important;
 }
@@ -186,7 +186,7 @@ ytd-watch-flexy #player-container-inner,
 ytd-watch-metadata,
 ytd-video-primary-info-renderer,
 ytd-text-inline-expander {
-	background-color: #${c.base00} !important;
+	background-color: #${c.base01} !important;
 	color: #${c.base05} !important;
 }
 

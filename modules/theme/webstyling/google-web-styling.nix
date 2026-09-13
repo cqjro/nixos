@@ -62,16 +62,45 @@ V {
 	background-image: none !important;
 }
 
+/* AI overview gradient scrim */
+RDmXvc {
+	background: #${c.base00} !important;
+	background-image: none !important;
+}
+
 /* "show all" pill on the AI overview sources row */
 .YoEHmf {
 	background-color: #${c.base02} !important;
 	color: #${c.base04} !important;
 }
 
-/* expanded AI sources card */
+/* "show less" pill */
+.mWokkb {
+	background-color: #${c.base02} !important;
+	color: #${c.base04} !important;
+}
+
+/* expanded AI sources card (keeps the themed surface) */
 .XEqVsf {
 	background-color: #${c.base01} !important;
 	border-color: #${c.base03} !important;
+}
+
+/* the same class is reused for the search-bar text container: make it
+   transparent inside the pill so no separate box shows */
+.RNNXgb .XEqVsf {
+	background-color: transparent !important;
+	border-color: transparent !important;
+}
+
+/* people also search for / connections chips */
+.b2Rnsc {
+	background: #${c.base02} !important;
+}
+
+/* sticky header bar while scrolling */
+.VHFyob .CvDJxb {
+	background: #${c.base00} !important;
 }
 
 /* search suggestions dropdown */
