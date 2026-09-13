@@ -64,7 +64,7 @@ V,
 }
 
 /* AI overview gradient scrim */
-RDmXvc {
+.RDmXvc {
 	background: #${c.base00} !important;
 	background-image: none !important;
 }
