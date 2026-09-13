@@ -203,16 +203,25 @@ ytd-text-inline-expander {
 }
 
 /* description box -- one consistent surface, children stay transparent */
-#description-inline-expander {
-	background-color: #${c.base01} !important;
+#description.ytd-watch-metadata,
+#description.ytd-watch-metadata > #inline-expander,
+#description-inline-expander,
+#inline-expander.ytd-text-inline-expander,
+ytd-text-inline-expander,
+ytd-structured-description-content-renderer {
+	background: #${c.base02} !important;
+	background-color: #${c.base02} !important;
 	border-radius: 12px !important;
 }
 
+#description.ytd-watch-metadata,
+#description.ytd-watch-metadata *,
 #description-inline-expander,
 #description-inline-expander * {
 	color: #${c.base05} !important;
 }
 
+#description.ytd-watch-metadata *,
 #description-inline-expander *,
 ytd-structured-description-content-renderer,
 ytd-structured-description-content-renderer * {
@@ -220,7 +229,9 @@ ytd-structured-description-content-renderer * {
 	background-image: none !important;
 }
 
-/* description box */
+/* expand / any links inside the description */
+#description.ytd-watch-metadata a,
+#description-inline-expander a,
 ytd-text-inline-expander #expand {
 	color: #${c.base0D} !important;
 }
