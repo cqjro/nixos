@@ -109,6 +109,21 @@ RDmXvc {
 	background: #${c.base00} !important;
 }
 
+/* normalize native form fields so stray boxes don't appear */
+textarea,
+input[type="text"] {
+	color-scheme: dark !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	background: #${c.base01} !important;
+}
+
+/* except inside the search pill where the pill itself carries the surface */
+.RNNXgb textarea,
+.RNNXgb input[type="text"] {
+	background: transparent !important;
+}
+
 /* search suggestions dropdown */
 .ajZCb {
 	background: #${c.base01} !important;

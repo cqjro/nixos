@@ -204,7 +204,7 @@ ytd-text-inline-expander {
 
 /* description box -- one consistent surface, children stay transparent */
 #description-inline-expander {
-	background-color: #${c.base02} !important;
+	background-color: #${c.base01} !important;
 	border-radius: 12px !important;
 }
 
