@@ -69,10 +69,10 @@ RDmXvc {
 	background-image: none !important;
 }
 
-/* "show all" pill on the AI overview sources row */
+/* "show all" pill on the AI overview sources row (base02 bg needs a light text colour) */
 .YoEHmf {
 	background-color: #${c.base02} !important;
-	color: #${c.base04} !important;
+	color: #${c.base05} !important;
 }
 
 /* "show less" / "show more" pills (base02 bg needs a light text colour) */
@@ -88,10 +88,15 @@ RDmXvc {
 }
 
 /* the same class is reused for the search-bar text container: make it
-   transparent inside the pill so no separate box shows */
-.RNNXgb .XEqVsf {
-	background-color: transparent !important;
-	border-color: transparent !important;
+   transparent inside the pill no matter how deeply nested, and strip
+   border/box-shadow too so a stray box can't reappear if Google changes
+   the DOM depth or reuses the class again */
+.RNNXgb .XEqVsf,
+.RNNXgb .XEqVsf * {
+	background: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	box-shadow: none !important;
 }
 
 /* people also search for / connections chips */

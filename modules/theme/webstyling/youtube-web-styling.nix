@@ -202,9 +202,27 @@ ytd-text-inline-expander {
 	color: #${c.base05} !important;
 }
 
+/* description box -- one consistent surface, children stay transparent */
+#description-inline-expander {
+	background-color: #${c.base02} !important;
+	border-radius: 12px !important;
+}
+
+#description-inline-expander,
+#description-inline-expander * {
+	color: #${c.base05} !important;
+}
+
+#description-inline-expander *,
+ytd-structured-description-content-renderer,
+ytd-structured-description-content-renderer * {
+	background-color: transparent !important;
+	background-image: none !important;
+}
+
 /* description box */
 ytd-text-inline-expander #expand {
-	color: #${c.base00} !important;
+	color: #${c.base0D} !important;
 }
 
 /* action buttons (reply / join / like / share / save / menu -- style the inner
