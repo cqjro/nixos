@@ -209,8 +209,8 @@ ytd-text-inline-expander {
 #inline-expander.ytd-text-inline-expander,
 ytd-text-inline-expander,
 ytd-structured-description-content-renderer {
-	background: #${c.base02} !important;
-	background-color: #${c.base02} !important;
+	background: #${c.base01} !important;
+	background-color: #${c.base01} !important;
 	border-radius: 12px !important;
 }
 

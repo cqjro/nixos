@@ -31,12 +31,16 @@
 					Fingerprinting = true;
 				};
 
-				# for browser extensions that are not packaged by rycee
+# for browser extensions that are not packaged by rycee
 				ExtensionSettings = {
 					"myallychou@gmail.com" = {
       				install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/youtube-recommended-videos/latest.xpi";
       				installation_mode = "normal_installed";
-     				};
+      			};
+					"jordanlinkwarden@gmail.com" = {
+      				install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/linkwarden/latest.xpi";
+      				installation_mode = "normal_installed";
+      			};
 				};
 			};
 
