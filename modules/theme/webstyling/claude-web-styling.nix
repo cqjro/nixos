@@ -45,7 +45,12 @@
 		in "${fmt h} ${fmt s}% ${fmt l}%";
 		hslName = name: toHsl c."${name}";
 		styling = ''
-:root[data-mode="dark"] {
+/* Tokens are `!important` on a double-`:root` selector so they keep winning
+   even after Claude hydrates the theme and re-injects its own variable sheet
+   later with the same/similar specificity. */
+:root:root,
+:root:root[data-mode="dark"],
+html[data-mode="dark"] {
 	color-scheme: dark !important;
 
 	/* Claude.ai real design tokens. Most are consumed via hsl(var(--token)),
