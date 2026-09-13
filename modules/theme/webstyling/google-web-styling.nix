@@ -56,8 +56,9 @@ textarea::placeholder,
 	color: #${c.base04} !important;
 }
 
-/* AI overview "ask anything" plate gradient (uses element-scoped var) */
-V {
+/* AI overview "ask anything" plate gradient (the plate element class rotates) */
+V,
+.Zze5V {
 	background: #${c.base00} !important;
 	background-image: none !important;
 }
@@ -74,10 +75,10 @@ RDmXvc {
 	color: #${c.base04} !important;
 }
 
-/* "show less" pill */
+/* "show less" / "show more" pills (base02 bg needs a light text colour) */
 .mWokkb {
 	background-color: #${c.base02} !important;
-	color: #${c.base04} !important;
+	color: #${c.base05} !important;
 }
 
 /* expanded AI sources card (keeps the themed surface) */

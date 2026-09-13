@@ -170,8 +170,14 @@ ytd-video-primary-info-renderer h1.title,
 }
 
 /* ambient "cinematics" reflection layer behind the player uses element-scoped
-   --yt-saturated-* tokens -- flatten it to the page colour and kill the
-   video-content gradient */
+   --yt-saturated-* tokens -- remove the layer entirely and flatten the watch
+   page surfaces to the page colour */
+#cinematics-container,
+#cinematics,
+ytd-watch-flexy #cinematics-container {
+	display: none !important;
+}
+
 ytd-watch-flexy,
 ytd-watch-flexy #player-container,
 ytd-watch-flexy #player-container-inner,
@@ -181,18 +187,24 @@ ytd-watch-flexy #player-container-inner,
 	background-image: none !important;
 }
 
+/* theater mode: solid themed background around the player */
+ytd-watch-flexy[theater] #player-container,
+ytd-watch-flexy[theater] #full-bleed-container {
+	background: #${c.base00} !important;
+}
+
 /* the watch-page metadata / description section sits on that surface */
 #below.ytd-watch-flexy,
 ytd-watch-metadata,
 ytd-video-primary-info-renderer,
 ytd-text-inline-expander {
-	background-color: #${c.base01} !important;
+	background-color: #${c.base00} !important;
 	color: #${c.base05} !important;
 }
 
 /* description box */
 ytd-text-inline-expander #expand {
-	color: #${c.base01} !important;
+	color: #${c.base00} !important;
 }
 
 /* action buttons (reply / join / like / share / save / menu -- style the inner
