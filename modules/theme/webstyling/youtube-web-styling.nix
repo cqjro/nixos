@@ -92,7 +92,7 @@ ytd-watch-flexy,
 #masthead-container,
 ytd-masthead,
 #container.ytd-masthead {
-	background-color: #${c.base01} !important;
+	background-color: #${c.base00} !important;
 	border-bottom-color: #${c.base03} !important;
 }
 
@@ -120,7 +120,7 @@ ytd-masthead,
 .app-header,
 .app-drawer,
 ytd-guide-renderer {
-	background-color: #${c.base01} !important;
+	background-color: #${c.base00} !important;
 	border-color: #${c.base03} !important;
 }
 
@@ -147,7 +147,7 @@ yt-chip-cloud-chip-renderer[selected] {
 /* playlist sort bar header (background comes from a rotating hashed var) */
 ytd-item-section-renderer[use-chip-bar-view-model-header][page-subtype="playlist"] #header.ytd-item-section-renderer,
 #header.ytd-item-section-renderer {
-	background-color: #${c.base01} !important;
+	background-color: #${c.base00} !important;
 }
 
 /* account / profile popup menu (background comes from a rotating hashed var) */
@@ -170,10 +170,15 @@ ytd-video-primary-info-renderer h1.title,
 }
 
 /* ambient "cinematics" reflection layer behind the player uses element-scoped
-   --yt-saturated-* tokens -- force the page colour on the whole layer */
+   --yt-saturated-* tokens -- flatten it to the page colour and kill the
+   video-content gradient */
+ytd-watch-flexy,
+ytd-watch-flexy #player-container,
+ytd-watch-flexy #player-container-inner,
 #cinematics.ytd-watch-flexy,
 #cinematics {
-	background: #${c.base00} !important;
+	background-color: #${c.base00} !important;
+	background-image: none !important;
 }
 
 /* the watch-page metadata / description section sits on that surface */
@@ -187,16 +192,24 @@ ytd-text-inline-expander {
 
 /* description box */
 ytd-text-inline-expander #expand {
-	color: #${c.base0D} !important;
+	color: #${c.base01} !important;
 }
 
-/* action buttons (like / share / save / menu) */
+/* action buttons (reply / join / like / share / save / menu -- style the inner
+   pill shape, keep the square wrapper transparent) */
 ytd-button-renderer yt-button-shape,
 ytd-menu-renderer yt-button-shape,
 ytd-segmented-like-dislike-button-renderer yt-button-shape {
+	background-color: transparent !important;
+}
+
+ytd-button-renderer .yt-spec-button-shape-next,
+ytd-menu-renderer .yt-spec-button-shape-next,
+ytd-segmented-like-dislike-button-renderer .yt-spec-button-shape-next {
 	background-color: #${c.base02} !important;
 	color: #${c.base05} !important;
 	border-color: #${c.base03} !important;
+	border-radius: 18px !important;
 }
 
 /* subscribe button */

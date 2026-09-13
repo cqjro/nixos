@@ -7,13 +7,6 @@
 		in ''
 :root {
 	color-scheme: dark !important;
-
-	/* hashed surface tokens google.com uses for the header, chips and the AI
-	   "ask anything" gradient -- override so they resolve to the palette */
-	--xhUGwc: #${c.base00} !important;
-	--cIehld: #${c.base01} !important;
-	--XKMDxc: #${c.base02} !important;
-	--jINu6c: #${c.base04} !important;
 }
 
 html,
@@ -45,19 +38,49 @@ header,
 /* the text field inside stays transparent -- no background/border of its own */
 input[type="text"],
 input.gLFyf,
-textarea {
+input[name="q"],
+textarea,
+textarea[name="q"],
+#input {
 	background: transparent !important;
 	border: none !important;
+	box-shadow: none !important;
 	color: #${c.base05} !important;
 }
 
 input[type="text"]::placeholder,
 input.gLFyf::placeholder,
-textarea::placeholder {
+input[name="q"]::placeholder,
+textarea::placeholder,
+#input::placeholder {
 	color: #${c.base04} !important;
 }
 
-/* "people also ask" dropdown hover + "people also search for" chips + show-all */
+/* AI overview "ask anything" plate gradient (uses element-scoped var) */
+V {
+	background: #${c.base00} !important;
+	background-image: none !important;
+}
+
+/* "show all" pill on the AI overview sources row */
+.YoEHmf {
+	background-color: #${c.base02} !important;
+	color: #${c.base04} !important;
+}
+
+/* expanded AI sources card */
+.XEqVsf {
+	background-color: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+}
+
+/* search suggestions dropdown */
+.ajZCb {
+	background: #${c.base01} !important;
+	border-color: #${c.base03} !important;
+}
+
+/* "people also ask" dropdown hover + "people also search for" chips */
 .fxvkXe,
 .p8Jhnd {
 	background-color: #${c.base02} !important;
@@ -65,7 +88,7 @@ textarea::placeholder {
 
 /* page footer */
 .f6F9Be {
-	background: #${c.base01} !important;
+	background: #${c.base00} !important;
 }
 
 /* result titles, urls, snippets */
