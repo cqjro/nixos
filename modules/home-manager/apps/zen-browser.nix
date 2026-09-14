@@ -41,6 +41,10 @@
       				install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/linkwarden/latest.xpi";
       				installation_mode = "normal_installed";
       			};
+					"{8e41107d-2be2-454d-b4b8-c3d7e54d77de}" = {
+      				install_url = "https://addons.mozilla.org/en-US/firefox/downloads/latest/igplus-extension/latest.xpi";
+      				installation_mode = "normal_installed";
+      			};
 				};
 			};
 

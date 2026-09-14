@@ -45,12 +45,19 @@
 		in "${fmt h} ${fmt s}% ${fmt l}%";
 		hslName = name: toHsl c."${name}";
 		styling = ''
-/* Tokens are `!important` on a double-`:root` selector so they keep winning
-   even after Claude hydrates the theme and re-injects its own variable sheet
-   later with the same/similar specificity. */
-:root:root,
-:root:root[data-mode="dark"],
-html[data-mode="dark"] {
+/* Tokens are `!important` and declared on `:root` AND on every element
+   (`*`). Claude re-injects its own palette after hydration (keyed on
+   `[data-color-version=v2][data-theme=claude][data-mode=dark]`) and several
+   surfaces use Tailwind `!important` utilities, so a plain `:root`
+   declaration loses either on cascade order/specificity or on inheritance:
+   a nearer wrapper redefining the token shadows the root value for its
+   subtree. Declaring on every element sidesteps all of that. */
+:root:root:root,
+:root:root:root[data-mode="dark"],
+:root:root:root[data-theme="claude"],
+:root:root:root *,
+:root:root:root[data-mode="dark"] *,
+:root:root:root[data-theme="claude"] * {
 	color-scheme: dark !important;
 
 	/* Claude.ai real design tokens. Most are consumed via hsl(var(--token)),
