@@ -63,21 +63,21 @@ else
     rebuild_cmd=(sudo nixos-rebuild switch --flake ".#$dir" --impure)
 fi
 
-# Run a flake check before rebuilding and output the results
-echo "Running flake check..."
-if ! flake_check_output=$(nix flake check --impure 2>&1); then
-    echo "flake check FAILED:"
-    echo "$flake_check_output"
-    exit 1
-fi
-echo "flake check passed:"
-echo "$flake_check_output"
-
 # Ensure the log directory exists
 mkdir -p .log
 
-# Rebuild, output simplified errors, log trackebacks
-"${rebuild_cmd[@]}" &>./.log/nixos-switch.log || (bat ./.log/nixos-switch.log | grep --color error && exit 1)
+# Rebuild, live-streaming the output to the terminal with syntax highlighting
+# while also keeping a full log. On failure, surface only the relevant errors.
+set +e
+"${rebuild_cmd[@]}" 2>&1 | tee ./.log/nixos-switch.log | bat --paging=never --decorations=never --language=log
+status=${PIPESTATUS[0]}
+set -e
+
+if [ $status -ne 0 ]; then
+    echo "Build failed. Relevant errors:"
+    bat --paging=never --decorations=never --language=log ./.log/nixos-switch.log | rg --color error -C 4
+    exit 1
+fi
 
 # Get current generation metadata (list-generations doesn't support --target-host,
 # so for remote builds we run it over SSH on the target instead)

@@ -97,8 +97,14 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.actual-budget
 				inputs.self.modules.nixos.linkwarden
+				inputs.self.modules.nixos.paperless
+				inputs.self.modules.nixos.beszel
+				inputs.self.modules.nixos.glance
+				inputs.self.modules.nixos.homepage
 				inputs.self.modules.nixos.cloudflared
 				inputs.self.modules.nixos.youtube
+				inputs.self.modules.nixos.stylix
+				inputs.stylix.nixosModules.stylix
 				inputs.nixos-hardware.nixosModules.apple-t2
 				inputs.home-manager.nixosModules.default
 				{ nixpkgs.overlays = overlays; }
