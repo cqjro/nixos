@@ -12,7 +12,6 @@
 			settings = {
 				title = "REDRUM";
 			};
-
 			# "Homelab" tab: one entry per REDRUM app exposed via a cloudflared
 			# tunnel (kept in sync with the modules in this directory).
 			services = [

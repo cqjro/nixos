@@ -22,7 +22,9 @@ select dir in "${dir_list[@]}"; do
     fi
 done
 # Early return if no changes were detected (thanks @singiamtel!)
-if git diff --quiet; then
+# Compare against HEAD (not just the index): a failed attempt already ran
+# `git add --all`, so a staged-but-uncommitted tree would otherwise bail here.
+if git diff --quiet HEAD; then
     echo "No changes detected, exiting."
 		popd	
     exit 0
@@ -75,7 +77,7 @@ set -e
 
 if [ $status -ne 0 ]; then
     echo "Build failed. Relevant errors:"
-    bat --paging=never --decorations=never --language=log ./.log/nixos-switch.log | rg --color error -C 4
+    bat --paging=never --decorations=never --language=log ./.log/nixos-switch.log | grep -i -C 4 -E -- 'error|failed|fail|fatal' || true
     exit 1
 fi
 

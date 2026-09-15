@@ -305,6 +305,7 @@ across rebuilds.
 | `/var/lib/cloudflared/*.json` | `root:root` | 0600 | cloudflared-* (as root) |
 | `/var/lib/paperless/admin-password` | `paperless:paperless` | 0600 | paperless (via credential) |
 | `/var/lib/beszel/agent.env` | `beszel-agent:beszel-agent` | 0600 | beszel-agent (EnvironmentFile) |
+| `/var/lib/glance/glance.env` | `glance:glance` | 0600 | glance (EnvironmentFile) |
 
 Admin access is via `sudo` (`cairo` is in `wheel`) — keep the service dirs at
 `0700` and owned by their own user so each app stays isolated from the others
@@ -320,7 +321,7 @@ sudo chown -R paperless:paperless   /var/lib/paperless
 sudo chown -R beszel-hub:beszel-hub /var/lib/beszel-hub
 sudo chown -R beszel-agent:beszel-agent /var/lib/beszel-agent
 sudo chown -R glance:glance         /var/lib/glance
-sudo chmod 600 /var/lib/paperless/admin-password /var/lib/beszel/agent.env
+sudo chmod 600 /var/lib/paperless/admin-password /var/lib/beszel/agent.env /var/lib/glance/glance.env
 ```
 
 These users are not interactive logins, so operate as them with `sudo -u`:
