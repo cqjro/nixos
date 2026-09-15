@@ -32,10 +32,16 @@
 				};
 
 				# Restrict dashboard access behind username/password login.
+				# `auth.users` is a MAP keyed by username (not a list), and a
+				# random `secret-key` from `glance secret:make` is mandatory.
+				# Both secrets live in /var/lib/glance/glance.env.
 				auth = {
-					users = [
-						{ username = "admin"; password = "\${GLANCE_PASSWORD}"; }
-					];
+					secret-key = "\${GLANCE_SECRET_KEY}";
+					users = {
+						admin = {
+							password = "\${GLANCE_PASSWORD}";
+						};
+					};
 				};
 
 				pages = [
