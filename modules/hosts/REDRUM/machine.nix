@@ -64,6 +64,7 @@
 			isNormalUser = true;
 			openssh.authorizedKeys.keys = [
 				"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBR8F9bwCx8EUHCNpMAMpSnnErqkHYAeEVbk9KyHzzy1"
+				"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHk7TbyTHgnWyVlF4rtLB883CKUJc5mF6dQoj5n/m1lk"
 			];
 			extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
 			packages = with pkgs; [ tree ];
