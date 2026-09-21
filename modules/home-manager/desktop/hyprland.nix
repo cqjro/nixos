@@ -256,10 +256,10 @@
             (bind "${mainMod} + mouse_down" (dsp.focus { workspace = "e+1"; }) { })
             (bind "${mainMod} + mouse_up" (dsp.focus { workspace = "e-1"; }) { })
             (bind "${mainMod} + F" (dsp.window.fullscreen { action = "toggle"; }) { })
-            (bind "${mainMod} + ALT + H" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh left") { locked = true; })
-            (bind "${mainMod} + ALT + J" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh down") { locked = true; })
-            (bind "${mainMod} + ALT + K" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh up") { locked = true; })
-            (bind "${mainMod} + ALT + L" (dsp.exec_cmd "bash $HOME/.nixos/scripts/pip-move.sh right") { locked = true; })
+            (bind "${mainMod} + ALT + H" (dsp.exec_cmd "bash ${../../scripts/pip-move.sh} left") { locked = true; })
+            (bind "${mainMod} + ALT + J" (dsp.exec_cmd "bash ${../../scripts/pip-move.sh} down") { locked = true; })
+            (bind "${mainMod} + ALT + K" (dsp.exec_cmd "bash ${../../scripts/pip-move.sh} up") { locked = true; })
+            (bind "${mainMod} + ALT + L" (dsp.exec_cmd "bash ${../../scripts/pip-move.sh} right") { locked = true; })
             (bind "${mainMod} + mouse:272" dsp.window.drag { mouse = true; })
             (bind "${mainMod} + mouse:273" dsp.window.resize { mouse = true; })
             (bind "XF86AudioNext" (dsp.exec_cmd "playerctl next") { locked = true; })
@@ -276,7 +276,7 @@
             "hyprland.start"
             (mkLuaInline ''
               function()
-                hl.exec_cmd("bash $HOME/.nixos/start.sh")
+                hl.exec_cmd("bash ${../../../start.sh}")
                 hl.dispatch(hl.dsp.focus({ workspace = "special:magic" }))
                 hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
               end

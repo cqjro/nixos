@@ -19,8 +19,8 @@
 				ll = "eza -l --header";
 				llt = "eza -l --tree --header";
 				cd = "z";
-				rebuild = "bash ~/.nixos/rebuild.sh";
-				xremap-binds = "bash ~/.nixos/modules/scripts/keybind-cheatsheet.sh";
+				rebuild = "bash ${../../../rebuild.sh}";
+				xremap-binds = "bash ${../../scripts/keybind-cheatsheet.sh} ${../keyboard/xremap.nix} ${../../scripts/parse_xremap.py}";
 			};
 
 			profileExtra = ''

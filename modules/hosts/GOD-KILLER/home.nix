@@ -24,9 +24,5 @@
 				"desc:Microstep MAG321UP OLED,3840x2160@165,0x0,1.00" # MSI OLED
 			];
 		};
-
-		home.sessionPath = [
-			"/homes/cairo/.nixos"
-		];
 	};
 }

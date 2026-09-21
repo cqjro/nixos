@@ -17,8 +17,8 @@
 
 set -euo pipefail
 
-XREMAP_NIX="${XREMAP_NIX:-$HOME/.nixos/modules/keyboard/xremap.nix}"
-PARSE_SCRIPT="${PARSE_SCRIPT:-$HOME/.nixos/modules/scripts/parse_xremap.py}"
+XREMAP_NIX="${1:-${XREMAP_NIX:-$HOME/.nixos/modules/home-manager/keyboard/xremap.nix}}"
+PARSE_SCRIPT="${2:-${PARSE_SCRIPT:-$HOME/.nixos/modules/scripts/parse_xremap.py}}"
 LAUNCHER="${LAUNCHER:-walker}"   # rofi | wofi | fuzzel | walker
 
 # --- 1. Hyprland binds ---
