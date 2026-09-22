@@ -38,7 +38,6 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos."GOD-KILLER-monitors"
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
-				inputs.nix-flatpak.nixosModules.nix-flatpak
 				{ nixpkgs.overlays = overlays; }
 			];
 		};
@@ -74,7 +73,6 @@ inputs.self.modules.nixos.games
 				inputs.nixos-hardware.nixosModules.apple-t2
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
-				inputs.nix-flatpak.nixosModules.nix-flatpak
 				{ nixpkgs.overlays = overlays; }
 			];
 		};

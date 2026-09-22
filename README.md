@@ -142,17 +142,59 @@ targets:
 
 ## Scripts
 
-- `rebuild.sh` — the daily-driver workflow. Runs a `nix flake check`, rebuilds
-  locally (or remotely via `--target-host --use-remote-sudo`), logs to `.log/`,
-  then commits the result with generation metadata and pushes to `origin/master`.
-- `start.sh` — run from Hyprland on login: sets up the SSH agent with GUI
-  password prompting, verifies GitHub auth, and pulls the latest config.
+- `rebuild.sh` — the daily-driver workflow. Streams the rebuild live with
+  syntax highlighting (`bat`), shows only the errors on failure (log kept at
+  `.log/nixos-switch.log`), rebuilds locally or remotely
+  (`--target-host --use-remote-sudo`), commits with generation metadata, and
+  pushes to `origin/master`.
+- `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
+  passphrase prompt, verifies GitHub auth, and pulls the latest config (see
+  [How start.sh works](#how-startsh-works) below).
 - `modules/scripts/focus-window.sh` — focus an app by class/title or launch it.
 - `modules/scripts/keybind-cheatsheet.sh` — render the xremap keymap as a
   cheatsheet (`Super+K X`).
 - `modules/scripts/pip-move.sh` — move the floating picture-in-picture window
   around (`Super+Alt+HJKL`).
 - `modules/scripts/parse_xremap.py` — parse the xremap config for reading/grepping.
+
+### How `start.sh` works
+
+`start.sh` re-syncs the NixOS config from GitHub every time you log in, without
+blocking the desktop. Hyprland launches it on session start
+(`hl.exec_cmd("bash $HOME/.nixos/start.sh")` in the `hyprland.start` hook in
+`modules/home-manager/desktop/hyprland.nix`), and the final line
+(`main "$@"`) runs it in the background.
+
+The flow:
+
+1. **Logging** — everything is written to `~/.nixos/.log/start.log`
+   (`[INFO]/[WARN]/[ERROR]`), and key milestones are surfaced as desktop
+   notifications via `notify-send`.
+2. **Wait for desktop** — sleeps 2s so the session is fully up before anything
+   tries to show a GUI.
+3. **Key check** — bails out if `~/.ssh/id_ed25519` is missing (adjustable at the
+   top of the script).
+4. **GUI askpass** — sets `SSH_ASKPASS` to `openssh-askpass`'s GTK dialog
+   (`/run/current-system/sw/libexec/gtk-ssh-askpass`) and exports
+   `DISPLAY=:0` + `SSH_ASKPASS_REQUIRE=force` so every passphrase prompt is
+   answered by a popup instead of a terminal. This is why the script only works
+   from a session with a display.
+5. **SSH agent** — starts `ssh-agent` if none is running and saves
+   `SSH_AUTH_SOCK`/`SSH_AGENT_PID` to `~/.ssh/agent-info` (chmod 600) so
+   unrelated processes can reuse the same agent.
+6. **Load the key** — `ssh-add`s `~/.ssh/id_ed25519` through the GUI prompt
+   (detached from any TTY with `setsid` so it never blocks on stdin).
+7. **Verify GitHub** — `ssh -T git@github.com` confirms the key is authorised
+   (non-fatal — a failure only warns and continues).
+8. **Pull the config** — stash any local uncommitted changes, `git pull origin
+   master` (30s timeout), then restore the stash. If `~/.nixos` exists but
+   isn't a repo, it warns instead of stomping on it.
+
+If the pull succeeds you keep your local edits; on failure the stash is restored
+and the script exits with a notification. The whole thing is safe to re-run
+anywhere — `git pull` is idempotent — and the `.log/` files are gitignored.
+Note that the askpass step in step 4 requires `openssh-askpass` to be installed
+(e.g. via `modules/essentials/ssh.nix`).
 
 ## Installation
 

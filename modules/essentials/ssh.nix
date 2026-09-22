@@ -6,8 +6,8 @@
 		};
 
 		environment.systemPackages = with pkgs; [
-			# ssh-askpass-fullscreen # removed from nixpkgs unstable for some reason?
-			kdePackages.ksshaskpass
+			# ssh-askpass-fullscreen # removed from nixpkgs unstable; replaced by openssh-askpass
+			openssh-askpass
 		];
 	};
 }

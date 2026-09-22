@@ -24,10 +24,11 @@
 		};
 
 		hyprland.url = "github:hyprwm/Hyprland";
-		hyprland-plugins = {
-			url = "github:hyprwm/hyprland-plugins";
-			inputs.hyprland.follows = "hyprland";
-		};
+		# archived: not referenced by any live module
+		# hyprland-plugins = {
+		# 	url = "github:hyprwm/hyprland-plugins";
+		# 	inputs.hyprland.follows = "hyprland";
+		# };
 
 		# hyprcursor theme
 		rose-pine-hyprcursor = {
@@ -78,9 +79,10 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
-		nix-flatpak = {
-			url = "github:gmodena/nix-flatpak";
-		};
+		# archived: flatpak module moved to modules/_archive/flatpak.nix
+		# nix-flatpak = {
+		# 	url = "github:gmodena/nix-flatpak";
+		# };
 
 		nixpkgs-openconnect-sso.url = "github:nixos/nixpkgs/46397778ef1f73414b03ed553a3368f0e7e33c2f";
 
@@ -96,15 +98,18 @@
 			inputs.elephant.follows = "elephant";
 		};
 
-		caelestia-shell = {
-			url = "github:caelestia-dots/shell";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
+		# archived: caelestia-shell module moved to modules/_archive/caelestia-shell.nix
+		# caelestia-shell = {
+		# 	url = "github:caelestia-dots/shell";
+		# 	inputs.nixpkgs.follows = "nixpkgs";
+		# };
 
-		iloader = {
-			url = "github:nab138/iloader";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
+		# archived: only referenced by a commented-out fragment in
+		# modules/system/ios-sideloading.nix
+		# iloader = {
+		# 	url = "github:nab138/iloader";
+		# 	inputs.nixpkgs.follows = "nixpkgs";
+		# };
 
 		noctalia = {
 			url = "github:noctalia-dev/noctalia";

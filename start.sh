@@ -33,16 +33,15 @@ notify() {
 
 # Setup GUI ssh askpass
 setup_ssh_askpass() {
-	# Set SSH_ASKPASS environment variable to use GUI prompting
-	# if command -v ksshaskpass >/dev/null 2>&1; then
-	# 	export SSH_ASKPASS="ksshaskpass"
-	# 	log "Using ksshaskpass for GUI password prompting"
-	if command -v ssh-askpass-fullscreen >/dev/null 2>&1; then
-		export SSH_ASKPASS="ssh-askpass-fullscreen"
-		log "Using ssh-askpass-fullscreen for GUI password prompting"
+	# Set SSH_ASKPASS environment variable to use GUI prompting.
+	# openssh-askpass ships its dialog (gtk-ssh-askpass) under libexec/, so it is
+	# not on PATH — reference it through the system profile path instead.
+	if [ -x "/run/current-system/sw/libexec/gtk-ssh-askpass" ]; then
+		export SSH_ASKPASS="/run/current-system/sw/libexec/gtk-ssh-askpass"
+		log "Using openssh-askpass (gtk-ssh-askpass) for GUI password prompting"
 	else
-		error "No supported GUI askpass program found. Please install ksshaskpass or ssh-askpass-fullscreen"
-		notify "Error: Please install ksshaskpass or ssh-askpass-fullscreen"
+		error "No supported GUI askpass program found. Please install openssh-askpass (gtk-ssh-askpass)"
+		notify "Error: Please install openssh-askpass (gtk-ssh-askpass)"
 		return 1
 	fi
 
