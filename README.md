@@ -35,7 +35,7 @@ for details and the TODO for when it can be unpinned.
 ```
 flake.nix              # Flake inputs (flake-parts + import-tree scaffolding)
 rebuild.sh             # Interactive rebuild: selects a host, diffs, commits, pushes
-start.sh               # Startup script run by Hyprland: loads SSH agent, pulls latest config
+start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
 
 modules/
 ├── _archive/          # Retired / superseded modules (kept for reference)
@@ -148,8 +148,14 @@ targets:
   (`--target-host --use-remote-sudo`), commits with generation metadata, and
   pushes to `origin/master`.
 - `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
-  passphrase prompt, verifies GitHub auth, and pulls the latest config (see
-  [How start.sh works](#how-startsh-works) below).
+  passphrase prompt and pulls the latest config, delegating the sync itself to
+  `config-sync.sh` (see [How start.sh works](#how-startsh-works) below).
+- `modules/scripts/config-sync.sh` — the config sync on its own: verifies GitHub
+  SSH auth and does the stash/pull/stash-pop against `~/.nixos`. Available from
+  any terminal as the `config-sync` zsh alias (`bash
+  ${../../scripts/config-sync.sh}`), so it works outside of login — e.g. midway
+  through a session or SSH'd into REDRUM (needs the SSH key loaded in an agent;
+  `start.sh` does this on login). Logs to `~/.nixos/.log/config-sync.log`.
 - `modules/scripts/focus-window.sh` — focus an app by class/title or launch it.
 - `modules/scripts/keybind-cheatsheet.sh` — render the xremap keymap as a
   cheatsheet (`Super+K X`).
@@ -184,15 +190,37 @@ The flow:
    unrelated processes can reuse the same agent.
 6. **Load the key** — `ssh-add`s `~/.ssh/id_ed25519` through the GUI prompt
    (detached from any TTY with `setsid` so it never blocks on stdin).
-7. **Verify GitHub** — `ssh -T git@github.com` confirms the key is authorised
+7. **Sync the config** — runs `modules/scripts/config-sync.sh`, which verifies
+   GitHub auth (`ssh -T git@github.com`, non-fatal) and then does the
+   stash/pull/stash-pop described below. Its own log lives at
+   `~/.nixos/.log/config-sync.log`.
+
+### `config-sync.sh` (the `config-sync` alias)
+
+The GitHub check and the stash/pull/pop logic live in
+`modules/scripts/config-sync.sh` so the sync can be re-run on demand — `start.sh`
+just executes it after loading the SSH key. Whenever you need to pull the latest
+config outside of a login:
+
+- **Anywhere in a terminal** — `config-sync` (zsh alias wired in
+  `modules/home-manager/terminal/zsh.nix`, like `rebuild`).
+- **SSH'd into REDRUM** — same `config-sync` command, as long as the SSH key is
+  loaded in that agent (`ssh-add ~/.ssh/id_ed25519`).
+
+The sync itself:
+
+1. **Verify GitHub** — `ssh -T git@github.com` confirms the key is authorised
    (non-fatal — a failure only warns and continues).
-8. **Pull the config** — stash any local uncommitted changes, `git pull origin
-   master` (30s timeout), then restore the stash. If `~/.nixos` exists but
+2. **Stash** — any local uncommitted changes are stashed before pulling, so your
+   edits are never lost or clobbered.
+3. **Pull** — `git pull origin master` with a 30s timeout.
+4. **Pop** — the stash is restored on success (you keep your local edits), and
+   also if the pull failed, so nothing is stranded. If `~/.nixos` exists but
    isn't a repo, it warns instead of stomping on it.
 
 If the pull succeeds you keep your local edits; on failure the stash is restored
-and the script exits with a notification. The whole thing is safe to re-run
-anywhere — `git pull` is idempotent — and the `.log/` files are gitignored.
+and the script exits with status 1. The whole thing is safe to re-run anywhere —
+`git pull` is idempotent — and the `.log/` files are gitignored.
 Note that the askpass step in step 4 requires `openssh-askpass` to be installed
 (e.g. via `modules/essentials/ssh.nix`).
 

@@ -14,8 +14,9 @@ module fragments, all themed from one base16 palette via Stylix.
 
 ```bash
 nix flake check --impure          # verify the flake evaluates (manual, not part of rebuild.sh)
-bash -n rebuild.sh start.sh       # syntax-check scripts
+bash -n rebuild.sh start.sh modules/scripts/*.sh   # syntax-check scripts
 ./rebuild.sh                      # interactive rebuild: pick host -> diff -> commit -> push
+config-sync                       # zsh alias -> modules/scripts/config-sync.sh (stash/pull/pop ~/.nixos)
 nix develop .#youtube-sync        # devshell for the youtube-sync helper
 sudo nixos-rebuild switch --flake ".#GOD-KILLER" --impure   # rebuild a specific host
 nixos-rebuild list-generations    # generation metadata (used in commit messages)

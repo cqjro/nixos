@@ -20,6 +20,7 @@
 				llt = "eza -l --tree --header";
 				cd = "z";
 				rebuild = "bash ${../../../rebuild.sh}";
+				config-sync = "bash ${../../scripts/config-sync.sh}";
 				xremap-binds = "bash ${../../scripts/keybind-cheatsheet.sh} ${../keyboard/xremap.nix} ${../../scripts/parse_xremap.py}";
 			};
 

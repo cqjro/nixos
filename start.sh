@@ -92,83 +92,9 @@ add_ssh_key() {
 	fi
 }
 
-# Function to test SSH connection to GitHub
-test_github_connection() {
-	log "Testing GitHub SSH connection..."
-	if timeout 10 ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-		log "GitHub SSH connection successful"
-		return 0
-	else
-		warn "GitHub SSH connection failed, but continuing anyway..."
-		return 1
-	fi
-}
-
-# Function to sync NixOS configuration
-# Function to sync NixOS configuration
-sync_nixos_config() {
-	log "Syncing NixOS configuration from GitHub..."
-
-	if [ -d "$NIXOS_CONFIG_DIR" ]; then
-		log "Configuration directory exists, syncing with stash/pull/stash pop..."
-		cd "$NIXOS_CONFIG_DIR"
-
-		# Check if it's a git repository
-		if [ -d ".git" ]; then
-			# Stash any local changes
-			log "Stashing local changes..."
-			if git diff --quiet && git diff --cached --quiet; then
-				log "No local changes to stash"
-				STASH_CREATED=false
-			else
-				if git stash push -m "Auto-stash before sync $(date)" 2>/dev/null; then
-					log "Local changes stashed successfully"
-					STASH_CREATED=true
-				else
-					warn "Failed to stash local changes"
-					STASH_CREATED=false
-				fi
-			fi
-
-			# Pull latest changes
-			log "Pulling latest changes from remote..."
-			if timeout 30 git pull origin master 2>/dev/null; then
-				log "Git pull completed successfully"
-
-				# Pop stash if we created one
-				if [ "$STASH_CREATED" = true ]; then
-					log "Restoring stashed changes..."
-					if git stash pop 2>/dev/null; then
-						log "Stashed changes restored successfully"
-						notify "NixOS config updated (local changes preserved)"
-					else
-						warn "Failed to restore stashed changes - you may need to resolve conflicts manually"
-						notify "NixOS config updated - check for stash conflicts"
-					fi
-				else
-					notify "NixOS configuration updated"
-				fi
-			else
-				warn "Failed to pull changes from remote repository"
-
-				# If we stashed changes but pull failed, try to restore them
-				if [ "$STASH_CREATED" = true ]; then
-					log "Attempting to restore stashed changes after failed pull..."
-					git stash pop 2>/dev/null || warn "Failed to restore stashed changes"
-				fi
-
-				notify "Warning: Failed to update NixOS config"
-				return 1
-			fi
-		else
-			warn "Directory exists but is not a git repository"
-			notify "Error: Config directory is not a git repo"
-			return 1
-		fi
-	fi
-
-	log "NixOS configuration sync completed"
-}
+# The GitHub connection test and the stash/pull/stash-pop config sync moved to
+# modules/scripts/config-sync.sh so they can also be run manually via the
+# `config-sync` zsh alias (start.sh just delegates to it).
 
 # Main execution
 main() {
@@ -194,11 +120,9 @@ main() {
     
     # Add SSH key to agent (this will show GUI prompt if needed)
     if add_ssh_key; then
-        # Test GitHub connection
-        test_github_connection
-        
-        # Sync NixOS configuration
-        if sync_nixos_config; then
+        # Sync NixOS configuration (GitHub test + stash/pull/stash-pop,
+        # defined in modules/scripts/config-sync.sh)
+        if "$NIXOS_CONFIG_DIR/modules/scripts/config-sync.sh"; then
             log "Startup script completed successfully!"
             notify "SSH and NixOS sync completed successfully"
 						exit 0
