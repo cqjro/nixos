@@ -58,6 +58,13 @@
 									}
 
 									{
+										type = "weather";
+										location = "Vaughan, Ontario, Canada";
+										units = "metric";
+										"hour-format" = "12h";
+									}
+
+									{
 										type = "rss";
 										limit = 10;
 										"collapse-after" = 3;
@@ -68,18 +75,6 @@
 											{ url = "https://www.joshwcomeau.com/rss.xml"; title = "Josh Comeau"; }
 											{ url = "https://samwho.dev/rss.xml"; }
 											{ url = "https://ishadeed.com/feed.xml"; title = "Ahmad Shadeed"; }
-										];
-									}
-
-									{
-										type = "twitch-channels";
-										channels = [
-											"theprimeagen"
-											"j_blow"
-											"giantwaffle"
-											"cohhcarnage"
-											"christitustech"
-											"EJ_SA"
 										];
 									}
 								];
@@ -118,13 +113,6 @@
 							{
 								size = "small";
 								widgets = [
-									{
-										type = "weather";
-										location = "London, United Kingdom";
-										units = "metric";
-										"hour-format" = "12h";
-									}
-
 									{
 										type = "markets";
 										markets = [
