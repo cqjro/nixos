@@ -44,6 +44,7 @@
 						bat
 						btop
 						opencode
+						nom
 						terminal-packages
 					];
 			};

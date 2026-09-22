@@ -43,7 +43,7 @@ modules/
   home-manager/    # user config: apps/, desktop/, keyboard/, languages/, terminal/
   scripts/         # helper shell/python scripts
   server/          # REDRUM services (actual-budget, linkwarden, tailscale, …)
-  system/          # games, minecraft, waydroid, ios-sideloading, vpn, manifest, …
+  system/          # games, minecraft, waydroid, ios-sideloading, vpn, manifest, rss-sources, …
   theme/           # stylix scheme + openrgb + webstyling/ + discord-theme
   _archive/        # retired modules — prefer archiving here over deleting
 ```
@@ -82,6 +82,10 @@ Other conventions:
 - Feature toggles live in `system/manifest.nix`
   (`manifest.enableMillennium`, `manifest.enableSpicetify`) and gate
   `mkIf` blocks in consumer modules (see `home-manager/apps/spicetify.nix`).
+- Shared **data** fragments also live NixOS-side and are consumed user-side via
+  `osConfig`. Example: `rss-sources.feeds` (in `modules/system/rss-sources.nix`)
+  feeds the glance rss widget through `config.rss-sources.feeds` and
+  `nom` via `osConfig.rss-sources.feeds`.
 - Theming is always derived from Stylix colors (`config.lib.stylix.colors.baseXX`)
   or `config.stylix.*` — never hardcode new colors in modules, extend the scheme
   in `modules/theme/stylix.nix` instead.

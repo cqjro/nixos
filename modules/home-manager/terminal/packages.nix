@@ -11,7 +11,7 @@
 			jq # json command line processor
 			unzip # unzipping zip files from terminal
 			youtube-tui
-			nom # terminal rss reader
+			# nom # terminal rss reader (see modules/home-manager/terminal/nom.nix)
 			# age # secrets/encryption manager
 			bluetui # bluetooh manager tui
 			ncdu # storage manager

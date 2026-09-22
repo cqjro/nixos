@@ -36,6 +36,7 @@
 						bat
 						btop
 						opencode
+						nom
 						terminal-packages
 discord
 					zen-browser

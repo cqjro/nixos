@@ -50,10 +50,10 @@ modules/
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
-│   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, ...
+│   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
 ├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet)
 ├── server/            # REDRUM services: paperless, beszel, glance, homepage, actual-budget, linkwarden, cloudflared, tailscale, youtube
-├── system/            # System-level config: games, minecraft, waydroid, ios-sideloading, flatpak, vpn...
+├── system/            # System-level config: games, minecraft, waydroid, ios-sideloading, flatpak, rss-sources, vpn...
 └── theme/             # Everything color-related
     └── webstyling/    #   Per-site CSS themes for the browser
 ```
@@ -139,6 +139,9 @@ targets:
   Flatpak support, Minecraft + game launchers, Waydroid, iOS sideloading
   toolchain, `mtkclient`/`rockbox-utility` gadget firmware "doodads", VPN, and
   printing.
+- **Shared rss sources** — `rss-sources` (`modules/system/rss-sources.nix`)
+  defines the standard feed list once; the glance rss widget and the `nom`
+  terminal reader both consume it, so the same sources appear everywhere.
 
 ## Scripts
 

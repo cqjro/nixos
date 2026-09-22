@@ -42,6 +42,7 @@
 						bat
 						btop
 						opencode
+						nom
 						terminal-packages
 						discord
 						discord-theme

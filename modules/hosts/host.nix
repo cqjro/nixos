@@ -26,6 +26,7 @@
 inputs.self.modules.nixos.games
 			inputs.self.modules.nixos.manifest
 			inputs.self.modules.nixos.openrgb
+				inputs.self.modules.nixos.rss-sources
 				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
@@ -66,6 +67,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.minecraft
 				inputs.self.modules.nixos.manifest
+				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos."LittleNix"
 				inputs.self.modules.nixos."LittleNix-hardware"
@@ -98,6 +100,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.paperless
 				inputs.self.modules.nixos.beszel
 				inputs.self.modules.nixos.glance
+				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.homepage
 				inputs.self.modules.nixos.cloudflared
 				inputs.self.modules.nixos.youtube

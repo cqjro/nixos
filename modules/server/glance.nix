@@ -1,6 +1,6 @@
 { ... }:
 {
-	flake.modules.nixos.glance = { pkgs, lib, ... }:
+	flake.modules.nixos.glance = { pkgs, lib, config, ... }:
 	{
 		# Dedicated user, mirroring the linkwarden/actual-budget modules. The
 		# nixpkgs module uses DynamicUser=true by default; we pin it to a stable
@@ -69,13 +69,11 @@
 										limit = 10;
 										"collapse-after" = 3;
 										cache = "12h";
-										feeds = [
-											{ url = "https://selfh.st/rss/"; title = "selfh.st"; limit = 4; }
-											{ url = "https://ciechanow.ski/atom.xml"; }
-											{ url = "https://www.joshwcomeau.com/rss.xml"; title = "Josh Comeau"; }
-											{ url = "https://samwho.dev/rss.xml"; }
-											{ url = "https://ishadeed.com/feed.xml"; title = "Ahmad Shadeed"; }
-										];
+										# Standard feed list shared with the other rss apps
+										# (modules/system/rss-sources.nix).
+										feeds = map (f: { url = f.url; title = f.title; }
+											// lib.optionalAttrs (f.limit != null) { limit = f.limit; })
+											config.rss-sources.feeds;
 									}
 								];
 							}
