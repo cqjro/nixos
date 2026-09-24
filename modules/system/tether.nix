@@ -3,6 +3,12 @@
 	flake.modules.nixos.tether = { ... }: {
 		imports = [ inputs.tether.nixosModules.default ];
 
+		# bluetoothd defaults the adapter class to A/V Hands-Free (0x000408).
+		# The tether-btclass@ unit (from the module above) re-applies it with
+		# btmgmt after every bluetooth restart, but bluetoothd recomputes the
+		# class over that write, so main.conf must carry it too.
+		hardware.bluetooth.settings.General.Class = "0x000408";
+
 		programs.tether = {
 			enable = true;
 
