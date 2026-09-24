@@ -1,0 +1,134 @@
+{ inputs, ... }:
+let
+	system = "x86_64-linux";
+	# REDRUM is built from the pinned nixpkgs (see modules/hosts/REDRUM/T2-PIN.md),
+	# so the build toolchain below must come from the same pins for a stable hash.
+	pkgs = inputs.nixpkgs-redrum.legacyPackages.${system};
+
+	# ReactFlux (electh/ReactFlux) is a third-party web frontend for Miniflux.
+	# It's not packaged in nixpkgs and the repo ships no flake.nix, so the source
+	# is pinned by rev via fetchFromGitHub. It's a pure static SPA: the browser
+	# talks directly to the Miniflux API (CORS), so it only needs a static server.
+	# The pinned rev below is BOTH the source hash and the miniflux integration
+	# points in the README; bump it by:
+	#   1. updating `rev` + re-running `nix-prefetch-url --unpack <tarball>`
+	#   2. re-fetching the pnpm deps (see `reactflux-pnpm-deps`)
+	reactfluxRev = "49414d990108a1d8ce72c9aa2c06dcc7382fa1fb";
+	reactfluxSrc = pkgs.fetchFromGitHub {
+		owner = "electh";
+		repo = "ReactFlux";
+		rev = reactfluxRev;
+		hash = "sha256-cuPHvF8gLd1P9+bPUlPKtD684QxA4s8Rg/a60h2fG5E=";
+	};
+	reactfluxVersion = builtins.substring 0 8 reactfluxRev;
+
+	# The project is pnpm-based (packageManager: pnpm@11.21.0) and built with
+	# node 22 (engines >= 22.22.0), mirroring the upstream Dockerfile.
+	nodejs = pkgs.nodejs_22;
+	pnpm = pkgs.pnpm.override { inherit nodejs; };
+
+	# pnpm deps are downloaded once as a fixed-output derivation (FOD) whose
+	# output IS the pnpm content-addressed store PLUS the pnpm metadata cache
+	# (needed for `--offline` resolution in the build below). Network is allowed
+	# inside a FOD build, so this is the single place the npm registry is
+	# touched. The build below then installs --offline against both, exactly like
+	# the Docker image only fetches deps once at build time.
+	pnpmDeps = pkgs.stdenv.mkDerivation {
+		pname = "reactflux-pnpm-deps";
+		version = reactfluxVersion;
+		src = reactfluxSrc;
+		nativeBuildInputs = [ nodejs pnpm pkgs.cacert ];
+		# node doesn't inherit the nix CA bundle; without this pnpm can't verify
+		# registry.npmjs.org inside the sandbox (UNABLE_TO_GET_ISSUER_CERT_LOCALLY).
+		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+		outputHashMode = "recursive";
+		outputHashAlgo = "sha256";
+		outputHash = "sha256-Nr0e0+PWCVPYlT+RR8kBFXKYVB58t6+Kwe1db5BKhec=";
+		phases = [ "installPhase" ];
+		installPhase = ''
+			runHook preInstall
+			export HOME="$TMPDIR"
+			mkdir -p "$HOME/.cache/pnpm" "$out"
+			cp -r "$src" ./reactflux
+			chmod -R u+w ./reactflux
+			# Mirror upstream Docker: install without pnpm-workspace.yaml so
+			# `minimumReleaseAge`/`allowBuilds` never trigger registry checks.
+			rm -f ./reactflux/pnpm-workspace.yaml
+			cd ./reactflux
+			pnpm config set store-dir "$out/store"
+			pnpm config set cache-dir "$out/cache"
+			pnpm install --frozen-lockfile --ignore-scripts
+			runHook postInstall
+		'';
+	};
+
+	reactflux = pkgs.stdenv.mkDerivation {
+		pname = "reactflux";
+		version = reactfluxVersion;
+		src = reactfluxSrc;
+		nativeBuildInputs = [ nodejs pnpm pkgs.cacert ];
+		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+		# Single phase (like the FOD above): pnpm needs a stable writable cwd,
+		# and mixing buildPhase/installPhase caused stdenv to reset the working
+		# dir between them, losing the build output location.
+		phases = [ "installPhase" ];
+		installPhase = ''
+			runHook preInstall
+			export HOME="$TMPDIR"
+			mkdir -p "$HOME/.cache/pnpm"
+			cp -r "$src" ./reactflux
+			chmod -R u+w ./reactflux
+			rm -f ./reactflux/pnpm-workspace.yaml
+			cd ./reactflux
+			# pnpm needs a *writable* store+metadata cache (it keeps a sqlite
+			# index inside the store), so copy the immutable FOD output into the
+			# build dir and re-point both store-dir and cache-dir at the copies.
+			cp -r "${pnpmDeps}" "$TMPDIR/pnpm"
+			chmod -R u+w "$TMPDIR/pnpm"
+			pnpm config set store-dir "$TMPDIR/pnpm/store"
+			pnpm config set cache-dir "$TMPDIR/pnpm/cache"
+			pnpm install --frozen-lockfile --offline --ignore-scripts
+			# prebuild (version-info.js) + vite build; VITE_BASE_PATH defaults to "/"
+			pnpm run build
+			mkdir -p "$out"
+			cp -r ./build/. "$out"/
+			runHook postInstall
+		'';
+	};
+in
+{
+	flake.packages.${system} = {
+		reactflux = reactflux;
+		reactflux-pnpm-deps = pnpmDeps;
+	};
+
+	flake.modules.nixos.reactflux = { lib, ... }: {
+		# ReactFlux is static files, so there's no app user or data dir of its
+		# own — nginx (its own hardened system user) serves the immutable store
+		# path from the derivation above. Only reachable via cloudflared tunnel.
+		services.nginx = {
+			enable = true;
+			# Bound to localhost only; cloudflared forwards public traffic.
+			defaultListen = [{ addr = "127.0.0.1"; port = 8085; }];
+			virtualHosts."flux.cqjro.ca" = {
+				listen = [{ addr = "127.0.0.1"; port = 8085; }];
+				root = reactflux;
+				# SPA: route unknown paths (client-side routes) to index.html.
+				locations."/".tryFiles = "$uri $uri/ /index.html";
+			};
+		};
+
+		services.cloudflared = {
+			tunnels."4f2d08c6-71ea-4c7e-9b0d-5b7a1e3dcc44" = {
+				# TODO: replace with your tunnel UUID (cloudflared tunnel create reactflux)
+				credentialsFile = "/var/lib/cloudflared/reactflux.json";
+				default = "http_status:404";
+				ingress = {
+					"flux.cqjro.ca" = "http://localhost:8085";
+				};
+			};
+		};
+	};
+}

@@ -43,7 +43,7 @@ modules/
   home-manager/    # user config: apps/, desktop/, keyboard/, languages/, terminal/
   scripts/         # helper shell/python scripts
   server/          # REDRUM services (actual-budget, linkwarden, tailscale, …)
-  system/          # games, minecraft, waydroid, ios-sideloading, vpn, manifest, rss-sources, …
+  system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, …
   theme/           # stylix scheme + openrgb + webstyling/ + discord-theme
   _archive/        # retired modules — prefer archiving here over deleting
 ```
@@ -93,6 +93,51 @@ Other conventions:
   `LittleNix/machine.nix`). The latest commits moved paths to relative.
 - Star imports from the fragment's `{ pkgs, ... }` arguments rather than
   introducing deps at the top level, matching surrounding files.
+
+### Creating a server module (REDRUM)
+
+`modules/server/*.nix` each define an app on REDRUM, exposed through a
+Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
+`actual-budget.nix`, `minsiflux.nix`) — each one **must**:
+
+1. **Pick a free local port** (gres: glance 8081, homepage 8082, linkwarden 8083,
+   miniflux 8084, reactflux 8085) and a `*.cqjro.ca` hostname. Bind the app to
+   `127.0.0.1:<port>` (nginx's `defaultListen` when reverse-proxying static
+   content), never `0.0.0.0`.
+
+2. **Run as its own dedicated user**: `users.users.<app>` (`isSystemUser`,
+   `group = "<app>"`, `home = "/var/lib/<app>"`, `createHome = true`) plus
+   `users.groups.<app> = {}` — see `miniflux.nix`. If the nixpkgs module ships
+   a `DynamicUser` service, pin it with
+   `systemd.services.<svc>.serviceConfig = { DynamicUser = lib.mkForce false; User = "<app>"; Group = "<app>"; };`.
+
+3. **Keep secrets off the Nix store**: write them once by hand under
+   `/var/lib/<app>/` on REDRUM (e.g. miniflux `admin.env`), reference them via
+   paths / `EnvironmentFile` in the module, and document the exact create
+   commands in the README's "Create app secrets" step.
+
+4. **Add the tunnel block**:
+   `services.cloudflared.tunnels."<uuid>" = { credentialsFile = "/var/lib/cloudflared/<app>.json"; default = "http_status:404"; ingress = { "<host>.cqjro.ca" = "http://localhost:<port>"; }; };`
+   Use a **placeholder UUID marked with a `# TODO:` comment** (real UUIDs are
+   provisioned per-machine and never committed). Keep the shared
+   `hostname → port` table in the README accurate, and list the app in the
+   Homepage Homelab tab (`modules/server/homepage.nix` is a config fragment of
+   its own) if it should show there.
+
+5. **Wire and document**: add `inputs.self.modules.nixos."<name>"` to the REDRUM
+   module list in `modules/hosts/host.nix`, then update the README: the
+   feature bullet, the tunnel create/credential steps, the DNS CNAME table, the
+   permissions table (`/var/lib/<app>` row) and the "log in once" notes.
+
+6. **Static frontends** (e.g. ReactFlux, a pnpm/Vite SPA): package the build as a
+   `pkgs.stdenv.mkDerivation` and serve the store path straight from nginx —
+   no app user needed. For pnpm projects, follow `reactflux.nix`: an immutable
+   fixed-output `pnpm install` must run **with network** (that's the only place
+   the registry is touched), then the real build installs `--offline` against a
+   *copied* (writable) store **and** metadata cache. Neither `fetchPnpmDeps` nor
+   `buildPnpmPackage` exist in the pinned nixpkgs on REDRUM — hand-roll both.
+   `nix flake check` on REDRUM is not part of the loop; verify with
+   `nix eval --impure '.#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'`.
 
 ### Archiving a module (required steps)
 

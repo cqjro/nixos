@@ -52,8 +52,8 @@ modules/
 │   ├── languages/     #   latex, language toolchains
 │   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
 ├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet)
-├── server/            # REDRUM services: paperless, beszel, glance, homepage, actual-budget, linkwarden, cloudflared, tailscale, youtube
-├── system/            # System-level config: games, minecraft, waydroid, ios-sideloading, flatpak, rss-sources, vpn...
+├── server/            # REDRUM services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, youtube
+├── system/            # System-level config: games, minecraft, waydroid, ios-sideloading, tether, flatpak, rss-sources, vpn...
 └── theme/             # Everything color-related
     └── webstyling/    #   Per-site CSS themes for the browser
 ```
@@ -132,13 +132,19 @@ targets:
 - **Server stack on REDRUM** — Tailscale, Paperless-ngx (paperless storage, tied to
   the stylix `glance` theme only for the glance dashboard), Actual Budget
   (self-hosted finance), Linkwarden (bookmarks), Beszel (server monitoring),
-  Glance (feed dashboard, themed by Stylix), a Cloudflare-hosted homepage
+  Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
+  ReactFlux (a Miniflux web client), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
   playlist-sync service backed by a `devShell` (`nix develop .#youtube-sync`).
 - **System niceties** — Opt-in experimental features, auto-optimised store,
   Flatpak support, Minecraft + game launchers, Waydroid, iOS sideloading
   toolchain, `mtkclient`/`rockbox-utility` gadget firmware "doodads", VPN, and
   printing.
+- **Tether** — iPhone ↔ Linux bridge on the desktop hosts (GOD-KILLER and
+  LittleNix): notification mirroring (ANCS), SMS/iMessage + contacts
+  (MAP/PBAP) over Bluetooth, plus clipboard sync, file transfer and OTP
+  handling over Wi-Fi via the iOS app. Defined in `modules/system/tether.nix`
+  (wraps `github:zackb/tether`'s NixOS module). See the pairing steps below.
 - **Shared rss sources** — `rss-sources` (`modules/system/rss-sources.nix`)
   defines the standard feed list once; the glance rss widget and the `nom`
   terminal reader both consume it, so the same sources appear everywhere.
@@ -227,6 +233,28 @@ and the script exits with status 1. The whole thing is safe to re-run anywhere �
 Note that the askpass step in step 4 requires `openssh-askpass` to be installed
 (e.g. via `modules/essentials/ssh.nix`).
 
+### Tether pairing (per desktop host)
+
+1. Rebuild so Tether (daemon, CLI, `tether-gtk`) is installed and the Bluetooth
+   bits are live (`tether-btclass@hci0` + BlueZ experimental).
+2. One-time Bluetooth system setup — prints only the commands this machine still
+   needs (class-of-device + `bluetoothd --experimental`): `tether --bt-setup`.
+   Run `tether bt setup` first if the CLI wants it; both are safe to re-run.
+3. Pair over Bluetooth: pick the iPhone in `tether-gtk` (Devices → BLUETOOTH →
+   "Pair over Bluetooth"), or `tether bt pair <addr>` (find it with
+   `tether bt devices`). Confirm the code on both ends.
+4. On the iPhone: Settings → Bluetooth → (i) next to this computer → enable
+   **Show Message Notifications** and **Sync Contacts** (can take minutes to
+   appear; re-open the page if blank).
+5. Wi-Fi pairing (clipboard/file transfer/OTP via the iOS app): install
+   "Tether - Linux Companion" from the App Store, open it, accept the pairing on
+   both ends (`tether pending` / `tether accept <fingerprint>` from a terminal).
+
+Notes: notification mirroring (ANCS) requires iOS 19+; older iOS still gets
+messages + contacts. The browser/mail extension opt-ins (`extensions` in
+`modules/system/tether.nix`) are left off — enable `"firefox"`/`"chromium"` if
+you want the OTP autofill native-messaging hosts.
+
 ## Installation
 
 `GOD-KILLER` is also where this repo lives (`~/.nixos`), so it is a *self-hosting*
@@ -299,11 +327,13 @@ sudo cp ~/.cloudflared/cert.pem /var/lib/cloudflared/cert.pem   # make it readab
 sudo cloudflared tunnel create paperless   # prints a UUID, writes /var/lib/cloudflared/<uuid>.json
 sudo cloudflared tunnel create glance
 sudo cloudflared tunnel create beszel
+sudo cloudflared tunnel create miniflux
+sudo cloudflared tunnel create reactflux
 # (linkwarden + actual-budget already have IDs, see their modules)
 ```
 
 Copy each UUID into the matching `tunnels."<uuid>" = { credentialsFile = ...; }`
-in `modules/server/{paperless,glance,beszel}.nix`.
+in `modules/server/{paperless,glance,beszel,miniflux,reactflux}.nix`.
 
 ### 3. Point each credentials file where Nix expects it
 
@@ -314,7 +344,8 @@ sudo chown root:root /var/lib/cloudflared/*.json && sudo chmod 600 /var/lib/clou
 ```
 
 (`credentialsFile` paths used by the modules: `paperless.json`, `glance.json`,
-`beszel.json`, `linkwarden.json`, `actual-budget.json`.)
+`beszel.json`, `linkwarden.json`, `actual-budget.json`, `miniflux.json`,
+`reactflux.json`.)
 
 ### 4. Add DNS CNAME records (Cloudflare dashboard → DNS)
 
@@ -328,6 +359,8 @@ For each app hostname add a **CNAME** pointing at `<tunnel-uuid>.cfargotunnel.co
 | Beszel | `status.cqjro.ca` |
 | Linkwarden | `link.cqjro.ca` |
 | Actual Budget | `budget.cqjro.ca` |
+| Miniflux | `feed.cqjro.ca` |
+| ReactFlux | `flux.cqjro.ca` |
 
 The ingress rules in the Nix modules handle the traffic; DNS is the only thing
 you manage in the dashboard (no `certificateFile` is used here).
@@ -343,10 +376,17 @@ sudo mkdir -p /var/lib/beszel
 # KEY + optional TOKEN come from Beszel → Add System dialog
 sudo sh -c 'printf "KEY=<public key>\nTOKEN=<universal token>\n" > /var/lib/beszel/agent.env'
 sudo chown beszel-agent:beszel-agent /var/lib/beszel/agent.env
+
+sudo mkdir -p /var/lib/miniflux
+# Miniflux first-run credentials (the module's adminCredentialsFile)
+sudo sh -c 'printf "ADMIN_USERNAME=admin\nADMIN_PASSWORD=<change-me>\n" > /var/lib/miniflux/admin.env'
+sudo chown miniflux:miniflux /var/lib/miniflux/admin.env
 ```
 
 (Linkwarden additionally wants `/var/lib/linkwarden/nextauth-secret` and
-`postgres-password`, and Actual Budget stores its data in `/var/lib/actual`.)
+`postgres-password`, and Actual Budget stores its data in `/var/lib/actual`.
+ReactFlux needs no secrets — it's static files served by nginx; the browser
+talks straight to the Miniflux API (CORS is enabled on Miniflux's side).)
 
 ### 6. Rebuild and log in once
 
@@ -359,6 +399,11 @@ ssh <server> systemctl restart cloudflared-tunnel-*.service
 - Beszel → `https://status.cqjro.ca` (create the admin account on first visit,
   then set the agent KEY from step 5 by editing `/var/lib/beszel/agent.env`).
 - Glance → `https://home.cqjro.ca` (no login; styled by Stylix from the base16 palette).
+- Miniflux → `https://feed.cqjro.ca` (log in with the `admin.env` credentials
+  from step 5, then enable an API token under Settings → API Keys, and set a
+  `BASE_URL`-matching "External base URL" if you change hosts).
+- ReactFlux → `https://flux.cqjro.ca` (add the server as `https://feed.cqjro.ca`
+  and paste the Miniflux API token from above; it stores config in your browser).
 
 ## File access permissions (REDRUM)
 
@@ -375,16 +420,18 @@ across rebuilds.
 | `/var/lib/glance` (cache/DB) | `glance:glance` | 0700 | glance |
 | `/var/lib/linkwarden` | `linkwarden:linkwarden` | 0700 | linkwarden |
 | `/var/lib/actual` | `actual:actual` | 0700 | actual-budget |
+| `/var/lib/miniflux` | `miniflux:miniflux` | 0700 | miniflux (data + `admin.env`) |
 | `/var/lib/cloudflared/*.json` | `root:root` | 0600 | cloudflared-* (as root) |
 | `/var/lib/paperless/admin-password` | `paperless:paperless` | 0600 | paperless (via credential) |
 | `/var/lib/beszel/agent.env` | `beszel-agent:beszel-agent` | 0600 | beszel-agent (EnvironmentFile) |
 | `/var/lib/glance/glance.env` | `glance:glance` | 0600 | glance (EnvironmentFile) |
+| `/var/lib/miniflux/admin.env` | `miniflux:miniflux` | 0600 | miniflux (EnvironmentFile) |
 
 Admin access is via `sudo` (`cairo` is in `wheel`) — keep the service dirs at
 `0700` and owned by their own user so each app stays isolated from the others
 (no shared `homelab` group needed).
 
-- Verify identities: `id paperless glance beszel-hub beszel-agent`
+- Verify identities: `id paperless glance beszel-hub beszel-agent miniflux`
 - Inspect ownership: `sudo ls -l /var/lib`
 
 Re-apply ownership after restoring a backup or copying files in as root:
@@ -394,7 +441,8 @@ sudo chown -R paperless:paperless   /var/lib/paperless
 sudo chown -R beszel-hub:beszel-hub /var/lib/beszel-hub
 sudo chown -R beszel-agent:beszel-agent /var/lib/beszel-agent
 sudo chown -R glance:glance         /var/lib/glance
-sudo chmod 600 /var/lib/paperless/admin-password /var/lib/beszel/agent.env /var/lib/glance/glance.env
+sudo chown -R miniflux:miniflux     /var/lib/miniflux
+sudo chmod 600 /var/lib/paperless/admin-password /var/lib/beszel/agent.env /var/lib/glance/glance.env /var/lib/miniflux/admin.env
 ```
 
 These users are not interactive logins, so operate as them with `sudo -u`:

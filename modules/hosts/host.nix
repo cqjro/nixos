@@ -30,6 +30,7 @@ inputs.self.modules.nixos.games
 				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
+				inputs.self.modules.nixos.tether
 				inputs.self.modules.nixos.minecraft
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos.doodads
@@ -65,6 +66,7 @@ inputs.self.modules.nixos.games
 				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
+				inputs.self.modules.nixos.tether
 				inputs.self.modules.nixos.minecraft
 				inputs.self.modules.nixos.manifest
 				inputs.self.modules.nixos.rss-sources
@@ -103,6 +105,8 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.homepage
 				inputs.self.modules.nixos.cloudflared
+				inputs.self.modules.nixos.miniflux
+				inputs.self.modules.nixos.reactflux
 				inputs.self.modules.nixos.youtube
 				inputs.self.modules.nixos.stylix
 				inputs.stylix.nixosModules.stylix

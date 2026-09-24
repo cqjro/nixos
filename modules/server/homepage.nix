@@ -52,6 +52,20 @@
 								icon = "actualbudget";
 							};
 						}
+						{
+							"Miniflux" = {
+								href = "https://feed.cqjro.ca";
+								description = "RSS reader";
+								icon = "miniflux";
+							};
+						}
+						{
+							"ReactFlux" = {
+								href = "https://flux.cqjro.ca";
+								description = "Miniflux client";
+								abbr = "RF";
+							};
+						}
 					];
 				}
 			];

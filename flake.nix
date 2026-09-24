@@ -79,6 +79,12 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
+		# bridge linux to the iphone: notifications, messages, clipboard, files
+		tether = {
+			url = "github:zackb/tether";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
 		# archived: flatpak module moved to modules/_archive/flatpak.nix
 		# nix-flatpak = {
 		# 	url = "github:gmodena/nix-flatpak";
