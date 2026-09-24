@@ -24,9 +24,10 @@
 				adapters = [ "hci0" ];
 			};
 
-			# OTP browser/mail extensions are opt-in: add "firefox" (zen-browser)
-			# or "chromium" (brave) to the extensions list to enable native-messaging.
-			extensions = [];
+			# OTP browser extensions are opt-in: "firefox" targets zen-browser via
+			# native-messaging, "chromium" targets brave. Tether's upstream NixOS
+			# module validates this against its own enum.
+			extensions = [ "firefox" ];
 		};
 	};
 }
