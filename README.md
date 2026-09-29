@@ -8,9 +8,10 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 
 - [Machines](#machines)
 - [Repository Layout](#repository-layout)
-- [The Dendritic Pattern](#the-dendritic-pattern)
+- [The Dendritic Pattern](#dendritic-pattern)
 - [Theming](#theming)
 - [Key Features](#key-features)
+- [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
 - [Installation](#installation)
 - [Rebuilding](#rebuilding)
@@ -28,7 +29,9 @@ NixOS configuration that picks and chooses its modules from the pool:
 
 `REDRUM` is built against a **pinned nixpkgs** (`cac0c1ef`) because `linux >= 6.18.47`
 breaks the t2linux patchset on the T2 Macs. See `modules/hosts/REDRUM/T2-PIN.md`
-for details and the TODO for when it can be unpinned.
+for details and the TODO for when it can be unpinned, and
+[Pending upstream fixes](#pending-upstream-fixes) for the full list of
+workarounds currently in the tree.
 
 ## Repository Layout
 
@@ -105,7 +108,10 @@ targets:
   `@-moz-document` block in the browser's `userContent.css`.
 - **Discord** — a two-hundred-line `quickCss` (via nixcord) remaps every Discord
   CSS variable to the base16 palette: flat `base00` background, `base01`/`base02`
-  elevation, `base03` borders, `base05` text, `base0D` brand blue.
+  elevation, `base03` borders, `base05` text, `base0D` brand blue. Applied to
+  **Vesktop** (nixcord's `vesktop` client + Vencord), since the standalone
+  Discord package is currently disabled — see
+  [Pending upstream fixes](#pending-upstream-fixes).
 - **Spotify** — spicetify with a generated `color.ini` (same mapping) instead of
   a pre-baked theme, so it always matches.
 - **Steam** — the **Millennium** client patch with the same palette mapping;
@@ -148,6 +154,27 @@ targets:
 - **Shared rss sources** — `rss-sources` (`modules/system/rss-sources.nix`)
   defines the standard feed list once; the glance rss widget and the `nom`
   terminal reader both consume it, so the same sources appear everywhere.
+
+## Pending upstream fixes
+
+Workarounds currently in the tree because of bugs or gaps **upstream**. Each
+entry is a deliberate, temporary reduction in scope — re-check it whenever a
+rebuild conversation starts, and drop the workaround once the upstream fix
+lands. Keep this list in sync with the "Pending upstream fixes" section of
+`AGENTS.md`, and add a row here in the same commit that introduces a new
+workaround.
+
+| # | Workaround | Where | Blocked on | Re-enable when |
+| --- | --- | --- | --- | --- |
+| 1 | Discord package install disabled (`programs.nixcord.discord.enable = false`); Vesktop is used instead | `modules/home-manager/apps/discord/nixcord.nix:9` | `kaylorben/nixcord` — `pkgs/discord/default.nix` does `basePackage.override { inherit source; … }`, but nixpkgs moved `discord` to `pkgs/by-name/di/discord/package.nix` where `source` comes from `./metadata.nix` and is no longer a function argument. Since `nixcord.inputs.nixpkgs.follows = "nixpkgs"`, every nixpkgs bump breaks evaluation with `function 'anonymous lambda' called with unexpected argument 'source'` | nixcord guards `source` the way it already guards `useFHSEnv` (`basePackageSupportsFHSEnv`) — then set `discord.enable = true` |
+| 2 | REDRUM built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
+| 3 | Insecure pnpm version allowed on GOD-KILLER (`nixpkgs.config.permittedInsecurePackages`) | `modules/hosts/GOD-KILLER/machine.nix:3` | a pnpm release in nixpkgs that is no longer flagged insecure (reactflux needs pnpm ≥ 10.29.2) | nixpkgs ships a non-insecure pnpm satisfying reactflux's `engines`, then drop the list |
+
+Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
+(`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the
+`config.plugins` block and the Vesktop settings are all still applied — only
+the separate `discord` binary is given up. The theme, YouTube adblock and
+`discordBranch = "canary"` all live in `~/.config/vesktop/`.
 
 ## Scripts
 
@@ -249,6 +276,34 @@ Note that the askpass step in step 4 requires `openssh-askpass` to be installed
 5. Wi-Fi pairing (clipboard/file transfer/OTP via the iOS app): install
    "Tether - Linux Companion" from the App Store, open it, accept the pairing on
    both ends (`tether pending` / `tether accept <fingerprint>` from a terminal).
+
+#### If pairing fails: Class of Device quirk (per host)
+
+iOS only offers the "Show Message Notifications" / "Sync Contacts" toggles to a
+peer whose Bluetooth Class of Device is **A/V Hands-Free** (`0x000408`, major 4 /
+minor 8), and it evaluates that class at pairing/consent time. Two things to know:
+
+- **The class never "sticks" on its own.** `bluetoothd` rewrites the adapter class
+  from its own defaults whenever it (re)starts, clobbering both `main.conf`
+  (`hardware.bluetooth.settings.General.Class = "0x000408"` in
+  `modules/system/tether.nix`) and any `btmgmt` write. `tether --bt-status` may
+  report `class=wrong` and `tether --bt-setup` a leftover "1 setup step" even
+  though everything is configured. That is **cosmetic for an already-paired
+  phone** — the granted session survives a class revert, so messages, contacts
+  and notification mirroring keep working.
+- **It only matters for a brand-new pair.** If the phone has never granted the
+  permissions, re-apply the class *just before* pairing and keep the phone's
+  Bluetooth off until then:
+
+  ```bash
+  sudo systemctl restart bluetooth
+  sudo btmgmt class 4 8        # re-applies A/V Hands-Free until the next bluetoothd restart
+  tether bt pair <addr>        # pair while the class is fresh
+  ```
+
+  Re-pairing an already-granted phone does **not** need this. If pairing still
+  fails and MAP/PBAP are being refused, see the "1 setup step remaining"
+  runbook in the Tether `BLUETOOTH.md` docs for the class + re-pair recovery.
 
 Notes: notification mirroring (ANCS) requires iOS 19+; older iOS still gets
 messages + contacts. The browser/mail extension opt-ins (`extensions` in

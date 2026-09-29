@@ -1,8 +1,10 @@
 { inputs, ... }:
 {
 	flake.modules.nixos."GOD-KILLER" = { pkgs, ... }: {
-		#TODO REMOVE THIS WHEN POSSIBLEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-		# Allow the insecure pnpm version
+		# TODO-remove: allow the insecure pnpm version. Reactflux's `engines`
+		# need pnpm >= 10.29.2 and nixpkgs has no non-insecure release
+		# satisfying that yet. Drop this list once one lands. Tracked in the
+		# "Pending upstream fixes" registry (AGENTS.md row 3 / README).
 		nixpkgs.config.permittedInsecurePackages = [
 			"pnpm-10.29.2"
 		];

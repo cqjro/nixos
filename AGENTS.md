@@ -166,6 +166,39 @@ archived module **must**:
    `nix flake update <name>` or `nix flake lock` to restore it into
    `flake.lock`), re-add any `host.nix` input-module lines, then rebuild.
 
+## Pending upstream fixes (follow-up registry)
+
+Workarounds that exist **only** because of a bug or gap upstream. They are
+deliberate, temporary reductions in scope — never treat one as intentional
+design, and never "clean it up" without first confirming the upstream fix.
+
+**Standing instruction: on every rebuild conversation, before doing anything
+else, re-check each entry below for an upstream fix.** If one has landed, say
+so explicitly, then remove the workaround and verify the host still builds. If
+it has not, report the current status briefly and move on. Checking means
+looking at the linked issue/PR (or the upstream commit log for the relevant
+file), not assuming from the passage of time.
+
+| # | Workaround | Where | Blocked on | Re-enable when |
+| --- | --- | --- | --- | --- |
+| 1 | `programs.nixcord.discord.enable = false` — standalone Discord package not installed; Vesktop is the client | `modules/home-manager/apps/discord/nixcord.nix:9` | `kaylorben/nixcord`: `pkgs/discord/default.nix` calls `basePackage.override { inherit source; … }`, but nixpkgs refactored `discord` into `pkgs/by-name/di/discord/package.nix` where `source` is read from `./metadata.nix` and is no longer a function argument. `nixcord.inputs.nixpkgs.follows = "nixpkgs"` (flake.nix:79), so any nixpkgs bump fails with `function 'anonymous lambda' called with unexpected argument 'source'` | nixcord guards `source` the way it already guards `useFHSEnv` (`basePackageSupportsFHSEnv`, `pkgs/discord/default.nix:53`). Then set `discord.enable = true` |
+| 2 | REDRUM built from pinned nixpkgs `cac0c1ef` (kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | issue resolved / pin obsolete; follow the numbered removal steps in `T2-PIN.md` |
+| 3 | `nixpkgs.config.permittedInsecurePackages = [ "pnpm-10.29.2" ]` on GOD-KILLER | `modules/hosts/GOD-KILLER/machine.nix:3` | nixpkgs has no non-insecure pnpm ≥ 10.29.2 yet (reactflux's `engines` need it) | nixpkgs ships a non-insecure pnpm satisfying reactflux; then delete the list |
+
+Notes:
+
+- #1 costs nothing in practice: Vesktop is a **separate** nixcord client
+  (`finalPackages.vesktop`), so Vencord, the Stylix `quickCss` theme,
+  `config.plugins` and the Vesktop settings are all still written to
+  `~/.config/vesktop/`. Only the separate `discord` binary is gone. Because the
+  crash is lazy, forcing `programs.nixcord` as a whole attrset still throws
+  (it reaches `discord.package`); the *system build* is what must pass.
+- A `# TODO-remove:` comment at the workaround site is required, and the same
+  row must exist in the README's "Pending upstream fixes" table — update both
+  in the commit that adds the workaround, and delete from both when removing it.
+- Archive-to-`modules/_archive/` is for *retired* modules. A module disabled
+  pending an upstream fix stays in place and gets a registry row instead.
+
 ## Gotchas
 
 - **Secrets and firmware are gitignored** and must never be committed
@@ -173,7 +206,8 @@ archived module **must**:
   YouTube automation needs `token.json` present on the target host.
 - **REDRUM is built from pinned nixpkgs** (`nixpkgs-redrum`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
-  without reading `modules/hosts/REDRUM/T2-PIN.md`.
+  without reading `modules/hosts/REDRUM/T2-PIN.md` and re-checking
+  `NixOS/nixos-hardware#2027` (row 2 of the registry above).
 - **Do not add a `nix flake check` step** back into `rebuild.sh` — the live
   rebuild feed is intentionally streamed through `bat` and only errors are shown
   on failure (see the `PIPESTATUS` handling).
