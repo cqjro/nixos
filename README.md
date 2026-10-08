@@ -9,6 +9,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [Machines](#machines)
 - [Repository Layout](#repository-layout)
 - [The Dendritic Pattern](#dendritic-pattern)
+- [Nix User Repository (NUR)](#nix-user-repository-nur)
 - [Theming](#theming)
 - [Key Features](#key-features)
 - [Pending upstream fixes](#pending-upstream-fixes)
@@ -42,14 +43,14 @@ start.sh               # Startup script run by Hyprland: loads SSH agent, syncs 
 
 modules/
 ├── _archive/          # Retired / superseded modules (kept for reference)
-├── essentials/        # System services: networking, dbus, bluetooth, audio, printing, users, nvidia...
+├── essentials/        # System services: networking, dbus, bluetooth, audio, printing, users, nvidia, nur...
 ├── hosts/             # Per-machine config:
 │   ├── host.nix       #   Assembles all nixosConfigurations
 │   ├── GOD-KILLER/    #   machine.nix / home.nix / hardware.nix / monitors.nix
 │   ├── LittleNix/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
-│   ├── apps/          #   calibre, millennium, mpv, nemo, spicetify, zen-browser, ...
+│   ├── apps/          #   calibre, millennium, mpv, nemo, photocraft, spicetify, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
@@ -91,6 +92,63 @@ inputs.self.modules.homeManager."$name"       # user modules
 Each file is a small, self-contained fragment ("detritus") that does one thing.
 Adding a feature to one or two machines is just a matter of adding its name to
 that host's import list. Unused fragments are simply never referenced.
+
+## Nix User Repository (NUR)
+
+[NUR](https://github.com/nix-community/NUR) is a community registry of Nix
+packages that have not (yet) landed in nixpkgs. It is wired in as the `nur`
+flake input (`flake.nix`) with `inputs.nixpkgs.follows = "nixpkgs"`, so NUR
+packages build against the same nixpkgs as the rest of the config.
+
+The overlay is applied by `modules/essentials/nur.nix` — a thin dendritic
+fragment that imports NUR's own NixOS module:
+
+```nix
+flake.modules.nixos.nur = {
+  imports = [ inputs.nur.modules.nixos.default ];
+};
+```
+
+Hosts opt in by adding `inputs.self.modules.nixos.nur` to their module list in
+`modules/hosts/host.nix`; it is enabled on `GOD-KILLER` and `LittleNix`. Once
+enabled, **any** NUR package is addressable as
+`pkgs.nur.repos.<repo>.<package>` and can be used anywhere `pkgs` is available:
+
+```nix
+environment.systemPackages = [ pkgs.nur.repos.Skyb0rg007.photocraft ];
+```
+
+Browse packages at <https://nur.nix-community.org/> or search the
+[nur-combined](https://github.com/nix-community/nur-combined) repository. NUR
+packages are built from source and **not** reviewed by nixpkgs maintainers, so
+read an expression before trusting it. NUR is only used for things that are
+**not in nixpkgs yet** — on every nixpkgs bump, re-check NUR-installed apps and
+switch to the official `pkgs.<name>` once the package lands there.
+
+### Using NUR with Home Manager
+
+These hosts set `home-manager.useGlobalPkgs = true`, so Home Manager shares the
+system's `pkgs` — including the NUR overlay. `pkgs.nur...` therefore works in
+home-manager modules with **no extra setup**, whether at the system level or in
+a user fragment:
+
+```nix
+flake.modules.homeManager."some-app" = { pkgs, ... }: {
+  home.packages = [ pkgs.nur.repos.Skyb0rg007.photocraft ];
+};
+```
+
+A real example is `modules/home-manager/apps/photocraft.nix`.
+
+If you ever move a machine to **standalone** Home Manager (or set
+`useGlobalPkgs = false`), NUR's overlay must be applied to that `pkgs` directly
+by importing its Home Manager module:
+
+```nix
+modules = [ inputs.nur.modules.homeManager.default ];
+# ...
+home.packages = [ pkgs.nur.repos.Skyb0rg007.photocraft ];
+```
 
 ## Theming
 
@@ -154,6 +212,11 @@ targets:
 - **Shared rss sources** — `rss-sources` (`modules/system/rss-sources.nix`)
   defines the standard feed list once; the glance rss widget and the `nom`
   terminal reader both consume it, so the same sources appear everywhere.
+- **PhotoCraft** — an open-source, pure-Rust Photoshop alternative (layers,
+  masks, adjustment layers, real PSD files), installed on the desktop hosts
+  from NUR (`nur.repos.Skyb0rg007.photocraft`) via
+  `modules/home-manager/apps/photocraft.nix`. See
+  [Nix User Repository (NUR)](#nix-user-repository-nur) for the NUR workflow.
 
 ## Pending upstream fixes
 

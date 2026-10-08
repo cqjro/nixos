@@ -11,6 +11,7 @@
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.nur
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos.environment
@@ -51,6 +52,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.nur
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos.environment

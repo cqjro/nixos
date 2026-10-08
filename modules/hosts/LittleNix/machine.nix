@@ -50,6 +50,7 @@
 						nemo
 						calibre
 						apps-packages
+						photocraft
 						latex
 						languages-packages
 						xremap

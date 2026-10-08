@@ -94,6 +94,27 @@ Other conventions:
 - Star imports from the fragment's `{ pkgs, ... }` arguments rather than
   introducing deps at the top level, matching surrounding files.
 
+**NUR packages.** The [Nix User Repository](https://github.com/nix-community/NUR)
+is wired in as the `nur` flake input and applied by the `nur` NixOS fragment
+(`modules/essentials/nur.nix`); it is enabled on the desktop hosts (GOD-KILLER,
+LittleNix) in `host.nix`. Reference packages as
+`pkgs.nur.repos.<repo>.<package>`. Because those hosts use
+`useGlobalPkgs = true`, the same attribute works in home-manager fragments —
+see `modules/home-manager/apps/photocraft.nix`
+(`nur.repos.Skyb0rg007.photocraft`). NUR code is community-built and **not**
+reviewed by nixpkgs maintainers, so read an expression before adding it, and
+keep the README's "Nix User Repository (NUR)" section in sync.
+
+- **NUR apps → prefer nixpkgs.** Anything pulled from NUR is community-built
+  and exists only because it is not (yet) in nixpkgs. On every rebuild
+  conversation — and whenever a nixpkgs bump lands — re-check each
+  NUR-installed app against nixpkgs (`nix search nixpkgs <name>` or
+  <https://search.nixos.org/>). If the package has landed there, switch the
+  module to the official `pkgs.<name>` and drop the NUR reference, per the
+  user's preference to install things the official way when possible.
+  Example to keep checking: photocraft (`modules/home-manager/apps/photocraft.nix`,
+  currently `nur.repos.Skyb0rg007.photocraft`).
+
 ### Creating a server module (REDRUM)
 
 `modules/server/*.nix` each define an app on REDRUM, exposed through a

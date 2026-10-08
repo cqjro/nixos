@@ -54,6 +54,7 @@ discord
 					claude-web-styling
 				calibre
 					apps-packages
+					photocraft
 					latex
 					languages-packages
 					xremap
