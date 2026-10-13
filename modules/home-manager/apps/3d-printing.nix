@@ -12,10 +12,13 @@
 			# its ffmpeg libs, so it needs the FHS env for everything else, but
 			# webkitgtk_4_1's runtime deps (libsoup_3, libpng) are not pulled in
 			# and the binary dies with
-			# "libsoup-3.0.so.0: cannot open shared object file". Re-wrap with the
-			# same extraPkgs set the sibling package qidi-slicer-bin uses, until
-			# upstream adds them. Tracked in the "Pending upstream fixes" registry
-			# (AGENTS.md row 4 / README).
+			# "libsoup-3.0.so.0: cannot open shared object file". The env also has
+			# no CA bundle at the Fedora path the app probes
+			# (/etc/pki/tls/certs/ca-bundle.crt), so it nags about the system
+			# certificate store — pin SSL_CERT_FILE/SSL_CERT_DIR at nixpkgs'
+			# cacert. Re-wrap with the same extraPkgs set the sibling package
+			# qidi-slicer-bin uses, until upstream adds them. Tracked in the
+			# "Pending upstream fixes" registry (AGENTS.md row 4 / README).
 			appimageContents = pkgs.appimageTools.extract {
 				inherit (pkgs.qidi-studio) pname version src;
 			};
@@ -31,7 +34,9 @@
 						--replace-fail 'Exec=AppRun' 'Exec=qidi-studio'
 					wrapProgram "$out/bin/qidi-studio" \
 						--set-default WEBKIT_DISABLE_COMPOSITING_MODE 0 \
-						--set-default WEBKIT_DISABLE_DMABUF_RENDERER 0
+						--set-default WEBKIT_DISABLE_DMABUF_RENDERER 0 \
+						--set-default SSL_CERT_FILE ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt \
+						--set-default SSL_CERT_DIR ${pkgs.cacert}/etc/ssl/certs
 				'';
 			};
 		in {

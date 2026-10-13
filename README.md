@@ -222,9 +222,9 @@ targets:
   (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for
   parametric CAD, **OpenSCAD** for script-driven solids and **Blender** for mesh
   work — installed via `modules/home-manager/apps/3d-printing.nix`. All are from
-  nixpkgs; QIDI Studio is locally re-wrapped to add `libsoup_3`/`libpng` to its
-  FHS env until the upstream package gains them (see
-  [Pending upstream fixes](#pending-upstream-fixes) row 4).
+  nixpkgs; QIDI Studio is locally re-wrapped to add `libsoup_3`/`libpng` and pin
+  the CA bundle in its FHS env until the upstream package addresses those gaps
+  (see [Pending upstream fixes](#pending-upstream-fixes) row 4).
 
 ## Pending upstream fixes
 
@@ -240,7 +240,7 @@ workaround.
 | 1 | Discord package install disabled (`programs.nixcord.discord.enable = false`); Vesktop is used instead | `modules/home-manager/apps/discord/nixcord.nix:9` | `kaylorben/nixcord` — `pkgs/discord/default.nix` does `basePackage.override { inherit source; … }`, but nixpkgs moved `discord` to `pkgs/by-name/di/discord/package.nix` where `source` comes from `./metadata.nix` and is no longer a function argument. Since `nixcord.inputs.nixpkgs.follows = "nixpkgs"`, every nixpkgs bump breaks evaluation with `function 'anonymous lambda' called with unexpected argument 'source'` | nixcord guards `source` the way it already guards `useFHSEnv` (`basePackageSupportsFHSEnv`) — then set `discord.enable = true` |
 | 2 | REDRUM built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
 | 3 | Insecure pnpm version allowed on GOD-KILLER (`nixpkgs.config.permittedInsecurePackages`) | `modules/hosts/GOD-KILLER/machine.nix:3` | a pnpm release in nixpkgs that is no longer flagged insecure (reactflux needs pnpm ≥ 10.29.2) | nixpkgs ships a non-insecure pnpm satisfying reactflux's `engines`, then drop the list |
-| 4 | Local `appimageTools.wrapType2` override re-wraps qidi-studio with `libsoup_3` + `libpng` added to its FHS env | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The sibling package `qidi-slicer-bin` already adds both | upstream `qidi-studio` lists `libsoup_3` (and `libpng`) in `extraPkgs` like `qidi-slicer-bin`; then use `pkgs.qidi-studio` directly and delete the override |
+| 4 | Local `appimageTools.wrapType2` override re-wraps qidi-studio: adds `libsoup_3` + `libpng` to its FHS env and pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert` | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes, so it nags about the system certificate store. The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA-store nag is addressed; then use `pkgs.qidi-studio` directly and delete the override |
 
 Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
 (`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the
