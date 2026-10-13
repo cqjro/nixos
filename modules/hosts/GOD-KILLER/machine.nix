@@ -55,6 +55,7 @@ discord
 				calibre
 					apps-packages
 					photocraft
+					inputs.self.modules.homeManager."3d-printing"
 					latex
 					languages-packages
 					xremap

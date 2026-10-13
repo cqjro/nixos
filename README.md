@@ -50,7 +50,7 @@ modules/
 │   ├── LittleNix/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
-│   ├── apps/          #   calibre, millennium, mpv, nemo, photocraft, spicetify, zen-browser, ...
+│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, photocraft, spicetify, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
@@ -217,6 +217,11 @@ targets:
   from NUR (`nur.repos.Skyb0rg007.photocraft`) via
   `modules/home-manager/apps/photocraft.nix`. See
   [Nix User Repository (NUR)](#nix-user-repository-nur) for the NUR workflow.
+- **3D printing** — a slicer + modelling toolchain on the desktop hosts
+  (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
+  (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for
+  parametric CAD, **OpenSCAD** for script-driven solids and **Blender** for mesh
+  work — all straight from nixpkgs via `modules/home-manager/apps/3d-printing.nix`.
 
 ## Pending upstream fixes
 
