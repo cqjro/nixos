@@ -22,13 +22,29 @@
 			#      and point GIO_EXTRA_MODULES at it (same fix as nixpkgs #528942,
 			#      the QBZ package).
 			# Re-wrap with the same extraPkgs set the sibling package
-			# qidi-slicer-bin uses, until upstream adds them. Tracked in the
-			# "Pending upstream fixes" registry (AGENTS.md row 4 / README).
+			# qidi-slicer-bin uses, until upstream adds them.
+			#
+			# TODO-remove: QIDIStudio hardcodes a webview User-Agent without any
+			# browser token (src/slic3r/GUI/Widgets/WebView.cpp, the non-Windows
+			# branch), so the login / online-model pages can't sniff a browser to
+			# set the X-DeviceType header and api.qidimaker.com rejects them with
+			# "X-DeviceType missing in request header". Windows works because its
+			# UA carries "Chrome/... Safari/...". patch-qidi-studio-ua.py rewrites
+			# the literal to a Chrome UA in place (same length). See
+			# QIDITECH/QIDIStudio#244.
+			# Both workarounds are tracked in the "Pending upstream fixes"
+			# registry (AGENTS.md rows 4 and 5 / README).
 			appimageContents = pkgs.appimageTools.extract {
 				inherit (pkgs.qidi-studio) pname version src;
+				postExtract = ''
+					chmod u+w $out/bin/qidi-studio
+					${pkgs.python3}/bin/python3 ${../../scripts/patch-qidi-studio-ua.py} $out/bin/qidi-studio
+				'';
 			};
-			qidiStudio = pkgs.appimageTools.wrapType2 {
-				inherit (pkgs.qidi-studio) pname version src;
+			qidiStudio = pkgs.appimageTools.wrapAppImage {
+				pname = pkgs.qidi-studio.pname;
+				version = pkgs.qidi-studio.version;
+				contents = appimageContents;
 				extraPkgs = p: [ p.webkitgtk_4_1 p.libsoup_3 p.libpng p.glib-networking ];
 				nativeBuildInputs = [ pkgs.makeWrapper ];
 				extraInstallCommands = ''
@@ -47,7 +63,7 @@
 			};
 		in {
 			home.packages = with pkgs; [
-				qidiStudio # QIDI printer slicer (patched FHS env)
+				qidiStudio # QIDI printer slicer (patched FHS env + UA)
 				freecad # parametric CAD
 				solvespace # constraint-based parametric CAD
 				openscad # script-based solid modelling
