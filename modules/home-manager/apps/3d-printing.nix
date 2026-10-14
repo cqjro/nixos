@@ -30,7 +30,11 @@
 			# set the X-DeviceType header and api.qidimaker.com rejects them with
 			# "X-DeviceType missing in request header". Windows works because its
 			# UA carries "Chrome/... Safari/...". patch-qidi-studio-ua.py rewrites
-			# the literal to a Chrome UA in place (same length). See
+			# the literal in place (same length) to the Safari UA the issue
+			# validated, so the page sends "X-DeviceType: safari 17.4" and the
+			# gateway accepts it. It must NOT advertise Chrome: the webview is
+			# WebKitGTK, and the qidimaker SPA then takes Chrome-only code paths
+			# it cannot run, rendering the pages blank. See
 			# QIDITECH/QIDIStudio#244.
 			# Both workarounds are tracked in the "Pending upstream fixes"
 			# registry (AGENTS.md rows 4 and 5 / README).
