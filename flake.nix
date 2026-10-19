@@ -94,6 +94,13 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
+		# nixos generations, package diffs, flake updates & dev environments
+		# from a tray icon / CLI (not in nixpkgs yet)
+		nixdatifier = {
+			url = "github:Muddyblack/nixdatifier";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+
 		# archived: flatpak module moved to modules/_archive/flatpak.nix
 		# nix-flatpak = {
 		# 	url = "github:gmodena/nix-flatpak";

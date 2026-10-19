@@ -46,7 +46,10 @@
 						opencode
 						nom
 						terminal-packages
+						nixdatifier
 					];
+					# CLI/TUI only — REDRUM has no graphical session for the tray app
+					programs.nixdatifier.ui = false;
 			};
 			useUserPackages = true;
 			useGlobalPkgs = true;

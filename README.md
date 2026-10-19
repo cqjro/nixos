@@ -50,7 +50,7 @@ modules/
 │   ├── LittleNix/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
-│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, photocraft, spicetify, zen-browser, ...
+│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, nixdatifier, photocraft, spicetify, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
@@ -217,6 +217,13 @@ targets:
   from NUR (`nur.repos.Skyb0rg007.photocraft`) via
   `modules/home-manager/apps/photocraft.nix`. See
   [Nix User Repository (NUR)](#nix-user-repository-nur) for the NUR workflow.
+- **Nixdatifier** — NixOS generations, package diffs, flake-update checks and
+  store tools from the desktop: the tray app's icon lives in noctalia's bar
+  tray (a click toggles the window), a 6h background timer notifies when flake
+  inputs are outdated, and the same package ships the `nixdatifier` CLI/TUI
+  (installed CLI-only on REDRUM). Its TUI theme is generated from the Stylix
+  palette. From `github:Muddyblack/nixdatifier` via
+  `modules/home-manager/apps/nixdatifier.nix` — not in nixpkgs yet.
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
   (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
   (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for

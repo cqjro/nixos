@@ -847,6 +847,26 @@
         "type": "github"
       }
     },
+    "nixdatifier": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792411000,
+        "narHash": "sha256-fU59bJ0gnTBKCWM5BBuMfAbZ9UB4qBqSPZQt7L3U2Ho=",
+        "owner": "Muddyblack",
+        "repo": "nixdatifier",
+        "rev": "6eb061e18ac5a3593b918aa6ff80e24b5b43354f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Muddyblack",
+        "repo": "nixdatifier",
+        "type": "github"
+      }
+    },
     "nixos-hardware": {
       "inputs": {
         "nixpkgs": "nixpkgs_3"
@@ -1273,6 +1293,7 @@
         "hyprland": "hyprland",
         "import-tree": "import-tree",
         "nixcord": "nixcord",
+        "nixdatifier": "nixdatifier",
         "nixos-hardware": "nixos-hardware",
         "nixos-millennium": "nixos-millennium",
         "nixpkgs": "nixpkgs_4",
