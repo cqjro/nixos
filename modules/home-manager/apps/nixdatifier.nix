@@ -8,7 +8,30 @@
 	# noctalia's bar tray widget (a click toggles the window), so no extra
 	# panel/pill is needed. Hosts without a graphical session (REDRUM) set
 	# `programs.nixdatifier.ui = false` for the CLI only.
-	flake.modules.homeManager."nixdatifier" = { config, lib, ... }: {
+	#
+	# Widget-side settings the upstream module does not expose (font scale,
+	# palette, max generations, flake path) live in ~/.config/nixdatifier —
+	# `standalone.json` for the window, `config` for the CLI/window shared
+	# copy. The window rewrites standalone.json on every change (even a window
+	# resize), so they are *seeded if missing* by the activation step below
+	# rather than symlinked: Nix owns the initial values, the app owns the file
+	# afterwards, and in-app tweaks survive rebuilds. To re-seed, delete the
+	# file and rebuild.
+	flake.modules.homeManager."nixdatifier" = { config, lib, pkgs, ... }: let
+		c = config.lib.stylix.colors;
+		# First-run values for the tray window, styled from the stylix palette
+		# (colours are never hardcoded in modules — AGENTS.md theming rule).
+		standaloneDefaults = pkgs.writeText "nixdatifier-standalone.json" (builtins.toJSON {
+			flakePath = "${config.home.homeDirectory}/.nixos";
+			maxGenerations = 20;
+			fontScale = 1.3; # matches noctalia's DP-3 scale; tweak in Configure → Design
+			accentColor = "#${toString c.base0D}";
+			timelineColor = "#${toString c.base04}";
+			bgColor = "#e6${toString c.base00}"; # base00 at 90% opacity (#AARRGGBB)
+			bgRadius = 10; # matches hyprland decoration.rounding
+			showBg = true;
+		});
+	in {
 		imports = [ inputs.nixdatifier.homeManagerModules.default ];
 
 		programs.nixdatifier = {
@@ -67,5 +90,20 @@
 			};
 			Install.WantedBy = [ "graphical-session.target" ];
 		};
+
+		# Seed the app-owned config files once (see header comment): the window
+		# gets its design/general defaults, and the CLI/window shared copy gets
+		# the system flake path (~/.nixos is not one of the paths the app
+		# auto-detects). Existing files are left alone.
+		home.activation.nixdatifierDefaults = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+			cfgDir="${config.home.homeDirectory}/.config/nixdatifier"
+			run mkdir -p "$cfgDir"
+			if [[ ! -f "$cfgDir/standalone.json" ]]; then
+				run install -m 644 ${standaloneDefaults} "$cfgDir/standalone.json"
+			fi
+			if ! grep -qs '^flake=' "$cfgDir/config"; then
+				run sh -c 'printf "flake=%s\n" "${config.home.homeDirectory}/.nixos" >> "${config.home.homeDirectory}/.config/nixdatifier/config"'
+			fi
+		'';
 	};
 }

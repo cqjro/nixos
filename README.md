@@ -222,7 +222,10 @@ targets:
   tray (a click toggles the window), a 6h background timer notifies when flake
   inputs are outdated, and the same package ships the `nixdatifier` CLI/TUI
   (installed CLI-only on REDRUM). Its TUI theme is generated from the Stylix
-  palette. From `github:Muddyblack/nixdatifier` via
+  palette, and the first build seeds the widget's `~/.config/nixdatifier/`
+  files (flake path `~/.nixos`, 20 generations, font scale 1.3, palette
+  colours) — after that the app owns them, so in-app tweaks survive rebuilds.
+  From `github:Muddyblack/nixdatifier` via
   `modules/home-manager/apps/nixdatifier.nix` — not in nixpkgs yet.
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
   (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
