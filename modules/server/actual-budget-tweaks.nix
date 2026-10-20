@@ -142,7 +142,7 @@ in
 		abt-sidecar-pnpm-deps = pnpmDeps;
 	};
 
-	flake.modules.nixos.actual-budget-tweaks = { config, lib, ... }: {
+	flake.modules.nixos.actual-budget-tweaks = { config, lib, pkgs, ... }: {
 		options.services.abt-sidecar.enable = lib.mkEnableOption ''
 			the Actual Budget Tweaks sidecar, a small reverse proxy in front of
 			Actual that injects UI tweaks (themes, sidebar, mobile restyle)
@@ -151,7 +151,70 @@ in
 			sidecar (service, user, ingress override) is removed by NixOS
 		'';
 
-		config = lib.mkIf config.services.abt-sidecar.enable {
+		options.services.abt-sidecar.stylixTheme = lib.mkOption {
+			type = lib.types.bool;
+			default = true;
+			description = ''
+				Seed Actual Budget Tweaks with a palette built from the Stylix
+				base16 scheme, so Actual is themed like the rest of the config.
+				The theme can still be switched (and reverted to Actual's
+				default "Native" look) from ABT's own Theme Customizer; this only
+				sets the initial default. Set to false to leave Actual on its
+				stock theme with no Stylix seed.
+			'';
+		};
+
+		config = let
+			stylix = config.services.abt-sidecar.stylixTheme;
+			# Stylix base16 -> ABT's Catppuccin-style token names. ABT themes are
+			# just a --ctp-* token map; this projects the shared palette onto it.
+			c = config.lib.stylix.colors;
+			stylixKeys = {
+				"--ctp-rosewater" = "#${c.base05}";
+				"--ctp-flamingo" = "#${c.base08}";
+				"--ctp-pink" = "#${c.base0E}";
+				"--ctp-mauve" = "#${c.base0E}";
+				"--ctp-red" = "#${c.base08}";
+				"--ctp-maroon" = "#${c.base08}";
+				"--ctp-peach" = "#${c.base09}";
+				"--ctp-yellow" = "#${c.base0A}";
+				"--ctp-green" = "#${c.base0B}";
+				"--ctp-teal" = "#${c.base0C}";
+				"--ctp-sky" = "#${c.base0C}";
+				"--ctp-sapphire" = "#${c.base0D}";
+				"--ctp-blue" = "#${c.base0D}";
+				"--ctp-lavender" = "#${c.base0D}";
+				"--ctp-text" = "#${c.base05}";
+				"--ctp-subtext1" = "#${c.base04}";
+				"--ctp-subtext0" = "#${c.base04}";
+				"--ctp-overlay2" = "#${c.base03}";
+				"--ctp-overlay1" = "#${c.base03}";
+				"--ctp-overlay0" = "#${c.base03}";
+				"--ctp-surface2" = "#${c.base02}";
+				"--ctp-surface1" = "#${c.base02}";
+				"--ctp-surface0" = "#${c.base02}";
+				"--ctp-base" = "#${c.base00}";
+				"--ctp-mantle" = "#${c.base01}";
+				"--ctp-crust" = "#${c.base00}";
+			};
+			# The upstream shim (docker/browser-shim.js) plus a Stylix theming
+			# seed appended. Kept in modules/scripts/ so the WXT browser polyfill
+			# stays readable; only the _ABT_STYLIX_KEYS_/_ABT_STYLIX_NAME_
+			# placeholders are stamped in with the token map below.
+			shimSrc = builtins.readFile ../scripts/abt-browser-shim.js;
+			stylixShim = builtins.replaceStrings
+				[ "__ABT_STYLIX_KEYS__" "__ABT_STYLIX_NAME__" ]
+				[ (builtins.toJSON stylixKeys) "Stylix" ]
+				shimSrc;
+			# Override just the upstream shim file inside the sidecar store path
+			# (server.js serves /abt/browser-shim.js from __dirname, i.e. the
+			# sidecar root). Setting stylixTheme = false leaves the stock shim.
+			sidecar = if stylix then pkgs.runCommand "abt-sidecar-stylix" { } ''
+				cp -r ${abtSidecar} $out
+				chmod -R u+w $out
+				cp ${pkgs.writeText "abt-browser-shim.js" stylixShim} $out/browser-shim.js
+			'' else abtSidecar;
+		in lib.mkIf config.services.abt-sidecar.enable {
 			users.users.abt = {
 				isSystemUser = true;
 				group = "abt";
@@ -170,12 +233,12 @@ in
 				serviceConfig = {
 					User = "abt";
 					Group = "abt";
-					ExecStart = "${nodejs}/bin/node ${abtSidecar}/server.js";
+					ExecStart = "${nodejs}/bin/node ${sidecar}/server.js";
 					Environment = [
 						"PORT=8086"
 						"ACTUAL_ORIGIN=http://127.0.0.1:5006"
-						"ASSETS_DIR=${abtSidecar}/assets"
-						"PACKAGE_JSON_PATH=${abtSidecar}/package.json"
+						"ASSETS_DIR=${sidecar}/assets"
+						"PACKAGE_JSON_PATH=${sidecar}/package.json"
 						"HOME=/var/lib/abt"
 					];
 					# The sidecar stores nothing and runs from a read-only store

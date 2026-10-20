@@ -12,8 +12,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [The Dendritic Pattern](#dendritic-pattern)
 - [Nix User Repository (NUR)](#nix-user-repository-nur)
 - [Theming](#theming)
-- [Key Features](#key-features)
-- [Pending upstream fixes](#pending-upstream-fixes)
+- [Key Features](#key-features)- [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
 - [Installation](#installation)
 - [Rebuilding](#rebuilding)
@@ -187,6 +186,28 @@ targets:
   (`modules/system/manifest.nix`).
 - **OpenRGB** — systemd service for motherboard/mouse lighting.
 
+### Actual Budget theming
+
+Actual Budget runs on REDRUM behind the **Actual Budget Tweaks** (ABT) sidecar
+(`modules/server/actual-budget-tweaks.nix`), a small reverse proxy that injects
+ABT's UI tweaks into every browser that opens `budget.cqjro.ca` — no extension
+needed. ABT themes the app from a set of `--ctp-*` CSS tokens, so the sidecar
+seeds it with a palette derived from the shared Stylix base16 scheme: Actual
+matches the rest of the config out of the box.
+
+- **Switching themes is live.** Open ABT's settings → **Theme Customizer** and
+  pick **Native** (Actual's own default look), **Stylix** (the generated
+  palette), or any of ABT's built-in/community themes. Your pick is remembered
+  and synced into the budget, so it follows you across browsers and devices.
+- **The Stylix seed is only a default.** The sidecar writes `user:stylix` into
+  ABT's theme storage and selects it only when no theme has ever been chosen;
+  it never overrides a later choice.
+- **Turning it off entirely.** `services.abt-sidecar.stylixTheme = false`
+  (set in `modules/hosts/host.nix`, next to `services.abt-sidecar.enable`)
+  drops the Stylix shim and leaves Actual on its stock theme. The seed lives in
+  `modules/scripts/abt-browser-shim.js` (the upstream shim plus the seed); the
+  base16 → ABT token map is built NixOS-side in `actual-budget-tweaks.nix`.
+
 ## Key Features
 
 - **Hyprland** with a **Lua config** (`configType = "lua"`), per-monitor
@@ -205,7 +226,9 @@ targets:
   Proton Pass / Dark Reader / Stylus, and the webstyling stack above.
 - **Server stack on REDRUM** — Tailscale, Paperless-ngx (paperless storage, tied to
   the stylix `glance` theme only for the glance dashboard), Actual Budget
-  (self-hosted finance), Linkwarden (bookmarks), Beszel (server monitoring),
+  (self-hosted finance) with **Actual Budget Tweaks** (a sidecar proxy that
+  injects UI tweaks and is seeded with the Stylix palette — see
+  [Actual Budget theming](#actual-budget-theming)), Linkwarden (bookmarks), Beszel (server monitoring),
   Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
   ReactFlux (a Miniflux web client), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
@@ -295,6 +318,9 @@ the separate `discord` binary is given up. The theme, YouTube adblock and
 - `modules/scripts/pip-move.sh` — move the floating picture-in-picture window
   around (`Super+Alt+HJKL`).
 - `modules/scripts/parse_xremap.py` — parse the xremap config for reading/grepping.
+- `modules/scripts/abt-browser-shim.js` — the Actual Budget Tweaks browser shim
+  (upstream shim + the Stylix theme seed); stamped with the palette at build
+  time, see [Actual Budget theming](#actual-budget-theming).
 
 ### How `start.sh` works
 

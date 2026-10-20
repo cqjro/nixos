@@ -146,8 +146,7 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    its own) if it should show there.
 
 5. **Wire and document**: add `inputs.self.modules.nixos."<name>"` to the REDRUM
-   module list in `modules/hosts/host.nix`, then update the README: the
-   feature bullet, the tunnel create/credential steps, the DNS CNAME table, the
+   module list in `modules/hosts/host.nix`, then update the README: the   feature bullet, the tunnel create/credential steps, the DNS CNAME table, the
    permissions table (`/var/lib/<app>` row) and the "log in once" notes.
 
 6. **Static frontends** (e.g. ReactFlux, a pnpm/Vite SPA): package the build as a
@@ -159,6 +158,29 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    `buildPnpmPackage` exist in the pinned nixpkgs on REDRUM — hand-roll both.
    `nix flake check` on REDRUM is not part of the loop; verify with
    `nix eval --impure '.#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'`.
+
+### Theming the Actual Budget Tweaks sidecar
+
+`modules/server/actual-budget-tweaks.nix` wraps Actual Budget in the ABT sidecar
+(a Node reverse proxy that injects ABT's UI tweaks into every browser). ABT
+themes via a `--ctp-*` token map, so the sidecar is seeded with a palette
+derived from the shared Stylix base16 scheme:
+
+- The base16 → ABT token map is built **NixOS-side** (needs
+  `config.lib.stylix.colors`), emitted as JSON, and stamped into
+  `modules/scripts/abt-browser-shim.js` — the upstream shim plus a small seed
+  appended. `pkgs.runCommand` overrides just `browser-shim.js` inside the
+  sidecar store path (server.js serves it from the sidecar root).
+- The seed writes a `user:stylix` palette into ABT's `local:user-themes` and
+  selects it in `local:catppuccin-palette` **only when that key is unset**, so
+  any theme chosen later in ABT's own Theme Customizer (incl. `Native`) wins.
+  ABT's settings-sync copies both keys into the budget, so the choice persists.
+- `services.abt-sidecar.stylixTheme = false` (set in `modules/hosts/host.nix`)
+  skips the override and leaves the stock shim/theme. Both branches are worth
+  re-checking on ABT bumps: the shim mirrors upstream
+  `docker/browser-shim.js` at the pinned rev and the token names come from
+  `src/lib/design/palettes/*.ts` — if either changes, update
+  `modules/scripts/abt-browser-shim.js` / the `stylixKeys` map.
 
 ### Archiving a module (required steps)
 

@@ -101,9 +101,14 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.actual-budget
 				# ABT sidecar: set services.abt-sidecar.enable = false to
-				# revert budget.cqjro.ca to a direct Actual connection.
+				# revert budget.cqjro.ca to a direct Actual connection, or
+				# services.abt-sidecar.stylixTheme = false to keep the sidecar
+				# but leave Actual on its stock theme (no Stylix palette).
 				inputs.self.modules.nixos.actual-budget-tweaks
-				{ services.abt-sidecar.enable = true; }
+				{
+					services.abt-sidecar.enable = true;
+					services.abt-sidecar.stylixTheme = true;
+				}
 				inputs.self.modules.nixos.linkwarden
 				inputs.self.modules.nixos.paperless
 				inputs.self.modules.nixos.beszel
