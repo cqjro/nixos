@@ -44,19 +44,25 @@
 		basePackage = inputs.nixdatifier.packages.${pkgs.stdenv.hostPlatform.system}.${
 			if config.programs.nixdatifier.ui then "nixdatifier" else "cli"
 		};
-		# TODO-remove: upstream workaround, registry row 6 in AGENTS.md and
-		# README. diskusage hardcodes `timeout --kill-after=5s 120s` around
-		# `nix-store --gc --print-dead`; that scan alone takes ~119.5s on this
-		# store (326k paths, ~244k dead), so the measurement is killed at
-		# random and the Tools storage card never fills in. Raise the cap to
-		# 300s until upstream makes it configurable. ui = false (the cli
-		# package) is left stock: its helpers are wrapProgram-wrapped, so the
-		# string is not patchable in place, and nothing on REDRUM measures the
-		# store automatically.
+		# TODO-remove: upstream workaround, registry rows 6 and 7 in AGENTS.md
+		# and README. (6) diskusage hardcodes `timeout --kill-after=5s 120s`
+		# around `nix-store --gc --print-dead`; that scan alone takes ~119.5s
+		# on this store (326k paths, ~244k dead), so the measurement is killed
+		# at random and the Tools storage card never fills in — raise the cap
+		# to 300s. (7) The root panel Rectangle paints a 1px window outline in
+		# wash(accentColor, .18), which with the dark palette accent reads as
+		# a faint blue frame; recolour it to the panel background so it
+		# blends in (visually identical to removing it with an opaque bg).
+		# ui = false (the cli package) is left stock: its helpers are
+		# wrapProgram-wrapped, so the timeout string is not patchable in
+		# place, and nothing on REDRUM measures the store automatically.
 		patchedPackage = basePackage.overrideAttrs (old: {
 			postInstall = (old.postInstall or "") + ''
 				substituteInPlace $out/share/nixdatifier/package/contents/tools/sh/diskusage \
 					--replace-fail 'timeout --kill-after=5s 120s' 'timeout --kill-after=5s 300s'
+				substituteInPlace $out/share/nixdatifier/package/contents/ui/FullView.qml \
+					--replace-fail 'border.color: UI.Theme.wash(fullView.accentColor, .18)' \
+					'border.color: fullView.showBg ? fullView.bgColor : "transparent"'
 			'';
 		});
 	in {
@@ -132,6 +138,7 @@
 			run ${config.programs.nixdatifier.package}/bin/nixdatifier config set flake "${config.home.homeDirectory}/.nixos"
 			${lib.optionalString config.programs.nixdatifier.ui ''
 				if systemctl --user is-active --quiet nixdatifier; then
+					run systemctl --user daemon-reload
 					run systemctl --user restart nixdatifier
 				fi
 			''}

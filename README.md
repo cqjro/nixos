@@ -8,6 +8,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 
 - [Machines](#machines)
 - [Repository Layout](#repository-layout)
+- [Planned Updates](#planned-updates)
 - [The Dendritic Pattern](#dendritic-pattern)
 - [Nix User Repository (NUR)](#nix-user-repository-nur)
 - [Theming](#theming)
@@ -40,6 +41,7 @@ workarounds currently in the tree.
 flake.nix              # Flake inputs (flake-parts + import-tree scaffolding)
 rebuild.sh             # Interactive rebuild: selects a host, diffs, commits, pushes
 start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
+TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
 
 modules/
 ├── _archive/          # Retired / superseded modules (kept for reference)
@@ -61,6 +63,14 @@ modules/
 └── theme/             # Everything color-related
     └── webstyling/    #   Per-site CSS themes for the browser
 ```
+
+## Planned Updates
+
+[`TODO.md`](TODO.md) lists planned updates to this configuration — features
+and improvements that are wanted but not yet implemented (system-level items
+like Waydroid/Android TV, and REDRUM server additions such as Immich and
+Pi-hole). It is a working checklist, not a roadmap or issue tracker; items
+are removed from it once they land in the tree.
 
 ## The Dendritic Pattern
 
@@ -255,6 +265,7 @@ workaround.
 | 4 | Local override re-wraps `qidi-studio` via `appimageTools.wrapAppImage`: adds `libsoup_3`/`libpng`/`glib-networking` to its FHS env, pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert`, and points `GIO_EXTRA_MODULES` at glib-networking | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes (certificate-store nag) and glib-networking's GIO TLS backend, so every web view reports "TLS support not available". The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA + GIO-TLS gaps are addressed; then use `pkgs.qidi-studio` directly and delete the override |
 | 5 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
 | 6 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
+| 7 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #6) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
 
 Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
 (`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the
