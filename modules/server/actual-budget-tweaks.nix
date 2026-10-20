@@ -29,7 +29,11 @@ let
 
 	# The project is pnpm-based (packageManager: pnpm@10.19.0, lockfile
 	# v9.0) and needs node >= 22.13 (engines), mirroring upstream's
-	# Dockerfile (node:22-alpine + corepack pnpm).
+	# Dockerfile (node:22-alpine + corepack pnpm). The packageManager pin
+	# is stripped in both derivations below: the pnpm shipped by the pinned
+	# nixpkgs (10.34.5) would otherwise self-download the pinned 10.19.0
+	# mid-build (manage-package-manager-versions), which fails inside the
+	# sandbox and would be a hidden network dependency on a second pnpm.
 	nodejs = pkgs.nodejs_22;
 		pnpm = pkgs.pnpm_10.override { inherit nodejs; };
 
@@ -47,17 +51,28 @@ let
 		# registry.npmjs.org inside the sandbox (UNABLE_TO_GET_ISSUER_CERT_LOCALLY).
 		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
 		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+		COREPACK_ENABLE_STRICT = "0";
+		COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
 		outputHashMode = "recursive";
 		outputHashAlgo = "sha256";
-		outputHash = "sha256-LTBNkyKFV+Gb8vha+lVdCAMaV66+L3SyOubUtcIYN70=";
+		outputHash = "sha256-39f6xLMtOUMEu8pdPxcj99c1BHE72rOpenqRBkUYJfs=";
 		phases = [ "installPhase" ];
 		installPhase = ''
 			runHook preInstall
 			export HOME="$TMPDIR"
+			export COREPACK_ENABLE_STRICT=0
+			export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 			mkdir -p "$HOME/.cache/pnpm" "$out"
 			cp -r "$src" ./abt
 			chmod -R u+w ./abt
 			cd ./abt
+			# Remove the packageManager pin before the first pnpm command:
+			# nixpkgs' pnpm (10.34.5) would try to self-download the pinned
+			# 10.19.0 via manage-package-manager-versions, which fails in the
+			# sandbox ("Failed to switch pnpm to v10.19.0 … ENOENT") and
+			# makes the FOD depend on a second registry fetch of a pnpm
+			# binary. Same strip as the real build below.
+			node -e "const p=require('./package.json');delete p.packageManager;require('fs').writeFileSync('./package.json',JSON.stringify(p,null,'\t')+'\n');"
 			pnpm config set store-dir "$out/store"
 			pnpm config set cache-dir "$out/cache"
 			# --ignore-scripts skips `wxt prepare` (postinstall); the real build

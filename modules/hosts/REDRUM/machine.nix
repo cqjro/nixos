@@ -66,6 +66,16 @@
 		# Define a user account.
 		users.users.cairo = {
 			isNormalUser = true;
+			# REDRUM defines its own user block instead of importing the shared
+			# essentials/users module, so the zsh login shell must be set here too —
+			# otherwise SSH sessions land in bash and the home-manager zsh aliases
+			# (rebuild, config-sync, cd=z, …) plus zoxide integration never load.
+			# Do not import essentials/users.nix here instead: its extraGroups
+			# reference seat/plugdev, which no module REDRUM imports creates, so
+			# activation would fail with "group does not exist"; it would also
+			# enable hardware.uinput for xremap, which this headless server never
+			# uses. When essentials/users.nix changes, mirror it in this block.
+			shell = pkgs.zsh;
 			openssh.authorizedKeys.keys = [
 				"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBR8F9bwCx8EUHCNpMAMpSnnErqkHYAeEVbk9KyHzzy1"
 				"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHk7TbyTHgnWyVlF4rtLB883CKUJc5mF6dQoj5n/m1lk"

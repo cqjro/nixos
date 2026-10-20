@@ -24,6 +24,16 @@ let
 
 	# The project is pnpm-based (packageManager: pnpm@11.21.0) and built with
 	# node 22 (engines >= 22.22.0), mirroring the upstream Dockerfile.
+	# NOTE: this pin currently equals pkgs.pnpm from the pinned nixpkgs
+	# (11.21.0), so pnpm's manage-package-manager-versions never triggers a
+	# self-download of a second pnpm. That coincidence is the only reason the
+	# derivations below are safe — when they broke on a mismatch, see the
+	# abt-sidecar postmortem in modules/server/actual-budget-tweaks.nix
+	# ("Failed to switch pnpm to vX … ENOENT"). If the T2 pin is lifted
+	# (T2-PIN.md) or either version drifts, strip packageManager from
+	# package.json in BOTH derivations below (node one-liner as in
+	# actual-budget-tweaks.nix) and re-fetch the FOD outputHash, or the next
+	# deps rebuild dies in the sandbox.
 	nodejs = pkgs.nodejs_22;
 	pnpm = pkgs.pnpm.override { inherit nodejs; };
 
@@ -56,6 +66,8 @@ let
 			# `minimumReleaseAge`/`allowBuilds` never trigger registry checks.
 			rm -f ./reactflux/pnpm-workspace.yaml
 			cd ./reactflux
+			# Safe while pkgs.pnpm (11.21.0) == packageManager pin; on any
+			# drift strip packageManager first (see note at `pnpm` above).
 			pnpm config set store-dir "$out/store"
 			pnpm config set cache-dir "$out/cache"
 			pnpm install --frozen-lockfile --ignore-scripts

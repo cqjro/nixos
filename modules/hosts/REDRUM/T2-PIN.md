@@ -33,6 +33,17 @@ checking the upstream issue, then rebuild REDRUM without the pin.
 2. `modules/hosts/host.nix`: in the REDRUM block, change
    `inputs.nixpkgs-redrum.lib.nixosSystem` back to
    `inputs.nixpkgs.lib.nixosSystem` and delete the comment block above it.
-3. `rm modules/hosts/REDRUM/T2-PIN.md`
-4. `nix flake lock --update-input nixpkgs-redrum` (or let it drop), then
+3. `modules/server/reactflux.nix`: the pinned nixpkgs ships
+   `pkgs.pnpm == 11.21.0`, which matches the project's `packageManager`
+   pin — so pnpm never self-downloads a second version. Stock nixpkgs ships
+   a different pnpm, so after unpinning, strip the `packageManager` field
+   from `package.json` in BOTH the `pnpmDeps` FOD and the `reactflux`
+   build (copy the node one-liner from
+   `modules/server/actual-budget-tweaks.nix`) and re-fetch the FOD
+   `outputHash` (build with the wrong hash once, copy the "got" hash).
+   Without this, the next deps rebuild fails in the sandbox with
+   `Failed to switch pnpm to v… ENOENT` — the same failure that broke
+   abt-sidecar's FOD on 2026-10-20.
+4. `rm modules/hosts/REDRUM/T2-PIN.md`
+5. `nix flake lock --update-input nixpkgs-redrum` (or let it drop), then
    rebuild REDRUM to confirm it builds on current nixpkgs.

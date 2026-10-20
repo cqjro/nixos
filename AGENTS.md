@@ -243,6 +243,30 @@ Notes:
   when committing manually.
 - `stylix.enableReleaseChecks = false` is set in host `home.nix` files to avoid
   the release-mismatch error — keep it consistent across hosts.
+- **REDRUM does not import `essentials/users.nix`** — it defines its own
+  `users.users.cairo` in `hosts/REDRUM/machine.nix`, so anything the shared
+  users module sets (currently `shell = pkgs.zsh`) must be duplicated there.
+  Without `shell = pkgs.zsh`, SSH sessions land in bash and none of the
+  home-manager zsh config (aliases `rebuild`/`config-sync`/`cd = "z"`, zoxide
+  integration) loads. **Do not "fix" this by importing the shared module on
+  REDRUM**: it sets `extraGroups = [ … "seat" … "plugdev" ]` and those groups
+  are not created by any module REDRUM imports (they exist on the desktop
+  hosts only), so user activation fails with `group does not exist` and the
+  switch aborts — and it would also enable `hardware.uinput` + the uinput/input
+  groups for xremap, which a headless server never uses. When changing
+  `essentials/users.nix`, mirror the change in REDRUM's user block.
+- **pnpm `packageManager` pins in server FODs** — pnpm's
+  `manage-package-manager-versions` self-downloads whatever version
+  `package.json` pins whenever it differs from the running `pkgs.pnpm`; that
+  fetch fails inside the build sandbox (`Failed to switch pnpm to vX … ENOENT`)
+  and silently makes a "fixed-output" derivation depend on a second registry
+  download of a pnpm binary. This broke the abt-sidecar deps FOD on
+  2026-10-20; the fix (strip `packageManager` with the node one-liner before
+  the first pnpm command, re-fetch the FOD hash) is in
+  `modules/server/actual-budget-tweaks.nix`. `modules/server/reactflux.nix` is
+  currently safe only because its pin (`pnpm@11.21.0`) equals the pinned
+  nixpkgs' `pkgs.pnpm` — when bumping either pnpm project, or when the T2 pin
+  is lifted (T2-PIN.md step 3), apply the same strip and re-fetch the hash.
 
 ## Documentation Maintenance
 
