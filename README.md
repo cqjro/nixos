@@ -222,10 +222,11 @@ targets:
   tray (a click toggles the window), a 6h background timer notifies when flake
   inputs are outdated, and the same package ships the `nixdatifier` CLI/TUI
   (installed CLI-only on REDRUM). Its TUI theme is generated from the Stylix
-  palette, and the first build seeds the widget's `~/.config/nixdatifier/`
-  files (flake path `~/.nixos`, 20 generations, font scale 1.3, palette
-  colours) — after that the app owns them, so in-app tweaks survive rebuilds.
-  From `github:Muddyblack/nixdatifier` via
+  palette. Every rebuild merges a declarative slice into the widget's
+  `~/.config/nixdatifier/standalone.json` and restarts the tray app (flake
+  path `~/.nixos`, 20 generations, font scale 1.3, palette colours); all
+  other widget settings stay app-owned and survive rebuilds. From
+  `github:Muddyblack/nixdatifier` via
   `modules/home-manager/apps/nixdatifier.nix` — not in nixpkgs yet.
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
   (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
@@ -253,6 +254,7 @@ workaround.
 | 3 | Insecure pnpm version allowed on GOD-KILLER (`nixpkgs.config.permittedInsecurePackages`) | `modules/hosts/GOD-KILLER/machine.nix:3` | a pnpm release in nixpkgs that is no longer flagged insecure (reactflux needs pnpm ≥ 10.29.2) | nixpkgs ships a non-insecure pnpm satisfying reactflux's `engines`, then drop the list |
 | 4 | Local override re-wraps `qidi-studio` via `appimageTools.wrapAppImage`: adds `libsoup_3`/`libpng`/`glib-networking` to its FHS env, pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert`, and points `GIO_EXTRA_MODULES` at glib-networking | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes (certificate-store nag) and glib-networking's GIO TLS backend, so every web view reports "TLS support not available". The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA + GIO-TLS gaps are addressed; then use `pkgs.qidi-studio` directly and delete the override |
 | 5 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
+| 6 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
 
 Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
 (`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the

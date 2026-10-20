@@ -13,29 +13,58 @@
 	# palette, max generations, flake path) live in ~/.config/nixdatifier —
 	# `standalone.json` for the window, `config` for the CLI/window shared
 	# copy. The window rewrites standalone.json on every change (even a window
-	# resize), so they are *seeded if missing* by the activation step below
-	# rather than symlinked: Nix owns the initial values, the app owns the file
-	# afterwards, and in-app tweaks survive rebuilds. To re-seed, delete the
-	# file and rebuild.
+	# resize), so seeding it once would never take effect on a host where the
+	# app already ran, and symlinked it would revert every in-app change on
+	# rebuild. The activation below instead *merges* a small declarative slice
+	# of keys into the file each activation and restarts the tray app; every
+	# other key stays app-owned.
 	flake.modules.homeManager."nixdatifier" = { config, lib, pkgs, ... }: let
 		c = config.lib.stylix.colors;
-		# First-run values for the tray window, styled from the stylix palette
-		# (colours are never hardcoded in modules — AGENTS.md theming rule).
+		# The declarative slice applied on every activation; colours are
+		# derived from the stylix palette (never hardcoded — AGENTS.md
+		# theming rule). Change values here, not in the config files.
 		standaloneDefaults = pkgs.writeText "nixdatifier-standalone.json" (builtins.toJSON {
 			flakePath = "${config.home.homeDirectory}/.nixos";
 			maxGenerations = 20;
-			fontScale = 1.3; # matches noctalia's DP-3 scale; tweak in Configure → Design
+			fontScale = 1.3; # matches noctalia's DP-3 scale; tune in Configure → Design
 			accentColor = "#${toString c.base0D}";
 			timelineColor = "#${toString c.base04}";
-			bgColor = "#e6${toString c.base00}"; # base00 at 90% opacity (#AARRGGBB)
-			bgRadius = 10; # matches hyprland decoration.rounding
-			showBg = true;
+			bgColor = "#ff${toString c.base00}"; # base00, opaque like the standalone default
+		});
+		seedStandalone = pkgs.writeShellScript "nixdatifier-seed-standalone" ''
+			set -eu
+			file="$1"
+			if [[ -f "$file" ]] && ${pkgs.jq}/bin/jq -e . "$file" >/dev/null 2>&1; then
+				${pkgs.jq}/bin/jq --slurpfile seed "${standaloneDefaults}" '. * $seed[0]' "$file" > "$file.tmp"
+				mv "$file.tmp" "$file"
+			else
+				install -m 644 ${standaloneDefaults} "$file"
+			fi
+		'';
+		basePackage = inputs.nixdatifier.packages.${pkgs.stdenv.hostPlatform.system}.${
+			if config.programs.nixdatifier.ui then "nixdatifier" else "cli"
+		};
+		# TODO-remove: upstream workaround, registry row 6 in AGENTS.md and
+		# README. diskusage hardcodes `timeout --kill-after=5s 120s` around
+		# `nix-store --gc --print-dead`; that scan alone takes ~119.5s on this
+		# store (326k paths, ~244k dead), so the measurement is killed at
+		# random and the Tools storage card never fills in. Raise the cap to
+		# 300s until upstream makes it configurable. ui = false (the cli
+		# package) is left stock: its helpers are wrapProgram-wrapped, so the
+		# string is not patchable in place, and nothing on REDRUM measures the
+		# store automatically.
+		patchedPackage = basePackage.overrideAttrs (old: {
+			postInstall = (old.postInstall or "") + ''
+				substituteInPlace $out/share/nixdatifier/package/contents/tools/sh/diskusage \
+					--replace-fail 'timeout --kill-after=5s 120s' 'timeout --kill-after=5s 300s'
+			'';
 		});
 	in {
 		imports = [ inputs.nixdatifier.homeManagerModules.default ];
 
 		programs.nixdatifier = {
 			enable = true;
+			package = if config.programs.nixdatifier.ui then patchedPackage else basePackage;
 
 			# The upstream autostart option only writes an XDG autostart desktop
 			# entry, which nothing processes under Hyprland — the user service
@@ -91,19 +120,21 @@
 			Install.WantedBy = [ "graphical-session.target" ];
 		};
 
-		# Seed the app-owned config files once (see header comment): the window
-		# gets its design/general defaults, and the CLI/window shared copy gets
-		# the system flake path (~/.nixos is not one of the paths the app
-		# auto-detects). Existing files are left alone.
+		# Apply the declarative slice of the app-owned config on every
+		# activation (see header): merge the keys into standalone.json (or
+		# create it), repoint the shared CLI/window copy at the system flake,
+		# and restart the tray app so it reloads those values instead of
+		# overwriting them from memory on its next save.
 		home.activation.nixdatifierDefaults = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
 			cfgDir="${config.home.homeDirectory}/.config/nixdatifier"
 			run mkdir -p "$cfgDir"
-			if [[ ! -f "$cfgDir/standalone.json" ]]; then
-				run install -m 644 ${standaloneDefaults} "$cfgDir/standalone.json"
-			fi
-			if ! grep -qs '^flake=' "$cfgDir/config"; then
-				run sh -c 'printf "flake=%s\n" "${config.home.homeDirectory}/.nixos" >> "${config.home.homeDirectory}/.config/nixdatifier/config"'
-			fi
+			run ${seedStandalone} "$cfgDir/standalone.json"
+			run ${config.programs.nixdatifier.package}/bin/nixdatifier config set flake "${config.home.homeDirectory}/.nixos"
+			${lib.optionalString config.programs.nixdatifier.ui ''
+				if systemctl --user is-active --quiet nixdatifier; then
+					run systemctl --user restart nixdatifier
+				fi
+			''}
 		'';
 	};
 }

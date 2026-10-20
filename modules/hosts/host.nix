@@ -100,6 +100,10 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos."REDRUM-hardware"
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.actual-budget
+				# ABT sidecar: set services.abt-sidecar.enable = false to
+				# revert budget.cqjro.ca to a direct Actual connection.
+				inputs.self.modules.nixos.actual-budget-tweaks
+				{ services.abt-sidecar.enable = true; }
 				inputs.self.modules.nixos.linkwarden
 				inputs.self.modules.nixos.paperless
 				inputs.self.modules.nixos.beszel
