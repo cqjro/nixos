@@ -43,6 +43,17 @@ let
 	# inside a FOD build, so this is the single place the npm registry is
 	# touched. The build below then installs --offline against both, exactly like
 	# the Docker image only fetches deps once at build time.
+	#
+	# FIXME: `outputHash` is NOT reproducible across machines/dates. The build
+	# is shared between GOD-KILLER and REDRUM (different pin/nixpkgs), and pnpm
+	# re-resolves floating dep ranges from the live registry on every fetch, so
+	# the store+cache output drifts and the hash mismatches (observed
+	# 2026-10-20: Nr0e0+PW… -> 3loMT2kp…). Same failure mode as the ABT FOD in
+	# modules/server/actual-budget-tweaks.nix — both broke in one session.
+	# TODO: make this stable — ideally replace this hand-rolled FOD with a
+	# lockfile-frozen fetch (e.g. `fetchPnpmDeps` / `pnpm.fetchDeps`) once the
+	# pinned nixpkgs ships one that works with this project's lockfile, so the
+	# hash stops drifting and cross-host builds stop failing.
 	pnpmDeps = pkgs.stdenv.mkDerivation {
 		pname = "reactflux-pnpm-deps";
 		version = reactfluxVersion;
@@ -54,7 +65,7 @@ let
 		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
 		outputHashMode = "recursive";
 		outputHashAlgo = "sha256";
-		outputHash = "sha256-Nr0e0+PWCVPYlT+RR8kBFXKYVB58t6+Kwe1db5BKhec=";
+		outputHash = "sha256-3loMT2kpj/gZi/GipJXxQy19v+RV+qGifOZ6SfezcKI=";
 		phases = [ "installPhase" ];
 		installPhase = ''
 			runHook preInstall

@@ -42,6 +42,19 @@ let
 	# (needed for `--offline` resolution in the build below). Network is allowed
 	# inside a FOD build, so this is the single place the npm registry is
 	# touched — same pattern as modules/server/reactflux.nix.
+	#
+	# FIXME: `outputHash` is NOT reproducible across machines/dates. The build
+	# is shared between GOD-KILLER and REDRUM (different pin/nixpkgs), and pnpm
+	# re-resolves floating dep ranges from the live registry on every fetch, so
+	# the store+cache output drifts and the hash mismatches (observed
+	# 2026-10-20: 39f6xLM… -> ItG9GaX…). Two consequences: (1) the first build
+	# after any registry drift fails with "hash mismatch" and the hash must be
+	# re-fetched (build once, copy the "got" value); (2) building on the other
+	# host can fail even when the source is unchanged, because the pinned
+	# `pkgs`/`pnpm` differ. TODO: make this stable — ideally replace this
+	# hand-rolled FOD with a lockfile-frozen fetch (e.g. `fetchPnpmDeps` /
+	# `pnpm.fetchDeps` once the pinned nixpkgs on both hosts ships one that
+	# works with this project's lockfile), so the hash stops drifting.
 	pnpmDeps = pkgs.stdenv.mkDerivation {
 		pname = "abt-sidecar-pnpm-deps";
 		version = abtVersion;
@@ -55,7 +68,7 @@ let
 		COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
 		outputHashMode = "recursive";
 		outputHashAlgo = "sha256";
-		outputHash = "sha256-39f6xLMtOUMEu8pdPxcj99c1BHE72rOpenqRBkUYJfs=";
+		outputHash = "sha256-ItG9GaX6EL9fsxssdQEEPxh/AofrfvSZBE1N82olD70=";
 		phases = [ "installPhase" ];
 		installPhase = ''
 			runHook preInstall

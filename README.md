@@ -41,6 +41,7 @@ flake.nix              # Flake inputs (flake-parts + import-tree scaffolding)
 rebuild.sh             # Interactive rebuild: selects a host, diffs, commits, pushes
 start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
+docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
 
 modules/
 ├── _archive/          # Retired / superseded modules (kept for reference)

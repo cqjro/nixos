@@ -22,7 +22,7 @@ warn() {
 }
 
 error() {
-	printf '[%s] [ERROR] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')' "$1" >> "$LOG_FILE"
+	printf '[%s] [ERROR] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOG_FILE"
 }
 
 # Function to show GUI notifications (only where a display exists)

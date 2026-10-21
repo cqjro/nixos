@@ -199,4 +199,24 @@
 	} catch (e) {
 		// localStorage can throw in private mode; leave ABT on its default theme.
 	}
+
+	// Scoped contrast fix for the budget month-summary flow panel. ABT derives
+	// .flow__body's background from
+	//   --color-budgetHeaderCurrentMonth = color-mix(mantle, surface0 30%)
+	// which, with this palette (mantle = base01 #221d2b, surface0 = base02
+	// #524763), lands at a lighter ~#2e2235. The panel's "subdued" labels
+	// (--color-pageTextSubdued = base03 #373142) then sit darker than their own
+	// background and become unreadable. Pin *only this element's* background to
+	// mantle (base01, #221d2b) — the shared token is untouched, so the budget
+	// header and every other surface keep their current colours.
+	// TODO-remove: delete this block once the palette's mantle/surface0 pair no
+	// longer inverts against pageTextSubdued.
+	try {
+		var flowStyle = document.createElement("style");
+		flowStyle.textContent =
+			".flow__body.svelte-n5tsx9 { background-color: var(--ctp-mantle) !important; }";
+		(document.head || document.documentElement).appendChild(flowStyle);
+	} catch (e) {
+		// no-op
+	}
 })();

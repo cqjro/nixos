@@ -289,6 +289,17 @@ Notes:
   currently safe only because its pin (`pnpm@11.21.0`) equals the pinned
   nixpkgs' `pkgs.pnpm` — when bumping either pnpm project, or when the T2 pin
   is lifted (T2-PIN.md step 3), apply the same strip and re-fetch the hash.
+- **Server pnpm FOD hashes are not reproducible** — a separate, related trap:
+  both `pnpmDeps` fixed-output derivations (`actual-budget-tweaks.nix`,
+  `reactflux.nix`) re-resolve **floating dep ranges** from the live npm registry
+  on every fetch, so their store+metadata-cache output — and therefore
+  `outputHash` — drifts over time and across the GOD-KILLER/REDRUM pins. Symptom
+  is `error: hash mismatch in fixed-output derivation` on an otherwise-unchanged
+  tree (observed 2026-10-20 on both FODs in one session). Immediate fix: build
+  once, copy the `got:` value into `outputHash`, rebuild. Both sites carry a
+  `FIXME:` block. Durable fix: replace the hand-rolled FODs with a
+  lockfile-frozen fetch (`fetchPnpmDeps` / `pnpm.fetchDeps`) when the pinned
+  nixpkgs ships one that works with these lockfiles.
 
 ## Documentation Maintenance
 
