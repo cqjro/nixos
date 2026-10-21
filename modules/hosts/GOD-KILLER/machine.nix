@@ -93,6 +93,7 @@ discord
 		boot.kernelPackages = pkgs.linuxPackages_latest;
 
 		networking.hostName = "GOD-KILLER"; # Define your hostname.
+		networking.nftables.enable = true;
 
 		services.resolved.enable = true; # apparently this fixes slow steam downloads
 
