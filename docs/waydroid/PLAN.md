@@ -17,14 +17,14 @@ notes, pinned image hashes, remote-pairing notes.
 | Host | **GOD-KILLER only** (NVIDIA proprietary is the top risk — spike first) |
 | Boot behaviour | module option `waydroid-tv.autologin` — **default off** (greeter flow unchanged; option on = greetd `initial_session` straight into TV) |
 | Image provisioning | **Pinned Nix FODs** — both release zips fetched with hashes into the store; first-boot oneshot installs them. Bump = edit url+hash. |
-| Image flavour | **GAPPS build** (`20260403`, Android TV 16 / LineageOS 23.0). Google TV mode is left **off** (default) — it's a runtime toggle inside the image (Settings → System → Waydroid options → Google TV mode), not an image choice. |
+| Image flavour | **GAPPS build** (`20261017`, Android TV 17 / LineageOS 24.0). Google TV mode is left **off** (default) — it's a runtime toggle inside the image (Settings → System → Waydroid options → Google TV mode), not an image choice. |
 | BT remote | iPazzPort air mouse / BT universal remote — **not delivered yet**; verify shortly after arrival |
 
 ## Feasibility findings (research, 2026-10-20)
 
 - **Declarative image — yes.** WayDroid-ATV publishes versioned GitHub release
-  assets (e.g. `lineage-23.0-20260403-GAPPS-waydroid_tv_x86_64-system.zip`
-  ~1.0 GB + `…-MAINLINE-…-vendor.zip` ~219 MB). `virtualisation.waydroid` has
+  assets (e.g. `lineage-24.0-20261017-GAPPS-waydroid_x86_64-system.zip`
+  ~1.4 GB + `…-MAINLINE-…-vendor.zip` ~249 MB). `virtualisation.waydroid` has
   no image options, so we `fetchurl` the zips, extract `system.img` /
   `vendor.img`, drop them in `/etc/waydroid-extra/images/` (the documented
   custom-image path) and run `waydroid init -f` from a guarded systemd
@@ -72,7 +72,7 @@ New/reintegrated files:
   `mkIf enable` options:
   - `waydroid-tv.enable`, `waydroid-tv.autologin` (default false),
     `waydroid-tv.apks` (default: Aurora fetchurl).
-  - Image pin (GAPPS `20260403`) → `runCommand` unzip → store dir.
+  - Image pin (GAPPS `20260403`; VANILLA `20260403` fetched for NVIDIA/testing) → `runCommand` unzip → store dir.
   - `systemd.services.waydroid-atv-provision` (oneshot, required before
     `waydroid-container.service`, marker `/var/lib/waydroid/.nix-atv-image`
     holds the image-drv hash so a pin bump re-provisions): tmpfiles-create
@@ -151,9 +151,40 @@ provisioning marker mechanics); remove the Android TV item from `TODO.md`.
 - [x] Wire into GOD-KILLER in `host.nix`
 - [x] Eval/rebuild passes (binder kernel config assertion)
 - [x] ATV images fetched + hashes recorded (see [SPIKE.md](./SPIKE.md))
-- [ ] ATV images copied to `/etc/waydroid-extra/images/` + `waydroid init -f` run
+- [x] ATV images copied to `/etc/waydroid-extra/images/` + `waydroid init -f` run
 - [ ] `atv.setup.bt_remote_pairing=false` appended to `waydroid_base.prop`
 - [ ] `waydroid show-full-ui` renders under Hyprland (NVIDIA check)
 - [ ] Keyboard/D-pad input reaches Android TV
 
-**Resume instructions (for a later session):** Follow [SPIKE.md](./SPIKE.md) end-to-end. Report back with `waydroid status`, `waydroid log --details-to-stdout | tail -100`, and `sudo journalctl -u waydroid-container -n 100 --no-pager`. If all criteria pass, Phase 0 exits and Phase 1 begins.
+### Black-screen triage (2026-10-21)
+
+Both ATV flavours (`20260403` GAPPS and `20260403` VANILLA) failed
+identically: container boots, logs `Android with user 0 is ready`, then the
+window is black and the container is torn down (SurfaceFlinger crash).
+
+Root cause identified — **the `20260403` pin was stale**, not the hardware:
+
+- Waydroid's GPU probe skips `nvidia` (unsupported list), so it auto-selects
+  the **AMD iGPU** `/dev/dri/renderD129` → `ro.hardware.egl=mesa`,
+  `ro.hardware.vulkan=radeon`, `gralloc.gbm.device=/dev/dri/renderD129`.
+  Hyprland itself runs on the **NVIDIA** GPU, so the container renders on a
+  *different* GPU than the compositor.
+- [waydroid-builds#17](https://github.com/WayDroid-ATV/waydroid-builds/issues/17)
+  ("Boot loop happening with latest A16 image") is an **AMD GPU** boot loop,
+  fixed in release `20260717`.
+- Release `20261017` notes: *"Fixed crashing on non-wlroots Wayland
+  compositors"* and *"Use `minigbm_gbm_mesa` on AMD GPUs by default for better
+  compatibility"*.
+
+`20260403` predates both. The pin has been bumped to **`20261017`**
+(LineageOS 24.0 / Android TV 17) for all three images; hashes are in
+`.prefetch-system.json`, `.prefetch-system-vanilla.json` and
+`.prefetch-vendor.json`.
+
+Secondary finding (independent bug, still open upstream): Waydroid 1.6.3's
+`tools/actions/initializer.py:55` calls `os.stat()` on a possibly-missing
+image and raises `FileNotFoundError` instead of falling through to the
+"missing image" branch. Workaround: remove `/etc/waydroid-extra` entirely
+before `waydroid init -f`. See the IMPORTANT box in [SPIKE.md](./SPIKE.md).
+
+**Resume instructions (for a later session):** Follow [SPIKE.md](./SPIKE.md) end-to-end. Report back with `waydroid status`, `waydroid log --details-to-stdout | tail -100`, `waydroid logcat` (captured *during* the boot attempt, for the real SurfaceFlinger stack trace), and `sudo journalctl -u waydroid-container -n 100 --no-pager`. If all criteria pass, Phase 0 exits and Phase 1 begins.

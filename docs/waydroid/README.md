@@ -3,8 +3,9 @@
 - [PLAN.md](./PLAN.md) — full implementation plan, decisions, architecture,
   phases and risks (session `ses_ea40b3490ffehrTKIy93qWd1fs`).
 - [SPIKE.md](./SPIKE.md) — Phase 0 NVIDIA spike runbook (images already
-  fetched/pinned for 20260403 GAPPS + MAINLINE vendor).
-- Prefetch outputs (for reference): `.prefetch-system.json`, `.prefetch-vendor.json`
+  fetched/pinned for 20261017 GAPPS + MAINLINE vendor).
+- Prefetch outputs (for reference): `.prefetch-system.json`,
+  `.prefetch-system-vanilla.json`, `.prefetch-vendor.json`
 
 The base reintegrated module lives at `modules/system/waydroid.nix`.
 The feature module will go in `modules/system/waydroid-tv.nix`.
