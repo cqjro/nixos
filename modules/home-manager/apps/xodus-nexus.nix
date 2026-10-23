@@ -29,11 +29,15 @@
 				# Electron needs the stock AppImage wrappers; the extra WebKitGTK
 				# stack is for the separately-launched Xodus backend, whose
 				# sign-in window is a WebKit webview. glib-networking supplies the
-				# GIO TLS backend that webview needs.
+				# GIO TLS backend that webview needs. python3 is required by the
+				# Nexus runtime's Proton script (`#!/usr/bin/env python3`); without
+				# it prefix setup fails before the vkd3d/dxgi/d3d12 DLLs are
+				# installed.
 				extraPkgs = p: with p; [
 					webkitgtk_4_1
 					libsoup_3
 					glib-networking
+					python3
 				];
 
 				nativeBuildInputs = [ pkgs.makeWrapper ];
