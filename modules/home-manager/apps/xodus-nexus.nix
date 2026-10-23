@@ -40,6 +40,11 @@
 					python3
 				];
 
+				# Proton/Wine still runs 32-bit helpers, so the FHS sandbox needs
+				# the i686 multilib root (/lib/ld-linux.so.2 etc.); without it game
+				# launch dies with "/lib/ld-linux.so.2: could not open".
+				multiArch = true;
+
 				nativeBuildInputs = [ pkgs.makeWrapper ];
 
 				extraInstallCommands = ''
