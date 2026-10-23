@@ -33,11 +33,24 @@
 				# Nexus runtime's Proton script (`#!/usr/bin/env python3`); without
 				# it prefix setup fails before the vkd3d/dxgi/d3d12 DLLs are
 				# installed.
+				#
+				# gnutls gives Wine its schannel/bcrypt backend (TLS for Xbox
+				# sign-in and licensing). The GStreamer set gives Wine's Media
+				# Foundation H.264/AAC decoders, which Unreal games use for
+				# startup movies; without them the game can hang on a black
+				# screen with no audio or input.
 				extraPkgs = p: with p; [
 					webkitgtk_4_1
 					libsoup_3
 					glib-networking
 					python3
+					gnutls
+					gst_all_1.gstreamer
+					gst_all_1.gst-plugins-base
+					gst_all_1.gst-plugins-good
+					gst_all_1.gst-plugins-bad
+					gst_all_1.gst-plugins-ugly
+					gst_all_1.gst-libav
 				];
 
 				# Proton/Wine still runs 32-bit helpers, so the FHS sandbox needs
@@ -58,7 +71,8 @@
 						--add-flags --no-sandbox \
 						--set-default SSL_CERT_FILE ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt \
 						--set-default SSL_CERT_DIR ${pkgs.cacert}/etc/ssl/certs \
-						--prefix GIO_EXTRA_MODULES : "${pkgs.glib-networking}/lib/gio/modules"
+						--prefix GIO_EXTRA_MODULES : "${pkgs.glib-networking}/lib/gio/modules" \
+						--set GST_PLUGIN_SYSTEM_PATH_1_0 /usr/lib/gstreamer-1.0:/usr/lib32/gstreamer-1.0
 				'';
 
 				meta = {
