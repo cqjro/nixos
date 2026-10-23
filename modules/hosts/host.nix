@@ -25,6 +25,7 @@
 				inputs.self.modules.nixos.stylix
 				inputs.self.modules.nixos.nvidia
 inputs.self.modules.nixos.games
+				inputs.self.modules.nixos."xodus-nexus"
 			inputs.self.modules.nixos.manifest
 			inputs.self.modules.nixos.openrgb
 				inputs.self.modules.nixos.rss-sources

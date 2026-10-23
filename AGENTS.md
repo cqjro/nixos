@@ -231,6 +231,7 @@ file), not assuming from the passage of time.
 | 5 | binary patch of `qidi-studio`'s webview User-Agent (via `modules/scripts/patch-qidi-studio-ua.py`, run from `postExtract` on a custom `contents`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix`, `modules/scripts/patch-qidi-studio-ua.py` | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model pages' UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (in both `WebView()` and `RecreateAll()`); then drop `postExtract`, the patch script and `contents`, reverting to plain `appimageTools.wrapType2` |
 | 6 | `diskusage` store-measure timeout raised 120s → 300s via `overrideAttrs` on the nixdatifier package (covers the window and the desktop CLI; `ui = false` keeps the stock cli package) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, which takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random and the Tools storage card never fills in (free space still shows via `df`). Not yet reported upstream | upstream raises the cap or makes it configurable; then drop `patchedPackage` and use the default package |
 | 7 | window outline recoloured to match the panel background: `substituteInPlace` on the installed `FullView.qml` turns the hardcoded `wash(accentColor, .18)` border into the background colour (same `overrideAttrs` block as #6) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — with the dark palette accent (`#007bd3`) it renders as a faint blue frame around the standalone window; no setting controls it | upstream makes the border configurable or drops it; then delete this `substituteInPlace` |
+| 8 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs (`pkgs/by-name/xo` has no `xodus`), and `domsvoboda/xodus-nexus` ships no `flake.nix` or Nix expression. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
 Notes:
 
@@ -248,6 +249,14 @@ Notes:
 
 ## Gotchas
 
+- **Xodus Nexus is a pinned AppImage** (`modules/home-manager/apps/xodus-nexus.nix`,
+  `GOD-KILLER` only). Nix packages only the launcher; its Xodus backend and
+  Nexus runtime self-install from GitHub into the user data directory on first
+  run (Settings → Xodus backend / Nexus runtime → Install). The launcher cannot
+  self-update from its read-only store path — bump the module's `version` and
+  `hash` instead. It needs an unlocked keyring, so the module also enables
+  `gnome-keyring` and greetd PAM unlocking; the passkey "Continue in browser"
+  fallback needs Google Chrome.
 - **Secrets and firmware are gitignored** and must never be committed
   (`client_secret.json`, `token.json`, `config.json`, `firmware/`). The
   YouTube automation needs `token.json` present on the target host.

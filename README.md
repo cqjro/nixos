@@ -12,7 +12,9 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [The Dendritic Pattern](#dendritic-pattern)
 - [Nix User Repository (NUR)](#nix-user-repository-nur)
 - [Theming](#theming)
-- [Key Features](#key-features)- [Pending upstream fixes](#pending-upstream-fixes)
+- [Key Features](#key-features)
+- [Xbox Game Pass (Xodus Nexus)](#xbox-game-pass-xodus-nexus)
+- [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
 - [Installation](#installation)
 - [Rebuilding](#rebuilding)
@@ -52,7 +54,7 @@ modules/
 │   ├── LittleNix/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
-│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, nixdatifier, photocraft, spicetify, zen-browser, ...
+│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, nixdatifier, photocraft, spicetify, xodus-nexus, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
@@ -262,6 +264,11 @@ matches the rest of the config out of the box.
   other widget settings stay app-owned and survive rebuilds. From
   `github:Muddyblack/nixdatifier` via
   `modules/home-manager/apps/nixdatifier.nix` — not in nixpkgs yet.
+- **Xbox Game Pass** — [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus),
+  an Xbox-style launcher for Microsoft Store / PC Game Pass titles, installed on
+  `GOD-KILLER` via `modules/home-manager/apps/xodus-nexus.nix`. The launcher
+  downloads its Xodus backend and Nexus runtime on first run (see
+  [Xbox Game Pass (Xodus Nexus)](#xbox-game-pass-xodus-nexus)).
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
   (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
   (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for
@@ -271,6 +278,25 @@ matches the rest of the config out of the box.
   (`libsoup_3`/`libpng`, the CA bundle, and the GIO TLS backend) and its webview
   User-Agent is patched so online-model login works, until upstream addresses
   both (see [Pending upstream fixes](#pending-upstream-fixes) rows 4 and 5).
+
+## Xbox Game Pass (Xodus Nexus)
+
+`GOD-KILLER` installs [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus)
+from `modules/home-manager/apps/xodus-nexus.nix`: an Xbox-style launcher for
+Microsoft Store and PC Game Pass games that runs them through a shared
+Proton-based runtime (no Windows install).
+
+- **What Nix installs** is only the launcher AppImage. On first launch open
+  **Settings → Xodus backend → Install backend**, then **Settings → Nexus
+  runtime → Install Nexus runtime**. Those downloads are the patched upstream
+  Xodus components and live in the user data directory, not the Nix store.
+  The launcher itself is version-pinned in the module; bump `version` (and
+  `hash`) there to update it.
+- **Sign-in** needs an unlocked keyring. The module enables `gnome-keyring`
+  (including greetd PAM unlocking) for this. If passkey sign-in hangs, use
+  **Continue in browser**, which requires Google Chrome (not Chromium/Firefox).
+- **Requirements:** a Microsoft account with a valid purchase or Game Pass
+  subscription. Compatibility varies by game; see the upstream list.
 
 ## Pending upstream fixes
 
@@ -290,6 +316,7 @@ workaround.
 | 5 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
 | 6 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
 | 7 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #6) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
+| 8 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
 Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
 (`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the
