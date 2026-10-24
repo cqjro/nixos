@@ -51,6 +51,7 @@
 					gst_all_1.gst-plugins-bad
 					gst_all_1.gst-plugins-ugly
 					gst_all_1.gst-libav
+					libglvnd
 				];
 
 				# Proton/Wine still runs 32-bit helpers, so the FHS sandbox needs
@@ -72,7 +73,7 @@
 						--set-default SSL_CERT_FILE ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt \
 						--set-default SSL_CERT_DIR ${pkgs.cacert}/etc/ssl/certs \
 						--prefix GIO_EXTRA_MODULES : "${pkgs.glib-networking}/lib/gio/modules" \
-						--set GST_PLUGIN_SYSTEM_PATH_1_0 /usr/lib/gstreamer-1.0:/usr/lib32/gstreamer-1.0
+						--set __EGL_VENDOR_LIBRARY_DIRS /run/opengl-driver/share/glvnd/egl_vendor.d
 				'';
 
 				meta = {
