@@ -6,12 +6,37 @@
   fetched/pinned for 20261017 GAPPS + MAINLINE vendor).
 - Prefetch outputs (for reference): `.prefetch-system.json`,
   `.prefetch-system-vanilla.json`, `.prefetch-vendor.json`
+- **Current state (2026-10-25):** Android TV 17 boots; the black window is a
+  confirmed host cross-GPU limitation (display on NVIDIA, Waydroid on the AMD
+  iGPU), not an image/prop bug. Resume from
+  [PLAN.md → Handoff](./PLAN.md#handoff--paused-2026-10-25).
 
 The base reintegrated module lives at `modules/system/waydroid.nix`.
 The feature module will go in `modules/system/waydroid-tv.nix`.
 Wiring: GOD-KILLER only (`modules/hosts/host.nix` already includes
 `inputs.self.modules.nixos.waydroid`).
 
+
+## Reset Android data (factory reset)
+
+Android's userdata is **`~/.local/share/waydroid`**, not
+`/var/lib/waydroid/userdata.img`. `waydroid init -f`, replacing the images and
+clearing the overlays do not touch it. Old data from a different Android
+release makes `zygote`/`system_server` crash-loop (symptoms: Container
+RUNNING, IP `UNKNOWN`, kernel log repeating `zygote ... exited 4 times before
+boot completed`). For a data-only reset (images unchanged):
+
+```bash
+waydroid session stop
+rm -rf ~/.local/share/waydroid          # no sudo: it is your own data
+sudo rm -rf /var/lib/waydroid/overlay*
+sudo systemctl start waydroid-container
+waydroid show-full-ui
+```
+
+If the images were also replaced, use
+`modules/scripts/waydroid-atv-install.sh` instead — it wipes the data, extracts
+the pinned images, runs `init -f`, and re-applies the AMD/ATV props.
 
 ## Restart + test after prop changes (AMD, minigbm)
 Exact steps used on GOD-KILLER (Hyprland on NVIDIA, Waydroid on AMD iGPU):
@@ -59,4 +84,7 @@ tail -60 /var/lib/waydroid/waydroid.log
 Notes:
 - `/dev/dri/renderD129` = AMD iGPU (correct). `/dev/dri/renderD128` = NVIDIA (do not use).
 - `ro.hardware.gralloc=minigbm_gbm_mesa` is required for 20261017 ATV on AMD.
-- Cross-GPU (compositor on NVIDIA, container on AMD) can still result in a black screen even with correct props.
+- Cross-GPU is **confirmed** on this host: compositor on NVIDIA, container on
+  the AMD iGPU → black window even with correct props. Boot is healthy; the
+  fix is a display-topology/upstream issue, not a Waydroid setting. See
+  [PLAN.md → Handoff](./PLAN.md#handoff--paused-2026-10-25).

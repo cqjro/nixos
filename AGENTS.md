@@ -249,6 +249,23 @@ Notes:
 
 ## Gotchas
 
+- **Waydroid Android userdata is `~/.local/share/waydroid`**, not
+  `/var/lib/waydroid/userdata.img` (`waydroid.host_data_path`). Replacing the
+  images or running `waydroid init -f` does not reset it. Stale data from an
+  older Android release makes `zygote`/`system_server` crash-loop after an
+  image bump — symptoms: Container RUNNING but IP `UNKNOWN`, `show-full-ui`
+  stuck on `waydroidplatform`, and the kernel log repeating
+  `process with updatable components 'zygote' exited 4 times before boot
+  completed`. Stop the session, `rm -rf ~/.local/share/waydroid`, restart; the
+  installer script now does this (`modules/scripts/waydroid-atv-install.sh`).
+- **Waydroid is black on GOD-KILLER while the display is on NVIDIA** — confirmed
+  2026-10-25, and it is not an image/prop bug. Waydroid's probe skips
+  `nvidia`, so it renders on the AMD iGPU (`renderD129`), while Hyprland scans
+  out DP-3/HDMI-A-1 from NVIDIA (`card1`); the AMD dmabufs are never presented
+  and Hyprland logs no EGL/import error. A forced-Mesa `mpv` reproduces it
+  (NVIDIA client visible, AMD client black). Don't chase ATV logcat. See
+  `docs/waydroid/PLAN.md` → "Handoff — paused 2026-10-25" for the A/B evidence
+  and the topology/upstream options.
 - **Xodus Nexus is a pinned AppImage** (`modules/home-manager/apps/xodus-nexus.nix`,
   `GOD-KILLER` only). Nix packages only the launcher; its Xodus backend and
   Nexus runtime self-install from GitHub into the user data directory on first
