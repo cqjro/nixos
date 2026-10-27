@@ -14,14 +14,15 @@ Active. Workaround for the broken REDRUM/LittleNix kernel build.
 The location carries a `# TODO-remove:` comment.
 
 ## Knock-on effects elsewhere in the tree
-The pin is *not* inherited by everything — packages that must track upstream get
-pulled from the unpinned `nixpkgs` input instead:
+The pin is *not* inherited by everything — packages that must track upstream
+(security fixes) are overridden explicitly on REDRUM:
 
 - **`cloudflared`** — `services.cloudflared.package` in
-  `modules/server/cloudflared.nix` points at
-  `inputs.nixpkgs.legacyPackages.${system}.cloudflared`, so the tunnels and the
-  CLI keep updating (the pinned rev only has 2026.7.3). Drop that override with
-  the pin.
+  `modules/server/cloudflared.nix` is pinned to Cloudflare's own release binary
+  (`cloudflaredPinned`, currently 2026.10.2) instead of the pinned nixpkgs'
+  2026.7.3 — the locked `nixpkgs` input only reaches 2026.10.1, which lagged a
+  security release. The override carries a `# TODO-remove:`; delete it with the
+  pin, or earlier once `nixpkgs` is bumped (master already ships 2026.10.3).
 
 ## Why
 `linux_6_18 >= 6.18.47` no longer accepts the `facf1c7` t2linux patchset
@@ -43,9 +44,9 @@ checking the upstream issue, then rebuild REDRUM without the pin.
 2. `modules/hosts/host.nix`: in the REDRUM block, change
    `inputs.nixpkgs-redrum.lib.nixosSystem` back to
    `inputs.nixpkgs.lib.nixosSystem` and delete the comment block above it.
-3. `modules/server/cloudflared.nix`: delete the `services.cloudflared.package`
-   override (and its comment) — the unpinned `nixpkgs` input and the host's
-   `pkgs` are the same set again after step 2.
+3. `modules/server/cloudflared.nix`: delete `cloudflaredPinned` and the
+   `services.cloudflared.package` line (plus their comments) — the host's
+   `pkgs.cloudflared` is current again after step 2.
 4. `modules/server/actual-budget-tweaks.nix`: `pkgs =
    inputs.nixpkgs-redrum.legacyPackages.${system}` must become
    `inputs.nixpkgs.legacyPackages.${system}` (the input no longer exists). The
