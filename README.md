@@ -33,7 +33,10 @@ NixOS configuration that picks and chooses its modules from the pool:
 breaks the t2linux patchset on the T2 Macs. See `modules/hosts/REDRUM/T2-PIN.md`
 for details and the TODO for when it can be unpinned, and
 [Pending upstream fixes](#pending-upstream-fixes) for the full list of
-workarounds currently in the tree.
+workarounds currently in the tree. Packages that have to track upstream are
+pulled from the *unpinned* `nixpkgs` input instead — currently `cloudflared`
+(`services.cloudflared.package` in `modules/server/cloudflared.nix`, so the
+tunnels keep updating while the host is pinned).
 
 ## Repository Layout
 

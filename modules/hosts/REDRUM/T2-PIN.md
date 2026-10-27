@@ -13,6 +13,16 @@ Active. Workaround for the broken REDRUM/LittleNix kernel build.
 
 The location carries a `# TODO-remove:` comment.
 
+## Knock-on effects elsewhere in the tree
+The pin is *not* inherited by everything — packages that must track upstream get
+pulled from the unpinned `nixpkgs` input instead:
+
+- **`cloudflared`** — `services.cloudflared.package` in
+  `modules/server/cloudflared.nix` points at
+  `inputs.nixpkgs.legacyPackages.${system}.cloudflared`, so the tunnels and the
+  CLI keep updating (the pinned rev only has 2026.7.3). Drop that override with
+  the pin.
+
 ## Why
 `linux_6_18 >= 6.18.47` no longer accepts the `facf1c7` t2linux patchset
 shipped by `nixos-hardware`'s apple-t2 module (patch `4001` hunk fails).
@@ -33,7 +43,15 @@ checking the upstream issue, then rebuild REDRUM without the pin.
 2. `modules/hosts/host.nix`: in the REDRUM block, change
    `inputs.nixpkgs-redrum.lib.nixosSystem` back to
    `inputs.nixpkgs.lib.nixosSystem` and delete the comment block above it.
-3. `modules/server/reactflux.nix`: the pinned nixpkgs ships
+3. `modules/server/cloudflared.nix`: delete the `services.cloudflared.package`
+   override (and its comment) — the unpinned `nixpkgs` input and the host's
+   `pkgs` are the same set again after step 2.
+4. `modules/server/actual-budget-tweaks.nix`: `pkgs =
+   inputs.nixpkgs-redrum.legacyPackages.${system}` must become
+   `inputs.nixpkgs.legacyPackages.${system}` (the input no longer exists). The
+   sidecar's `abtSidecarPnpmDeps` FOD hash will drift with the build toolchain —
+   rebuild once and copy the "got" hash, as with the reactflux FOD below.
+5. `modules/server/reactflux.nix`: the pinned nixpkgs ships
    `pkgs.pnpm == 11.21.0`, which matches the project's `packageManager`
    pin — so pnpm never self-downloads a second version. Stock nixpkgs ships
    a different pnpm, so after unpinning, strip the `packageManager` field
@@ -44,6 +62,6 @@ checking the upstream issue, then rebuild REDRUM without the pin.
    Without this, the next deps rebuild fails in the sandbox with
    `Failed to switch pnpm to v… ENOENT` — the same failure that broke
    abt-sidecar's FOD on 2026-10-20.
-4. `rm modules/hosts/REDRUM/T2-PIN.md`
-5. `nix flake lock --update-input nixpkgs-redrum` (or let it drop), then
+6. `rm modules/hosts/REDRUM/T2-PIN.md`
+7. `nix flake lock --update-input nixpkgs-redrum` (or let it drop), then
    rebuild REDRUM to confirm it builds on current nixpkgs.

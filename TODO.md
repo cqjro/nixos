@@ -139,6 +139,28 @@ repeated as proposals.
       (shadows are a small block at `hyprland.nix:167-173`; iterate on
       `range`/`render_power`/`color` vs `color_inactive`)
 
+- [ ] **Logitech device setup** — check out [OpenLogi](https://openlogi.org)
+      (`github:AprilNEA/OpenLogi`) as the Logitech Options+ replacement: button
+      remaps, DPI, SmartShift and per-app profiles for the mouse/keyboard from a
+      local TOML config instead of Options+ (or Solaar / logiops) — **4/10**
+      (it is in nixpkgs as `pkgs.openlogi` since 0.6.25, so the work is wiring,
+      not packaging)
+  - [ ] Decide what owns remapping: OpenLogi's evdev/uinput hook overlaps
+        xremap, which already drives the keyboard layout
+  - *Proposed approach:* nothing Logitech-specific exists in the tree today
+    (OpenRGB only touches the mouse's lighting). `pkgs.openlogi` ships the GUI
+    (`openlogi-gui`), the agent (`openlogi-agent`), `/lib/udev/rules.d/70-openlogi.rules`
+    and a systemd **user** unit in `$out/share/systemd/user` — but no NixOS
+    module, so a host fragment must add `services.udev.packages = [ pkgs.openlogi ]`
+    for `/dev/hidraw*` access, `hardware.uinput` (as xremap already needs) and a
+    user service/autostart for the agent, with `~/.config/openlogi/config.toml`
+    declaratively seeded (schema is strict; device blocks are keyed by physical
+    identity — receiver serial + slot, or the device's own serial). Pair new
+    Bolt/Unifying devices once with Solaar first — OpenLogi's Bolt pairing is
+    still in progress — and quit any other HID++ manager so the two don't fight
+    over the receiver. Upstream flags it as pre-stable, so verify the MX
+    mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
+
 ## Server (REDRUM)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for

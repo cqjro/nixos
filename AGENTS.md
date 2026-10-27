@@ -261,7 +261,10 @@ Notes:
 - **REDRUM is built from pinned nixpkgs** (`nixpkgs-redrum`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
   without reading `modules/hosts/REDRUM/T2-PIN.md` and re-checking
-  `NixOS/nixos-hardware#2027` (row 2 of the registry above).
+  `NixOS/nixos-hardware#2027` (row 2 of the registry above). Anything on that
+  host that must track upstream is instead taken from the **unpinned** `nixpkgs`
+  input — currently `services.cloudflared.package` in
+  `modules/server/cloudflared.nix`; drop such overrides together with the pin.
 - **Do not add a `nix flake check` step** back into `rebuild.sh` — the live
   rebuild feed is intentionally streamed through `bat` and only errors are shown
   on failure (see the `PIPESTATUS` handling).
