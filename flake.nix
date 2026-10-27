@@ -10,14 +10,11 @@
 		nixpkgs.url = "nixpkgs/nixos-unstable";
 		nixos-hardware.url = "github:nixos/nixos-hardware";
 
-		# Nix User Repository: community packages not in nixpkgs yet. The
-		# overlay is applied by modules/essentials/nur.nix, exposing every NUR
-		# package as `pkgs.nur.repos.<repo>.<package>`. See the README's
-		# "Nix User Repository (NUR)" section.
-		nur = {
-			url = "github:nix-community/NUR";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
+		# archived: NUR removed - NUR packages can be removed at any time and need new sources
+		# nur = {
+		# 	url = "github:nix-community/NUR";
+		# 	inputs.nixpkgs.follows = "nixpkgs";
+		# };
 
 		# REDRUM T2 kernel pin: cac0c1ef is the last nixpkgs rev whose kernel is
 		# still 6.18.46; linux >= 6.18.47 breaks the apple-t2 t2linux patchset

@@ -15,6 +15,12 @@
 			autosuggestion.enable = true;
 			syntaxHighlighting.enable = true;
 
+			envExtra = ''
+				if [ -f "$HOME/.config/nix/nix.conf" ]; then
+					export NIX_CONFIG="$(cat "$HOME/.config/nix/nix.conf")"
+				fi
+			'';
+
 			shellAliases = {
 				ll = "eza -l --header";
 				llt = "eza -l --tree --header";

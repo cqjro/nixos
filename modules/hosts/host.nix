@@ -11,7 +11,6 @@
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
-				inputs.self.modules.nixos.nur
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos.environment
@@ -25,8 +24,7 @@
 				inputs.self.modules.nixos.stylix
 				inputs.self.modules.nixos.nvidia
 inputs.self.modules.nixos.games
-				inputs.self.modules.nixos."xodus-nexus"
-			inputs.self.modules.nixos.manifest
+                       inputs.self.modules.nixos.manifest
 			inputs.self.modules.nixos.openrgb
 				inputs.self.modules.nixos.rss-sources
 				# inputs.self.modules.nixos.android
@@ -54,7 +52,6 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
 				inputs.self.modules.nixos.nixpkgs
-				inputs.self.modules.nixos.nur
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos.environment
@@ -71,8 +68,8 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.tether
-				inputs.self.modules.nixos.minecraft
-				inputs.self.modules.nixos.manifest
+				inputs.self.modules.nixos."xodus-nexus"
+			inputs.self.modules.nixos.manifest
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos."LittleNix"
