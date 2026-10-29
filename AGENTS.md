@@ -330,4 +330,8 @@ them accurate:
 - **`TODO.md`** is the wishlist of planned config updates (see the README's
   "Planned Updates" section). When you implement an item from it, **remove
   the item (and its sub-items) from `TODO.md` in the same change** — do not
-  check it off, do not leave it behind "for reference".
+  check it off, do not leave it behind "for reference".- **Waydroid software rendering on proprietary NVIDIA is not viable** — Waydroid
+  1.6.3's GPU probe hard-blocks the proprietary `nvidia` driver (`unsupported =
+  ["nvidia"]` in `tools/helpers/gpu.py`). Forcing software rendering on
+  `renderD128` caused the HWC/composer to crash-loop (window opens/closes
+  rapidly). Same-GPU software rendering does not bypass this.

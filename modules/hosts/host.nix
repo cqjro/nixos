@@ -117,6 +117,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.cloudflared
 				inputs.self.modules.nixos.miniflux
 				inputs.self.modules.nixos.reactflux
+				inputs.self.modules.nixos.t3code
 				inputs.self.modules.nixos.youtube
 				inputs.self.modules.nixos.stylix
 				inputs.stylix.nixosModules.stylix

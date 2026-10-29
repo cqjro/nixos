@@ -330,3 +330,53 @@ display to AMD, expect the ATV launcher instead.
 `modules/scripts/waydroid-atv-install.sh` — userdata wipe, prop re-apply, and
 this handoff. Commit once the topology decision is made (or commit the
 docs/script now — they are independent of the fix).
+
+
+### Live capture — 2026-10-27 20:19
+
+Current session (`waydroid show-full-ui`): Window `Waydroid` at `[1925,1102]`
+size `[943,514]` on workspace 2, mapped but black.
+
+```text
+grim -g "$(hyprctl clients -j | jq -r '.[] | select(.class=="Waydroid") | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')" /tmp/wd.png
+ffmpeg -loglevel error -i /tmp/wd.png -vf scale=6:3 -f rawvideo -pix_fmt rgb24 - | xxd -p -c 18
+
+030004030004030004030004030004030004
+020003020003020003020003020003020003
+020002020002020002020002020002020002
+```
+
+This matches the cross-GPU A/B test: NVIDIA-rendered content is visible,
+Mesa/AMD-rendered content is black on the NVIDIA compositor with no
+import errors logged. Same symptom for Waydroid. Confirmed cross-GPU.
+
+
+### Live capture — 2026-10-27 21:30
+
+**Attempt: software rendering on NVIDIA (same-GPU test)**
+
+Tried forcing software rendering to run on the NVIDIA GPU (`renderD128`) to avoid
+cross-GPU dma-buf issues:
+
+1. Edited `/var/lib/waydroid/waydroid_base.prop` (not `waydroid.prop` which gets
+   regenerated) with:
+```conf
+ro.hardware.gralloc=gbm
+ro.hardware.egl=swiftshader
+gralloc.gbm.device=/dev/dri/renderD128
+```
+2. Deleted `/var/lib/waydroid/waydroid.prop` to force regeneration
+3. Restarted `waydroid-container`
+
+**Result:** Unstable - window opened and closed rapidly in a loop. Container
+became unresponsive; had to revert. Logs showed repeated start/stop cycles.
+
+**Lesson:** Proprietary NVIDIA + Waydroid software rendering is problematic on
+this setup. The GPU probe in Waydroid 1.6.3 blocks proprietary `nvidia` driver
+(`unsupported = ["nvidia"]` in `tools/helpers/gpu.py`), and even with config
+overrides the HWC/composer crashes. Same-GPU software rendering is not a
+viable fix here.
+
+**Reverted:** Restored `waydroid_base.prop` backup, back to working AMD config
+(`gralloc.gbm.device=/dev/dri/renderD129`, `ro.hardware.gralloc=minigbm_gbm_mesa`,
+`ro.hardware.egl=mesa`).

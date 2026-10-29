@@ -40,7 +40,8 @@
 						opencode
 						nom
 						terminal-packages
-discord
+						discord
+						inputs.self.modules.homeManager."t3code"
 					zen-browser
 					nemo
 					github-web-styling
@@ -49,10 +50,10 @@ discord
 					youtube-web-styling
 					reddit-web-styling
 					instagram-web-styling
-					nixpkgs-web-styling
-					wikipedia-web-styling
-					claude-web-styling
-				calibre
+						nixpkgs-web-styling
+						wikipedia-web-styling
+						claude-web-styling
+						calibre
 					apps-packages
 					xodus-nexus
 					nixdatifier

@@ -183,7 +183,7 @@ matches the rest of the config out of the box.
   injects UI tweaks and is seeded with the Stylix palette — see
   [Actual Budget theming](#actual-budget-theming)), Linkwarden (bookmarks), Beszel (server monitoring),
   Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
-  ReactFlux (a Miniflux web client), a Cloudflare-hosted homepage
+  ReactFlux (a Miniflux web client), T3 Code (self-hosted AI coding agents GUI/server), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
   playlist-sync service backed by a `devShell` (`nix develop .#youtube-sync`).
 - **System niceties** — Opt-in experimental features, auto-optimised store,
@@ -481,11 +481,12 @@ sudo cloudflared tunnel create glance
 sudo cloudflared tunnel create beszel
 sudo cloudflared tunnel create miniflux
 sudo cloudflared tunnel create reactflux
+sudo cloudflared tunnel create t3code
 # (linkwarden + actual-budget already have IDs, see their modules)
 ```
 
 Copy each UUID into the matching `tunnels."<uuid>" = { credentialsFile = ...; }`
-in `modules/server/{paperless,glance,beszel,miniflux,reactflux}.nix`.
+in `modules/server/{paperless,glance,beszel,miniflux,reactflux,t3code}.nix`.
 
 ### 3. Point each credentials file where Nix expects it
 
@@ -497,7 +498,7 @@ sudo chown root:root /var/lib/cloudflared/*.json && sudo chmod 600 /var/lib/clou
 
 (`credentialsFile` paths used by the modules: `paperless.json`, `glance.json`,
 `beszel.json`, `linkwarden.json`, `actual-budget.json`, `miniflux.json`,
-`reactflux.json`.)
+`reactflux.json`, `t3code.json`.)
 
 ### 4. Add DNS CNAME records (Cloudflare dashboard → DNS)
 
@@ -513,6 +514,7 @@ For each app hostname add a **CNAME** pointing at `<tunnel-uuid>.cfargotunnel.co
 | Actual Budget | `budget.cqjro.ca` |
 | Miniflux | `feed.cqjro.ca` |
 | ReactFlux | `flux.cqjro.ca` |
+| T3 Code | `t3.cqjro.ca` |
 
 The ingress rules in the Nix modules handle the traffic; DNS is the only thing
 you manage in the dashboard (no `certificateFile` is used here).
@@ -556,6 +558,7 @@ ssh <server> systemctl restart cloudflared-tunnel-*.service
   `BASE_URL`-matching "External base URL" if you change hosts).
 - ReactFlux → `https://flux.cqjro.ca` (add the server as `https://feed.cqjro.ca`
   and paste the Miniflux API token from above; it stores config in your browser).
+- T3 Code → `https://t3.cqjro.ca` (run the server once to print headless pairing details, then pair/link agents as needed).
 
 ## File access permissions (REDRUM)
 
@@ -578,6 +581,7 @@ across rebuilds.
 | `/var/lib/beszel/agent.env` | `beszel-agent:beszel-agent` | 0600 | beszel-agent (EnvironmentFile) |
 | `/var/lib/glance/glance.env` | `glance:glance` | 0600 | glance (EnvironmentFile) |
 | `/var/lib/miniflux/admin.env` | `miniflux:miniflux` | 0600 | miniflux (EnvironmentFile) |
+| `/var/lib/t3code` | `t3code:t3code` | 0700 | t3code |
 
 Admin access is via `sudo` (`cairo` is in `wheel`) — keep the service dirs at
 `0700` and owned by their own user so each app stays isolated from the others

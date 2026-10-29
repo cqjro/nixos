@@ -88,3 +88,8 @@ Notes:
   the AMD iGPU → black window even with correct props. Boot is healthy; the
   fix is a display-topology/upstream issue, not a Waydroid setting. See
   [PLAN.md → Handoff](./PLAN.md#handoff--paused-2026-10-25).
+
+- **2026-10-27 update:** Software rendering test on NVIDIA (same-GPU) failed -
+  window flickered open/close in a loop due to HWC/composer crashes.
+  Waydroid's GPU probe blocks proprietary NVIDIA; same-GPU software rendering
+  is not viable. Cross-GPU remains the blocker.
