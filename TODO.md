@@ -161,6 +161,19 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
+- [ ] **NixOS MCP server** — give the AI clients (OpenCode, Claude Code) real
+      NixOS package/option data over MCP instead of guessed attribute names — **3/10**
+  - *Proposed approach:* `pkgs.mcp-nixos` (upstream
+    [`utensils/mcp-nixos`](https://github.com/utensils/mcp-nixos)) is already in
+    nixpkgs and exposes package / option / Home Manager / flake search over
+    STDIO — add it to a `home-manager/ai-tools/` fragment and register it as an
+    MCP server in OpenCode's config (`programs.opencode`, currently only the
+    package is enabled) and in Claude Code's own settings file. The lighter
+    [`DanielRamosAcosta/nixos-mcp`](https://github.com/DanielRamosAcosta/nixos-mcp)
+    (TypeScript, options-only, needs Node 24) is the alternative if the
+    Python/FastMCP dependency set is unwanted. Verify with one real package-name
+    query before wiring it into every client.
+
 ## Server (REDRUM)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for
@@ -250,3 +263,20 @@ repeated as proposals.
     item into one "books" stack (e-reader + audio) exposed via a single OPDS
     entry point. `nixpkgs` ships `audiobookshelf`; follow the REDRUM recipe
     (port 8087 is the next free after the ABT sidecar's 8086).
+
+- [ ] **T3 Code** — finish setting up T3 Code end-to-end: the server module
+      (`modules/server/t3code.nix`, port 8086) and the desktop client
+      (`modules/home-manager/ai-tools/t3code.nix`, GOD-KILLER) are wired, but
+      the Cloudflare side is still a placeholder — **3/10**
+      (mechanical: the module + README steps already exist)
+  - [ ] Create the `t3code` tunnel on REDRUM and replace
+        `TODO-REPLACE-WITH-T3CODE-TUNNEL-UUID` in `modules/server/t3code.nix`
+  - [ ] Provision `/var/lib/cloudflared/t3code.json` (`root:root` 0600) and the
+        `t3.cqjro.ca` → `<uuid>.cfargotunnel.com` CNAME
+  - [ ] Restart the tunnel unit, run `t3 serve` once to print the headless
+        pairing details, then pair the desktop client and link an agent
+  - *Proposed approach:* follow README → REDRUM server setup steps 2–6 for the
+    tunnel/credentials/DNS, confirm the origin is up on REDRUM
+    (`curl -s http://127.0.0.1:8086`), then point the GOD-KILLER client at
+    `https://t3.cqjro.ca` and record the pairing flow in the README's
+    "log in once" notes.
