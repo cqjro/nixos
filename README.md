@@ -34,10 +34,12 @@ breaks the t2linux patchset on the T2 Macs. See `modules/hosts/REDRUM/T2-PIN.md`
 for details and the TODO for when it can be unpinned, and
 [Pending upstream fixes](#pending-upstream-fixes) for the full list of
 workarounds currently in the tree. Packages that have to track upstream security
-fixes are overridden explicitly on that host — currently `cloudflared`
+fixes are overridden explicitly — currently `cloudflared`
 (`services.cloudflared.package` in `modules/server/cloudflared.nix` pins
 Cloudflare's release binary, since the pinned nixpkgs lags the tunnel's security
-releases).
+releases) and `tailscale` (`services.tailscale.package` in
+`modules/server/tailscale.nix` pins 1.104.4, since the pinned nixpkgs ships
+1.102.2 and its Go toolchain is too old to build 1.104.4).
 
 ## Repository Layout
 
@@ -129,9 +131,8 @@ targets:
 - **Discord** — a two-hundred-line `quickCss` (via nixcord) remaps every Discord
   CSS variable to the base16 palette: flat `base00` background, `base01`/`base02`
   elevation, `base03` borders, `base05` text, `base0D` brand blue. Applied to
-  **Vesktop** (nixcord's `vesktop` client + Vencord), since the standalone
-  Discord package is currently disabled — see
-  [Pending upstream fixes](#pending-upstream-fixes).
+  both nixcord clients — **Vesktop** (`vesktop` + Vencord) and the standalone
+  **Discord** package.
 - **Spotify** — spicetify with a generated `color.ini` (same mapping) instead of
   a pre-baked theme, so it always matches.
 - **Steam** — the **Millennium** client patch with the same palette mapping;
@@ -223,7 +224,7 @@ matches the rest of the config out of the box.
   nixpkgs; QIDI Studio is locally re-wrapped to fill gaps in its FHS env
   (`libsoup_3`/`libpng`, the CA bundle, and the GIO TLS backend) and its webview
   User-Agent is patched so online-model login works, until upstream addresses
-  both (see [Pending upstream fixes](#pending-upstream-fixes) rows 4 and 5).
+  both (see [Pending upstream fixes](#pending-upstream-fixes) rows 2 and 3).
 
 ## Xbox Game Pass (Xodus Nexus)
 
@@ -255,20 +256,12 @@ workaround.
 
 | # | Workaround | Where | Blocked on | Re-enable when |
 | --- | --- | --- | --- | --- |
-| 1 | Discord package install disabled (`programs.nixcord.discord.enable = false`); Vesktop is used instead | `modules/home-manager/apps/discord/nixcord.nix:9` | `kaylorben/nixcord` — `pkgs/discord/default.nix` does `basePackage.override { inherit source; … }`, but nixpkgs moved `discord` to `pkgs/by-name/di/discord/package.nix` where `source` comes from `./metadata.nix` and is no longer a function argument. Since `nixcord.inputs.nixpkgs.follows = "nixpkgs"`, every nixpkgs bump breaks evaluation with `function 'anonymous lambda' called with unexpected argument 'source'` | nixcord guards `source` the way it already guards `useFHSEnv` (`basePackageSupportsFHSEnv`) — then set `discord.enable = true` |
-| 2 | REDRUM built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
-| 3 | Insecure pnpm version allowed on GOD-KILLER (`nixpkgs.config.permittedInsecurePackages`) | `modules/hosts/GOD-KILLER/machine.nix:3` | a pnpm release in nixpkgs that is no longer flagged insecure (reactflux needs pnpm ≥ 10.29.2) | nixpkgs ships a non-insecure pnpm satisfying reactflux's `engines`, then drop the list |
-| 4 | Local override re-wraps `qidi-studio` via `appimageTools.wrapAppImage`: adds `libsoup_3`/`libpng`/`glib-networking` to its FHS env, pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert`, and points `GIO_EXTRA_MODULES` at glib-networking | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes (certificate-store nag) and glib-networking's GIO TLS backend, so every web view reports "TLS support not available". The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA + GIO-TLS gaps are addressed; then use `pkgs.qidi-studio` directly and delete the override |
-| 5 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
-| 6 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
-| 7 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #6) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
-| 8 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
-
-Nothing is lost from #1 in practice: Vesktop is a separate nixcord client
-(`finalPackages.vesktop`), so Vencord, the ~17 KB Stylix `quickCss` theme, the
-`config.plugins` block and the Vesktop settings are all still applied — only
-the separate `discord` binary is given up. The theme, YouTube adblock and
-`discordBranch = "canary"` all live in `~/.config/vesktop/`.
+| 1 | REDRUM built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
+| 2 | Local override re-wraps `qidi-studio` via `appimageTools.wrapAppImage`: adds `libsoup_3`/`libpng`/`glib-networking` to its FHS env, pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert`, and points `GIO_EXTRA_MODULES` at glib-networking | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes (certificate-store nag) and glib-networking's GIO TLS backend, so every web view reports "TLS support not available". The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA + GIO-TLS gaps are addressed; then use `pkgs.qidi-studio` directly and delete the override |
+| 3 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
+| 4 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
+| 5 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
+| 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
 ## Scripts
 

@@ -23,6 +23,13 @@ The pin is *not* inherited by everything — packages that must track upstream
   2026.7.3 — the locked `nixpkgs` input only reaches 2026.10.1, which lagged a
   security release. The override carries a `# TODO-remove:`; delete it with the
   pin, or earlier once `nixpkgs` is bumped (master already ships 2026.10.3).
+- **`tailscale`** — `services.tailscale.package` in
+  `modules/server/tailscale.nix` is pinned to 1.104.4 instead of the pinned
+  nixpkgs' 1.102.2. The pin is built from the main `nixpkgs` input's package
+  recipe because the pinned rev's Go (1.26.5) is too old for tailscale 1.104.4
+  (`go.mod` wants >= 1.27.3); that input still ships 1.104.2 as of channel
+  2026-10-27. The override carries a `# TODO-remove:`; delete it once both
+  inputs ship >= 1.104.4.
 
 ## Why
 `linux_6_18 >= 6.18.47` no longer accepts the `facf1c7` t2linux patchset

@@ -1,14 +1,6 @@
 { inputs, ... }:
 {
 	flake.modules.nixos."GOD-KILLER" = { pkgs, ... }: {
-		# TODO-remove: allow the insecure pnpm version. Reactflux's `engines`
-		# need pnpm >= 10.29.2 and nixpkgs has no non-insecure release
-		# satisfying that yet. Drop this list once one lands. Tracked in the
-		# "Pending upstream fixes" registry (AGENTS.md row 3 / README).
-		nixpkgs.config.permittedInsecurePackages = [
-			"pnpm-10.29.2"
-		];
-
 		# Home-Manager
 		home-manager = {
 			extraSpecialArgs = { inherit inputs; };
@@ -41,6 +33,7 @@
 						nom
 						terminal-packages
 						discord
+						inputs.self.modules.homeManager."claude-code"
 						inputs.self.modules.homeManager."t3code"
 					zen-browser
 					nemo
