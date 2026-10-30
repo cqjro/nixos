@@ -144,7 +144,7 @@ in
 		};
 
 		services.cloudflared = {
-			tunnels."4f2d08c6-71ea-4c7e-9b0d-5b7a1e3dcc44" = {
+			tunnels."43d74f1c-1cc5-4083-a331-5ca34191dd37" = {
 				# TODO: replace with your tunnel UUID (cloudflared tunnel create reactflux)
 				credentialsFile = "/var/lib/cloudflared/reactflux.json";
 				default = "http_status:404";

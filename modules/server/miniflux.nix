@@ -39,7 +39,7 @@ in
 		};
 
 		services.cloudflared = {
-			tunnels."b8627eb8-2dfc-4ec8-9c5f-f59c3c2d1d1e" = {
+			tunnels."357dc859-c1a9-4af2-ac57-928ca8d8efc0" = {
 				# TODO: replace with your tunnel UUID (cloudflared tunnel create miniflux)
 				credentialsFile = "/var/lib/cloudflared/miniflux.json";
 				default = "http_status:404";
