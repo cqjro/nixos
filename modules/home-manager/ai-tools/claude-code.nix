@@ -13,10 +13,12 @@
 				theme = "dark";
 
 				permissions = {
-					# T3 Code defaults new threads to "Full access" (bypassPermissions),
-					# which skips every rule below. With bypass disabled Claude falls
-					# back to asking, so a mis-clicked Full access thread stays gated.
-					disableBypassPermissionsMode = "disable";
+					# Do NOT set `disableBypassPermissionsMode` here. T3 Code launches
+					# Full access threads with `--permission-mode bypassPermissions
+					# --allow-dangerously-skip-permissions`, which contradicts it and
+					# makes those threads fail with a provider error. It never gated
+					# anything anyway (a Full access thread ran `git push` with no
+					# prompt, 2026-10-30): keep threads on Supervised instead.
 
 					# opencode-style `external_directory`: file tools already prompt
 					# outside the working directory, but read-only Bash (ls, cat, grep,

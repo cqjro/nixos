@@ -186,7 +186,7 @@ matches the rest of the config out of the box.
   injects UI tweaks and is seeded with the Stylix palette — see
   [Actual Budget theming](#actual-budget-theming)), Linkwarden (bookmarks), Beszel (server monitoring),
   Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
-  ReactFlux (a Miniflux web client), T3 Code (self-hosted AI coding agents GUI/server), a Cloudflare-hosted homepage
+  ReactFlux (a Miniflux web client), a T3 Code agent server (tailnet-only, see [T3 Code on REDRUM](#t3-code-on-redrum)), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
   playlist-sync service backed by a `devShell` (`nix develop .#youtube-sync`).
 - **System niceties** — Opt-in experimental features, auto-optimised store,
@@ -238,8 +238,10 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
   into `~/.claude/settings.json` (merged, so the file stays writable). Reads
   outside the project prompt (like opencode's `external_directory`), secrets are
   denied, and `sudo`, `rebuild.sh switch|push`, `git commit|push` and
-  `gh pr merge|create` always ask. `disableBypassPermissionsMode` makes T3's
-  "Full access" mode fall back to asking.
+  `gh pr merge|create` always ask. T3's "Full access" mode **skips all of
+  these prompts** (`disableBypassPermissionsMode` neither stops it nor is
+  compatible with it — it made Full access threads fail, so it is not set), so
+  keep threads on Supervised.
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
@@ -257,7 +259,7 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
   approve still uses your token — consider a fine-grained PAT limited to this
   repo if you want a smaller blast radius.
 - **One-time setup in T3** — Settings → Threads → New threads → Permissions →
-  **Supervised** (T3 defaults to Full access).
+  **Supervised** (T3 defaults to Full access, which bypasses every prompt).
 
 ## Xbox Game Pass (Xodus Nexus)
 
@@ -513,12 +515,11 @@ sudo cloudflared tunnel create glance
 sudo cloudflared tunnel create beszel
 sudo cloudflared tunnel create miniflux
 sudo cloudflared tunnel create reactflux
-sudo cloudflared tunnel create t3code
 # (linkwarden + actual-budget already have IDs, see their modules)
 ```
 
 Copy each UUID into the matching `tunnels."<uuid>" = { credentialsFile = ...; }`
-in `modules/server/{paperless,glance,beszel,miniflux,reactflux,t3code}.nix`.
+in `modules/server/{paperless,glance,beszel,miniflux,reactflux}.nix`.
 
 ### 3. Point each credentials file where Nix expects it
 
@@ -530,7 +531,7 @@ sudo chown root:root /var/lib/cloudflared/*.json && sudo chmod 600 /var/lib/clou
 
 (`credentialsFile` paths used by the modules: `paperless.json`, `glance.json`,
 `beszel.json`, `linkwarden.json`, `actual-budget.json`, `miniflux.json`,
-`reactflux.json`, `t3code.json`.)
+`reactflux.json`.)
 
 ### 4. Add DNS CNAME records (Cloudflare dashboard → DNS)
 
@@ -546,7 +547,6 @@ For each app hostname add a **CNAME** pointing at `<tunnel-uuid>.cfargotunnel.co
 | Actual Budget | `budget.cqjro.ca` |
 | Miniflux | `feed.cqjro.ca` |
 | ReactFlux | `flux.cqjro.ca` |
-| T3 Code | `t3.cqjro.ca` |
 
 The ingress rules in the Nix modules handle the traffic; DNS is the only thing
 you manage in the dashboard (no `certificateFile` is used here).
@@ -590,7 +590,46 @@ ssh <server> systemctl restart cloudflared-tunnel-*.service
   `BASE_URL`-matching "External base URL" if you change hosts).
 - ReactFlux → `https://flux.cqjro.ca` (add the server as `https://feed.cqjro.ca`
   and paste the Miniflux API token from above; it stores config in your browser).
-- T3 Code → `https://t3.cqjro.ca` (run the server once to print headless pairing details, then pair/link agents as needed).
+
+### T3 Code on REDRUM
+
+Agents can run on either machine because **each machine runs its own T3 server**
+(an "environment"); clients connect to one or more of them over Tailscale. There
+is no Cloudflare tunnel for T3.
+
+| Environment | Server | Reached at |
+| --- | --- | --- |
+| GOD-KILLER | the desktop app's local backend | the app itself; Settings → Connections → Tailscale HTTPS for other devices |
+| REDRUM | `t3code.service` (`modules/server/t3code.nix`, `127.0.0.1:8088`) | `https://redrum.<tailnet>.ts.net`, published by `t3code-tailscale-serve.service` |
+
+Prerequisites: MagicDNS + HTTPS certificates enabled in the Tailscale admin
+console. The server only drives the provider, it does not ship one, so the module
+puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`
+in the system profile), makes `gh` git's credential helper for the service only,
+and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
+(secrets unreadable; `git push`, `gh api`, `sudo` always ask). Log in once as the
+`t3code` user after the switch — credentials land in `/var/lib/t3code`, never in
+the store:
+
+```bash
+sudo -u t3code -H claude          # follow the login URL, paste the code, then /exit
+sudo -u t3code -H gh auth login   # GitHub.com -> HTTPS -> browser/device code
+sudo systemctl restart t3code
+```
+
+Then, on REDRUM, mint a pairing token for each device (default TTL 5 min):
+
+```bash
+sudo -u t3code -H t3 pair --label god-killer                # token for the desktop app
+sudo -u t3code -H t3 pair --label iphone --ttl 15m \
+  --scope orchestration:read --scope orchestration:operate  # phone: view + drive threads only
+```
+
+In the GOD-KILLER app, add REDRUM under Settings → Connections using the printed
+link/token. On the phone (Tailscale connected) open the tailnet URL — or scan the
+QR from `t3 pair` — in the browser. Threads on both machines then show up in the
+same client. Pairing scopes include `terminal:operate` and `filesystem:write` by
+default, so keep phone tokens narrow and revoke devices from the connections list.
 
 ## File access permissions (REDRUM)
 
@@ -613,7 +652,7 @@ across rebuilds.
 | `/var/lib/beszel/agent.env` | `beszel-agent:beszel-agent` | 0600 | beszel-agent (EnvironmentFile) |
 | `/var/lib/glance/glance.env` | `glance:glance` | 0600 | glance (EnvironmentFile) |
 | `/var/lib/miniflux/admin.env` | `miniflux:miniflux` | 0600 | miniflux (EnvironmentFile) |
-| `/var/lib/t3code` | `t3code:t3code` | 0700 | t3code |
+| `/var/lib/t3code` | `t3code:t3code` | 0700 | t3code (incl. `.claude/` login and `.config/gh/hosts.yml` token) |
 
 Admin access is via `sudo` (`cairo` is in `wheel`) — keep the service dirs at
 `0700` and owned by their own user so each app stays isolated from the others

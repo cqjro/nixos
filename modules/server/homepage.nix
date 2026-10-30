@@ -66,13 +66,6 @@
 								abbr = "RF";
 							};
 						}
-						{
-							"T3 Code" = {
-								href = "https://t3.cqjro.ca";
-								description = "AI coding agents";
-								abbr = "T3";
-							};
-						}
 					];
 				}
 			];

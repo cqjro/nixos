@@ -251,19 +251,11 @@ repeated as proposals.
     entry point. `nixpkgs` ships `audiobookshelf`; follow the REDRUM recipe
     (port 8087 is the next free after the ABT sidecar's 8086).
 
-- [ ] **T3 Code** — finish setting up T3 Code end-to-end: the server module
-      (`modules/server/t3code.nix`, port 8086) and the desktop client
-      (`modules/home-manager/ai-tools/t3code.nix`, GOD-KILLER) are wired, but
-      the Cloudflare side is still a placeholder — **3/10**
-      (mechanical: the module + README steps already exist)
-  - [ ] Create the `t3code` tunnel on REDRUM and replace
-        `TODO-REPLACE-WITH-T3CODE-TUNNEL-UUID` in `modules/server/t3code.nix`
-  - [ ] Provision `/var/lib/cloudflared/t3code.json` (`root:root` 0600) and the
-        `t3.cqjro.ca` → `<uuid>.cfargotunnel.com` CNAME
-  - [ ] Restart the tunnel unit, run `t3 serve` once to print the headless
-        pairing details, then pair the desktop client and link an agent
-  - *Proposed approach:* follow README → REDRUM server setup steps 2–6 for the
-    tunnel/credentials/DNS, confirm the origin is up on REDRUM
-    (`curl -s http://127.0.0.1:8086`), then point the GOD-KILLER client at
-    `https://t3.cqjro.ca` and record the pairing flow in the README's
-    "log in once" notes.
+- [ ] **T3 Code on REDRUM** — the REDRUM server (`modules/server/t3code.nix`,
+      port 8088) is published over Tailscale Serve (no Cloudflare tunnel); finish
+      the setup — **3/10**
+  - [ ] Switch REDRUM, then log in Claude Code and `gh` as the `t3code` user
+        (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`; README →
+        "T3 Code on REDRUM")
+  - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
+        show up in one client

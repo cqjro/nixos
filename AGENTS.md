@@ -201,8 +201,19 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
 `~/.claude/settings.json`) — read it before assuming what an agent may do.
 
 - **Consent model.** Threads should run **Supervised** (set in T3: Settings →
-  Threads → New threads → Permissions). `disableBypassPermissionsMode` is set so
-  a Full access thread still asks. `blockReadsOutsideWorkingDirectories` makes
+  Threads → New threads → Permissions). **Supervised is the only safeguard:**
+  T3 launches Full access threads with
+  `--permission-mode bypassPermissions --allow-dangerously-skip-permissions`, and
+  a Full access thread ran `git push` and `sudo -n true` with **no prompt**
+  (verified 2026-10-30; Supervised, Accept edits and Auto all prompted). Whether
+  `deny` rules still hold under bypass is untested — do not rely on them there.
+  **Never set `permissions.disableBypassPermissionsMode`:** it contradicts T3's
+  launch flags, so Full access threads fail with a provider error, and it
+  protected nothing anyway. `programs.claude-code.mutableSettings` merges
+  `dynamic * static`, so dropping a key from Nix does **not** remove it from the
+  live `~/.claude/settings.json` — delete it there too
+  (`jq 'del(.permissions.disableBypassPermissionsMode)'`).
+  `blockReadsOutsideWorkingDirectories` makes
   reads outside the project (including read-only Bash like `cat`/`ls`) prompt,
   like opencode's `external_directory`; grant a directory with `/add-dir`. The
   agent-side tool result can be a plain "blocked … `/add-dir`" error (it does
@@ -233,6 +244,23 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   `gh auth token|status <args>|refresh|login|logout|switch`, `git credential*` and
   `*hosts.yml*` in Bash. These globs are best-effort — a push still runs with
   your token once approved, so keep `git push *` and `gh api *` as `ask` rules.
+- **Multi-machine T3.** Each machine runs its own T3 server; clients (GOD-KILLER
+  app, phone browser) pair to several over Tailscale. REDRUM's server is
+  `modules/server/t3code.nix` (`127.0.0.1:8088`, published by the root oneshot
+  `t3code-tailscale-serve` via `tailscale serve`), with **no Cloudflare tunnel**.
+  Pairing steps are in the README ("T3 Code on REDRUM"). Pairing scopes default
+  to terminal + filesystem write, so a paired device is as powerful as the
+  server's user — keep phone tokens narrow. Port 8086 is the ABT sidecar; do not
+  reuse it. The REDRUM agent runs as the `t3code` system user, which home-manager
+  never reaches: its tools (`claude`, `gh`, `git`, `bash`, `nix`), the `gh` git
+  credential helper (`GIT_CONFIG_*` env) and the Claude policy
+  (`/etc/claude-code/managed-settings.json`) are all declared in `t3code.nix`,
+  and its logins (`sudo -u t3code -H claude` / `gh auth login`) are manual
+  one-offs stored in `/var/lib/t3code`. Keep that policy in step with
+  `ai-tools/claude-code.nix` when either changes. The flake's absolute
+  `/home/cairo/.nixos/...` firmware paths are probably unreadable to `t3code`
+  (home dirs default to 0700; untested), so treat REDRUM agents as host
+  troubleshooters; flake edits and builds stay on GOD-KILLER.
 - **REDRUM and other remote hosts.** Agents may `build` them but must not
   switch them: a remote switch needs a terminal for the sudo password, so the
   human runs `./rebuild.sh` (or `switch HOST -m … --target USER@IP`) themselves.
@@ -274,6 +302,7 @@ gaps for exactly that reason).
 | `./rebuild.sh build GOD-KILLER` | exit 0, nothing staged on a clean tree | exit 0, empty output, tree stayed clean |
 | `./rebuild.sh switch GOD-KILLER -m …` | ask rule, then GUI sudo askpass | both appeared; clean tree → no commit, no push |
 | `git push origin master` over HTTPS | prompt, then success | succeeded via the gh credential helper (after switching `origin` to HTTPS) |
+| `sudo -n true`, `git push --dry-run`, `git push` in a **Full access** thread | prompt (expected while `disableBypassPermissionsMode` was set; since removed, as it made Full access threads error) | **no prompts** — all three ran silently; launch flags are `--permission-mode bypassPermissions --allow-dangerously-skip-permissions`. Supervised / Accept edits / Auto all prompted |
 
 ## Pending upstream fixes (follow-up registry)
 
