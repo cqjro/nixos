@@ -33,6 +33,7 @@
 						nom
 						terminal-packages
 						discord
+						inputs.self.modules.homeManager."mcp-servers"
 						inputs.self.modules.homeManager."claude-code"
 						inputs.self.modules.homeManager."github-cli"
 						inputs.self.modules.homeManager."t3code"

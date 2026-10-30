@@ -16,6 +16,9 @@ module fragments, all themed from one base16 palette via Stylix.
 nix flake check --impure          # verify the flake evaluates (manual, not part of rebuild.sh)
 bash -n rebuild.sh start.sh modules/scripts/*.sh   # syntax-check scripts
 ./rebuild.sh                      # interactive rebuild: pick host -> diff -> commit -> push
+./rebuild.sh build HOST           # unprivileged build + closure diff (agent-safe, no root, no commit)
+./rebuild.sh switch HOST -m "msg" # switch (sudo via GUI askpass without a TTY) + commit, no push
+./rebuild.sh push                 # git push origin master
 config-sync                       # zsh alias -> modules/scripts/config-sync.sh (stash/pull/pop ~/.nixos)
 nix develop .#youtube-sync        # devshell for the youtube-sync helper
 sudo nixos-rebuild switch --flake ".#GOD-KILLER" --impure   # rebuild a specific host
@@ -190,6 +193,39 @@ archived module **must**:
    `nix flake update <name>` or `nix flake lock` to restore it into
    `flake.lock`), re-add any `host.nix` input-module lines, then rebuild.
 
+## Agent workflow (T3 Code + Claude Code)
+
+The desktop (GOD-KILLER) runs agents through T3 Code, which drives Claude Code.
+Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
+(`programs.claude-code.settings.permissions`, merged into a writable
+`~/.claude/settings.json`) — read it before assuming what an agent may do.
+
+- **Consent model.** Threads should run **Supervised** (set in T3: Settings →
+  Threads → New threads → Permissions). `disableBypassPermissionsMode` is set so
+  a Full access thread still asks. `blockReadsOutsideWorkingDirectories` makes
+  reads outside the project (including read-only Bash like `cat`/`ls`) prompt,
+  like opencode's `external_directory`; grant a directory with `/add-dir`.
+  Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
+  `token.json`, `client_secret.json`) are `Read`-denied.
+- **Rebuild stages.** Agents verify with `./rebuild.sh build HOST` (no root, no
+  commit; prints a closure diff for the local host). `switch` and `push` are
+  `ask` rules: the human approves in T3, and `switch` additionally pops a GUI
+  sudo askpass dialog (`/run/current-system/sw/libexec/gtk-ssh-askpass`). Do
+  **not** add passwordless sudo for `nixos-rebuild` — the flake is writable by
+  the agent, so it would be root without a prompt.
+- **REDRUM and other remote hosts.** Agents may `build` them but must not
+  switch them: a remote switch needs a terminal for the sudo password, so the
+  human runs `./rebuild.sh` (or `switch HOST -m … --target USER@IP`) themselves.
+- **No PR workflow.** Changes are reviewed in T3 and land directly on `master`
+  through `rebuild.sh` (generation-metadata commits); do not open PRs unless
+  asked. Commit/push only on request.
+- **MCP.** `modules/home-manager/ai-tools/mcp-servers.nix` declares
+  `programs.mcp.servers.nixos` (`mcp-nixos`); Claude Code receives it through
+  `enableMcpIntegration` as the `hm` plugin, so tools are named
+  `mcp__plugin_hm_nixos__nix` / `…__nix_versions`. Prefer them over guessing
+  option or package names. T3 Code has no MCP-attach setting of its own — it
+  only reads the provider's config.
+
 ## Pending upstream fixes (follow-up registry)
 
 Workarounds that exist **only** because of a bug or gap upstream. They are
@@ -211,6 +247,7 @@ file), not assuming from the passage of time.
 | 4 | `diskusage` store-measure timeout raised 120s → 300s via `overrideAttrs` on the nixdatifier package (covers the window and the desktop CLI; `ui = false` keeps the stock cli package) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, which takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random and the Tools storage card never fills in (free space still shows via `df`). Not yet reported upstream | upstream raises the cap or makes it configurable; then drop `patchedPackage` and use the default package |
 | 5 | window outline recoloured to match the panel background: `substituteInPlace` on the installed `FullView.qml` turns the hardcoded `wash(accentColor, .18)` border into the background colour (same `overrideAttrs` block as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — with the dark palette accent (`#007bd3`) it renders as a faint blue frame around the standalone window; no setting controls it | upstream makes the border configurable or drops it; then delete this `substituteInPlace` |
 | 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs (`pkgs/by-name/xo` has no `xodus`), and `domsvoboda/xodus-nexus` ships no `flake.nix` or Nix expression. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
+| 7 | `mcp-nixos` taken from its upstream flake (`inputs.mcp-nixos`, no `follows`) instead of `pkgs.mcp-nixos` | `flake.nix` (input), `modules/home-manager/ai-tools/mcp-servers.nix` (`# TODO-remove:`) | nixpkgs (rev `3ec6363`, observed 2026-10-30): `python3Packages.fastmcp-slim` 3.4.7 does `from mcp.shared.exceptions import McpError`, but `python3Packages.mcp` 2.2.0 renamed it to `MCPError`, so fastmcp-slim fails its `installCheckPhase` and `pkgs.mcp-nixos` 3.0.1 cannot build (skipping the check would still crash at import). The upstream flake builds because it ships its own nixpkgs (fastmcp 4.0.2). Not yet reported upstream | `nix build nixpkgs#mcp-nixos` succeeds on nixos-unstable; then use `pkgs.mcp-nixos` and delete the flake input |
 
 Notes:
 
@@ -269,6 +306,17 @@ Notes:
 - `rebuild.sh` calls `git add --all` and auto-commits with generation metadata
   (`HOST: <generation> … || <message>`). Keep commit subjects in this format
   when committing manually.
+- **The `rebuild` zsh alias runs a copy of `rebuild.sh` in the Nix store**
+  (`bash ${../../../rebuild.sh}`), frozen at the last rebuild. After editing the
+  script, run `./rebuild.sh` from `~/.nixos` (or rebuild once) — agents must
+  always use `./rebuild.sh`, never the alias.
+- The interactive `./rebuild.sh` exits early with "No changes detected" when the
+  tree matches `HEAD`, so it cannot rebuild already-committed or just-pulled
+  changes. Use `./rebuild.sh switch HOST -m "msg"` for that case (it skips the
+  check and the commit if there is nothing to commit).
+- Flakes only see **tracked** files, so `rebuild.sh build`/`switch` stage with
+  `git add --all` first (same as the interactive flow) — new modules are
+  invisible to `nixos-rebuild` until staged.
 - `stylix.enableReleaseChecks = false` is set in host `home.nix` files to avoid
   the release-mismatch error — keep it consistent across hosts.
 - **REDRUM does not import `essentials/users.nix`** — it defines its own

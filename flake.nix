@@ -29,6 +29,13 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
+		# TODO-remove: mcp-nixos from its own flake (own nixpkgs, so deliberately NO
+		# `follows`) because pkgs.mcp-nixos does not build on current nixpkgs:
+		# fastmcp-slim 3.4.7 imports McpError, which mcp 2.2.0 renamed to MCPError.
+		# Drop this input once `nix build nixpkgs#mcp-nixos` works again; see the
+		# "Pending upstream fixes" registry in AGENTS.md (row 7).
+		mcp-nixos.url = "github:utensils/mcp-nixos";
+
 		hyprland.url = "github:hyprwm/Hyprland";
 		# archived: not referenced by any live module
 		# hyprland-plugins = {

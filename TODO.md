@@ -161,19 +161,6 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
-- [ ] **NixOS MCP server** — give the AI clients (OpenCode, Claude Code) real
-      NixOS package/option data over MCP instead of guessed attribute names — **3/10**
-  - *Proposed approach:* `pkgs.mcp-nixos` (upstream
-    [`utensils/mcp-nixos`](https://github.com/utensils/mcp-nixos)) is already in
-    nixpkgs and exposes package / option / Home Manager / flake search over
-    STDIO — add it to a `home-manager/ai-tools/` fragment and register it as an
-    MCP server in OpenCode's config (`programs.opencode`, currently only the
-    package is enabled) and in Claude Code's own settings file. The lighter
-    [`DanielRamosAcosta/nixos-mcp`](https://github.com/DanielRamosAcosta/nixos-mcp)
-    (TypeScript, options-only, needs Node 24) is the alternative if the
-    Python/FastMCP dependency set is unwanted. Verify with one real package-name
-    query before wiring it into every client.
-
 ## Server (REDRUM)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for

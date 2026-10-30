@@ -12,6 +12,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [The Dendritic Pattern](#dendritic-pattern)
 - [Theming](#theming)
 - [Key Features](#key-features)
+- [AI agents](#ai-agents)
 - [Xbox Game Pass (Xodus Nexus)](#xbox-game-pass-xodus-nexus)
 - [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
@@ -59,6 +60,7 @@ modules/
 │   ├── LittleNix/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
+│   ├── ai-tools/      #   claude-code (permissions), mcp-servers (mcp-nixos), t3code, github-cli
 │   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, nixdatifier, spicetify, xodus-nexus, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
@@ -226,6 +228,27 @@ matches the rest of the config out of the box.
   User-Agent is patched so online-model login works, until upstream addresses
   both (see [Pending upstream fixes](#pending-upstream-fixes) rows 2 and 3).
 
+## AI agents
+
+`GOD-KILLER` runs coding agents through [T3 Code](https://github.com/pingdotgg/t3code)
+(`modules/home-manager/ai-tools/t3code.nix`, themed from Stylix) driving Claude
+Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-tools/`:
+
+- **Permissions** (`claude-code.nix`) — `programs.claude-code` writes the policy
+  into `~/.claude/settings.json` (merged, so the file stays writable). Reads
+  outside the project prompt (like opencode's `external_directory`), secrets are
+  denied, and `sudo`, `rebuild.sh switch|push`, `git commit|push` and
+  `gh pr merge|create` always ask. `disableBypassPermissionsMode` makes T3's
+  "Full access" mode fall back to asking.
+- **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
+  package, option and version data over MCP instead of guessed attribute names,
+  delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
+- **Rebuilds** — agents run `./rebuild.sh build HOST` freely; the switch needs
+  your approval in T3 *and* your password in a GUI dialog. Remote hosts (REDRUM)
+  are built by the agent but switched by you in a terminal.
+- **One-time setup in T3** — Settings → Threads → New threads → Permissions →
+  **Supervised** (T3 defaults to Full access).
+
 ## Xbox Game Pass (Xodus Nexus)
 
 `GOD-KILLER` installs [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus)
@@ -262,14 +285,20 @@ workaround.
 | 4 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
 | 5 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
 | 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
+| 7 | `mcp-nixos` taken from its upstream flake (`inputs.mcp-nixos`, no `follows`) instead of `pkgs.mcp-nixos` | `flake.nix` (input), `modules/home-manager/ai-tools/mcp-servers.nix` (`# TODO-remove:`) | nixpkgs (rev `3ec6363`, observed 2026-10-30): `python3Packages.fastmcp-slim` 3.4.7 does `from mcp.shared.exceptions import McpError`, but `python3Packages.mcp` 2.2.0 renamed it to `MCPError`, so fastmcp-slim fails its `installCheckPhase` and `pkgs.mcp-nixos` 3.0.1 cannot build (skipping the check would still crash at import). The upstream flake builds because it ships its own nixpkgs (fastmcp 4.0.2). Not yet reported upstream | `nix build nixpkgs#mcp-nixos` succeeds on nixos-unstable; then use `pkgs.mcp-nixos` and delete the flake input |
 
 ## Scripts
 
 - `rebuild.sh` — the daily-driver workflow. Streams the rebuild live with
   syntax highlighting (`bat`), shows only the errors on failure (log kept at
   `.log/nixos-switch.log`), rebuilds locally or remotely
-  (`--target-host --use-remote-sudo`), commits with generation metadata, and
-  pushes to `origin/master`.
+  (`--target-host --elevate sudo`), commits with generation metadata, and
+  pushes to `origin/master`. With no arguments it is interactive; the same
+  steps are also available as non-interactive stages so an AI agent can drive
+  them (see [AI agents](#ai-agents)): `rebuild.sh build HOST` (unprivileged
+  build + closure diff), `rebuild.sh switch HOST -m "msg" [--target USER@IP]`
+  (switch + commit; asks for the sudo password in a GUI dialog when there is no
+  terminal) and `rebuild.sh push`.
 - `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
   passphrase prompt and pulls the latest config, delegating the sync itself to
   `config-sync.sh` (see [How start.sh works](#how-startsh-works) below).
