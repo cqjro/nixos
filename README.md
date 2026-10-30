@@ -243,9 +243,19 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
-- **Rebuilds** — agents run `./rebuild.sh build HOST` freely; the switch needs
+- **Rebuilds** — agents run `./rebuild.sh build HOST` freely (silent on success
+  without a terminal; the log is `.log/nixos-build.log`); the switch needs
   your approval in T3 *and* your password in a GUI dialog. Remote hosts (REDRUM)
-  are built by the agent but switched by you in a terminal.
+  are built by the agent but switched by you in a terminal. `switch` commits
+  only when there are changes and never pushes.
+- **Pushing** (`github-cli.nix`) — `gh` is git's credential helper over HTTPS,
+  so an approved `git push` works from an agent thread without an SSH agent or
+  access to `~/.ssh`. The `origin` remote must be
+  `https://github.com/cqjro/nixos.git` (`git remote set-url origin …`, one-time,
+  not in Nix). Commands that would print the token (`gh auth token`,
+  `git credential*`, anything touching `hosts.yml`) are denied, but a push you
+  approve still uses your token — consider a fine-grained PAT limited to this
+  repo if you want a smaller blast radius.
 - **One-time setup in T3** — Settings → Threads → New threads → Permissions →
   **Supervised** (T3 defaults to Full access).
 

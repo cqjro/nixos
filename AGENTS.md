@@ -204,11 +204,22 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   Threads → New threads → Permissions). `disableBypassPermissionsMode` is set so
   a Full access thread still asks. `blockReadsOutsideWorkingDirectories` makes
   reads outside the project (including read-only Bash like `cat`/`ls`) prompt,
-  like opencode's `external_directory`; grant a directory with `/add-dir`.
+  like opencode's `external_directory`; grant a directory with `/add-dir`. The
+  agent-side tool result can be a plain "blocked … `/add-dir`" error (it does
+  not wait for the card), so re-issue the call after the human grants access.
   Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
-  `token.json`, `client_secret.json`) are `Read`-denied.
+  `token.json`, `client_secret.json`) are `Read`-denied. Those rules cover the
+  Read/Grep/Glob tools only: there is **no Bash-level deny for `~/.ssh`**, so
+  `cat ~/.ssh/…` is stopped by `blockReadsOutsideWorkingDirectories` and your
+  approval, not by a `deny` rule.
 - **Rebuild stages.** Agents verify with `./rebuild.sh build HOST` (no root, no
-  commit; prints a closure diff for the local host). `switch` and `push` are
+  commit; closure diff for the local host). Without a TTY (agent shells)
+  `run_logged` writes only to `.log/nixos-build.log` and prints nothing on
+  success, and `nix store diff-closures` prints nothing when the closure is
+  unchanged — so **empty output with exit 0 is a successful build**; read the
+  log for details. `switch` commits only if the tree has uncommitted changes
+  (a clean tree prints "No uncommitted changes; skipping commit.") and never
+  pushes; `push` is a separate stage. `switch` and `push` are
   `ask` rules: the human approves in T3, and `switch` additionally pops a GUI
   sudo askpass dialog (`/run/current-system/sw/libexec/gtk-ssh-askpass`). Do
   **not** add passwordless sudo for `nixos-rebuild` — the flake is writable by
@@ -233,7 +244,36 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   `enableMcpIntegration` as the `hm` plugin, so tools are named
   `mcp__plugin_hm_nixos__nix` / `…__nix_versions`. Prefer them over guessing
   option or package names. T3 Code has no MCP-attach setting of its own — it
-  only reads the provider's config.
+  only reads the provider's config. MCP servers connect lazily and their tools
+  are *deferred*: load the schemas first
+  (`ToolSearch` → `select:mcp__plugin_hm_nixos__nix,mcp__plugin_hm_nixos__nix_versions`)
+  before calling them, otherwise the call fails input validation.
+- **How T3 launches Claude.** Via `systemd-run` with
+  `--permission-mode default --add-dir ~/.nixos --add-dir ~/.t3/userdata/attachments
+  --allowedTools "mcp__t3-code__*"` (visible in `journalctl`). The process does
+  **not** inherit the login shell's `SSH_AUTH_SOCK`, which is why SSH pushes
+  failed from agent threads (`ssh_askpass: exec(): No such file or directory`,
+  `Permission denied (publickey)`) and why pushes now go over HTTPS (above).
+
+### Permissions smoke test (verified 2026-10-30, GOD-KILLER)
+
+Run in a fresh **Supervised** thread; the agent edits nothing and the human
+approves/denies prompts. **The agent cannot see the approval UI**, so "the call
+returned output" does not prove "no prompt appeared" — the human must record
+which calls prompted (an early run of this test mislabelled prompted steps as
+gaps for exactly that reason).
+
+| Step | Expected | Verified result |
+| --- | --- | --- |
+| Read outside the project (`/etc/hostname`), Bash `jq` on `~/.claude/settings.json` | prompt / directory-access card | Read returned a "blocked, `/add-dir`" error; Bash ran after approval and showed `theme dark`, `bypass "disable"`, `blockReads true`, allow 28 / ask 11 / deny 15 |
+| mcp-nixos `nix` + `nix_versions` | no prompt (allow-listed) | works; channels: 25.11, 26.05 (= stable/beta), unstable |
+| `journalctl`, `systemctl is-active`, `nixos-rebuild list-generations`, `gh auth status`, `gh issue view` | no prompt | ran; `NixOS/nixos-hardware#2027` was still OPEN (registry row 1) |
+| `Read` of `~/.ssh/**`, `~/.config/gh/**` | denied, no prompt | denied |
+| Bash `cat ~/.ssh/known_hosts` | not allowed | denied (no Bash-level deny rule exists — see consent model) |
+| `git push`, `sudo -n true`, `gh pr create --help` | prompt | prompted; `sudo -n true` → "a password is required" (no `NOPASSWD`) |
+| `./rebuild.sh build GOD-KILLER` | exit 0, nothing staged on a clean tree | exit 0, empty output, tree stayed clean |
+| `./rebuild.sh switch GOD-KILLER -m …` | ask rule, then GUI sudo askpass | both appeared; clean tree → no commit, no push |
+| `git push origin master` over HTTPS | prompt, then success | succeeded via the gh credential helper (after switching `origin` to HTTPS) |
 
 ## Pending upstream fixes (follow-up registry)
 
