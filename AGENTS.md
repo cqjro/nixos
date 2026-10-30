@@ -213,6 +213,15 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   sudo askpass dialog (`/run/current-system/sw/libexec/gtk-ssh-askpass`). Do
   **not** add passwordless sudo for `nixos-rebuild` — the flake is writable by
   the agent, so it would be root without a prompt.
+- **Git pushes use gh credentials over HTTPS.** `modules/home-manager/ai-tools/github-cli.nix`
+  makes `gh` git's credential helper (`git_protocol = "https"`), so an approved
+  `git push` works without an ssh-agent or any access to `~/.ssh`. The `origin`
+  remote must be `https://github.com/cqjro/nixos.git` (set once with
+  `git remote set-url`; it lives in `.git/config`, not Nix). The token sits in
+  `~/.config/gh/hosts.yml` (`Read`-denied); `deny` rules also block
+  `gh auth token|status <args>|refresh|login|logout|switch`, `git credential*` and
+  `*hosts.yml*` in Bash. These globs are best-effort — a push still runs with
+  your token once approved, so keep `git push *` and `gh api *` as `ask` rules.
 - **REDRUM and other remote hosts.** Agents may `build` them but must not
   switch them: a remote switch needs a terminal for the sudo password, so the
   human runs `./rebuild.sh` (or `switch HOST -m … --target USER@IP`) themselves.

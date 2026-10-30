@@ -82,6 +82,18 @@
 					];
 
 					deny = [
+						# gh is git's credential helper (github-cli.nix): never let the
+						# agent print the token. Best-effort globs; the real gates are the
+						# `git push` / `gh api` ask rules above and Supervised mode.
+						"Bash(gh auth token*)"
+						"Bash(gh auth status *)"
+						"Bash(gh auth refresh*)"
+						"Bash(gh auth login*)"
+						"Bash(gh auth logout*)"
+						"Bash(gh auth switch*)"
+						"Bash(git credential*)"
+						"Bash(*hosts.yml*)"
+
 						# credentials and secrets (Read rules also cover Grep/Glob)
 						"Read(~/.ssh/**)"
 						"Read(~/.gnupg/**)"
