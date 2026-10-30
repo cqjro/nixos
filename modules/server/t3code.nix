@@ -17,9 +17,9 @@ in
 		users.groups.${appUser} = {};
 
 		# `claude` / `gh` for the t3code user to log in once by hand
-		# (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`); git is
-		# already in the REDRUM system profile.
-		environment.systemPackages = [ pkgs.claude-code pkgs.gh ];
+		# (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`) and `t3`
+		# for `t3 pair`; git is already in the REDRUM system profile.
+		environment.systemPackages = [ pkgs.claude-code pkgs.gh pkgs.t3code ];
 
 		# The server only drives a provider, it does not ship one: everything the
 		# agent shells out to has to be on the unit's PATH. Credentials live in

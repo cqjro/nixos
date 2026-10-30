@@ -604,7 +604,7 @@ is no Cloudflare tunnel for T3.
 
 Prerequisites: MagicDNS + HTTPS certificates enabled in the Tailscale admin
 console. The server only drives the provider, it does not ship one, so the module
-puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`
+puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`/`t3`
 in the system profile), makes `gh` git's credential helper for the service only,
 and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
 (secrets unreadable; `git push`, `gh api`, `sudo` always ask). Log in once as the
