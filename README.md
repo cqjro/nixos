@@ -40,7 +40,9 @@ fixes are overridden explicitly — currently `cloudflared`
 Cloudflare's release binary, since the pinned nixpkgs lags the tunnel's security
 releases) and `tailscale` (`services.tailscale.package` in
 `modules/server/tailscale.nix` pins 1.104.4, since the pinned nixpkgs ships
-1.102.2 and its Go toolchain is too old to build 1.104.4).
+1.102.2 and its Go toolchain is too old to build 1.104.4) and `t3code`
+(`modules/server/t3code.nix` runs the server from the main `nixpkgs` input, since
+the desktop client rejects the pinned nixpkgs' older 0.0.33 server).
 
 ## Repository Layout
 

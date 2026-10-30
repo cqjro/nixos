@@ -30,6 +30,11 @@ The pin is *not* inherited by everything — packages that must track upstream
   (`go.mod` wants >= 1.27.3); that input still ships 1.104.2 as of channel
   2026-10-27. The override carries a `# TODO-remove:`; delete it once both
   inputs ship >= 1.104.4.
+- **`t3code`** — `modules/server/t3code.nix` runs the server from the main
+  `nixpkgs` input (same build as GOD-KILLER) instead of the pinned nixpkgs'
+  0.0.33, because the desktop client rejects older servers ("This client
+  requires a newer server"). The override carries a `# TODO-remove:`; delete it
+  with the pin.
 
 ## Why
 `linux_6_18 >= 6.18.47` no longer accepts the `facf1c7` t2linux patchset

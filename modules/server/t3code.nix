@@ -7,7 +7,15 @@ let
 	port = 8088;
 in
 {
-	flake.modules.nixos.t3code = { config, pkgs, lib, ... }: {
+	flake.modules.nixos.t3code = { config, inputs, pkgs, lib, ... }:
+		let
+			# The desktop client refuses servers older than itself ("This client
+			# requires a newer server"). REDRUM's pinned nixpkgs
+			# (modules/hosts/REDRUM/T2-PIN.md) ships t3code 0.0.33, so the server
+			# comes from the main `nixpkgs` input, the same build GOD-KILLER runs.
+			# TODO-remove: use `pkgs.t3code` again once the pin is lifted.
+			t3code = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3code;
+		in {
 		users.users.${appUser} = {
 			isSystemUser = true;
 			group = appUser;
@@ -19,7 +27,7 @@ in
 		# `claude` / `gh` for the t3code user to log in once by hand
 		# (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`) and `t3`
 		# for `t3 pair`; git is already in the REDRUM system profile.
-		environment.systemPackages = [ pkgs.claude-code pkgs.gh pkgs.t3code ];
+		environment.systemPackages = [ pkgs.claude-code pkgs.gh t3code ];
 
 		# The server only drives a provider, it does not ship one: everything the
 		# agent shells out to has to be on the unit's PATH. Credentials live in
@@ -50,7 +58,7 @@ in
 					"GIT_CONFIG_KEY_0=credential.https://github.com.helper"
 					"GIT_CONFIG_VALUE_0=!${pkgs.gh}/bin/gh auth git-credential"
 				];
-				ExecStart = "${pkgs.t3code}/bin/t3 serve --host 127.0.0.1 --port ${toString port}";
+				ExecStart = "${t3code}/bin/t3 serve --host 127.0.0.1 --port ${toString port}";
 				Restart = "on-failure";
 				RestartSec = 5;
 			};
