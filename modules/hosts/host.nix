@@ -36,6 +36,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos.doodads
 				inputs.self.modules.nixos.tailscale
+				inputs.self.modules.nixos.keyring
 				inputs.self.modules.nixos."GOD-KILLER"
 				inputs.self.modules.nixos."GOD-KILLER-hardware"
 				inputs.self.modules.nixos."GOD-KILLER-monitors"
@@ -68,7 +69,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.tether
-				inputs.self.modules.nixos."xodus-nexus"
+				inputs.self.modules.nixos.keyring
 			inputs.self.modules.nixos.manifest
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.noctalia-greeter

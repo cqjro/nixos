@@ -55,7 +55,7 @@ docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned imag
 
 modules/
 ├── _archive/          # Retired / superseded modules (kept for reference)
-├── essentials/        # System services: networking, dbus, bluetooth, audio, printing, users, nvidia, nur...
+├── essentials/        # System services: networking, dbus, bluetooth, audio, printing, users, keyring, nvidia...
 ├── hosts/             # Per-machine config:
 │   ├── host.nix       #   Assembles all nixosConfigurations
 │   ├── GOD-KILLER/    #   machine.nix / home.nix / hardware.nix / monitors.nix
@@ -276,8 +276,9 @@ Proton-based runtime (no Windows install).
   Xodus components and live in the user data directory, not the Nix store.
   The launcher itself is version-pinned in the module; bump `version` (and
   `hash`) there to update it.
-- **Sign-in** needs an unlocked keyring. The module enables `gnome-keyring`
-  (including greetd PAM unlocking) for this. If passkey sign-in hangs, use
+- **Sign-in** needs an unlocked keyring, provided by the shared `keyring`
+  module (`modules/essentials/keyring.nix`: `gnome-keyring` plus greetd PAM
+  unlocking, also used by T3 Code's saved connections). If passkey sign-in hangs, use
   **Continue in browser**, which requires Google Chrome (not Chromium/Firefox).
 - **Requirements:** a Microsoft account with a valid purchase or Game Pass
   subscription. Compatibility varies by game; see the upstream list.

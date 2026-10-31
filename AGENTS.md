@@ -359,8 +359,11 @@ Notes:
   Nexus runtime self-install from GitHub into the user data directory on first
   run (Settings → Xodus backend / Nexus runtime → Install). The launcher cannot
   self-update from its read-only store path — bump the module's `version` and
-  `hash` instead. It needs an unlocked keyring, so the module also enables
-  `gnome-keyring` and greetd PAM unlocking; the passkey "Continue in browser"
+  `hash` instead. It needs an unlocked keyring, provided by the shared `keyring`
+  fragments (`modules/essentials/keyring.nix`: `gnome-keyring` + greetd PAM
+  unlocking; add it to both the host's NixOS list and its `machine.nix`
+  imports). T3 Code's desktop app also stores its saved connections there
+  ("Desktop secure storage is unavailable" means the keyring is locked). The passkey "Continue in browser"
   fallback needs Google Chrome.
 - **Secrets and firmware are gitignored** and must never be committed
   (`client_secret.json`, `token.json`, `config.json`, `firmware/`). The

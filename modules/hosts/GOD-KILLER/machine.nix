@@ -51,6 +51,7 @@
 						calibre
 					apps-packages
 					xodus-nexus
+					keyring
 					nixdatifier
 					inputs.self.modules.homeManager."3d-printing"
 					latex

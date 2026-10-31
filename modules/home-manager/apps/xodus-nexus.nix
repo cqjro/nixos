@@ -85,20 +85,8 @@
 				};
 			};
 		in {
+			# The Microsoft sign-in is stored in the system keyring, which comes
+			# from the shared `keyring` fragments (modules/essentials/keyring.nix).
 			home.packages = [ xodusNexus ];
-
-			# Provider for Electron's safeStorage and the backend's keyring.
-			services.gnome-keyring.enable = true;
 		};
-
-	# Xodus Nexus stores the Microsoft sign-in in the system keyring. Hyprland is
-	# launched by greetd on the desktop hosts, so unlock the login keyring from
-	# the greetd PAM session as well as from login.
-	flake.modules.nixos."xodus-nexus" = { ... }: {
-		services.gnome.gnome-keyring.enable = true;
-		# Keep the existing OpenSSH agent (modules/essentials/ssh.nix); GNOME's
-		# gcr-ssh-agent would otherwise conflict with it.
-		services.gnome.gcr-ssh-agent.enable = false;
-		security.pam.services.greetd.enableGnomeKeyring = true;
-	};
 }
