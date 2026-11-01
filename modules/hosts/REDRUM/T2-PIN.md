@@ -35,6 +35,11 @@ The pin is *not* inherited by everything — packages that must track upstream
   0.0.33, because the desktop client rejects older servers ("This client
   requires a newer server"). The override carries a `# TODO-remove:`; delete it
   with the pin.
+- **`claude-code`** — `modules/server/t3code.nix` also takes the `claude` CLI
+  from the main `nixpkgs` input (2.1.308) instead of the pinned nixpkgs'
+  2.1.238: T3 gates each Claude model on a minimum CLI version (up to 2.1.293),
+  so the older CLI left REDRUM with only the legacy model. The override carries
+  a `# TODO-remove:`; delete it with the pin.
 
 ## Why
 `linux_6_18 >= 6.18.47` no longer accepts the `facf1c7` t2linux patchset

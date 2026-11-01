@@ -602,11 +602,18 @@ is no Cloudflare tunnel for T3.
 
 | Environment | Server | Reached at |
 | --- | --- | --- |
-| GOD-KILLER | the desktop app's local backend | the app itself; Settings → Connections → Tailscale HTTPS for other devices |
+| GOD-KILLER | the desktop app's local backend (`127.0.0.1:3773`) | the app itself; for other devices publish it with `tailscale serve` (see [Reaching GOD-KILLER from other devices](#reaching-god-killer-from-other-devices)) |
 | REDRUM | `t3code.service` (`modules/server/t3code.nix`, `127.0.0.1:8088`) | `https://redrum.<tailnet>.ts.net`, published by `t3code-tailscale-serve.service` |
 
 Prerequisites: MagicDNS + HTTPS certificates enabled in the Tailscale admin
-console. The server only drives the provider, it does not ship one, so the module
+console. **Client and server versions must match:** the desktop app refuses an
+older server ("This client requires a newer server"). REDRUM's pinned nixpkgs
+only ships t3code 0.0.33, so `t3code.nix` takes the package from the main
+`nixpkgs` input (the build GOD-KILLER runs; `# TODO-remove:` with the T2 pin) —
+after a `nix flake update nixpkgs`, switch both machines. The same goes for the
+`claude` CLI (`# TODO-remove:` with the pin): T3 only lists a Claude model when the
+CLI meets that model's minimum version, and the pinned nixpkgs' 2.1.238 left REDRUM
+with only the legacy model ("only legacy Fable 5 is available" in Settings). The server only drives the provider, it does not ship one, so the module
 puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`/`t3`
 in the system profile), makes `gh` git's credential helper for the service only,
 and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
@@ -615,8 +622,9 @@ and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
 the store:
 
 ```bash
-sudo -u t3code -H claude          # follow the login URL, paste the code, then /exit
-sudo -u t3code -H gh auth login   # GitHub.com -> HTTPS -> browser/device code
+# run from t3code's home, not ~/.nixos: t3code cannot read /home/cairo (EACCES on .claude/settings.json)
+sudo -u t3code -H sh -c 'cd ~ && claude'   # follow the login URL, paste the code, then /exit
+sudo -u t3code -H sh -c 'cd ~ && gh auth login'   # GitHub.com -> HTTPS -> browser/device code (token lands in plain text in ~/.config/gh/hosts.yml, mode 0600; there is no keyring on a headless host)
 sudo systemctl restart t3code
 ```
 
@@ -628,11 +636,72 @@ sudo -u t3code -H t3 pair --label iphone --ttl 15m \
   --scope orchestration:read --scope orchestration:operate  # phone: view + drive threads only
 ```
 
-In the GOD-KILLER app, add REDRUM under Settings → Connections using the printed
-link/token. On the phone (Tailscale connected) open the tailnet URL — or scan the
-QR from `t3 pair` — in the browser. Threads on both machines then show up in the
-same client. Pairing scopes include `terminal:operate` and `filesystem:write` by
-default, so keep phone tokens narrow and revoke devices from the connections list.
+**The printed link points at the wrong host.** `t3 serve` binds to
+`127.0.0.1:8088`, so the link and QR from `t3 pair` say `http://127.0.0.1:8088/…`,
+which the client cannot reach (`Failed to fetch remote environment endpoint
+http://127.0.0.1:8088/…`). Replace only that part with
+`https://redrum.<tailnet>.ts.net` (no `:8088`, no `http`, and **no trailing dot** —
+`tailscale status --json | jq -r .Self.DNSName` ends in one), keeping the path
+and token as printed. `t3 pair --tailscale` is not an alternative: it would make
+the `t3code` user run `tailscale serve` itself, without the rights to, and
+compete with `t3code-tailscale-serve` for port 443.
+
+Tokens are single-use and expire after `--ttl` (5 min default). "This credential
+is invalid" means the token expired, was already tried (including the failed
+`127.0.0.1` attempt) or was minted before a switch/restart — mint a new one and
+use it once.
+
+In the GOD-KILLER app, add REDRUM under Settings → Connections with the edited
+link. The app stores saved connections in the system keyring; if it fails with
+"Desktop secure storage is unavailable in this system context", the keyring is
+locked — see [Keyring](#keyring-gnome-keyring) below. Threads on both machines
+then show up in the same client. Pairing scopes include `terminal:operate` and
+`filesystem:write` by default, so keep phone tokens narrow and revoke devices
+from the connections list.
+
+#### Reaching GOD-KILLER from other devices
+
+Nothing exposes the desktop backend by default, so a phone gets
+`Remote environment endpoint https://god-killer.<tailnet>.ts.net/.well-known/t3/environment
+timed out`. Publish it once on GOD-KILLER (MagicDNS + HTTPS certificates must be
+enabled, as above):
+
+```bash
+sudo tailscale serve --bg --https=443 http://127.0.0.1:3773
+tailscale serve status            # https://god-killer.<tailnet>.ts.net -> 127.0.0.1:3773
+```
+
+The mapping is saved in tailscaled's state and survives reboots and rebuilds. Then
+open `https://god-killer.<tailnet>.ts.net/.well-known/t3/environment` on the phone
+(Tailscale connected) — it should return JSON — and pair from the desktop app's
+own pairing link/QR, not `t3 pair` (that targets a different server).
+
+- **Port 443 is the right HTTPS port** (the app's default too). The backend port
+  `3773` is whatever the app listens on (`ss -ltnp | grep electron`); if it ever
+  changes, re-run the command with the new port.
+- **The app's "Tailscale HTTPS" toggle silently does nothing** unless your user
+  may change Tailscale settings: it runs the same `tailscale serve --bg
+  --https=443 …` as your normal user and the rejection is not shown. Making
+  yourself the operator (`sudo tailscale set --operator=$USER`) fixes the toggle
+  but lets anything running as you (including agents) change Tailscale settings
+  without a password. Prefer the one-off `sudo` command above; if you set the
+  operator, undo it with `sudo tailscale set --operator=` — the saved mapping
+  stays. Do not switch the toggle off afterwards: that runs `serve … off`, which
+  needs the same rights (remove it deliberately with
+  `sudo tailscale serve --https=443 off`).
+- GOD-KILLER is only reachable while the desktop app is running and the machine
+  is awake; REDRUM's service is always up.
+
+#### Keyring (gnome-keyring)
+
+Electron's secure storage (T3's saved connections, Xodus Nexus' sign-in) needs an
+unlocked Secret Service. The `keyring` fragments in `modules/essentials/keyring.nix`
+provide `gnome-keyring` and unlock the login keyring from the greetd PAM session;
+the NixOS fragment is in the GOD-KILLER and LittleNix lists in `host.nix`, and the
+home-manager one in GOD-KILLER's `machine.nix` imports. The unlock happens only at a **password** login
+(not autologin/fingerprint), only after logging out and back in once, and only if
+the keyring's password equals the login password. To unlock the running session
+without logging out: `gnome-keyring-daemon --unlock`, then type the password.
 
 ## File access permissions (REDRUM)
 

@@ -261,6 +261,26 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   `/home/cairo/.nixos/...` firmware paths are probably unreadable to `t3code`
   (home dirs default to 0700; untested), so treat REDRUM agents as host
   troubleshooters; flake edits and builds stay on GOD-KILLER.
+  Operational facts (full detail in the README's "T3 Code on REDRUM"):
+  - Client and server versions must match ("This client requires a newer
+    server"). REDRUM's pinned nixpkgs ships an older t3code, so `t3code.nix`
+    takes the package from the main `nixpkgs` input (`# TODO-remove:`, listed in
+    `T2-PIN.md`); after `nix flake update nixpkgs`, both machines need a switch.
+  - `t3 pair` prints a `http://127.0.0.1:8088/…` link (the server binds
+    loopback); the host must be rewritten to `https://redrum.<tailnet>.ts.net`
+    (no trailing dot — `.Self.DNSName` has one). Tokens are single-use, 5 min.
+    Do not use `t3 pair --tailscale` (t3code user lacks the rights, clashes
+    with `t3code-tailscale-serve` on :443).
+  - GOD-KILLER's backend (`127.0.0.1:3773`) is published for phones with
+    `sudo tailscale serve --bg --https=443 http://127.0.0.1:3773`, run by the
+    human. The app's Tailscale HTTPS toggle fails silently without Tailscale
+    operator rights; **do not set `tailscale set --operator`** for agents'
+    convenience — it lets anything running as `cairo` (agents included) change
+    Tailscale settings without a password. Agents should never run
+    `tailscale serve`/`set` themselves; it exposes a service on the tailnet.
+  - The desktop app stores saved connections in the system keyring; "Desktop
+    secure storage is unavailable" = locked keyring (see the Xodus gotcha:
+    `keyring` fragments, password login required).
 - **REDRUM and other remote hosts.** Agents may `build` them but must not
   switch them: a remote switch needs a terminal for the sudo password, so the
   human runs `./rebuild.sh` (or `switch HOST -m … --target USER@IP`) themselves.

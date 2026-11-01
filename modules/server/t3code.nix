@@ -14,7 +14,17 @@ in
 			# (modules/hosts/REDRUM/T2-PIN.md) ships t3code 0.0.33, so the server
 			# comes from the main `nixpkgs` input, the same build GOD-KILLER runs.
 			# TODO-remove: use `pkgs.t3code` again once the pin is lifted.
-			t3code = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3code;
+			mainPkgs = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+			t3code = mainPkgs.t3code;
+			# T3 only offers a Claude model when the `claude` CLI is new enough for
+			# it (per-model minVersion in its catalog). The pinned nixpkgs ships
+			# claude-code 2.1.238, which leaves only the legacy model available.
+			# TODO-remove: use `pkgs.claude-code` again once the pin is lifted.
+			# claude-code is unfree and `legacyPackages` ignores the host's config
+			claude-code = (import inputs.nixpkgs {
+				inherit (pkgs.stdenv.hostPlatform) system;
+				inherit (config.nixpkgs) config;
+			}).claude-code;
 		in {
 		users.users.${appUser} = {
 			isSystemUser = true;
@@ -27,7 +37,7 @@ in
 		# `claude` / `gh` for the t3code user to log in once by hand
 		# (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`) and `t3`
 		# for `t3 pair`; git is already in the REDRUM system profile.
-		environment.systemPackages = [ pkgs.claude-code pkgs.gh t3code ];
+		environment.systemPackages = [ claude-code pkgs.gh t3code ];
 
 		# The server only drives a provider, it does not ship one: everything the
 		# agent shells out to has to be on the unit's PATH. Credentials live in
@@ -37,7 +47,7 @@ in
 			description = "T3 Code server";
 			after = [ "network.target" ];
 			wantedBy = [ "multi-user.target" ];
-			path = [ pkgs.claude-code pkgs.gh pkgs.git pkgs.bashInteractive config.nix.package ];
+			path = [ claude-code pkgs.gh pkgs.git pkgs.bashInteractive config.nix.package ];
 
 			serviceConfig = {
 				Type = "simple";
