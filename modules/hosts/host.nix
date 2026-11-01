@@ -37,6 +37,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.doodads
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.keyring
+				inputs.self.modules.nixos.claude-code-policy
 				inputs.self.modules.nixos."GOD-KILLER"
 				inputs.self.modules.nixos."GOD-KILLER-hardware"
 				inputs.self.modules.nixos."GOD-KILLER-monitors"
@@ -119,6 +120,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.miniflux
 				inputs.self.modules.nixos.reactflux
 				inputs.self.modules.nixos.t3code
+				inputs.self.modules.nixos.claude-code-policy
 				inputs.self.modules.nixos.youtube
 				inputs.self.modules.nixos.stylix
 				inputs.stylix.nixosModules.stylix

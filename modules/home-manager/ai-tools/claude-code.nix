@@ -12,112 +12,376 @@
 			settings = {
 				theme = "dark";
 
+				# The permission policy is NOT here: it is the root-owned managed
+				# policy below (/etc/claude-code/managed-settings.json), which the
+				# agent cannot edit and every user-level file merges under. The
+				# merge is `live * nix` and jq replaces arrays wholesale, so these
+				# empty lists wipe rules left in the live file by older generations
+				# (or written by an agent) on every activation.
 				permissions = {
-					# Do NOT set `disableBypassPermissionsMode` here. T3 Code launches
-					# Full access threads with `--permission-mode bypassPermissions
-					# --allow-dangerously-skip-permissions`, which contradicts it and
-					# makes those threads fail with a provider error. It never gated
-					# anything anyway (a Full access thread ran `git push` with no
-					# prompt, 2026-10-30): keep threads on Supervised instead.
-
-					# opencode-style `external_directory`: file tools already prompt
-					# outside the working directory, but read-only Bash (ls, cat, grep,
-					# find) does not unless this is set.
-					blockReadsOutsideWorkingDirectories = true;
-
-					# no standing additionalDirectories: grant a directory per session
-					# with /add-dir (or the T3 approval card) when troubleshooting
-					# another project.
-
-					allow = [
-						# mcp-nixos (read-only package/option/version lookups). MCP servers
-						# delivered by home-manager arrive as the "hm" plugin, hence the prefix.
-						"mcp__plugin_hm_nixos__nix"
-						"mcp__plugin_hm_nixos__nix_versions"
-
-						# verification that needs no root
-						"Bash(./rebuild.sh build *)"
-						"Bash(bash -n *)"
-						"Bash(nixos-rebuild list-generations *)"
-						"Bash(nix flake metadata *)"
-						"Bash(nix flake show *)"
-						"Bash(nix search *)"
-						"Bash(nix log *)"
-						"Bash(nix path-info *)"
-						"Bash(nix why-depends *)"
-						"Bash(nix store diff-closures *)"
-
-						# on-device troubleshooting (read-only)
-						"Bash(journalctl *)"
-						"Bash(systemctl status *)"
-						"Bash(systemctl is-active *)"
-						"Bash(systemctl is-enabled *)"
-						"Bash(systemctl list-units *)"
-						"Bash(systemctl cat *)"
-						"Bash(systemctl --user status *)"
-
-						# upstream-fix checks (AGENTS.md "Pending upstream fixes")
-						"Bash(gh auth status)"
-						"Bash(gh issue view *)"
-						"Bash(gh issue list *)"
-						"Bash(gh pr view *)"
-						"Bash(gh pr list *)"
-						"Bash(gh pr checks *)"
-						"Bash(gh repo view *)"
-						"WebFetch(domain:github.com)"
-						"WebFetch(domain:raw.githubusercontent.com)"
-					];
-
-					# consent gates: these prompt even in Auto-accept edits / Auto
-					ask = [
-						"Bash(sudo *)"
-						"Bash(nixos-rebuild switch *)"
-						"Bash(nixos-rebuild boot *)"
-						"Bash(nixos-rebuild test *)"
-						"Bash(*rebuild.sh switch*)"
-						"Bash(*rebuild.sh push*)"
-						"Bash(git commit *)"
-						"Bash(git push *)"
-						"Bash(gh pr merge *)"
-						"Bash(gh pr create *)"
-						"Bash(gh api *)"
-					];
-
-					deny = [
-						# gh is git's credential helper (github-cli.nix): never let the
-						# agent print the token. Best-effort globs; the real gates are the
-						# `git push` / `gh api` ask rules above and Supervised mode.
-						"Bash(gh auth token*)"
-						"Bash(gh auth status *)"
-						"Bash(gh auth refresh*)"
-						"Bash(gh auth login*)"
-						"Bash(gh auth logout*)"
-						"Bash(gh auth switch*)"
-						"Bash(git credential*)"
-						"Bash(*hosts.yml*)"
-
-						# credentials and secrets (Read rules also cover Grep/Glob)
-						"Read(~/.ssh/**)"
-						"Read(~/.gnupg/**)"
-						"Read(~/.config/gh/**)"
-						"Read(~/.config/rss-sync/**)"
-						"Read(~/.config/nix/nix.conf)"
-						"Read(~/.claude/.credentials.json)"
-						"Read(~/.t3/userdata/secrets/**)"
-						"Read(//run/secrets/**)"
-						"Read(//etc/ssh/ssh_host_*)"
-						"Read(//var/lib/**/*.env)"
-						"Read(//**/.env)"
-						"Read(//**/token.json)"
-						"Read(//**/client_secret.json)"
-
-						# the agent must not widen its own permissions or touch keys
-						"Edit(~/.ssh/**)"
-						"Edit(~/.gnupg/**)"
-						"Edit(~/.claude/settings.json)"
-					];
+					allow = [];
+					ask = [];
+					deny = [];
 				};
 			};
 		};
 	};
+
+	# Claude Code policy for every user on the host: cairo on GOD-KILLER and the
+	# t3code service user on REDRUM read the same file, so the two cannot drift.
+	# Layers, strongest first (docs/agent-security.md has the evidence):
+	#   1. sandbox: bubblewrap; with blockReadsOutsideWorkingDirectories it
+	#      swaps /home for an empty tmpfs and re-opens only the working dirs,
+	#      so ~/.ssh, ~/.config/gh, ... do not exist for sandboxed Bash. Strict:
+	#      nothing escapes except `excludedCommands`.
+	#   2. deny rules + the claude-guard PreToolUse hook: hold in every mode,
+	#      including T3 Full access (bypassPermissions).
+	#   3. ask rules: prompts in Supervised / Accept edits / Auto. Full access
+	#      auto-approves prompts, so the guard turns these into blocks there.
+	# Other modules add to the policy with drop-ins (lists merge, scalars from
+	# later files win), e.g. secret scanning or notification hooks:
+	#   environment.etc."claude-code/managed-settings.d/50-<name>.json".text = builtins.toJSON { hooks = { ... }; };
+	# Only hooks delivered this way (or here) run: allowManagedHooksOnly.
+	flake.modules.nixos."claude-code-policy" = { pkgs, ... }:
+		let
+			guard = pkgs.writeShellApplication {
+				name = "claude-guard";
+				runtimeInputs = with pkgs; [ coreutils gnugrep gnused jq git ];
+				text = builtins.readFile ../../scripts/claude-guard.sh;
+				# literal `$HOME` / `$(` in its regexes and self-tests are the point
+				excludeShellChecks = [ "SC2016" ];
+			};
+
+			# commands that run outside the sandbox. They still go through the
+			# normal permission flow (allow/ask/deny, guard). Keep them narrow: an
+			# excluded command can read everything the user can.
+			excludedCommands = [
+				# the nix daemon socket is AF_UNIX (blocked by the sandbox's seccomp
+				# filter) and flake eval trips over the masked .gitmodules.
+				# `nix run/shell/develop` stay sandboxed on purpose (they would
+				# execute arbitrary code outside it), so they fail in agent sessions.
+				"nix eval *"
+				"nix build *"
+				"nix flake *"
+				"nix log *"
+				"nix path-info *"
+				"nix why-depends *"
+				"nix search *"
+				"nix store *"
+				"nix derivation *"
+				"nix-store *"
+				"nix-instantiate *"
+				"nixos-rebuild *"
+				"./rebuild.sh *"
+				# gh and git's network commands need the token in ~/.config/gh
+				"gh *"
+				"git push *"
+				"git fetch *"
+				"git pull *"
+				"git ls-remote *"
+				# D-Bus / unix sockets, /run and the host network namespace
+				"systemctl *"
+				"journalctl *"
+				"loginctl *"
+				"resolvectl *"
+				"tailscale status *"
+				"ss *"
+				"ip addr *"
+				"ip route *"
+				"ip link show *"
+				# GPU / display probes (Waydroid, Hyprland troubleshooting)
+				"hyprctl monitors *"
+				"hyprctl clients *"
+				"hyprctl workspaces *"
+				"hyprctl devices *"
+				"hyprctl version *"
+				"nvidia-smi *"
+				"vulkaninfo *"
+				"glxinfo *"
+				"eglinfo *"
+				"wayland-info *"
+				"mpv *"
+				"waydroid *"
+				"adb *"
+			];
+
+			permissions = {
+				# Do NOT set `disableBypassPermissionsMode`: T3 Code launches Full
+				# access threads with `--permission-mode bypassPermissions`, which it
+				# contradicts (provider error). Deny rules and the guard hold there.
+
+				# reads outside the working directories prompt (file tools and
+				# recognised read commands) and, with the sandbox, are hidden from
+				# sandboxed Bash. Grant a directory per session with /add-dir.
+				blockReadsOutsideWorkingDirectories = true;
+
+				allow = [
+					# mcp-nixos (read-only package/option/version lookups). MCP servers
+					# delivered by home-manager arrive as the "hm" plugin, hence the prefix.
+					"mcp__plugin_hm_nixos__nix"
+					"mcp__plugin_hm_nixos__nix_versions"
+
+					# verification that needs no root
+					"Bash(./rebuild.sh build *)"
+					"Bash(bash -n *)"
+					"Bash(nixos-rebuild build *)"
+					"Bash(nixos-rebuild list-generations *)"
+					"Bash(nix eval *)"
+					"Bash(nix build *)"
+					"Bash(nix flake check *)"
+					"Bash(nix flake metadata *)"
+					"Bash(nix flake show *)"
+					"Bash(nix search *)"
+					"Bash(nix log *)"
+					"Bash(nix path-info *)"
+					"Bash(nix why-depends *)"
+					"Bash(nix derivation show *)"
+					"Bash(nix store diff-closures *)"
+
+					# branch work (commits on master prompt via the guard; pushes
+					# always prompt: `git push *` is an ask rule)
+					"Bash(git add *)"
+					"Bash(git commit *)"
+					"Bash(git fetch *)"
+
+					# GitHub: reads, plus PRs/issues on this repo (the guard prompts
+					# when --repo names another one)
+					"Bash(gh auth status)"
+					"Bash(gh issue view *)"
+					"Bash(gh issue list *)"
+					"Bash(gh issue create *)"
+					"Bash(gh pr view *)"
+					"Bash(gh pr list *)"
+					"Bash(gh pr diff *)"
+					"Bash(gh pr checks *)"
+					"Bash(gh pr create *)"
+					"Bash(gh repo view *)"
+					"Bash(gh run list *)"
+					"Bash(gh run view *)"
+					"Bash(gh release list *)"
+					"Bash(gh release view *)"
+					"Bash(gh search issues *)"
+					"Bash(gh search prs *)"
+					"WebFetch(domain:github.com)"
+					"WebFetch(domain:raw.githubusercontent.com)"
+					"WebFetch(domain:code.claude.com)"
+					"WebFetch(domain:nixos.org)"
+					"WebFetch(domain:wiki.nixos.org)"
+					"WebFetch(domain:search.nixos.org)"
+					"WebFetch(domain:discourse.nixos.org)"
+					"WebFetch(domain:nix.dev)"
+					"WebFetch(domain:wiki.t2linux.org)"
+
+					# on-device troubleshooting (read-only)
+					"Bash(journalctl *)"
+					"Bash(systemctl status *)"
+					"Bash(systemctl is-active *)"
+					"Bash(systemctl is-enabled *)"
+					"Bash(systemctl is-failed *)"
+					"Bash(systemctl list-units *)"
+					"Bash(systemctl list-timers *)"
+					"Bash(systemctl list-unit-files *)"
+					"Bash(systemctl cat *)"
+					"Bash(systemctl show *)"
+					"Bash(systemctl --user status *)"
+					"Bash(systemctl --user list-units *)"
+					"Bash(systemctl --user is-active *)"
+					"Bash(loginctl list-sessions *)"
+					"Bash(loginctl show-session *)"
+					"Bash(resolvectl status *)"
+					"Bash(tailscale status *)"
+					"Bash(ss *)"
+					"Bash(ip addr *)"
+					"Bash(ip route *)"
+					"Bash(ip link show *)"
+					"Bash(hyprctl monitors *)"
+					"Bash(hyprctl clients *)"
+					"Bash(hyprctl workspaces *)"
+					"Bash(hyprctl devices *)"
+					"Bash(hyprctl version *)"
+					"Bash(nvidia-smi *)"
+				];
+
+				# consent gates: these prompt in Supervised, Accept edits and Auto;
+				# in Full access the guard refuses them instead
+				ask = [
+					"Bash(sudo *)"
+					"Bash(nixos-rebuild switch *)"
+					"Bash(nixos-rebuild boot *)"
+					"Bash(nixos-rebuild test *)"
+					"Bash(nixos-rebuild dry-activate *)"
+					"Bash(*rebuild.sh switch*)"
+					"Bash(*rebuild.sh test*)"
+					"Bash(*rebuild.sh deploy*)"
+					"Bash(*rebuild.sh push*)"
+					"Bash(git push *)"
+					"Bash(git merge *)"
+					"Bash(git reset --hard*)"
+					"Bash(git clean *)"
+					"Bash(git branch -D *)"
+					"Bash(git branch -f *)"
+					"Bash(git update-ref *)"
+					"Bash(git reflog expire *)"
+					"Bash(git reflog delete *)"
+					"Bash(git gc *)"
+					"Bash(git stash drop *)"
+					"Bash(git stash clear*)"
+					"Bash(git worktree remove *)"
+					"Bash(git worktree prune *)"
+					"Bash(gh pr merge *)"
+					"Bash(gh pr close *)"
+					"Bash(gh api *)"
+					"Bash(gh repo create *)"
+					"Bash(gh repo delete *)"
+					"Bash(gh repo edit *)"
+					"Bash(gh repo rename *)"
+					"Bash(gh repo archive *)"
+					"Bash(gh release create *)"
+					"Bash(gh release delete *)"
+					"Bash(gh release upload *)"
+					"Bash(gh secret *)"
+					"Bash(gh variable *)"
+					"Bash(gh workflow run *)"
+					"Bash(gh gist *)"
+					"Bash(systemctl start *)"
+					"Bash(systemctl stop *)"
+					"Bash(systemctl restart *)"
+					"Bash(systemctl reload *)"
+					"Bash(systemctl enable *)"
+					"Bash(systemctl disable *)"
+					"Bash(systemctl mask *)"
+					"Bash(systemctl kill *)"
+					"Bash(systemctl --user start *)"
+					"Bash(systemctl --user stop *)"
+					"Bash(systemctl --user restart *)"
+					"Bash(systemctl --user enable *)"
+					"Bash(systemctl --user disable *)"
+				];
+
+				deny = [
+					# gh is git's credential helper (github-cli.nix): never let the
+					# agent print the token
+					"Bash(gh auth token*)"
+					"Bash(gh auth status *)"
+					"Bash(gh auth refresh*)"
+					"Bash(gh auth login*)"
+					"Bash(gh auth logout*)"
+					"Bash(gh auth switch*)"
+					"Bash(git credential*)"
+					"Bash(*hosts.yml*)"
+
+					# credentials and secrets. Read rules cover Read/Grep/Glob, the
+					# Bash file commands Claude recognises (cat, head, sed, ...), and
+					# are merged into the sandbox's denyRead
+					"Read(~/.ssh/**)"
+					"Read(~/.gnupg/**)"
+					"Read(~/.config/gh/**)"
+					"Read(~/.config/rss-sync/**)"
+					"Read(~/.config/nix/nix.conf)"
+					"Read(~/.git-credentials)"
+					"Read(~/.netrc)"
+					"Read(~/.claude/.credentials.json)"
+					"Read(~/.t3/userdata/secrets/**)"
+					"Read(//run/secrets/**)"
+					"Read(//etc/ssh/ssh_host_*)"
+					"Read(//var/lib/cloudflared/**)"
+					"Read(//var/lib/**/*.env)"
+					"Read(//**/.env)"
+					"Read(//**/token.json)"
+					"Read(//**/client_secret.json)"
+
+					# the agent must not widen its own permissions or touch keys:
+					# settings, hooks and MCP servers in a repo run on the next session
+					"Edit(~/.ssh/**)"
+					"Edit(~/.gnupg/**)"
+					"Edit(~/.claude/settings.json)"
+					"Edit(~/.claude/settings.local.json)"
+					"Edit(**/.claude/settings.json)"
+					"Edit(**/.claude/settings.local.json)"
+					"Edit(**/.claude/hooks/**)"
+					"Edit(**/.mcp.json)"
+					"Edit(//etc/claude-code/**)"
+					"Edit(~/.t3/userdata/**)"
+
+					# persistence outside the sandbox: things that run later as the
+					# user. Supervised already prompts (protected paths); these hold
+					# in Full access too, where the Edit tool may write anywhere.
+					"Edit(~/.zshrc)"
+					"Edit(~/.zshenv)"
+					"Edit(~/.zprofile)"
+					"Edit(~/.bashrc)"
+					"Edit(~/.bash_profile)"
+					"Edit(~/.profile)"
+					"Edit(~/.gitconfig)"
+					"Edit(~/.config/git/**)"
+					"Edit(~/.config/systemd/**)"
+					"Edit(~/.config/autostart/**)"
+					"Edit(~/.config/hypr/**)"
+					"Edit(~/.local/bin/**)"
+				];
+			};
+
+			askRules = pkgs.writeText "claude-ask-rules.json" (builtins.toJSON permissions.ask);
+		in {
+			# sandbox runtime (the T3 Code package wraps these into its own PATH;
+			# a terminal `claude` needs them system-wide). The REDRUM service PATH
+			# is set in modules/server/t3code.nix.
+			environment.systemPackages = [ pkgs.bubblewrap pkgs.socat guard ];
+
+			environment.etc."claude-code/managed-settings.json".text = builtins.toJSON {
+				inherit permissions;
+
+				# only hooks from /etc/claude-code (root-owned, from this repo) run:
+				# hooks an agent writes into a repo's .claude/settings.json, a skill
+				# or a subagent never execute. Also disables /goal and user-level
+				# statusLine.
+				allowManagedHooksOnly = true;
+
+				hooks.PreToolUse = [
+					{
+						matcher = "Bash|Edit|Write|MultiEdit|NotebookEdit";
+						hooks = [
+							{
+								type = "command";
+								command = "${guard}/bin/claude-guard ${askRules}";
+								timeout = 10;
+							}
+						];
+					}
+				];
+
+				sandbox = {
+					enabled = true;
+					# refuse to start rather than silently run unsandboxed
+					failIfUnavailable = true;
+					# strict: no `dangerouslyDisableSandbox` retries
+					allowUnsandboxedCommands = false;
+					# sandboxed Bash runs without a prompt; content ask rules
+					# (git push, rm of .git via the guard, ...) still prompt
+					autoAllowBashIfSandboxed = true;
+					inherit excludedCommands;
+					# home is hidden from sandboxed commands; git still needs its
+					# config (identity, gh credential-helper line; no secrets in it)
+					filesystem.allowRead = [ "~/.config/git" ];
+					# hosts sandboxed commands (curl, git over https, ...) may reach.
+					# Strict: anything else is refused instead of prompting, because
+					# Full access auto-approves that prompt (curl example.com went
+					# through in a bypass test). Does not limit WebFetch, MCP or
+					# excluded commands.
+					network.strictAllowlist = true;
+					network.allowedDomains = [
+						"github.com"
+						"api.github.com"
+						"codeload.github.com"
+						"raw.githubusercontent.com"
+						"objects.githubusercontent.com"
+						"cache.nixos.org"
+						"channels.nixos.org"
+						"nixos.org"
+						"search.nixos.org"
+						"wiki.t2linux.org"
+					];
+				};
+			};
+		};
 }
