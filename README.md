@@ -190,7 +190,9 @@ matches the rest of the config out of the box.
   Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
   ReactFlux (a Miniflux web client), a T3 Code agent server (tailnet-only, see [T3 Code on REDRUM](#t3-code-on-redrum)), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
-  playlist-sync service backed by a `devShell` (`nix develop .#youtube-sync`).
+  playlist-sync service (hourly; reads subscriptions via the Data API but checks
+  each channel's RSS feed for new uploads to stay under the daily API quota)
+  backed by a `devShell` (`nix develop .#youtube-sync`).
 - **System niceties** — Opt-in experimental features, auto-optimised store,
   Flatpak support, Minecraft + game launchers, Waydroid, iOS sideloading
   toolchain, `mtkclient`/`rockbox-utility` gadget firmware "doodads", VPN, and
@@ -202,7 +204,36 @@ matches the rest of the config out of the box.
   (wraps `github:zackb/tether`'s NixOS module). See the pairing steps below.
 - **Shared rss sources** — `rss-sources` (`modules/system/rss-sources.nix`)
   defines the standard feed list once; the glance rss widget and the `nom`
-  terminal reader both consume it, so the same sources appear everywhere.
+  terminal reader both consume it, so the same sources appear everywhere. The
+  list itself is data, `modules/system/rss-feeds.json` (`url`, `title`, optional
+  `category`, `tags`, `limit`), and the module also renders it as OPML, linked
+  at `/etc/rss-sources.opml` — import that file into any reader (FreshRSS, Yarr,
+  NetNewsWire, …) to bulk-subscribe. `category` becomes the folder/category in
+  readers that have one (Miniflux's "Nuclear" holds the nuclear-industry feeds).
+  - **Miniflux sync** — `rss-sync` (GOD-KILLER; `modules/scripts/rss-sync.py`,
+    wired by `home-manager/terminal/rss-sync.nix`) keeps the list and Miniflux
+    in step in both directions. It compares three things — the master list,
+    Miniflux, and `rss-feeds.synced.json` (the URLs both sides agreed on at the
+    last sync) — which is what tells "deleted in Miniflux" from "never pushed".
+    Every command is a dry run until given its apply flag:
+
+    | Command | Effect |
+    | --- | --- |
+    | `rss-sync` / `rss-sync status` | show what each command below would do |
+    | `rss-sync push` | subscribe Miniflux to feeds in the list that it lacks (creating categories as needed) |
+    | `rss-sync pull --write` | add feeds you subscribed to in Miniflux/on your phone to the list |
+    | `rss-sync pull --write --apply-removals` | also drop feeds you deleted in Miniflux from the list (refuses more than 5 at once, or if Miniflux is empty) |
+    | `rss-sync prune --yes` | delete from Miniflux the feeds you removed from the list (also deletes their entries) |
+
+    Only feeds recorded in the snapshot are ever deleted from Miniflux, so a
+    feed added on a phone is never lost before `pull` has seen it. `pull` only
+    edits the JSON; commit it and rebuild so Glance/`nom`/the OPML pick it up.
+    One-time setup: create an API token in Miniflux (Settings → API Keys) and
+    save it with `mkdir -p ~/.config/rss-sync && install -m 600 /dev/stdin
+    ~/.config/rss-sync/api-token` (paste, Ctrl-D), or export `MINIFLUX_TOKEN`.
+    `MINIFLUX_URL` defaults to `https://feed.cqjro.ca`. A feed whose URL
+    Miniflux rewrites after a permanent redirect shows up as one deletion plus
+    one addition; `pull --write --apply-removals` resolves it.
 
 - **Nixdatifier** — NixOS generations, package diffs, flake-update checks and
   store tools from the desktop: the tray app's icon lives in noctalia's bar

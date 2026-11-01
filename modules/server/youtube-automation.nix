@@ -42,7 +42,8 @@ in
         User = "youtube-sync";
         Group = "youtube-sync";
         WorkingDirectory = workDir;
-        ExecStart = "${pythonEnv}/bin/python3 ${workDir}/sync_playlist.py --config ${workDir}/config.json";
+        # Script is Nix-managed; only config.json / token.json live in workDir.
+        ExecStart = "${pythonEnv}/bin/python3 ${../scripts/sync_playlist.py} --config ${workDir}/config.json";
 
         # Hardening
         ProtectSystem = "strict";
@@ -57,9 +58,10 @@ in
       description = "Run youtube-playlist-sync periodically";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        # Every 15 minutes; adjust to taste (e.g. "hourly").
+        # Hourly: at 15 min the Data API quota (10,000 units/day) ran out, since
+        # channels whose RSS feed fails fall back to a 1-unit API call each.
         OnBootSec = "5m";
-        OnUnitActiveSec = "15m";
+        OnUnitActiveSec = "1h";
         Persistent = true;
       };
     };

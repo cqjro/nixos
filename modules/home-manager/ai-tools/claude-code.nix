@@ -100,6 +100,7 @@
 						"Read(~/.ssh/**)"
 						"Read(~/.gnupg/**)"
 						"Read(~/.config/gh/**)"
+						"Read(~/.config/rss-sync/**)"
 						"Read(~/.config/nix/nix.conf)"
 						"Read(~/.claude/.credentials.json)"
 						"Read(~/.t3/userdata/secrets/**)"

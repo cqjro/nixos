@@ -1,0 +1,58 @@
+[
+	{
+		"url": "https://selfh.st/rss/",
+		"title": "selfh.st",
+		"tags": ["selfhosted"],
+		"limit": 4
+	},
+	{
+		"url": "https://ciechanow.ski/atom.xml",
+		"title": "Ciechanow.ski",
+		"tags": ["dev", "engineering"]
+	},
+	{
+		"url": "https://www.joshwcomeau.com/rss.xml",
+		"title": "Josh W. Comeau",
+		"tags": ["dev", "frontend"]
+	},
+	{
+		"url": "https://samwho.dev/rss.xml",
+		"title": "Sam Rose",
+		"tags": ["dev"]
+	},
+	{
+		"url": "https://ishadeed.com/feed.xml",
+		"title": "Ahmad Shadeed",
+		"tags": ["dev", "frontend", "css"]
+	},
+	{
+		"url": "https://www.world-nuclear-news.org/rss",
+		"title": "World Nuclear News",
+		"category": "Nuclear",
+		"tags": ["nuclear", "news"]
+	},
+	{
+		"url": "https://www.iaea.org/feeds/topnews",
+		"title": "IAEA Top News",
+		"category": "Nuclear",
+		"tags": ["nuclear", "news", "regulation"]
+	},
+	{
+		"url": "https://www.iaea.org/feeds/publications",
+		"title": "IAEA Publications",
+		"category": "Nuclear",
+		"tags": ["nuclear", "publications", "regulation"]
+	},
+	{
+		"url": "https://api.io.canada.ca/io-server/gc/news/en/v2?dept=canadiannuclearsafetycommission&sort=publishedDate&orderBy=desc&pick=20&format=atom&atomtitle=Canadian%20Nuclear%20Safety%20Commission",
+		"title": "CNSC News",
+		"category": "Nuclear",
+		"tags": ["nuclear", "news", "regulation"]
+	},
+	{
+		"url": "https://www.worldnuclearreport.org/spip.php?page=backend",
+		"title": "World Nuclear Industry Status Report",
+		"category": "Nuclear",
+		"tags": ["nuclear", "publications"]
+	}
+]

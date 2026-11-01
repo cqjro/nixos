@@ -88,7 +88,16 @@ Other conventions:
 - Shared **data** fragments also live NixOS-side and are consumed user-side via
   `osConfig`. Example: `rss-sources.feeds` (in `modules/system/rss-sources.nix`)
   feeds the glance rss widget through `config.rss-sources.feeds` and
-  `nom` via `osConfig.rss-sources.feeds`.
+  `nom` via `osConfig.rss-sources.feeds`. The list is data in
+  `modules/system/rss-feeds.json` (read with `builtins.fromJSON`), not Nix
+  source: `modules/scripts/rss-sync.py` (the `rss-sync` command, GOD-KILLER)
+  edits it to mirror Miniflux, and `rss-feeds.synced.json` is its snapshot of
+  URLs both sides agreed on — hand-edit the master list freely, but do not
+  hand-edit or delete the snapshot (without it a deletion in Miniflux looks
+  like a feed that was never pushed). The same module renders the list as OPML
+  (`rss-sources.opml`, `/etc/rss-sources.opml`). The Miniflux API token lives in
+  `~/.config/rss-sync/api-token` (`Read`-denied); agents run only
+  `rss-sync status` and leave `push`/`pull --write`/`prune --yes` to the human.
 - Theming is always derived from Stylix colors (`config.lib.stylix.colors.baseXX`)
   or `config.stylix.*` — never hardcode new colors in modules, extend the scheme
   in `modules/theme/stylix.nix` instead.
@@ -388,6 +397,20 @@ Notes:
 - **Secrets and firmware are gitignored** and must never be committed
   (`client_secret.json`, `token.json`, `config.json`, `firmware/`). The
   YouTube automation needs `token.json` present on the target host.
+- **YouTube playlist sync is quota-bound** (REDRUM, `modules/server/youtube-automation.nix`
+  + `modules/scripts/sync_playlist.py`). The Data API allows 10,000 units/day
+  (reads 1, playlist insert/delete 50); polling every subscription's uploads
+  playlist every 15 minutes exhausted it on 2026-10-31 (`quotaExceeded` on every
+  run, queue stale ~11h; resets midnight Pacific). The script now reads each
+  channel's public RSS feed and falls back to a 1-unit `playlistItems.list` only
+  for channels whose feed fails; `youtube.com/feeds` is flaky (404/500, sticky
+  per channel — some feeds failed 12/12 in testing), so the timer is hourly.
+  The script is Nix-managed (store path); only `config.json` / `token.json` are
+  hand-placed in `/var/lib/nixos-config/modules/server/youtube/`, and the old
+  hand-copied `sync_playlist.py` there is unused. The copy in
+  `modules/_archive/youtube-support/` is the retired original — don't edit it.
+  Check health with `journalctl -u youtube-playlist-sync` and the quota graph
+  in Google Cloud Console (YouTube Data API v3 → Quotas).
 - **REDRUM is built from pinned nixpkgs** (`nixpkgs-redrum`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
   without reading `modules/hosts/REDRUM/T2-PIN.md` and re-checking

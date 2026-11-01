@@ -31,6 +31,7 @@
 						btop
 						opencode
 						nom
+						rss-sync
 						terminal-packages
 						discord
 						inputs.self.modules.homeManager."mcp-servers"

@@ -168,10 +168,16 @@ repeated as proposals.
       work is the ML/`external_media` and large-storage decisions, plus
       Postgres/Redis, which no current module runs)
 
-- [ ] **RSS workflow** — finalize the feed list (`modules/system/rss-sources.nix`)
-      and reading workflow end-to-end: front-end apps + KOReader integration
-      on top of the existing Miniflux setup — **6/10**
-  - *Proposed approach:* feed list is a small edit; the workflow is the work.
+- [ ] **RSS workflow** — finalize the feed list (`modules/system/rss-feeds.json`;
+      `rss-sync` already syncs it with Miniflux) and reading workflow
+      end-to-end: front-end apps + KOReader integration on top of the existing
+      Miniflux setup — **6/10**
+  - *Open:* the US NRC news feed is still missing from the list —
+    `nrc.gov` returns 403 to non-browser clients, so copy the exact feed link
+    from <https://www.nrc.gov/public-involve/rss> in a browser, add it to
+    `rss-feeds.json` (`"category": "Nuclear"`), and check that Miniflux (on
+    REDRUM) can actually fetch it before relying on it.
+  - *Proposed approach:* the workflow is the work.
     Miniflux + ReactFlux already cover the server/browser side. For KOReader,
     point it at Miniflux's Fever API (Miniflux exposes `/fever/`) or generate
     per-feed EPUBs; then decide the desktop front-end (Glance reader widget vs a
