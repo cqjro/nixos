@@ -46,7 +46,7 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    *copied* (writable) store **and** metadata cache. Neither `fetchPnpmDeps` nor
    `buildPnpmPackage` exist in the pinned nixpkgs on REDRUM — hand-roll both.
    `nix flake check` on REDRUM is not part of the loop; verify with
-   `nix eval --impure '.#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'`.
+   `nix eval '.#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'`.
 
 ## Theming the Actual Budget Tweaks sidecar
 

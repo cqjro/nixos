@@ -44,10 +44,13 @@ config-sync                       # zsh alias -> modules/scripts/config-sync.sh 
 nix develop .#youtube-sync        # devshell for the youtube-sync helper
 ```
 
-- `--impure` is **required** (`rebuild.sh` passes it) because the flake reads
-  files not declared as inputs, such as the `brcm-firmware` bundles in
-  `modules/hosts/{LittleNix,REDRUM}`. LittleNix does not evaluate where its
-  gitignored firmware is absent (any worktree/clone without it).
+- All three hosts evaluate **purely**: the Apple T2 Wi-Fi/Bluetooth firmware
+  for REDRUM and LittleNix comes from the Nix store
+  (`modules/system/t2-firmware.nix`, `pkgs.requireFile` pinned by hash), so
+  evaluation needs no files and no `--impure`; only a *build* of a T2 host needs
+  the firmware imported into that machine's store (`docs/firmware.md`). If a
+  build reports the firmware missing, stop and tell the human which machine and
+  host — do not work around it.
 - `rebuild.sh` works on the checkout it lives in (worktree-safe). Always run
   `./rebuild.sh` from the checkout, never the `rebuild` zsh alias (a frozen
   store copy).
@@ -128,8 +131,8 @@ Other conventions:
 - Theming is always derived from Stylix colors (`config.lib.stylix.colors.baseXX`)
   or `config.stylix.*` — never hardcode new colors in modules, extend the scheme
   in `modules/theme/stylix.nix` instead.
-- Prefer **relative paths** over absolute ones (e.g. `./firmware/brcm` in
-  `LittleNix/machine.nix`). The latest commits moved paths to relative.
+- Prefer **relative paths** over absolute ones (e.g. `${../../scripts/pip-move.sh}` in
+  `home-manager/desktop/hyprland.nix`). The latest commits moved paths to relative.
 - Star imports from the fragment's `{ pkgs, ... }` arguments rather than
   introducing deps at the top level, matching surrounding files.
 
@@ -222,7 +225,8 @@ and `modules/server/t3code.nix` (REDRUM).
 - Threads run **Supervised**; T3's Full access bypasses every prompt.
 - Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
   `token.json`, `client_secret.json`) are never read, printed or committed;
-  firmware (`firmware/`) is never committed. Never ask the human to paste a
+  the T2 firmware is never committed, read, printed or attached (`docs/firmware.md`).
+  Never ask the human to paste a
   secret in chat — use T3's `request_secret`.
 - `switch`, `test`, `dry`, `revert`, `push`, `git commit|push`, `gh pr
   create|merge` and `sudo` are human-approved. No passwordless sudo for
@@ -258,7 +262,8 @@ Read the matching entry before touching that area.
   not viable.
 - **Xodus Nexus** — pinned AppImage; backend self-installs; needs the `keyring`
   fragments.
-- **Secrets and firmware are gitignored** and must never be committed.
+- **Secrets and firmware are gitignored** and must never be committed; the T2
+  firmware is proprietary, lives outside the repo and is never read or attached.
 - **YouTube playlist sync** is quota-bound (RSS first, hourly timer).
 - **REDRUM is built from pinned nixpkgs** (`cac0c1ef`); security-relevant
   packages (cloudflared, tailscale, t3code) are overridden explicitly.

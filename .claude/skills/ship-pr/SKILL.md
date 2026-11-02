@@ -14,8 +14,8 @@ Stop and report at the first failure; do not push a branch that fails tier 0.
 2. **Tier 0.** `./rebuild.sh check <hosts>` then `./rebuild.sh build <host>`
    for each host this machine may build. Empty output + exit 0 = success; on
    GOD-KILLER summarise the closure diff (new/removed packages, size).
-   LittleNix eval fails until its firmware is relocated — report it, do not fix
-   it here.
+   Building a T2 host needs its firmware in this machine's store; if the build
+   says it is missing, report the machine and host and stop (docs/firmware.md).
 3. **Tier 1.** Run the `nix-reviewer` subagent with: branch name, affected
    hosts, TODO item (if any). Fix `CHANGES`, re-run tier 0 and tier 1
    (max two rounds).

@@ -12,15 +12,17 @@ picking the T3 environment in the client.
 
 | Thread runs on | Edit config for | `eval` | `build` | `test` / `dry` | `switch` |
 | --- | --- | --- | --- | --- | --- |
-| GOD-KILLER (home, fast) | any host | any host | GOD-KILLER, REDRUM (LittleNix once its firmware evaluates) | GOD-KILLER locally (askpass); REDRUM only by the human from a terminal (`--target`) | GOD-KILLER, from merged `master`, human-approved |
+| GOD-KILLER (home, fast) | any host | any host | GOD-KILLER, REDRUM (LittleNix only once its firmware is imported here) | GOD-KILLER locally (askpass); REDRUM only by the human from a terminal (`--target`) | GOD-KILLER, from merged `master`, human-approved |
 | REDRUM (away, always on) | any host | any host — **eval-only for GOD-KILLER** | REDRUM only (never GOD-KILLER: too slow, and pointless) | human, over SSH | human, over SSH |
 
 - REDRUM agents run as the `t3code` system user and cannot sudo, so every
   activation on REDRUM is the human's (`ssh redrum`, then `./rebuild.sh test|switch REDRUM`).
-- Until REDRUM has its own clone of the repo readable by `t3code` and the
-  firmware is readable there (firmware thread), REDRUM agents are host
+- Until REDRUM has its own clone of the repo readable by `t3code` (not yet
+  set up), REDRUM agents are host
   troubleshooters (see [t3-claude.md](t3-claude.md)) and flake builds stay on
-  GOD-KILLER.
+  GOD-KILLER. Building REDRUM on REDRUM also needs its firmware imported into
+  REDRUM's store once (`nix run .#t2-firmware-import -- REDRUM`, untested there;
+  see `docs/firmware.md`).
 - A REDRUM build done on GOD-KILLER can be shipped instead of rebuilt:
   `nix copy --to ssh-ng://USER@redrum ./result`, then the switch on REDRUM is a
   cache hit. Run by the human (it uses SSH keys agents cannot reach).
@@ -85,7 +87,7 @@ picking the T3 environment in the client.
 
 `switch` refuses to run off `master`, so unmerged work can only ever be
 test-activated. The human can still bypass this for an emergency with plain
-`sudo nixos-rebuild switch --flake .#HOST --impure`; that generation is then
+`sudo nixos-rebuild switch --flake .#HOST`; that generation is then
 stamped with the branch commit (or `-dirty`).
 
 ## Generation tracking

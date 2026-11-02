@@ -511,24 +511,33 @@ To deploy an existing machine:
 git clone git@github.com:cqjro/nixos.git ~/.nixos
 cd ~/.nixos
 
-# 2. Rebuild any host from the repo (flake is self-contained, so this works
+# 2. T2 hosts only (REDRUM, LittleNix), before their first build on this machine:
+#    put the Apple brcm firmware in /var/lib/firmware-src/<HOST>/brcm (never in
+#    the repo) and import it into the Nix store; see docs/firmware.md
+nix run .#t2-firmware-import -- REDRUM
+
+# 3. Rebuild any host from the repo (flake is self-contained, so this works
 #    from any machine with Nix installed)
-sudo nixos-rebuild switch --flake ".#GOD-KILLER" --impure
+sudo nixos-rebuild switch --flake ".#GOD-KILLER"
 #     replace GOD-KILLER with LittleNix or REDRUM as appropriate
 ```
 
 For a fresh install from the live ISO, first bring up NixOS (installer →
-`nixos-generate-config` → boot), then:
+`nixos-generate-config` → boot), then (for a T2 host, import its firmware as in
+step 2 first):
 
 ```bash
 # Prefer the standalone installer for correct hardware/partition setup, or:
-nixos-install --flake ".#GOD-KILLER" --impure
+nixos-install --flake ".#GOD-KILLER"
 ```
 
 Notes:
 
-- `--impure` is required because the flake reads files from `~/.nixos` that
-  aren't declared as inputs (e.g. the REDRUM/littleNix `brcm-firmware` bundle).
+- All hosts evaluate without `--impure`: the T2 firmware is a hash-pinned store
+  path (`modules/system/t2-firmware.nix`), so clean clones and worktrees can
+  evaluate every host; only *building* a T2 host needs its firmware imported on
+  that machine. The firmware is proprietary — never commit, push or share it
+  (see `docs/firmware.md`).
 - Remote machines are configured for SSH keys over `git@github.com`, so
   `rebuild.sh` can deploy to any host and push the result back from anywhere.
 - Every generation records the commit it was built from

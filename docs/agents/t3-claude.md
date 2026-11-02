@@ -54,10 +54,11 @@ Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
   (`/etc/claude-code/managed-settings.json`) are all declared in `t3code.nix`,
   and its logins (`sudo -u t3code -H claude` / `gh auth login`) are manual
   one-offs stored in `/var/lib/t3code`. Keep that policy in step with
-  `ai-tools/claude-code.nix` when either changes. The flake's absolute
-  `/home/cairo/.nixos/...` firmware paths are probably unreadable to `t3code`
-  (home dirs default to 0700; untested), so treat REDRUM agents as host
-  troubleshooters; flake edits and builds stay on GOD-KILLER.
+  `ai-tools/claude-code.nix` when either changes. The T2 firmware comes from a
+  world-readable store path, so `t3code` needs no extra access to it. What still
+  keeps REDRUM agents to host troubleshooting is the missing `t3code`-readable
+  checkout of the repo; until it exists, flake builds stay on GOD-KILLER (see
+  [workflow.md](workflow.md)).
   Operational facts (full detail in the README's "T3 Code on REDRUM"):
   - Client and server versions must match ("This client requires a newer
     server"). REDRUM's pinned nixpkgs ships an older t3code, so `t3code.nix`
