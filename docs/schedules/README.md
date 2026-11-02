@@ -24,7 +24,7 @@ T3 scheduler (fixed_time, fresh thread per run)
             • prints a JSON report: changed? actionable?
        2. changed = false  → one line, stop                  ← the common case
        3. changed = true   → short summary of the report
-       4. actionable ≠ []  → t3_thread_launch ONE worker (worktree, fix/<slug>, from origin)
+       4. actionable ≠ []  → t3_thread_launch ONE worker (worktree, auto/<slug>, from origin/master)
             └─ worker: verify → edit → build → gh pr create "Fixes #N" → watch the PR
                  └─ human reviews, squash-merges, then switches the host
 ```
@@ -46,7 +46,7 @@ Why this shape:
 - **No schedule ever touches `master` or the main checkout.** The old "Build
   Flags" edited the root checkout. The new one evaluates a detached worktree of
   `origin/master` that the script creates and removes, and fixes go through a
-  worker's `fix/…` branch and a PR.
+  worker's `auto/…` branch and a PR.
 
 ## The pre-step script
 
@@ -66,8 +66,9 @@ schedule-precheck health SCHEDULE MESSAGE…
   substitutable from the cache?). A probe returns a *fix signal*, never proof.
   Statuses: `baseline` (first sight), `blocked` (unchanged), `changed`,
   `fix-candidate`, `error`. It warns when the row numbers in the registry table
-  (found in `AGENTS.md`, `README.md` or `docs/agents/*.md`) and the probe file
-  disagree, which is the drift check for the second copy.
+  (found in `docs/agents/upstream-registry.md`, then `README.md`) and the probe file
+  disagree. `./rebuild.sh check` already compares the registry with the README mirror;
+  this is the equivalent check for the probe file.
 - **`buildflags`** fetches `origin/master`, adds a detached worktree, runs
   `nix eval --impure --raw .#nixosConfigurations.<host>.config.system.build.toplevel.drvPath`
   for every `modules/hosts/*` directory, and parses stderr into
@@ -148,8 +149,8 @@ setting). So the plan is:
 
 | Run | Wanted | How |
 | --- | --- | --- |
-| Dispatcher (scheduled thread) | Haiku 5.5, low (or Sonnet 5.5, low) | Not settable by tool. Check whether T3's scheduled-task editor has a model picker (**please look**); otherwise it runs on the project default, which is fine because the dispatcher does almost nothing. |
-| Worker, upstream removal | Sonnet 5.5, medium | Set explicitly in `t3_thread_launch.modelSelection`. Mechanical removal, effort score 1–3. |
+| Dispatcher (scheduled thread) | Haiku, low (docs/agents/workflow.md: "Triage, scheduled checks") | Not settable by tool. Check whether T3's scheduled-task editor has a model picker (**please look**); otherwise it runs on the project default, which is fine because the dispatcher does almost nothing. |
+| Worker, upstream removal | Sonnet 5.5, medium (effort 1–3 row) | Set explicitly in `t3_thread_launch.modelSelection`. Mechanical removal, effort score 1–3. |
 | Worker, warning/eval fix | Sonnet 5.5, medium; high if the dispatcher marks it non-trivial | Same. Escalate to Opus 5.5 only after two failed rounds, per thread 1's tiers. |
 | Row 1 (REDRUM kernel pin) | none | `notify-only`: needs kernel testing and a human-run REDRUM switch. |
 
@@ -221,14 +222,14 @@ are why the design is worth having:
   two avahi options) plus `pnpm: Override nodejs-slim` on REDRUM. LittleNix fails
   to evaluate (missing firmware path), which is ignored with a reason until
   thread 2 merges.
-- **Stale cross-references:** `3d-printing.nix` points at "AGENTS.md rows 4 and
-  5" and `nixdatifier.nix` at "rows 6 and 7"; the registry numbers are 2/3 and
-  4/5. Not in this lane; noted in the PR.
+- **Stale cross-references:** `3d-printing.nix` and `nixdatifier.nix` cited the wrong
+  registry rows; the workflow branch already fixes them (`917d021`).
 
 ## Rollout
 
-1. Merge this PR (the prompts call `docs/schedules/bin/schedule-precheck`, which
-   must exist in the checkout the scheduled runs use).
+1. Merge the workflow/docs PR first (workers use `./rebuild.sh check|build` and the
+   `ship-pr` skill), then this one (the prompts call `docs/schedules/bin/schedule-precheck`,
+   which must exist in the checkout the scheduled runs use).
 2. Approve (or edit) the prompts in `upstream-check.md` and `build-flags.md`.
 3. Thread 4 allows `Bash(docs/schedules/bin/schedule-precheck *)`, so an unattended
    run does not stall on a prompt (see Handoffs).
@@ -246,32 +247,27 @@ not, `update_scheduled_task enabled=false` before then.
 
 ## Handoffs to other threads
 
-**Thread 1 (docs / `rebuild.sh` / AGENTS.md):**
+**Workflow thread (`workflow/pr-rebuild-docs`).** Its handoff is applied here: `auto/<slug>`
+branches from `origin/master`, `./rebuild.sh check|eval|build` and the `ship-pr` skill in the
+worker briefs, Haiku low for scheduled checks, and the registry at
+`docs/agents/upstream-registry.md`. What is left for it:
 
-- AGENTS.md "Pending upstream fixes" standing instruction currently says to
-  re-check every entry "on every rebuild conversation, before doing anything
-  else". With this schedule that becomes: *read the open `upstream-fix` issues
-  (`gh issue list --label upstream-fix`) and the latest `.log/schedules/` report;
-  re-check by hand only the rows with no issue.* This removes a recurring
-  per-conversation token cost. Suggested wording is in `upstream-check.md`.
-- The registry table now has a second, structured copy
-  (`docs/schedules/upstream-probes.json`). Either keep the row numbers in step
-  (the script warns on mismatch) or, better, make one the source and generate
-  the other. When a worker removes a registry row it also deletes the matching
-  probe entry; say so in the "removing a workaround" steps.
-- Tell the rebuild stages about worktrees: the worker briefs use
-  `nixos-rebuild build --flake .#HOST --impure` until `rebuild.sh` is worktree-safe.
-- Fix the stale registry row references in `3d-printing.nix` / `nixdatifier.nix`
-  comments (they say rows 4–7 for what are rows 2–5).
-- TODO.md items "Upstream-fixes watchdog" and "Rebuild warnings catcher" are
-  implemented by this work. Per the repo rule they should be removed from
-  `TODO.md` in the same change; TODO.md is outside this lane, so remove them when
-  this merges.
-- Packaging: `schedule-precheck` borrows `python3` through `nix shell` because
-  agent shells have no Python. Ship it properly (home-manager package or
-  `writers.writePython3Bin` with `gh git nix` as runtime inputs) alongside the
-  other scripts in `modules/scripts/`, and add it to the REDRUM `t3code` user's
-  tools.
+- The AGENTS.md standing instruction ("in every rebuild conversation, re-check each entry")
+  should become a read of the open `upstream-fix` issues once the schedule is live; the
+  replacement wording is in `upstream-check.md`. Not before, or nothing polls the registry.
+- The registry now exists in three places: `docs/agents/upstream-registry.md`, the README
+  mirror (`./rebuild.sh check` compares those two) and `upstream-probes.json`
+  (`schedule-precheck` warns when its row numbers differ). Consider extending the check, or
+  generating the probe file's row list from the registry. A worker that removes a row deletes
+  it from all three.
+- Packaging: `schedule-precheck` borrows `python3` through `nix shell` because agent shells
+  have none. Ship it properly (home-manager package or `writers.writePython3Bin` with
+  `gh git nix` as runtime inputs) next to the other scripts in `modules/scripts/`, and add it
+  to the REDRUM `t3code` user's tools.
+- `TODO.md` items "Upstream-fixes watchdog" and "Rebuild warnings catcher" are implemented
+  by this work. Remove them once the schedules are verified live (the repo rule is to remove
+  an item when it is implemented; removing them earlier would hide that nothing runs yet).
+  The watchdog item's registry pointer is already updated on this branch.
 
 **Thread 4 (permissions):**
 

@@ -154,7 +154,7 @@ class Issues:
 
 def table_rows(root: Path):
 	"""Count registry rows, wherever thread 1 ends up putting the table."""
-	files = [root / "AGENTS.md", root / "README.md", *sorted((root / "docs").glob("agents/*.md"))]
+	files = [root / "docs/agents/upstream-registry.md", root / "README.md", root / "AGENTS.md", *sorted((root / "docs").glob("agents/*.md"))]
 	for f in files:
 		if not f.is_file():
 			continue

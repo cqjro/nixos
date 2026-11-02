@@ -41,7 +41,7 @@ repeated as proposals.
 
 - [ ] **Upstream-fixes watchdog** — build a monitor (background process or
       agent) that tracks the "Pending upstream fixes" registry rows in
-      `README.md` / `AGENTS.md`, periodically re-checks each upstream
+      `docs/agents/upstream-registry.md` (mirrored in `README.md`), periodically re-checks each upstream
       issue/PR, and prompts me (or an agent) when a fix has landed so the
       workaround can be removed and verified — **7/10**
   - *Proposed approach:* parse the registry table (its `Blocked on` column is

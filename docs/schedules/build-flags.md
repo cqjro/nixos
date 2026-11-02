@@ -8,10 +8,10 @@ Replaces the existing "Build Flags" task
 | Old behaviour | Problem under the PR workflow | New behaviour |
 | --- | --- | --- |
 | Evaluated the root checkout (`/home/cairo/.nixos`) as it stood | A half-edited tree gives false reports; the report is about uncommitted work, not merged work | `schedule-precheck buildflags` evaluates a throw-away detached worktree of `origin/master`, created and removed by the script |
-| "May build and edit" in the root checkout if `git status` was clean | Edits land on `master`'s working tree, unreviewed, racing the human and any thread using that checkout | The scheduled thread never edits anything. A fix is a worker on `fix/warnings-<date>` in its own worktree, ending in a PR |
+| "May build and edit" in the root checkout if `git status` was clean | Edits land on `master`'s working tree, unreviewed, racing the human and any thread using that checkout | The scheduled thread never edits anything. A fix is a worker on `auto/warnings-<date>` in its own worktree, ending in a PR |
 | Precondition: skip fixes if the tree is dirty | Needed only because it edited the root checkout | Dropped: nothing touches the root checkout |
 | Findings lived in the thread's last message | Lost once the thread is archived; no dedupe, the same warning re-reported weekly | One GitHub issue per distinct warning/failure (label `rebuild-warning` or `eval-failure`), updated in place, auto-closed when it stops reproducing |
-| `bash -n` and `./rebuild.sh build` in the root checkout | `rebuild.sh` does `cd ~/.nixos` and is not worktree-safe | Eval only in the scheduled run; the worker builds in its worktree with `nixos-rebuild build --flake .#HOST --impure` until thread 1 makes `rebuild.sh` worktree-safe |
+| `bash -n` and `./rebuild.sh build` in the root checkout | Wrong tree for a PR flow | Eval only in the scheduled run (the script's own detached worktree). The worker verifies in its worktree with `./rebuild.sh check` / `build`, which are worktree-safe once the workflow thread's PR is merged |
 
 Worktree safety, concretely: the script uses `git worktree add --detach <tmp> <rev>`
 and `git worktree remove --force` in a `finally`; it never checks out a branch, so
@@ -22,8 +22,9 @@ list with a reason.
 
 - **Runs on:** GOD-KILLER now; REDRUM later with `--detect-only` (evaluation is
   host independent: all three hosts evaluate in ~15 s on GOD-KILLER).
-- **Model / effort:** project default for the dispatcher; Sonnet 5.5 medium for
-  the worker (`worker-briefs.md`).
+- **Model / effort:** Haiku, low for the dispatcher (the "scheduled checks" row of
+  the model table in docs/agents/workflow.md; not settable by tool, see README);
+  Sonnet medium for the worker (`worker-briefs.md`).
 - **Permissions it needs:** `Bash(docs/schedules/bin/schedule-precheck *)`; the
   script itself runs `git fetch`, `git worktree` and `nix eval`.
 
@@ -57,8 +58,8 @@ instructions.
 
 5. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
    - Launch ONE worker for up to the first three keys in `actionable`. Skip if
-     t3_thread_list already shows a thread on a branch starting fix/warnings-, or
-     `gh pr list --search "head:fix/warnings-"` is non-empty.
+     t3_thread_list already shows a thread on a branch starting auto/warnings-, or
+     `gh pr list --search "head:auto/warnings-"` is non-empty.
    - Use t3_thread_launch exactly as specified in docs/schedules/worker-briefs.md
      ("Warning and evaluation-failure worker"), with the issue numbers from the report.
      Use the stronger setting in that file if any key is an eval-failure.

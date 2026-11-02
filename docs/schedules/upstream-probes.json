@@ -1,5 +1,5 @@
 {
-	"_comment": "Structured mirror of the 'Pending upstream fixes' registry (AGENTS.md / README). One entry per registry row; schedule-precheck warns when the row numbers disagree. A probe reports a fix SIGNAL, never proof: the worker re-verifies upstream itself. action: auto-pr = a worker may open a removal PR; notify-only = file the issue and stop (needs a human-run switch or kernel testing).",
+	"_comment": "Structured mirror of the 'Pending upstream fixes' registry (docs/agents/upstream-registry.md, mirrored in README.md). One entry per registry row; schedule-precheck warns when the row numbers disagree. A probe reports a fix SIGNAL, never proof: the worker re-verifies upstream itself. action: auto-pr = a worker may open a removal PR; notify-only = file the issue and stop (needs a human-run switch or kernel testing).",
 	"rows": [
 		{
 			"id": "row-1",
