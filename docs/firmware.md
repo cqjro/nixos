@@ -399,14 +399,35 @@ The point of no return is **making the new repo public** (6.5), not the push.
    (no README, licence or gitignore; it must not be a fork or a template copy of
    the old repo, because forks share object storage with their parent and the old
    firmware would stay reachable by SHA).
-3. **Push only what you intend, from the scratch clone** (no `--mirror`):
+3. **Replace the broad `gh` login with a fine-grained token** (requested by the
+   secrets thread; detail in `docs/secrets.md` 4.1 and 2.8). Do it **after** step
+   2, because a repo named `cqjro/nixos` must exist again before a token can be
+   scoped to it, and **before** making the repo public (6.5). Four Full access
+   threads ran on 2026-10-29..31, so treat the old `gh` token and the Claude login
+   as exposed.
+   - github.com → Settings → Developer settings → Fine-grained tokens →
+     Generate: *Repository access* **only `cqjro/nixos`** (the new repo);
+     permissions **Contents: read and write**, **Pull requests: read and write**,
+     **Metadata: read**; expiry 30-90 days. **One token per machine**:
+     GOD-KILLER, and the `t3code` user on REDRUM.
+   - Enter it without putting it on a command line or in chat:
+     ```bash
+     read -rs T; printf %s "$T" | gh auth login --with-token; unset T
+     # REDRUM: sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'
+     ```
+   - Then revoke the old broad grant: github.com → Settings → Applications →
+     Authorized OAuth Apps → *GitHub CLI* → Revoke, and log each machine in again
+     with its own token. The steps after this one (the push in step 4) then run
+     with the new token. Note that a token scoped to `cqjro/nixos` only makes `gh`
+     fail on your other repositories; use a separate login for those.
+4. **Push only what you intend, from the scratch clone** (no `--mirror`):
    ```bash
    cd /tmp/nixos-rewrite
    git remote add origin https://github.com/cqjro/nixos.git
    git push origin master 'refs/heads/workflow/*:refs/heads/workflow/*'
    ```
    Never add `nixos-archive` as a remote of this clone.
-4. **Retire the old clone on every machine** (GOD-KILLER first, no T3 thread
+5. **Retire the old clone on every machine** (GOD-KILLER first, no T3 thread
    running):
    ```bash
    cd ~ && mv .nixos .nixos.pre-rewrite
@@ -417,19 +438,19 @@ The point of no return is **making the new repo public** (6.5), not the push.
    cd ~/.nixos && git fetch origin && git branch --list -r 'origin/workflow/*'   # the six branches are here
    ```
    No patch export is needed: the branches were rewritten with `master` in 6.3
-   and pushed in step 3, with their commits, order and authorship intact.
-5. **T3:** the worktrees under `~/.t3/worktrees/.nixos/*` pointed at the old clone
+   and pushed in step 4, with their commits, order and authorship intact.
+6. **T3:** the worktrees under `~/.t3/worktrees/.nixos/*` pointed at the old clone
    and are now broken; delete them (`rm -rf ~/.t3/worktrees/.nixos/*`) and let
    T3 create new ones from the pushed branches. Old threads lose their diffs and
    the 117 hidden `refs/t3/orchestration-v2/checkpoints/*` refs (they stay in
    `.nixos.pre-rewrite`). How T3 reacts to a project whose repo was replaced in
    place is **untested**; re-adding the project is the fallback. Existing thread
    *conversations* are T3's own data and are not part of the repo.
-6. **REDRUM and LittleNix:** re-clone the same way when you next use them;
+7. **REDRUM and LittleNix:** re-clone the same way when you next use them;
    REDRUM also replaces `/var/lib/t3code/nixos` if it is used. `config-sync` and
    `./rebuild.sh switch` fail on the old clone (unrelated histories) rather than
    doing damage; nothing pulls automatically any more.
-7. **Clean up** once the new `~/.nixos` builds and you have everything you need:
+8. **Clean up** once the new `~/.nixos` builds and you have everything you need:
    `rm -rf /tmp/nixos-rewrite ~/rewrite-emails /tmp/firmware-objects.txt /tmp/history-email-scrub.sh /tmp/oldtip /tmp/newtip ~/.nixos.pre-rewrite`.
    (`.nixos.pre-rewrite` holds the old history, including firmware; the private
    archive repo keeps a copy anyway.)
@@ -444,6 +465,8 @@ back (anything public can be cloned or archived immediately):
 - you opened the new repo in a browser: branches are `master` + `workflow/*`,
   the repo is **not** marked "forked from", and `git log` shows only the
   `cqjro` noreply identity;
+- the token swap (6.4 step 3) is done on every machine and the old *GitHub CLI*
+  OAuth grant is revoked;
 - GitHub account settings *Keep my email addresses private* and *Block command
   line pushes that expose my email* are on (per the secrets thread; not
   verified from here).
