@@ -60,8 +60,8 @@ secret_re+="|(^|[/[:space:]\"'=])\.env([.[:space:]\"';|&)]|$)"
 
 # T2 Broadcom firmware: proprietary (not secret), so names are fine but
 # contents must never be read into a session, copied, archived or uploaded
-fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware/|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware([/[:space:]"'"'"']|$)'
-fw_op_re='(^|[;&|[:space:](])(cat|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object)([[:space:]]|$)|nix[[:space:]]+store[[:space:]]+(cat|dump-path)|nix-store[[:space:]]+--dump'
+fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware(/|[[:space:]"'"'"']|$)|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware([/[:space:]"'"'"']|$)'
+fw_op_re='(^|[;&|[:space:](])(cat|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object|show|cat-file|archive)([[:space:]]|$)|nix[[:space:]]+store[[:space:]]+(cat|dump-path)|nix-store[[:space:]]+--dump'
 
 # files that change what Claude Code (or a later session) is allowed to run
 config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settings|\.claude/hooks|\.claude\.json|\.mcp\.json'
@@ -115,7 +115,7 @@ check_bash() {
 		ask "impure inline Nix expression (can read files outside the repo)."
 	fi
 
-	# AGENTS.md: agents never publish services on (or reconfigure) the tailnet
+	# docs/agents/t3-claude.md: agents never publish services on (or reconfigure) the tailnet
 	if grep -Eq -- '(^|[^[:alnum:]_-])tailscale[[:space:]]+(serve|funnel|set|up|down|login|logout|switch|cert)([[:space:]]|$)' <<<"$cmd"; then
 		block "tailscale serve/funnel/set/up/down change what the tailnet exposes; the human runs these."
 	fi
@@ -195,7 +195,7 @@ if [ "${1:-}" = "--self-test" ]; then
 	fails=0
 	rules=$(mktemp)
 	trap 'rm -f "$rules"' EXIT
-	echo '["Bash(sudo *)", "Bash(*rebuild.sh switch*)", "Bash(gh pr merge *)", "Bash(git push *)"]' >"$rules"
+	echo '["Bash(sudo *)", "Bash(*rebuild.sh switch*)", "Bash(*rebuild.sh revert*)", "Bash(gh pr merge *)", "Bash(git push *)"]' >"$rules"
 	pmode=default
 	expect() { # expect <block|ask|pass> <tool> <command-or-path> [content]
 		local want=$1 tool=$2 arg=$3 content=${4:-} json got
@@ -270,6 +270,12 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect pass Bash 'nix path-info /nix/store/abc-brcm-firmware'
 	expect pass Bash 'git add modules/system/t2-firmware.nix'
 	expect pass Bash 'cat modules/system/t2-firmware.nix'
+	expect block Bash 'git show 2412d99:hosts/REDRUM/firmware/brcm/brcmfmac4364b3-pcie.bin'
+	expect block Bash 'git archive HEAD modules/hosts/LittleNix/firmware'
+	expect pass Bash 'git log --stat -- modules/hosts/REDRUM/firmware'
+	expect pass Bash 'git show --stat HEAD'
+	expect pass Bash './rebuild.sh check GOD-KILLER REDRUM'
+	expect pass Bash 'git diff origin/master...HEAD | grep -nE "boot\.|services\.openssh|security\.sudo"'
 	expect block Bash 'tailscale serve --bg 3773'
 	expect pass Bash 'tailscale status'
 	expect ask Bash 'gh issue create --repo someone/else --title x'
@@ -281,6 +287,8 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect block Bash 'sudo -n true'
 	expect block Bash 'cd /x && ./rebuild.sh switch GOD-KILLER -m msg'
 	expect block Bash 'gh pr merge 12 --squash'
+	expect block Bash './rebuild.sh revert'
+	expect pass Bash './rebuild.sh check GOD-KILLER'
 	expect block Bash 'git push -u origin todo/foo'
 	expect pass Bash 'git commit -m x'
 	expect pass Bash 'nix eval --impure .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'

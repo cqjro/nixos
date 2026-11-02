@@ -29,7 +29,7 @@
 
 	# Claude Code policy for every user on the host: cairo on GOD-KILLER and the
 	# t3code service user on REDRUM read the same file, so the two cannot drift.
-	# Layers, strongest first (docs/agent-security.md has the evidence):
+	# Layers, strongest first (docs/agents/security.md has the evidence):
 	#   1. sandbox: bubblewrap; with blockReadsOutsideWorkingDirectories it
 	#      swaps /home for an empty tmpfs and re-opens only the working dirs,
 	#      so ~/.ssh, ~/.config/gh, ... do not exist for sandboxed Bash. Strict:
@@ -121,8 +121,12 @@
 					"mcp__plugin_hm_nixos__nix"
 					"mcp__plugin_hm_nixos__nix_versions"
 
-					# verification that needs no root
+					# verification that needs no root (rebuild.sh stages that never
+					# activate; test/dry/revert/switch/push are ask rules below)
+					"Bash(./rebuild.sh check*)"
+					"Bash(./rebuild.sh eval *)"
 					"Bash(./rebuild.sh build *)"
+					"Bash(./rebuild.sh generations*)"
 					"Bash(bash -n *)"
 					"Bash(nixos-rebuild build *)"
 					"Bash(nixos-rebuild list-generations *)"
@@ -143,6 +147,7 @@
 					"Bash(git add *)"
 					"Bash(git commit *)"
 					"Bash(git fetch *)"
+					"Bash(git ls-remote *)"
 
 					# GitHub: reads, plus PRs/issues on this repo (the guard prompts
 					# when --repo names another one)
@@ -210,8 +215,11 @@
 					"Bash(nixos-rebuild boot *)"
 					"Bash(nixos-rebuild test *)"
 					"Bash(nixos-rebuild dry-activate *)"
+					# test/dry/revert activate through the sudo askpass
 					"Bash(*rebuild.sh switch*)"
 					"Bash(*rebuild.sh test*)"
+					"Bash(*rebuild.sh dry*)"
+					"Bash(*rebuild.sh revert*)"
 					"Bash(*rebuild.sh deploy*)"
 					"Bash(*rebuild.sh push*)"
 					"Bash(git push *)"
@@ -228,7 +236,11 @@
 					"Bash(git stash clear*)"
 					"Bash(git worktree remove *)"
 					"Bash(git worktree prune *)"
+					# approving this card IS the merge approval (no GitHub review:
+					# the owner's token cannot approve its own PR)
 					"Bash(gh pr merge *)"
+					"Bash(gh pr update-branch *)"
+					"Bash(gh pr comment *)"
 					"Bash(gh pr close *)"
 					"Bash(gh api *)"
 					"Bash(gh repo create *)"

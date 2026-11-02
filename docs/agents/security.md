@@ -135,23 +135,26 @@ Allow, ask and deny summary (full lists are in the Nix file):
 
 - **No prompt:**
   - sandboxed Bash;
-  - `./rebuild.sh build`, `nixos-rebuild build`, `nix eval/build/flake check`
-    and the read-only nix commands;
-  - `git add/commit/fetch` (commits on master prompt via the guard);
+  - the `rebuild.sh` stages that never activate (`check`, `eval`, `build`,
+    `generations`), `nixos-rebuild build`, `nix eval/build/flake check` and
+    the read-only nix commands;
+  - `git add/commit/fetch/ls-remote` (commits on master prompt via the guard);
   - `gh pr/issue create` and the gh read commands;
   - read-only `systemctl`/`journalctl`/network/GPU diagnostics;
   - mcp-nixos;
   - WebFetch to GitHub, Claude docs, nixos.org and t2linux.
 - **Prompt (ask):**
   - `sudo`;
-  - every switch/boot/test/deploy/push stage of `nixos-rebuild` and
-    `rebuild.sh`;
+  - every stage that activates or publishes: `nixos-rebuild switch/boot/test/dry-activate`
+    and `rebuild.sh test/dry/revert/switch/deploy/push` (they go through the
+    sudo askpass or push);
   - every `git push` (branch pushes too, as you chose);
   - `git merge`;
   - destructive git (`reset --hard`, `clean`, `branch -D/-f`, `update-ref`,
     `reflog expire`, `gc`, `stash drop/clear`, `worktree remove/prune`);
-  - `gh pr merge/close`, `gh api`, `gh repo/release/secret/variable/workflow/gist`
-    writes;
+  - `gh pr merge` (approving that card **is** the merge approval: the owner's
+    token cannot approve its own PR on GitHub), `gh pr update-branch/comment/close`,
+    `gh api`, `gh repo/release/secret/variable/workflow/gist` writes;
   - `systemctl start/stop/restart/…`.
 - **Deny:**
   - `gh auth token|status <args>|refresh|login|logout|switch`,
@@ -265,10 +268,38 @@ Recommendation per task type:
   - the classifier's quota cost in Auto;
   - everything on REDRUM.
 
+## Skills and reviewer subagents
+
+The `.claude/skills/{start-todo,ship-pr,merge-pr}` and
+`.claude/agents/{nix,lockout,deep}-reviewer` definitions
+([review.md](review.md), [workflow.md](workflow.md)) fit this policy as
+follows:
+
+- **Reviewers.** Their read-only Bash (`git diff/log/show`,
+  `./rebuild.sh eval`) and mcp-nixos run without prompts. The guard and the
+  sandbox apply to subagent tool calls too.
+- **ship-pr.**
+  - `./rebuild.sh check/build`, `git commit` on the branch and
+    `gh pr create` need no prompt.
+  - `./rebuild.sh push` prompts.
+  - The skill's "(ask rule)" note on commit is out of date: commits on
+    branches are allowed, and only commits on master prompt.
+- **merge-pr.**
+  - `gh pr view/checks` need no prompt.
+  - `gh pr update-branch`, `git merge origin/master`, the push and
+    `gh pr merge` prompt.
+  - In Full access all four are refused, so merges always need a Supervised,
+    Accept edits or Auto thread.
+- **start-todo.** `git ls-remote` is allowed. `t3_thread_launch` and the other
+  T3 MCP tools are pre-approved by T3's launch flag.
+- **No hooks.** None of these files may declare `hooks:` or ship a
+  `.claude/settings.json`. The guard blocks agent edits that add them, and
+  `allowManagedHooksOnly` ignores them anyway.
+
 ## After the switch (human)
 
-1. `./rebuild.sh switch GOD-KILLER -m "…"`, and on REDRUM
-   `sudo nixos-rebuild switch --flake .#REDRUM --impure` (or your usual flow).
+1. `./rebuild.sh switch GOD-KILLER`, and on REDRUM `./rebuild.sh switch REDRUM`
+   from REDRUM itself (see [workflow.md](workflow.md)).
 2. Start a **new** thread: Claude Code reads managed settings at startup.
 3. Check that `~/.claude/settings.json` now has empty permission lists:
    `jq .permissions ~/.claude/settings.json`.
@@ -303,6 +334,8 @@ you record which steps prompted.**
 | 18 | `echo '{}' > .mcp.json` | blocked by the guard | blocked |
 | 19 | mcp-nixos `nix` (`{"action":"channels"}`) | no prompt | runs |
 | 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (hidden or empty); `cat` blocked by the guard | same |
+| 21 | `./rebuild.sh check GOD-KILLER` and `./rebuild.sh generations` | no prompt | runs |
+| 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it) | **blocked** by the guard |
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. If a step disagrees, update this table and the policy in the same

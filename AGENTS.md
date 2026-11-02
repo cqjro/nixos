@@ -204,6 +204,8 @@ archived module **must**:
 
 ## Agent workflow (T3 Code + Claude Code)
 
+Permissions, sandbox and the `claude-guard` hook (both hosts, one managed policy): [`docs/agents/security.md`](docs/agents/security.md) — read it before assuming what an agent may do; it supersedes the policy notes below.
+
 The desktop (GOD-KILLER) runs agents through T3 Code, which drives Claude Code.
 Policy lives in `modules/home-manager/ai-tools/claude-code.nix`
 (`programs.claude-code.settings.permissions`, merged into a writable
