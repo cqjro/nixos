@@ -35,9 +35,9 @@ repeated as proposals.
         recommended, `docs/firmware.md` 6.5), then **before any workflow PR is
         opened** run the history rewrite (`docs/firmware.md` section 6) and
         delete the obsolete `dendritic` branch
-  - [ ] Contact GitHub Support to clear cached views and orphaned commits
-        (`docs/firmware.md` 6.4) — required, the repo was public with the
-        firmware in history
+  - [ ] Optional while the repo stays private: contact GitHub Support to
+        purge orphaned commits, or move to a fresh repo (`docs/firmware.md`
+        6.4). Needed before ever making the repo public again
   - [ ] Re-clone every machine and T3 worktree, recreate the workflow branches,
         and rotate anything the secrets scan finds in the old public history
   - *Why this order:* every merged PR leaves a read-only `refs/pull/*` ref that

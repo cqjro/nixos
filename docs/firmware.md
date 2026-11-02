@@ -90,8 +90,13 @@ Exposure paths, in order of concern:
    public while the firmware was in history, then made private.** Making a public
    repo private detaches its forks into separate public repos, and the current
    `forkCount: 0` would not show them, so clones and detached forks may still
-   hold the files and cannot be recalled. Section 6.4 (GitHub Support) is
-   therefore required, not optional, to clear cached views and orphaned objects.
+   hold the files and cannot be recalled. What the rewrite can and cannot do:
+   it stops further exposure (new clones, a future public repo, agents running
+   `git log -p`), but it cannot recall copies already made while the repo was
+   public, and GitHub Support may decline to purge. While the repo stays private
+   the orphaned objects are readable only by people with access to it, so
+   Section 6.4 (GitHub Support) matters mainly if the repo will be made public
+   again or you want the server copy gone; see the fresh-repo alternative there.
 2. **Binary caches**: none configured except the read-only Millennium cachix in
    `modules/system/games.nix`; nothing pushes. Keep it that way: never
    `nix copy` or `cachix push` firmware to a public cache.
@@ -377,6 +382,20 @@ what Support is for (6.4); it is not a sign the rewrite failed.
 rejected ref means branch protection, so disable it, retry, and re-enable.
 
 ### 6.4 GitHub Support (cached views, orphaned objects)
+
+**Is this step needed?** Only if the repo will be public again or you want the
+server-side copy gone. While it stays private, the unreachable old commits can be
+read only by people with access to the repo, and the copies that were exposed
+while it was public cannot be recalled by anything you do here. Support may
+decline, so do not make the repo public on the strength of this step alone.
+
+**Alternative that needs no Support decision (untested, from memory of GitHub's
+behaviour):** push the rewritten history to a brand-new repository, check it,
+then delete the old repo and rename the new one to `nixos`. The old objects go
+with the deleted repository (GitHub keeps deleted repos restorable for a limited
+period, reportedly 90 days; verify at <https://docs.github.com> before relying on
+it). You lose issues, stars and the old URL history; forks of the old public repo
+are unaffected either way.
 
 After a force push, the old commits are unreachable but GitHub keeps serving them
 by SHA (for example `github.com/cqjro/nixos/commit/2412d99`) until server-side
