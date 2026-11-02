@@ -18,6 +18,30 @@ repeated as proposals.
 
 ## System
 
+- [ ] **Firmware scrub and placement** — finish moving the proprietary Apple
+      brcm firmware out of the repo and its history — **3/10** (the work is
+      manual and ordered; full detail in [`docs/firmware.md`](docs/firmware.md),
+      section 6 is the history-rewrite runbook). Do the steps in this order and
+      delete this item when all are done
+  - [ ] Place the REDRUM files in `/var/lib/firmware-src/REDRUM/brcm` on
+        GOD-KILLER and REDRUM, then run `nix run .#t2-firmware-import -- REDRUM`
+        on each (GOD-KILLER can already build REDRUM; REDRUM building itself
+        needs this)
+  - [ ] On the LittleNix machine, run `nix run .#t2-firmware-import -- LittleNix`;
+        if it reports MISMATCH, set the printed hash in
+        `modules/hosts/LittleNix/machine.nix` (the pinned one is unverified)
+  - [ ] Decide how workflow branches/worktrees cross the rewrite (patch export
+        recommended, `docs/firmware.md` 6.5), then **before any workflow PR is
+        opened** run the history rewrite (`docs/firmware.md` section 6) and
+        delete the obsolete `dendritic` branch
+  - [ ] Contact GitHub Support to clear cached views and orphaned commits
+        (`docs/firmware.md` 6.4) — required, the repo was public with the
+        firmware in history
+  - [ ] Re-clone every machine and T3 worktree, recreate the workflow branches,
+        and rotate anything the secrets scan finds in the old public history
+  - *Why this order:* every merged PR leaves a read-only `refs/pull/*` ref that
+    pins the old history and forces the GitHub Support step to cover it too.
+
 - [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
       (an archived `modules/_archive/waydroid.nix` already exists to
       reintegrate; the kiosk session/autologin is the hard half)
