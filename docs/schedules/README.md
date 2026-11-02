@@ -9,8 +9,10 @@ exist today still run their original prompts.
 | --- | --- |
 | [`upstream-check.md`](./upstream-check.md) | Prompt + `schedule_task` JSON: "Upstream Issues Check" (registry polling) |
 | [`build-flags.md`](./build-flags.md) | Prompt + `schedule_task` JSON: "Build Flags" (eval warnings and failures) |
+| [`unswitched-changes.md`](./unswitched-changes.md) | Prompt + `schedule_task` JSON + REDRUM steps: per-host "merged but not switched yet" notifier |
 | [`worker-briefs.md`](./worker-briefs.md) | The `t3_thread_launch` calls and briefs for the PR-opening worker threads |
 | [`bin/schedule-precheck`](./bin/schedule-precheck) | The deterministic pre-step (no LLM): probes, state, issue bookkeeping |
+| [`host-scopes.json`](./host-scopes.json) | Path → hosts rules the unswitched check uses |
 | [`upstream-probes.json`](./upstream-probes.json) | Structured mirror of the "Pending upstream fixes" registry + known-noise ignore list |
 
 ## The shape of a run
@@ -54,7 +56,8 @@ Why this shape:
 
 ```
 schedule-precheck upstream   [--skip-nix] [--detect-only] [--max-new N] [--dry-run]
-schedule-precheck buildflags [--tree master|working] [--host H]… [--detect-only] [--max-new N] [--dry-run]
+schedule-precheck buildflags [--host H]… [--detect-only] [--max-new N] [--dry-run]
+schedule-precheck unswitched [--host H] [--notify] [--remind-hours N] [--dry-run]
 schedule-precheck mark-launched KEY THREAD_ID
 schedule-precheck health SCHEDULE MESSAGE…
 ```
@@ -69,7 +72,7 @@ schedule-precheck health SCHEDULE MESSAGE…
   (found in `docs/agents/upstream-registry.md`, then `README.md`) and the probe file
   disagree. `./rebuild.sh check` already compares the registry with the README mirror;
   this is the equivalent check for the probe file.
-- **`buildflags`** fetches `origin/master`, adds a detached worktree, runs
+- **`buildflags`** fetches `origin/master` into the private clone, adds a detached worktree there, runs
   `nix eval --impure --raw .#nixosConfigurations.<host>.config.system.build.toplevel.drvPath`
   for every `modules/hosts/*` directory, and parses stderr into
   `evaluation warning` / `warning` / `trace` / `error` blocks (multi-line
@@ -78,10 +81,19 @@ schedule-precheck health SCHEDULE MESSAGE…
   is one finding. Evaluating `origin/master` instead of the checkout means a
   half-edited tree can never produce a false report, and only merged work is
   judged. `ignore` entries in the probe file silence known noise with a reason.
-- **State** is `$NIXOS_SCHEDULE_STATE`, default `<repo>/.log/schedules/`
-  (gitignored through `*.log`): `upstream-state.json`, `buildflags-state.json`,
-  `heartbeat.json`. Losing it is harmless (the next run re-baselines; issues are
-  the durable record).
+- **`unswitched`** answers "has this host switched to everything merged on master?"
+  See [`unswitched-changes.md`](./unswitched-changes.md).
+- **Nothing here writes to `~/.nixos`.** The human's switch checkout is never fetched,
+  pulled, worktree'd or logged into by a schedule (user rule: cross-machine awareness
+  is a notification, never a pull). All git work happens in a private partial clone,
+  `$NIXOS_SCHEDULE_STATE/clone` (default `~/.local/state/nixos-schedules/`, a few MB),
+  made and fetched by the script; its origin URL is read once from the checkout the
+  script lives in (`--remote-url` overrides). Throw-away worktrees are created inside
+  that clone's state directory and removed afterwards. (My first version wrote a
+  worktree entry and a `.log/` state file into `~/.nixos`; this fixes that.)
+- **State** is the same directory: `upstream-state.json`, `buildflags-state.json`,
+  `unswitched-<HOST>.json`, `heartbeat.json`. Losing it is harmless (the next run
+  re-baselines; issues are the durable record).
 - **`--detect-only`** files and updates issues but reports nothing actionable.
   For a host that must not launch workers (see [Placement](#placement)).
 - **Safety of running it.** One allow rule (`Bash(docs/schedules/bin/schedule-precheck *)`)
@@ -91,7 +103,8 @@ schedule-precheck health SCHEDULE MESSAGE…
 
 ### Verified vs untested
 
-Run on GOD-KILLER on 2026-11-01 in this worktree: all `upstream` probes against
+Run on GOD-KILLER on 2026-11-01/02 in this worktree (the clone-based version, `unswitched`
+statuses and the reminder state machine included): all `upstream` probes against
 live GitHub (`--dry-run`), `buildflags` on all three hosts at `origin/master`
 (15 s / 11 s / 7 s eval; the temporary worktree is removed afterwards), warning
 parsing against real multi-line warnings, the `--detect-only`/`--max-new`/`--skip-nix`
@@ -125,6 +138,7 @@ REDRUM's server.
 | --- | --- | --- | --- |
 | Upstream Issues Check | GOD-KILLER | REDRUM, `--detect-only` | Only needs `gh` and a read-only checkout; REDRUM is always on, GOD-KILLER often is not. |
 | Build Flags | GOD-KILLER | REDRUM, `--detect-only` | Nix evaluation does not depend on the machine, so REDRUM can evaluate all three hosts (REDRUM 7 s, GOD-KILLER 15 s). It is eval only, never a GOD-KILLER build. |
+| Unswitched changes | none | every machine (own copy per T3 server, or a timer) | It must run on the host it is about; see `unswitched-changes.md`. |
 | Worker launches | GOD-KILLER | GOD-KILLER | Workers need builds for GOD-KILLER modules, which REDRUM must not do. The same prompts run on GOD-KILLER without `--detect-only` and pick up whatever REDRUM filed, because `actionable` is computed from live issue state, not local state. |
 
 REDRUM prerequisites before moving detection there (none exist yet): a repo
@@ -271,7 +285,8 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 
 **Thread 4 (permissions):**
 
-- Allow `Bash(docs/schedules/bin/schedule-precheck *)` (or its packaged name) in
+- Allow `Bash(docs/schedules/bin/schedule-precheck *)` (or its packaged name; it also covers the
+  `unswitched` check) in
   both the user and the REDRUM managed policy. Without it an unattended run
   stalls on a card. No `gh issue *` allow is needed.
 - Scheduled and worker threads must not run `full-access`. Decide whether workers
@@ -284,9 +299,11 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 `cqjro/nixos` with `issues: write`, `pull_requests: write`, `contents: write`.
 The schedules need nothing else.
 
-**Thread 6 (notifications):** the dispatcher ends with a one-paragraph summary and
-the worker waits on a PR approval, so "thread finished" and "approval needed"
-notifications are the right wake signals; no schedule-specific hook is needed.
+**Thread 6 (notifications):** the dispatchers end with a one-paragraph summary and the worker
+waits on a PR approval, so "thread finished" and "approval needed" are the right wake signals.
+The unswitched check delivers through `agent-notify send finished` with a label; the specific
+requests (an `info` kind, scheduled-thread completion pings, the REDRUM `t3code` topic file)
+are in the last section of [`unswitched-changes.md`](./unswitched-changes.md).
 
 **Thread 2 (firmware):** when the firmware module merges, delete the LittleNix
 entry in `upstream-probes.json`'s `ignore` list.

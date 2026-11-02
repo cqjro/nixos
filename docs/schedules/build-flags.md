@@ -13,9 +13,10 @@ Replaces the existing "Build Flags" task
 | Findings lived in the thread's last message | Lost once the thread is archived; no dedupe, the same warning re-reported weekly | One GitHub issue per distinct warning/failure (label `rebuild-warning` or `eval-failure`), updated in place, auto-closed when it stops reproducing |
 | `bash -n` and `./rebuild.sh build` in the root checkout | Wrong tree for a PR flow | Eval only in the scheduled run (the script's own detached worktree). The worker verifies in its worktree with `./rebuild.sh check` / `build`, which are worktree-safe once the workflow thread's PR is merged |
 
-Worktree safety, concretely: the script uses `git worktree add --detach <tmp> <rev>`
-and `git worktree remove --force` in a `finally`; it never checks out a branch, so
-it cannot collide with a branch another worktree holds. Flakes only see tracked
+Worktree safety, concretely: the script fetches `origin/master` into its own private
+clone (`~/.local/state/nixos-schedules/clone`), uses `git worktree add --detach <tmp> <rev>`
+there and removes it in a `finally`. It never touches `~/.nixos` or its `.git`, and never
+checks out a branch, so it cannot collide with any branch another worktree holds. Flakes only see tracked
 files, so firmware-dependent hosts (LittleNix) fail to evaluate in any clean
 worktree until thread 2's firmware module lands; that error is on the `ignore`
 list with a reason.

@@ -3,6 +3,7 @@
 
   schedule-precheck upstream   poll the "Pending upstream fixes" probes
   schedule-precheck buildflags evaluate every host at origin/master and collect warnings
+  schedule-precheck unswitched run on each host: merged master commits not yet switched here
   schedule-precheck mark-launched KEY THREAD_ID   label an issue once a worker owns it
   schedule-precheck health SCHEDULE MESSAGE...    file/update the "schedule is failing" issue
 
@@ -13,8 +14,10 @@ issue per finding, updated in place) is done here, not by the model, and only
 from structured fields this script produced: upstream text never reaches an
 issue body, which keeps prompt injection out of the loop.
 
-State lives outside git, in $NIXOS_SCHEDULE_STATE (default <repo>/.log/schedules,
-gitignored through `*.log`). Design notes: docs/schedules/README.md.
+Nothing here writes to ~/.nixos (the checkout the human switches from): git work
+happens in a private partial clone and its throw-away worktrees under
+$NIXOS_SCHEDULE_STATE (default ~/.local/state/nixos-schedules). The script only
+READS ~/.nixos, once, for the origin URL. Design notes: docs/schedules/README.md.
 
 Needs python3, gh, git and nix on PATH. The shebang borrows python3 from nixpkgs because
 agent shells have none; package it with home-manager later (see README).
@@ -25,6 +28,7 @@ failed (the report's `errors` explains; the prompt files the health issue).
 
 import argparse
 import hashlib
+import shutil
 import json
 import os
 import re
@@ -99,6 +103,39 @@ class State:
 		tmp.replace(p)
 
 
+def state_root(arg):
+	if arg:
+		return Path(arg)
+	base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local/state")
+	return Path(base) / "nixos-schedules"
+
+
+def origin_url(override):
+	if override:
+		return override
+	rc, out, _ = run(["git", "-C", str(HERE.parents[2]), "remote", "get-url", "origin"], timeout=20)
+	return out.strip() if rc == 0 and out.strip() else "https://github.com/cqjro/nixos.git"
+
+
+def ensure_clone(state, url):
+	"""Private partial clone of master; `git fetch` here never touches ~/.nixos."""
+	clone = state.root / "clone"
+	if not (clone / ".git").exists():
+		rc, _, err = run(["git", "clone", "--quiet", "--filter=blob:none", "--no-tags", "--single-branch", "--branch", "master", url, str(clone)], timeout=900)
+		if rc != 0:
+			raise RuntimeError("git clone: " + (err.strip().splitlines() or [rc])[-1])
+	else:
+		rc, _, err = run(["git", "fetch", "--quiet", "--no-tags", "origin", "master"], cwd=clone, timeout=300)
+		if rc != 0:
+			raise RuntimeError("git fetch origin master: " + (err.strip().splitlines() or [rc])[-1])
+	return clone
+
+
+def git_show(clone, path, rev="origin/master"):
+	rc, out, _ = run(["git", "show", f"{rev}:{path}"], cwd=clone, timeout=60)
+	return out if rc == 0 else None
+
+
 # ---------------------------------------------------------------- GitHub issues
 
 class Issues:
@@ -152,18 +189,19 @@ class Issues:
 
 # ---------------------------------------------------------------------- upstream
 
-def table_rows(root: Path):
-	"""Count registry rows, wherever thread 1 ends up putting the table."""
-	files = [root / "docs/agents/upstream-registry.md", root / "README.md", root / "AGENTS.md", *sorted((root / "docs").glob("agents/*.md"))]
-	for f in files:
-		if not f.is_file():
+def table_rows(clone: Path):
+	"""Count registry rows in origin/master, wherever the table lives."""
+	rc, out, _ = run(["git", "ls-tree", "-r", "--name-only", "origin/master", "docs/agents/"], cwd=clone, timeout=30)
+	extra = [f for f in out.split() if f.endswith(".md")] if rc == 0 else []
+	for path in ["docs/agents/upstream-registry.md", "README.md", "AGENTS.md", *extra]:
+		text = git_show(clone, path)
+		if not text:
 			continue
-		text = f.read_text()
 		m = re.search(r"^#+ Pending upstream fixes.*?(?=^## |\Z)", text, re.S | re.M)
 		if m:
 			rows = re.findall(r"^\| (\d+) \|", m.group(0), re.M)
 			if rows:
-				return f.name, sorted(int(r) for r in rows)
+				return Path(path).name, sorted(int(r) for r in rows)
 	return None, []
 
 
@@ -217,7 +255,11 @@ def cmd_upstream(a, root, state, issues):
 	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
 	seen = state.load("upstream-state.json", {"rows": {}})
 	report = {"schedule": "upstream", "ranAt": now(), "findings": [], "errors": [], "changed": False}
-	rowfile, rownums = table_rows(root)
+	try:
+		rowfile, rownums = table_rows(ensure_clone(state, a.url))
+	except Exception as e:  # noqa: BLE001 - registry drift check is advisory
+		rowfile, rownums = None, []
+		report["errors"].append(f"registry check skipped: {e}")
 	probed = {r["registryRow"] for r in cfg["rows"]}
 	if rownums and set(rownums) != probed:
 		report["errors"].append(f"registry rows {sorted(set(rownums) ^ probed)} in {rowfile} and upstream-probes.json disagree")
@@ -348,23 +390,22 @@ def eval_host(tree: Path, host):
 def cmd_buildflags(a, root, state, issues):
 	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
 	ignore = [(re.compile(i["match"]), i["reason"]) for i in cfg.get("ignore", [])]
-	hosts = a.hosts or sorted(d.name for d in (root / "modules/hosts").iterdir() if d.is_dir())
 	seen = state.load("buildflags-state.json", {"keys": {}})
 	report = {"schedule": "buildflags", "ranAt": now(), "hosts": {}, "findings": [], "errors": [], "changed": False}
 	tmp = None
 	try:
-		if a.tree == "master":
-			rc, _, err = run(["git", "fetch", "--quiet", "origin", "master"], cwd=root, timeout=120)
-			if rc != 0:
-				report["errors"].append("git fetch origin master failed: " + err.strip()[-200:])
-			rev = run(["git", "rev-parse", "origin/master"], cwd=root)[1].strip()
-			tmp = tempfile.mkdtemp(prefix="sched-eval-")
-			rc, _, err = run(["git", "worktree", "add", "--detach", tmp, rev], cwd=root)
+		clone = ensure_clone(state, a.url)
+		rev = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
+		if a.tree_path:
+			tree, report["rev"] = Path(a.tree_path), "local-path"
+		else:
+			tmp = tempfile.mkdtemp(prefix="sched-eval-", dir=str(state.root))
+			rc, _, err = run(["git", "worktree", "add", "--detach", tmp, rev], cwd=clone, timeout=600)
 			if rc != 0:
 				raise RuntimeError("git worktree add: " + err.strip()[-200:])
 			tree, report["rev"] = Path(tmp), rev[:12]
-		else:
-			tree, report["rev"] = root, "working-tree"
+		rc, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+		hosts = a.hosts or sorted(Path(x).name for x in out.split())
 		issues.ensure_labels()
 		current = {}
 		for h in hosts:
@@ -420,7 +461,8 @@ def cmd_buildflags(a, root, state, issues):
 		report["errors"].append(str(e))
 	finally:
 		if tmp:
-			run(["git", "worktree", "remove", "--force", tmp], cwd=root)
+			run(["git", "worktree", "remove", "--force", tmp], cwd=state.root / "clone")
+			run(["git", "worktree", "prune"], cwd=state.root / "clone")
 	# actionable = still reproducing, issue open, no worker yet (state-free, so any machine can pick it up)
 	report["actionable"] = [] if a.detect_only else [f["key"] for f in report["findings"]
 		if f.get("issue") and f["issue"]["state"] == "OPEN" and f.get("kind") in ("rebuild-warning", "eval-failure")
@@ -450,6 +492,123 @@ def _sync_digest(issues, items):
 		issues.create(key, "Rebuild warnings over the per-run cap (digest)", "Warnings seen after the per-run issue cap was reached:\n\n" + lines, ["rebuild-warning"])
 	elif ex["state"] == "OPEN":
 		issues.comment(ex["number"], "More warnings over the cap:\n\n" + lines)
+
+
+# ------------------------------------------------------------------ unswitched
+
+def scope_rules(clone):
+	"""Path -> hosts rules from host-scopes.json (first match wins). Same idea as
+	docs/agents/workflow.md step 4: a file touches the hosts whose module lists import it."""
+	cfg = json.loads((HERE.parent / "host-scopes.json").read_text())
+	out = []
+	for r in cfg["rules"]:
+		rx = re.escape(r["glob"]).replace(r"\*\*", ".*").replace(r"\*", "[^/]*")
+		rx = rx.replace(r"\(HOST\)", "(?P<host>[^/]+)") if "(HOST)" in r["glob"] else rx
+		out.append((re.compile("^" + rx + "$"), r["hosts"]))
+	return out
+
+
+def hosts_for(path, rules, all_hosts):
+	for rx, hosts in rules:
+		m = rx.match(path)
+		if m:
+			if hosts == "host":
+				return {m.group("host")} & set(all_hosts), False
+			if hosts == "*":
+				return set(all_hosts), True
+			return set(hosts) & set(all_hosts), False
+	return set(all_hosts), True
+
+
+def cmd_unswitched(a, root, state, issues):
+	"""Merged commits on origin/master that this host has not switched to yet. Read-only."""
+	host = (a.hosts or [os.uname().nodename])[0]
+	report = {"schedule": "unswitched", "ranAt": now(), "host": host, "errors": [], "changed": False}
+	clone = ensure_clone(state, a.url)
+	head = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
+	_, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+	all_hosts = sorted(Path(x).name for x in out.split())
+	if host not in all_hosts:
+		report["errors"].append(f"unknown host {host!r}; pass --host (known: {', '.join(all_hosts)})")
+		return report
+	report["head"] = head[:12]
+	# 1. the running generation's commit
+	if a.revision is not None:
+		raw = a.revision
+	else:
+		rc, o, e = run(["nixos-version", "--json"], timeout=30)
+		if rc != 0:
+			report["errors"].append("nixos-version --json failed: " + e.strip()[-150:])
+			return report
+		raw = (json.loads(o).get("configurationRevision") or "")
+	status, rev, commits, message = "ok", raw.removesuffix("-dirty"), [], None
+	report["revision"] = raw or None
+	if not raw or raw == "unknown":
+		status = "no-revision"
+		message = f"{host}'s running generation predates config-revision (it records no commit), so I can't tell what is unswitched. The first switch from merged master fixes this."
+	elif raw.endswith("-dirty"):
+		status = "dirty"
+		message = f"{host}'s running generation was built from a dirty tree ({rev[:12]}-dirty), so I can't tell exactly what is unswitched."
+	if status == "ok" or status == "dirty":
+		if run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=clone)[0] != 0:
+			status = "unknown-revision"
+			message = f"{host}'s running generation was built from {rev[:12]}, which is not on origin/master or not pushed (an emergency or branch build?). Can't compare."
+		elif run(["git", "merge-base", "--is-ancestor", rev, "origin/master"], cwd=clone)[0] != 0:
+			status = "not-on-master" if status == "ok" else status
+			if status == "not-on-master":
+				message = f"{host}'s running generation ({rev[:12]}) is not an ancestor of origin/master (a branch or test build?). Can't compare."
+	if status in ("ok", "dirty"):
+		rules = scope_rules(clone)
+		_, log, _ = run(["git", "log", "--first-parent", "--format=%H%x1f%s", f"{rev}..origin/master"], cwd=clone, timeout=60)
+		for line in log.splitlines():
+			sha_, _, subj = line.partition("\x1f")
+			_, files, _ = run(["git", "diff-tree", "-r", "-m", "--first-parent", "--no-commit-id", "--name-only", sha_], cwd=clone)
+			touched, may = set(), False
+			for f in files.split("\n"):
+				if f:
+					h, wild = hosts_for(f, rules, all_hosts)
+					touched |= h
+					may = may or (wild and host in h)
+			if host in touched:
+				title = subj.split("||", 1)[-1].strip() if re.match(r"^[\w-]+: \d+ ", subj) else subj
+				pr = re.search(r"\(#(\d+)\)\s*$", title)
+				commits.append({"sha": sha_[:12], "title": title[:90], "pr": int(pr.group(1)) if pr else None, "mayAffect": may})
+		report["commitsSinceRevision"] = len(log.splitlines())
+		if status == "ok" and not commits:
+			status = "up-to-date"
+		elif commits:
+			shown = "; ".join(c["title"] for c in commits[:5]) + (f"; +{len(commits) - 5} more" if len(commits) > 5 else "")
+			head_msg = f"{host} has {len(commits)} merged change{'s' if len(commits) != 1 else ''} not switched yet: {shown}."
+			message = (message + " " if message else "") + head_msg + f" Run: cd ~/.nixos && ./rebuild.sh switch {host}"
+			status = "pending" if status == "ok" else "dirty-pending"
+		elif status == "dirty":
+			message += " No merged commit since its base touches this host."
+	report.update(status=status, commits=commits, message=message)
+	# 2. notify only on a state change, plus a reminder while it stays true
+	fp = sha(f"{status}|{head}|{raw}", 12)
+	seen = state.load(f"unswitched-{host}.json", {})
+	if status in ("up-to-date", "ok"):
+		message = None
+		report["message"] = None
+	due = False
+	if message:
+		hours = a.remind_hours if status in ("pending", "dirty-pending") else a.remind_hours * 7
+		age = (time.time() - seen.get("notifiedEpoch", 0)) / 3600
+		due = seen.get("fingerprint") != fp or age >= hours
+	report["notify"] = bool(due)
+	report["changed"] = bool(due)
+	if due and a.notify and not a.dry_run:
+		agent = shutil.which("agent-notify")
+		if agent:
+			env = dict(os.environ, AGENT_NOTIFY_LABEL="Unswitched changes")
+			rc, _, _ = run([agent, "send", "finished", message], env=env, timeout=30)
+			report["delivery"] = "agent-notify" if rc == 0 else f"agent-notify failed ({rc})"
+		else:
+			report["delivery"] = "none (agent-notify not on PATH; message is in the report)"
+	if not a.dry_run and (due and a.notify or not message):
+		seen = {"fingerprint": fp if message else None, "notifiedEpoch": time.time() if due and a.notify else 0, "status": status}
+		state.save(f"unswitched-{host}.json", seen)
+	return report
 
 
 # ------------------------------------------------------------- bookkeeping verbs
@@ -485,20 +644,24 @@ def cmd_health(a, state, issues):
 
 def main():
 	ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-	ap.add_argument("command", choices=["upstream", "buildflags", "mark-launched", "health"])
+	ap.add_argument("command", choices=["upstream", "buildflags", "unswitched", "mark-launched", "health"])
 	ap.add_argument("args", nargs="*", help="mark-launched KEY THREAD_ID | health SCHEDULE MESSAGE...")
 	ap.add_argument("--repo", default="cqjro/nixos", help="GitHub repo holding the issues")
 	ap.add_argument("--max-new", type=int, default=3, help="max new issues per run (eval failures are exempt)")
 	ap.add_argument("--dry-run", action="store_true", help="no issue writes, no state writes")
-	ap.add_argument("--tree", choices=["master", "working"], default="master", help="buildflags: evaluate a fresh origin/master worktree or the checkout as it is")
-	ap.add_argument("--host", dest="hosts", action="append", help="buildflags: limit to a host (repeatable)")
+	ap.add_argument("--tree-path", help="buildflags: evaluate this directory instead of a fresh origin/master worktree (debugging)")
+	ap.add_argument("--host", dest="hosts", action="append", help="buildflags: limit to a host (repeatable); unswitched: the host to check (default: this machine's hostname)")
+	ap.add_argument("--notify", action="store_true", help="unswitched: deliver through agent-notify instead of only reporting")
+	ap.add_argument("--remind-hours", type=int, default=24, help="unswitched: repeat a still-pending notice after this long (diagnostic notices: 7x)")
+	ap.add_argument("--revision", help="unswitched: pretend this is the running configurationRevision (testing)")
+	ap.add_argument("--remote-url", dest="url", help="git URL of the config repo (default: origin of the checkout this script lives in)")
 	ap.add_argument("--detect-only", action="store_true", help="file/update issues but report no actionable work (for hosts that must not launch workers)")
 	ap.add_argument("--skip-nix", action="store_true", help="upstream: skip probes that run `nix build --dry-run` (slow, downloads nixpkgs)")
 	ap.add_argument("--state-dir", default=os.environ.get("NIXOS_SCHEDULE_STATE"))
 	a = ap.parse_args()
-	rc, top, _ = run(["git", "rev-parse", "--show-toplevel"], cwd=os.getcwd())
-	root = Path(top.strip() if rc == 0 else HERE.parents[2])
-	state = State(Path(a.state_dir) if a.state_dir else root / ".log" / "schedules")
+	a.url = origin_url(a.url)
+	root = None  # nothing below may touch the checkout the human switches from
+	state = State(state_root(a.state_dir))
 	issues = Issues(a.repo, a.dry_run)
 	if a.command in ("mark-launched", "health"):
 		fn = cmd_mark_launched if a.command == "mark-launched" else cmd_health
@@ -509,7 +672,7 @@ def main():
 			print(json.dumps({"ok": False, "error": str(e)}))
 			return 3
 	try:
-		report = (cmd_upstream if a.command == "upstream" else cmd_buildflags)(a, root, state, issues)
+		report = {"upstream": cmd_upstream, "buildflags": cmd_buildflags, "unswitched": cmd_unswitched}[a.command](a, root, state, issues)
 	except Exception as e:  # noqa: BLE001
 		report = {"schedule": a.command, "ranAt": now(), "changed": True, "findings": [], "errors": [f"script failed: {e}"]}
 		print(json.dumps(report, indent=1))
