@@ -44,12 +44,12 @@
 		basePackage = inputs.nixdatifier.packages.${pkgs.stdenv.hostPlatform.system}.${
 			if config.programs.nixdatifier.ui then "nixdatifier" else "cli"
 		};
-		# TODO-remove: upstream workaround, registry rows 6 and 7 in AGENTS.md
-		# and README. (6) diskusage hardcodes `timeout --kill-after=5s 120s`
+		# TODO-remove: upstream workaround, registry rows 4 and 5 in
+		# docs/agents/upstream-registry.md and README. (4) diskusage hardcodes `timeout --kill-after=5s 120s`
 		# around `nix-store --gc --print-dead`; that scan alone takes ~119.5s
 		# on this store (326k paths, ~244k dead), so the measurement is killed
 		# at random and the Tools storage card never fills in — raise the cap
-		# to 300s. (7) The root panel Rectangle paints a 1px window outline in
+		# to 300s. (5) The root panel Rectangle paints a 1px window outline in
 		# wash(accentColor, .18), which with the dark palette accent reads as
 		# a faint blue frame; recolour it to the panel background so it
 		# blends in (visually identical to removing it with an opaque bg).

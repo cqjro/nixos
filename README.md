@@ -17,7 +17,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
 - [Installation](#installation)
-- [Rebuilding](#rebuilding)
+- [Change workflow](#change-workflow)
 
 ## Machines
 
@@ -48,9 +48,13 @@ the desktop client rejects the pinned nixpkgs' older 0.0.33 server).
 
 ```
 flake.nix              # Flake inputs (flake-parts + import-tree scaffolding)
-rebuild.sh             # Interactive rebuild: selects a host, diffs, commits, pushes
+rebuild.sh             # Staged rebuild (check/eval/build/test/switch/push/generations) + interactive flow
+AGENTS.md              # Shared agent guidance (CLAUDE.md imports it for Claude Code)
+.claude/               # Reviewer subagents and workflow skills (start-todo, ship-pr, merge-pr)
+.github/               # Pull request template
 start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
+docs/agents/           # On-demand agent reference: workflow, review tiers, recipes, registry, gotchas
 docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
 
 modules/
@@ -278,11 +282,18 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
-- **Rebuilds** — agents run `./rebuild.sh build HOST` freely (silent on success
-  without a terminal; the log is `.log/nixos-build.log`); the switch needs
-  your approval in T3 *and* your password in a GUI dialog. Remote hosts (REDRUM)
-  are built by the agent but switched by you in a terminal. `switch` commits
-  only when there are changes and never pushes.
+- **Rebuilds** — agents run `./rebuild.sh check|eval|build HOST` freely (silent
+  on success without a terminal; the log is `.log/nixos-build.log`).
+  `test`/`dry`/`switch` need your approval in T3 *and* your password in a GUI
+  dialog. Remote hosts (REDRUM) are built by the agent but activated by you in
+  a terminal. See [Change workflow](#change-workflow).
+- **Agent docs** — `AGENTS.md` is the shared guide for any agent; `CLAUDE.md`
+  imports it (`@AGENTS.md`) and adds Claude-only notes; long reference material
+  is in `docs/agents/` and is read on demand, keeping per-thread context small.
+- **Reviewers and skills** (`.claude/`) — read-only reviewer subagents
+  (`nix-reviewer` on Haiku, `lockout-reviewer` on Sonnet for network/SSH/boot
+  changes, `deep-reviewer` on Opus as an escalation) and the `start-todo`,
+  `ship-pr` and `merge-pr` skills that drive the PR workflow.
 - **Pushing** (`github-cli.nix`) — `gh` is git's credential helper over HTTPS,
   so an approved `git push` works from an agent thread without an SSH agent or
   access to `~/.ssh`. The `origin` remote must be
@@ -319,8 +330,9 @@ Proton-based runtime (no Windows install).
 Workarounds currently in the tree because of bugs or gaps **upstream**. Each
 entry is a deliberate, temporary reduction in scope — re-check it whenever a
 rebuild conversation starts, and drop the workaround once the upstream fix
-lands. Keep this list in sync with the "Pending upstream fixes" section of
-`AGENTS.md`, and add a row here in the same commit that introduces a new
+lands. Keep this list in sync with the agent copy in
+`docs/agents/upstream-registry.md` (`./rebuild.sh check` compares the row
+numbers), and add a row here in the same commit that introduces a new
 workaround.
 
 | # | Workaround | Where | Blocked on | Re-enable when |
@@ -336,15 +348,26 @@ workaround.
 ## Scripts
 
 - `rebuild.sh` — the daily-driver workflow. Streams the rebuild live with
-  syntax highlighting (`bat`), shows only the errors on failure (log kept at
-  `.log/nixos-switch.log`), rebuilds locally or remotely
-  (`--target-host --elevate sudo`), commits with generation metadata, and
-  pushes to `origin/master`. With no arguments it is interactive; the same
-  steps are also available as non-interactive stages so an AI agent can drive
-  them (see [AI agents](#ai-agents)): `rebuild.sh build HOST` (unprivileged
-  build + closure diff), `rebuild.sh switch HOST -m "msg" [--target USER@IP]`
-  (switch + commit; asks for the sudo password in a GUI dialog when there is no
-  terminal) and `rebuild.sh push`.
+  syntax highlighting (`bat`), shows only the errors on failure (logs kept in
+  `.log/nixos-<action>.log`), and rebuilds locally or remotely
+  (`--target-host --elevate sudo`). It works on whichever checkout it lives in
+  (a T3 worktree or `~/.nixos`). With no arguments it is interactive: pick a host,
+  review the diff, build, commit, then **switch** on `master` or **test** on any
+  other branch, and push the current branch. The same steps are
+  non-interactive stages so an AI agent can drive them (see
+  [Change workflow](#change-workflow)):
+
+  | Stage | Does | Privileges |
+  | --- | --- | --- |
+  | `check [HOST...]` | script syntax, tracked secrets/firmware, whitespace, registry sync, eval of each host | none |
+  | `eval HOST` | evaluate only (prints the drvPath) | none |
+  | `build HOST` | build + closure diff against the running system | none |
+  | `test HOST [--target USER@IP]` | activate without a boot entry/generation | sudo (GUI askpass) |
+  | `dry HOST [--target USER@IP]` | dry-activate: what a switch would restart | sudo |
+  | `revert` | re-activate the recorded generation after a `test` | sudo |
+  | `switch HOST [-m MSG] [--target USER@IP]` | `master` only: commit a dirty tree with MSG, then switch | sudo |
+  | `push` | push the current branch (never forced; `master` only from a terminal) | git credentials |
+  | `generations [--target USER@IP]` | each generation with the commit/PR it was built from | none |
 - `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
   passphrase prompt and pulls the latest config, delegating the sync itself to
   `config-sync.sh` (see [How start.sh works](#how-startsh-works) below).
@@ -488,32 +511,85 @@ To deploy an existing machine:
 git clone git@github.com:cqjro/nixos.git ~/.nixos
 cd ~/.nixos
 
-# 2. Rebuild any host from the repo (flake is self-contained, so this works
+# 2. T2 hosts only (REDRUM, LittleNix), before their first build on this machine:
+#    put the Apple brcm firmware in /var/lib/firmware-src/<HOST>/brcm (never in
+#    the repo) and import it into the Nix store; see docs/firmware.md
+nix run .#t2-firmware-import -- REDRUM
+
+# 3. Rebuild any host from the repo (flake is self-contained, so this works
 #    from any machine with Nix installed)
-sudo nixos-rebuild switch --flake ".#GOD-KILLER" --impure
+sudo nixos-rebuild switch --flake ".#GOD-KILLER"
 #     replace GOD-KILLER with LittleNix or REDRUM as appropriate
 ```
 
 For a fresh install from the live ISO, first bring up NixOS (installer →
-`nixos-generate-config` → boot), then:
+`nixos-generate-config` → boot), then (for a T2 host, import its firmware as in
+step 2 first):
 
 ```bash
 # Prefer the standalone installer for correct hardware/partition setup, or:
-nixos-install --flake ".#GOD-KILLER" --impure
+nixos-install --flake ".#GOD-KILLER"
 ```
 
 Notes:
 
-- `--impure` is required because the flake reads files from `~/.nixos` that
-  aren't declared as inputs (e.g. the REDRUM/littleNix `brcm-firmware` bundle).
+- All hosts evaluate without `--impure`: the T2 firmware is a hash-pinned store
+  path (`modules/system/t2-firmware.nix`), so clean clones and worktrees can
+  evaluate every host; only *building* a T2 host needs its firmware imported on
+  that machine. The firmware is proprietary — never commit, push or share it
+  (see `docs/firmware.md`).
 - Remote machines are configured for SSH keys over `git@github.com`, so
   `rebuild.sh` can deploy to any host and push the result back from anywhere.
-- Monitoring and applying per-host generation metadata
-  (`nixos-rebuild list-generations`) is built into `rebuild.sh`.
+- Every generation records the commit it was built from
+  (`system.configurationRevision` plus a `git-<sha>` boot-menu label, from
+  `modules/essentials/config-revision.nix`); `./rebuild.sh generations` lists
+  them with the commit subject. See [Change workflow](#change-workflow).
+
+## Change workflow
+
+GitHub (`cqjro/nixos`) is the hub between machines, and every change is a
+branch plus a PR. Only merged `master` becomes a recorded generation. The full
+agent procedure is in `docs/agents/workflow.md`.
+
+1. **Branch per item.** Each TODO item gets its own T3 thread in its own
+   worktree on `todo/<slug>`, branched from `origin/master` (the `start-todo`
+   skill sets this up and picks the model from the item's effort score). `~/.nixos`
+   stays on a clean `master`.
+2. **Verify.** The agent runs `./rebuild.sh check` and `./rebuild.sh build`
+   for the affected hosts:
+   - **GOD-KILLER** builds GOD-KILLER and REDRUM.
+   - **REDRUM** builds only itself, and only *evaluates* GOD-KILLER (`./rebuild.sh eval GOD-KILLER`).
+3. **Try it without recording it.** `./rebuild.sh test HOST` activates the
+   branch build but writes no boot entry or generation. `./rebuild.sh revert`
+   or a reboot undoes it. `./rebuild.sh dry HOST` only reports what would
+   restart, which is the safer choice for network/SSH changes on headless REDRUM.
+4. **Review.** Reviews are tiered, cheapest first:
+   1. Deterministic checks, which are free.
+   2. A Haiku convention reviewer.
+   3. A Sonnet lockout reviewer, only for network, SSH, boot or tunnel changes.
+   4. Opus, only as an escalation.
+
+   Results go in the PR description (`.github/pull_request_template.md`).
+5. **PR and merge.** When you ask, the agent pushes the branch and opens the PR
+   (`gh pr create`). The PR is linked to the T3 thread. When you say "merge
+   it", the agent runs `gh pr merge --squash --delete-branch`. Approving that
+   permission card in T3 *is* the approval, because GitHub won't let you
+   approve PRs made with your own token.
+6. **Switch.** On each affected host, run
+   `cd ~/.nixos && git pull --ff-only && ./rebuild.sh switch HOST`. `switch`
+   refuses to run off `master`.
+7. **Trace a generation.** `./rebuild.sh generations` maps each generation to
+   its commit and PR number. Older generations show the message from their
+   old `HOST: <gen> … || message` commit.
+
+The post-switch "generation metadata" commit is gone. A commit now exists
+before the switch, and the generation records it, so `master` only receives
+reviewed merges or your own direct commits from the interactive flow.
 
 ## One-off tasks
 
-Run the interactive rebuild with test-then-switch and a full history:
+Run the interactive rebuild (build → commit → switch on `master`, or test on a
+branch → push):
 
 ```bash
 ./rebuild.sh
