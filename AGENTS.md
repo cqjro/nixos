@@ -25,6 +25,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
 | [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | permissions, pushes, pairing, T3 on REDRUM, the permissions smoke test |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
+| [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
 ## Quick commands

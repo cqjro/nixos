@@ -14,12 +14,12 @@ let
 		Notification = [ (entry "permission_prompt|elicitation_dialog|agent_needs_input") ];
 		Stop = [ (entry "") ];
 		StopFailure = [ (entry "") ];
-		# PermissionRequest is not registered: Notification:permission_prompt
-		# covers the same prompt. If the permission_prompt notification does not
-		# arrive under T3 (docs/notifications.md, test 1), add
-		#   PermissionRequest = [ (entry "") ];
-		# the script already dedupes the pair. It returns no decision, so the
-		# normal prompt flow is untouched.
+		# PermissionRequest carries the actual command, which lets the script rank
+		# the approvals that matter (gh pr merge, rebuild.sh switch|test, pushes).
+		# It returns no decision, so the normal prompt flow is untouched. The
+		# generic permission_prompt Notification stays as the fallback in case
+		# PermissionRequest does not fire under T3; the script dedupes the pair.
+		PermissionRequest = [ (entry "") ];
 	};
 
 	mkScript = pkgs: desktop: pkgs.writeShellApplication {

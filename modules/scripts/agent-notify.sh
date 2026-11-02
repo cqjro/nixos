@@ -33,7 +33,19 @@ log() {
 	fi
 }
 
-if [ "${1:-}" = "test" ]; then
+if [ "${1:-}" = "send" ]; then
+	# non-hook callers (rebuild.sh): agent-notify send KIND MESSAGE
+	# KIND = approval|finished|failed; AGENT_NOTIFY_LABEL overrides the heading.
+	# The message is caller-supplied (not agent output), so it goes to ntfy too.
+	force_text=1
+	case "${2:-finished}" in
+	approval) ev=Notification ;;
+	failed) ev=StopFailure ;;
+	*) ev=Stop ;;
+	esac
+	payload=$(jq -nc --arg ev "$ev" --arg m "${3:-}" --arg cwd "$PWD" --arg s "send-$$-$(date +%s)" \
+		'{hook_event_name: $ev, notification_type: "permission_prompt", message: $m, last_assistant_message: $m, error: $m, cwd: $cwd, session_id: $s}')
+elif [ "${1:-}" = "test" ]; then
 	case "${2:-approval}" in
 	approval) payload='{"hook_event_name":"Notification","notification_type":"permission_prompt","message":"Claude needs your permission to use Bash","session_id":"selftest-approval"}' ;;
 	failed) payload='{"hook_event_name":"StopFailure","error":"rate_limit","session_id":"selftest-failed"}' ;;
@@ -56,6 +68,11 @@ ntype=$(field .notification_type)
 cwd=$(field .cwd)
 session=$(field .session_id)
 [ -n "$session" ] || session=unknown
+
+# The generic permission_prompt Notification carries no command; the
+# PermissionRequest hook does. Let the generic one wait so that one wins the
+# dedupe race.
+[ "$event:$ntype" = "Notification:permission_prompt" ] && sleep 2
 
 # classify; anything not listed is logged and dropped
 kind=""
@@ -117,6 +134,20 @@ approval)
 	tags=warning
 	label="Approval needed"
 	detail=$(snippet "$(field .message)")
+	if [ "$event" = PermissionRequest ]; then
+		cmd=$(field .tool_input.command)
+		detail=$(field .tool_name)
+		# the approvals that matter most: approving these IS the action
+		case "$cmd" in
+		*"gh pr merge"*) prio=5 tags=rotating_light label="MERGE approval" ;;
+		*"rebuild.sh switch"* | *"nixos-rebuild switch"* | *"rebuild.sh test"*) prio=5 tags=rotating_light label="Activate-system approval" ;;
+		*"gh pr create"*) label="Open-PR approval" ;;
+		*"rebuild.sh push"* | *"git push"*) label="Push approval" ;;
+		*"rebuild.sh dry"* | *"rebuild.sh revert"*) label="Rebuild approval" ;;
+		*"sudo "*) label="sudo approval" ;;
+		esac
+		[ "$label" = "Approval needed" ] || detail=$(snippet "$cmd")
+	fi
 	;;
 failed)
 	prio=4
@@ -132,6 +163,8 @@ failed)
 	;;
 esac
 
+[ -n "${AGENT_NOTIFY_LABEL:-}" ] && label="$AGENT_NOTIFY_LABEL"
+
 if [ "$quiet" = 1 ]; then
 	if [ "$kind" = finished ]; then
 		log "event=$event session=$session kind=$kind action=quiet-dropped"
@@ -146,7 +179,7 @@ body="$label"
 
 # remote body: do not ship agent output off-machine unless asked to
 remote_body="$label"
-if [ "$kind" != finished ] || [ -f "$cfg/include-text" ]; then
+if [ "${force_text:-0}" = 1 ] || [ "$kind" != finished ] || [ -f "$cfg/include-text" ]; then
 	remote_body="$body"
 fi
 

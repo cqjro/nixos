@@ -44,7 +44,7 @@ host + worktree + branch, which the native text lacks.
 | `StopFailure` (rate limit, overloaded, auth, billing, …) | Run failed | 4 (high) | normal |
 | `Notification` `idle_prompt` | dropped (would duplicate the Stop push) | – | – |
 | `SubagentStop` | not registered (T3 itself waits for the whole run) | – | – |
-| `PermissionRequest` | optional, see below | 4 | critical |
+| `PermissionRequest` | Approval needed, ranked by the command (below) | 4 or 5 | critical |
 
 Title: `HOST - worktree (branch)`, e.g. `GOD-KILLER - workflow-notifications
 (workflow/notifications)`. The worktree directory and branch are the closest
@@ -60,6 +60,26 @@ curl through stdin config, so they never appear in `ps`.
 `touch ~/.config/agent-notify/include-text`, because the agent's last message
 would otherwise leave the machine (on ntfy.sh, via a third party). Approval
 text (`Claude needs your permission to use Bash`) is sent as-is.
+
+### Approvals that matter most
+
+`PermissionRequest` hands the script the actual command, so it can rank:
+
+| Command contains | Heading | Priority |
+| --- | --- | --- |
+| `gh pr merge` | MERGE approval (approving the card **is** the merge) | 5 |
+| `rebuild.sh switch` / `nixos-rebuild switch` / `rebuild.sh test` | Activate-system approval | 5 |
+| `gh pr create` | Open-PR approval | 4 |
+| `git push` / `rebuild.sh push` | Push approval | 4 |
+| `rebuild.sh dry` / `revert` | Rebuild approval | 4 |
+| `sudo ` | sudo approval | 4 |
+
+The generic `Notification:permission_prompt` stays registered as a fallback
+(waits 2 s so the command-aware one wins the dedupe); if `PermissionRequest`
+does not fire under T3 you still get an unranked approval push.
+
+PR babysitting needs no notifications from here: T3's `watch_pull_request`
+wakes the thread on checks, comments or conflicts.
 
 ### Dedupe and quiet hours
 
@@ -266,3 +286,23 @@ per event type (or keep both, accepting duplicates).
   "unguessable URL" kind; adopt whatever file-credential mechanism you choose.
 * **Thread 3 (schedules):** scheduled threads that find something should fail
   loudly (`StopFailure`/Stop) so the same hooks announce them.
+
+## 8. rebuild.sh integration (handoff to the workflow-docs thread)
+
+`rebuild.sh` (not edited here) has `notify_ok()` at the end of `switch` and of
+the interactive flow; it only calls `notify-send`, so a switch started from a
+phone or REDRUM would never reach the phone. `agent-notify` gained a
+non-hook entry point for it:
+
+```bash
+AGENT_NOTIFY_LABEL="Rebuild done" agent-notify send finished "$host generation $current"
+AGENT_NOTIFY_LABEL="Rebuild failed" agent-notify send failed "$host build failed"
+```
+
+Suggested `notify_ok` body: keep the `echo`, then
+`if command -v agent-notify >/dev/null; then AGENT_NOTIFY_LABEL="Rebuild done"
+agent-notify send finished "$1" || true; elif command -v notify-send ...` as
+today. `send` honours quiet hours (a completion is dropped inside them),
+dedupe and the ntfy config, and its text is sent to ntfy because the caller, not
+an agent, wrote it. It exits 0 always. A `die`/failure path can call the
+`failed` form. Verified against a local listener; `rebuild.sh` itself untested.
