@@ -40,7 +40,7 @@ Read the others **when the task calls for them**:
 ./rebuild.sh push                 # push the current branch (never forced; master only from a terminal)
 ./rebuild.sh generations          # generations with the commit/PR each was built from
 ./rebuild.sh                      # interactive: host -> diff -> build -> commit -> switch (master) / test (branch) -> push
-config-sync                       # zsh alias -> modules/scripts/config-sync.sh (stash/pull/pop ~/.nixos)
+config-sync                       # zsh alias -> modules/scripts/config-sync.sh (manual stash/pull/pop of ~/.nixos; rarely needed)
 nix develop .#youtube-sync        # devshell for the youtube-sync helper
 ```
 
@@ -65,7 +65,7 @@ nix develop .#youtube-sync        # devshell for the youtube-sync helper
 ```
 flake.nix          # inputs + flake-parts/import-tree scaffolding (the "dendritic" core)
 rebuild.sh         # staged rebuild: check/eval/build/test/dry/switch/push/generations + interactive flow
-start.sh           # login script: ssh-agent + config auto-pull
+start.sh           # login script: ssh-agent only (no auto-pull; switch fast-forwards master)
 CLAUDE.md          # Claude Code entry point: @AGENTS.md + Claude-only notes
 .claude/           # agents/ (reviewer subagents), skills/ (start-todo, ship-pr, merge-pr)
 .github/           # pull_request_template.md

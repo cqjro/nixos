@@ -52,7 +52,7 @@ rebuild.sh             # Staged rebuild (check/eval/build/test/switch/push/gener
 AGENTS.md              # Shared agent guidance (CLAUDE.md imports it for Claude Code)
 .claude/               # Reviewer subagents and workflow skills (start-todo, ship-pr, merge-pr)
 .github/               # Pull request template
-start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
+start.sh               # Startup script run by Hyprland: loads the SSH agent (no config pull)
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
 docs/agents/           # On-demand agent reference: workflow, review tiers, recipes, registry, gotchas
 docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
@@ -365,13 +365,14 @@ workaround.
   | `test HOST [--target USER@IP]` | activate without a boot entry/generation | sudo (GUI askpass) |
   | `dry HOST [--target USER@IP]` | dry-activate: what a switch would restart | sudo |
   | `revert` | re-activate the recorded generation after a `test` | sudo |
-  | `switch HOST [-m MSG] [--target USER@IP]` | `master` only: commit a dirty tree with MSG, then switch | sudo |
+  | `switch HOST [-m MSG] [--target USER@IP]` | `master` only: fetch and fast-forward to `origin/master`, commit a dirty tree with MSG, then switch | sudo |
   | `push` | push the current branch (never forced; `master` only from a terminal) | git credentials |
   | `generations [--target USER@IP]` | each generation with the commit/PR it was built from | none |
 - `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
-  passphrase prompt and pulls the latest config, delegating the sync itself to
-  `config-sync.sh` (see [How start.sh works](#how-startsh-works) below).
-- `modules/scripts/config-sync.sh` — the config sync on its own: verifies GitHub
+  passphrase prompt. It no longer pulls the config: git is managed through T3
+  threads and PRs, and `./rebuild.sh switch` fast-forwards `master` itself
+  (see [How start.sh works](#how-startsh-works) below).
+- `modules/scripts/config-sync.sh` — a manual, rarely needed config pull: verifies GitHub
   SSH auth and does the stash/pull/stash-pop against `~/.nixos`. Available from
   any terminal as the `config-sync` zsh alias (`bash
   ${../../scripts/config-sync.sh}`), so it works outside of login — e.g. midway
@@ -389,7 +390,7 @@ workaround.
 
 ### How `start.sh` works
 
-`start.sh` re-syncs the NixOS config from GitHub every time you log in, without
+`start.sh` loads your SSH key into an agent every time you log in, without
 blocking the desktop. Hyprland launches it on session start
 (`hl.exec_cmd("bash $HOME/.nixos/start.sh")` in the `hyprland.start` hook in
 `modules/home-manager/desktop/hyprland.nix`), and the final line
@@ -414,17 +415,18 @@ The flow:
    unrelated processes can reuse the same agent.
 6. **Load the key** — `ssh-add`s `~/.ssh/id_ed25519` through the GUI prompt
    (detached from any TTY with `setsid` so it never blocks on stdin).
-7. **Sync the config** — runs `modules/scripts/config-sync.sh`, which verifies
-   GitHub auth (`ssh -T git@github.com`, non-fatal) and then does the
-   stash/pull/stash-pop described below. Its own log lives at
-   `~/.nixos/.log/config-sync.log`.
+
+There is no config sync step any more. `~/.nixos` stays a clean `master` that
+only changes when you switch: `./rebuild.sh switch HOST` fetches and
+fast-forwards it first. Branch work happens in T3 worktrees and reaches
+`master` through merged PRs.
 
 ### `config-sync.sh` (the `config-sync` alias)
 
 The GitHub check and the stash/pull/pop logic live in
-`modules/scripts/config-sync.sh` so the sync can be re-run on demand — `start.sh`
-just executes it after loading the SSH key. Whenever you need to pull the latest
-config outside of a login:
+`modules/scripts/config-sync.sh`. Nothing runs it automatically any more, and
+you rarely need it: `./rebuild.sh switch` already fast-forwards `master`. It is
+kept for pulling `~/.nixos` by hand without switching:
 
 - **Anywhere in a terminal** — `config-sync` (zsh alias wired in
   `modules/home-manager/terminal/zsh.nix`, like `rebuild`).
@@ -576,7 +578,7 @@ agent procedure is in `docs/agents/workflow.md`.
    permission card in T3 *is* the approval, because GitHub won't let you
    approve PRs made with your own token.
 6. **Switch.** On each affected host, run
-   `cd ~/.nixos && git pull --ff-only && ./rebuild.sh switch HOST`. `switch`
+   `cd ~/.nixos && ./rebuild.sh switch HOST` (it fetches and fast-forwards master first). `switch`
    refuses to run off `master`.
 7. **Trace a generation.** `./rebuild.sh generations` maps each generation to
    its commit and PR number. Older generations show the message from their

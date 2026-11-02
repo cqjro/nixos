@@ -30,7 +30,8 @@ picking the T3 environment in the client.
 ## Checkouts
 
 - `~/.nixos` (main checkout) stays on `master` and clean. It is where the
-  human switches from, and where `config-sync`/`start.sh` pull.
+  human switches from. Nothing pulls it automatically: `./rebuild.sh switch`
+  fetches and fast-forwards `master` itself, and agents never touch it.
 - Work happens in T3 worktrees (`~/.t3/worktrees/.nixos/<branch>`), one per
   branch. `./rebuild.sh` operates on the checkout it lives in, so run it from
   the worktree. Uncommitted edits are not copied into new worktrees; push
@@ -81,8 +82,9 @@ picking the T3 environment in the client.
     GitHub's self-approval is unavailable). The squash commit's subject is the
     PR title plus `(#N)`.
 11. **Switch** the affected hosts from merged master (human-approved):
-    on the host, in `~/.nixos`: `git pull --ff-only`, then
-    `./rebuild.sh switch HOST`. Optionally note the result on the PR
+    on the host, in `~/.nixos`: `./rebuild.sh switch HOST` (it fetches and
+    fast-forwards `master` first, and refuses if `master` has diverged or the
+    tree is dirty while behind). Optionally note the result on the PR
     (`gh pr comment <N> --body "GOD-KILLER: generation 231"`).
 
 `switch` refuses to run off `master`, so unmerged work can only ever be
