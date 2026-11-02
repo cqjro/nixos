@@ -95,7 +95,7 @@ Exposure paths, in order of concern:
 2. **Binary caches**: none configured except the read-only Millennium cachix in
    `modules/system/games.nix`; nothing pushes. Keep it that way: never
    `nix copy` or `cachix push` firmware to a public cache.
-3. **Every clone**: GOD-KILLER, REDRUM (`config-sync` pulls), LittleNix, T3
+3. **Every clone**: GOD-KILLER, REDRUM (`config-sync`, and `./rebuild.sh switch` fast-forwards `master`), LittleNix, T3
    worktrees under `~/.t3/worktrees/.nixos/*`, and T3's hidden
    `refs/t3/orchestration-v2/checkpoints/*` refs (117 locally; all reach the
    firmware commits).
@@ -361,8 +361,10 @@ rm -rf ~/.nixos.pre-rewrite
 ```
 
 - **REDRUM** also has the T3 agent clone `/var/lib/t3code/nixos` (if used) and
-  `config-sync`/`start.sh` auto-pull: replace the clone the same way, or the
-  next login's auto-pull will fail.
+  `config-sync` and `./rebuild.sh switch` (which fetches and fast-forwards
+  `master`): replace the clone the same way, or the next switch will refuse to
+  fast-forward onto unrelated history. Nothing pulls automatically any more
+  (`start.sh` only loads the SSH agent), so a stale clone fails only when used.
 - **T3 worktrees** (`~/.t3/worktrees/.nixos/*`, one per thread) are bound to
   the old clone: `git worktree prune` is not enough because their object store is
   the old repo. Delete them after re-cloning and let T3 create new worktrees.
