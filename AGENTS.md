@@ -20,7 +20,7 @@ Read the others **when the task calls for them**:
 | --- | --- |
 | `AGENTS.md` (this file) | always — the single source of truth for every agent |
 | `CLAUDE.md` | loaded by Claude Code; imports this file and adds Claude-only notes (subagents, skills, T3 tools). Never put shared rules there |
-| [`docs/agents/workflow.md`](docs/agents/workflow.md) | branching, PRs, testing, merging, cross-machine handoff, generation tracking, model choice |
+| [`docs/agents/workflow.md`](docs/agents/workflow.md) | branching, PRs, testing, merging, cross-machine handoff, generation tracking, model choice, the path to close and settling a thread |
 | [`docs/agents/review.md`](docs/agents/review.md) | reviewing a branch (tiers 0–3) |
 | [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
 | [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | permissions, pushes, pairing, T3 on REDRUM, the permissions smoke test |
@@ -185,6 +185,21 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
 - **Model per task** follows the TODO.md effort score (Haiku for triage and
   tier-1 review, Sonnet for 1–6, Opus to plan 7–10) — table in
   [`docs/agents/workflow.md`](docs/agents/workflow.md#model-and-effort-per-task).
+
+## Path to close (end of every reply)
+
+Every thread should move toward being settled. End **every** reply to the
+human with a `Path to close` block — format and settle checklist in
+[`docs/agents/workflow.md`](docs/agents/workflow.md#path-to-close):
+
+- One ordered list of the remaining steps, from both sides, each tagged
+  **Agent** or **You**, in the order they unblock each other, ending with the
+  step that closes the thread (e.g. "PR merged and REDRUM switched").
+- Work handed to another thread or agent goes under **Delegated**, with a
+  `t3-thread://` link or task id; it no longer blocks this thread.
+- When no steps remain, or every remaining step is delegated, recommend
+  settling (T3 *settle*, or *snooze* until a named event) instead of a list.
+  Settle only when the human agrees.
 
 ## Using mcp-nixos
 

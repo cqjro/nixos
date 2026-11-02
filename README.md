@@ -584,6 +584,12 @@ agent procedure is in `docs/agents/workflow.md`.
    its commit and PR number. Older generations show the message from their
    old `HOST: <gen> … || message` commit.
 
+Every agent reply ends with a **Path to close**: one ordered list of the
+remaining steps, each tagged *Agent* or *You*, ending with the step that
+closes the thread, plus any work delegated to other threads. Once nothing is
+left but delegated work or waiting, the agent recommends settling (or snoozing)
+the thread instead.
+
 The post-switch "generation metadata" commit is gone. A commit now exists
 before the switch, and the generation records it, so `master` only receives
 reviewed merges or your own direct commits from the interactive flow.
