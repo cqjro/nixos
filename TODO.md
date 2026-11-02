@@ -27,9 +27,10 @@ repeated as proposals.
         GOD-KILLER and REDRUM, then run `nix run .#t2-firmware-import -- REDRUM`
         on each (GOD-KILLER can already build REDRUM; REDRUM building itself
         needs this)
-  - [ ] On the LittleNix machine, run `nix run .#t2-firmware-import -- LittleNix`;
-        if it reports MISMATCH, set the printed hash in
-        `modules/hosts/LittleNix/machine.nix` (the pinned one is unverified)
+  - [ ] LittleNix is parked (see `docs/firmware.md` "LittleNix (parked)"). Only
+        if you want to keep its firmware: export it from commit `0181e6a` to
+        `/var/lib/firmware-src/LittleNix/brcm` **before** the history rewrite
+        deletes it (a fresh install would wipe the machine's own copy too)
   - [ ] Decide how workflow branches/worktrees cross the rewrite (patch export
         recommended, `docs/firmware.md` 6.5), then **before any workflow PR is
         opened** run the history rewrite (`docs/firmware.md` section 6) and

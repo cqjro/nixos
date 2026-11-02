@@ -185,10 +185,20 @@ with its own name):
    - **From a machine that already has them** (preferred, keeps the hash):
      `rsync -a --info=progress2 /var/lib/firmware-src/REDRUM/brcm/ redrum:/var/lib/firmware-src/REDRUM/brcm/`
      (over Tailscale/SSH; never via GitHub, chat or T3 attachments).
-   - **From the REDRUM checkout's old location**: `sudo install -d -o cairo -g users /var/lib/firmware-src/REDRUM && mv ~/.nixos/modules/hosts/REDRUM/firmware/brcm /var/lib/firmware-src/REDRUM/brcm`.
+   - **From the checkout's old location** (GOD-KILLER today has them, untracked,
+     in `~/.nixos/modules/hosts/REDRUM/firmware/brcm`, 27 MB): *copy* them out,
+     do not move yet:
+     `sudo install -d -o cairo -g users /var/lib/firmware-src /var/lib/firmware-src/REDRUM && cp -a ~/.nixos/modules/hosts/REDRUM/firmware/brcm /var/lib/firmware-src/REDRUM/`.
+     Delete the old directory only after this branch is merged: until then
+     `master` still points its REDRUM firmware at that absolute path, and the
+     old `~/.nixos` is replaced by the re-clone in 6.5 anyway.
    - **From the Mac itself**: re-extract with the t2linux `firmware.sh`. Output can
      differ by macOS version, so expect a hash `MISMATCH` and then re-pin.
 2. `cd ~/.nixos && nix run .#t2-firmware-import -- REDRUM`. Expect `OK`.
+   Until this branch is merged, `~/.nixos` (`master`) has no importer or
+   `t2-firmware.hash`; run it from the branch's checkout instead:
+   `cd ~/.t3/worktrees/.nixos/workflow-firmware && nix run .#t2-firmware-import -- REDRUM`
+   (it reads the pinned hash from `.`, so it must be run from there).
 
 Alternatively move the store path directly (verified path format; `nix copy` to
 a remote store is **untested** from here): `nix copy --to ssh-ng://cairo@redrum /nix/store/prscpri4fy5x2gy488j3rag9awjv568x-brcm-firmware`.
@@ -198,6 +208,35 @@ importer does this when pointed at the staging dir).
 
 If the build says the firmware is missing, the message already names the hash and
 these commands.
+
+### LittleNix (parked)
+
+LittleNix is not being rebuilt for now, so nothing here is urgent, but the
+config is ready for it. Its pinned hash is **unverified**, and a fresh install of
+the machine is possible, so know where its firmware can come from:
+
+- **The history copy is the only one off the machine, and the rewrite (6) deletes
+  it.** If you want to keep it, export it *before* the rewrite, on GOD-KILLER:
+  `mkdir -p /tmp/ln && git -C ~/.nixos archive 0181e6a hosts/LittleNix/firmware/brcm | tar -x -C /tmp/ln && sudo install -d -o cairo -g users /var/lib/firmware-src/LittleNix && mv /tmp/ln/hosts/LittleNix/firmware/brcm /var/lib/firmware-src/LittleNix/brcm`.
+  Do not open, print or attach the files.
+- **Verify it** on any machine with the branch checked out:
+  `nix run .#t2-firmware-import -- LittleNix`. `OK` means the pinned hash was
+  right and the file set equals what the machine used. `MISMATCH` prints the
+  hash to put in `modules/hosts/LittleNix/machine.nix`.
+- **The current install** also holds the files (wherever they were extracted),
+  but a **fresh install wipes them**. Before reinstalling either keep the copy
+  above (copy it off over Tailscale/SSH or a USB stick, never GitHub), or plan to
+  re-extract from macOS with the t2linux `firmware.sh` (Linux install guide of
+  the t2linux project); output can differ by macOS version, so expect `MISMATCH`
+  and re-pin.
+- **On the (re)installed machine:** put the directory in
+  `/var/lib/firmware-src/LittleNix/brcm` (create the parents with
+  `sudo install -d -o cairo -g users`), run the importer, then build. With no
+  files the build fails with the placement instructions, and the machine gets
+  no Wi-Fi/Bluetooth, which matters on first boot of a new install: keep a wired
+  adapter or a phone tether handy for the first rebuild.
+- A GOD-KILLER build of LittleNix (`./rebuild.sh build LittleNix`) also needs the
+  files imported on GOD-KILLER.
 
 ## 4. Who can build what, and how the files get there
 
@@ -317,9 +356,22 @@ you are here (no credentials were found by file name in history, but the secrets
 audit thread owns the real scan).
 
 ```bash
-git remote add origin https://github.com/cqjro/nixos.git     # filter-repo removes origin
-git push --force --mirror origin      # point of no return; rewrites every ref, then delete dendritic (6.1)
+git remote -v                         # origin must still point at https://github.com/cqjro/nixos.git
+git push --force --mirror origin      # point of no return; rewrites every ref
+git push origin --delete dendritic    # decided in 6.1
 ```
+
+`--sensitive-data-removal` keeps `origin` (plain `filter-repo` would remove it),
+so there is no `git remote add` step. If `git remote -v` shows nothing, add it
+back with `git remote add origin https://github.com/cqjro/nixos.git`.
+
+**Rehearsed 2026-11-02** against a throwaway local copy of `origin` (bare repo in
+`/tmp`, nothing contacted GitHub) with exactly these commands: 187 firmware
+objects found, 0 reachable afterwards, tip tree unchanged, only `master` and
+`dendritic` pushed, `dendritic` deletable. One thing to expect: the old objects
+still *exist* on the server after the push (a `cat-file` of the recorded ids
+still finds them) until the server runs garbage collection. On GitHub that is
+what Support is for (6.4); it is not a sign the rewrite failed.
 
 `refs/pull/*` rejections are expected and harmless when there are none; any other
 rejected ref means branch protection, so disable it, retry, and re-enable.
@@ -389,6 +441,13 @@ rm -rf ~/.nixos.pre-rewrite
   `configurationRevision` *before* the rewrite would record a hash that no longer
   resolves, so run the rewrite before the first such build or expect those to be
   unresolvable.
+- **First thing after the re-clone: apply and merge the firmware branch** (its
+  patches). Rewritten `master` still contains the old REDRUM `builtins.path` on
+  `/home/cairo/.nixos/modules/hosts/REDRUM/firmware/brcm`, a path the new clone
+  does not have (and must not get back), so REDRUM does not evaluate or build
+  until the firmware change is in. LittleNix is in the same state: its old
+  `./firmware/brcm` is relative to the repo and is not tracked at the tip, so it
+  already fails to evaluate from any clean clone. Only GOD-KILLER is unaffected.
 - **`flake.lock`** does not pin this repo, so it is unaffected.
 - Nix store copies of the flake source from the days the firmware was tracked
   (`/nix/store/*-source`) may contain the files; they are local, not shared, and
