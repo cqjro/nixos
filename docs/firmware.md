@@ -371,15 +371,22 @@ rm -rf ~/.nixos.pre-rewrite
   not recreated). How T3 reacts to a project whose repo was replaced in place is
   **untested**; re-adding the project is the fallback.
 - **Open branches / PRs.** Local-only branches (`workflow/*`) die with the old
-  clone. Before step 6.2 either (A) export each: `git format-patch -o ~/patches/<branch> master..<branch>`,
+  clone. All six workflow branches sit on `eac96f8` and are clean, so (A) covers
+  every one of them. Before step 6.2 either (A) export each: `git format-patch -o ~/patches/<branch> master..<branch>`,
   then recreate from the new `master` with `git switch -c <branch> && git am ~/patches/<branch>/*.patch`
   (the trees match at the tip, so patches apply cleanly), or (B) push the
   branches to `origin` *before* the rewrite so the mirror run rewrites them with
   `master` (only safe while no PR exists, 6.1). Do not `git merge` old branches
   into new `master`.
-- **Generations**: commit messages from `rebuild.sh` carry a generation number,
-  not a hash, so history stays meaningful. If `system.configurationRevision` is
-  later adopted, revisions recorded before the rewrite will not resolve.
+- **Generations**: `rebuild.sh` commit subjects carry a generation number, not a
+  hash, and the rewrite keeps those subjects. The workflow/docs branch adopts
+  `system.configurationRevision` (`modules/essentials/config-revision.nix`), but
+  no generation has been built with it yet, so no recorded revision predates the
+  rewrite. `./rebuild.sh generations` finds older generations by matching the
+  `HOST: N … || message` subjects, which survive. A generation built with
+  `configurationRevision` *before* the rewrite would record a hash that no longer
+  resolves, so run the rewrite before the first such build or expect those to be
+  unresolvable.
 - **`flake.lock`** does not pin this repo, so it is unaffected.
 - Nix store copies of the flake source from the days the firmware was tracked
   (`/nix/store/*-source`) may contain the files; they are local, not shared, and
