@@ -86,11 +86,12 @@ private copy. What I did not verify, I did not assume away.
 
 Exposure paths, in order of concern:
 
-1. **git/GitHub**: history on `origin` (private). **Open question for you:**
-   was the repo ever public while either set was in history? Making a public
+1. **git/GitHub**: history on `origin` (private now). **Confirmed by the owner: the repo was
+   public while the firmware was in history, then made private.** Making a public
    repo private detaches its forks into separate public repos, and the current
-   `forkCount: 0` would not show them. If it was public, treat section 6.4
-   (GitHub Support) as required, not optional.
+   `forkCount: 0` would not show them, so clones and detached forks may still
+   hold the files and cannot be recalled. Section 6.4 (GitHub Support) is
+   therefore required, not optional, to clear cached views and orphaned objects.
 2. **Binary caches**: none configured except the read-only Millennium cachix in
    `modules/system/games.nix`; nothing pushes. Keep it that way: never
    `nix copy` or `cachix push` firmware to a public cache.
@@ -263,9 +264,10 @@ that carries the old history and you must involve GitHub Support (6.4) even if
 you would otherwise have skipped it. Rewriting later also invalidates every open
 branch, worktree and PR on all machines at once.
 
-Decisions for you before starting: (a) whether `dendritic` (338 commits, tip
-`a54f8c4`) is still wanted: delete it, or let the mirror push rewrite it; (b)
-whether the repo was ever public (section 2).
+Decided by the owner: `dendritic` (338 commits, tip `a54f8c4`) is obsolete (the
+config already uses the dendritic pattern on `master`), so **delete it** instead
+of rewriting it: `git push origin --delete dendritic` after the rewrite, and
+never re-create it. The 6.3 mirror push would otherwise rewrite it too.
 
 ### 6.2 Prepare
 
@@ -316,7 +318,7 @@ audit thread owns the real scan).
 
 ```bash
 git remote add origin https://github.com/cqjro/nixos.git     # filter-repo removes origin
-git push --force --mirror origin      # point of no return; also rewrites dendritic
+git push --force --mirror origin      # point of no return; rewrites every ref, then delete dendritic (6.1)
 ```
 
 `refs/pull/*` rejections are expected and harmless when there are none; any other
