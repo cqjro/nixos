@@ -19,8 +19,10 @@ needs a human or another machine.
   reviewers evaluate all three hosts with no files and **without `--impure`**
   (verified).
 - They are **still in git history** (both REDRUM's and LittleNix's sets) on
-  `master` and `dendritic`. Section 6 is the runbook. Do it **before the first
-  workflow PR is opened** (section 6.1).
+  `master` and `dendritic`. The plan (section 6): rename the old repo to the
+  private `nixos-archive`, rewrite a scratch clone once (firmware, secrets paths,
+  emails) and publish it as a new `cqjro/nixos`, so the repo can be public again
+  without the firmware and nothing is force-pushed or purged.
 
 ## 1. What is in the directory
 
@@ -90,13 +92,9 @@ Exposure paths, in order of concern:
    public while the firmware was in history, then made private.** Making a public
    repo private detaches its forks into separate public repos, and the current
    `forkCount: 0` would not show them, so clones and detached forks may still
-   hold the files and cannot be recalled. What the rewrite can and cannot do:
-   it stops further exposure (new clones, a future public repo, agents running
-   `git log -p`), but it cannot recall copies already made while the repo was
-   public, and GitHub Support may decline to purge. While the repo stays private
-   the orphaned objects are readable only by people with access to it, so
-   Section 6.4 (GitHub Support) matters mainly if the repo will be made public
-   again or you want the server copy gone; see the fresh-repo alternative there.
+   hold the files and cannot be recalled. The goal is to make the repo public again, so history is handled by
+   publishing a rewritten copy as a new repo and keeping this one private
+   (section 6). That cannot recall copies made while it was public (6.7).
 2. **Binary caches**: none configured except the read-only Millennium cachix in
    `modules/system/games.nix`; nothing pushes. Keep it that way: never
    `nix copy` or `cachix push` firmware to a public cache.
@@ -220,8 +218,9 @@ LittleNix is not being rebuilt for now, so nothing here is urgent, but the
 config is ready for it. Its pinned hash is **unverified**, and a fresh install of
 the machine is possible, so know where its firmware can come from:
 
-- **The history copy is the only one off the machine, and the rewrite (6) deletes
-  it.** If you want to keep it, export it *before* the rewrite, on GOD-KILLER:
+- **The history copy survives in the private archive repo** (`cqjro/nixos-archive`, and
+  in `~/.nixos.pre-rewrite` until you delete it), but not in the new public repo. To
+  extract it, from a clone of the archive (or the old `~/.nixos`), on GOD-KILLER:
   `mkdir -p /tmp/ln && git -C ~/.nixos archive 0181e6a hosts/LittleNix/firmware/brcm | tar -x -C /tmp/ln && sudo install -d -o cairo -g users /var/lib/firmware-src/LittleNix && mv /tmp/ln/hosts/LittleNix/firmware/brcm /var/lib/firmware-src/LittleNix/brcm`.
   Do not open, print or attach the files.
 - **Verify it** on any machine with the branch checked out:
@@ -229,7 +228,7 @@ the machine is possible, so know where its firmware can come from:
   right and the file set equals what the machine used. `MISMATCH` prints the
   hash to put in `modules/hosts/LittleNix/machine.nix`.
 - **The current install** also holds the files (wherever they were extracted),
-  but a **fresh install wipes them**. Before reinstalling either keep the copy
+  but a **fresh install wipes them**. Before reinstalling either extract the copy
   above (copy it off over Tailscale/SSH or a USB stick, never GitHub), or plan to
   re-extract from macOS with the t2linux `firmware.sh` (Linux install guide of
   the t2linux project); output can differ by macOS version, so expect `MISMATCH`
@@ -271,214 +270,217 @@ Keep these private: copy only over SSH/Tailscale or `nix copy` to your own hosts
 - Never `git add -f` a firmware path, push a `result` that contains it to a
   cache, or paste it into `request_secret` (it is not a secret; it just must not
   be shared).
-- Do not rewrite history, `git push --force` or contact GitHub Support: the
-  runbook below is for the human.
+- Do not run the section 6 runbook, rewrite history, `git push --force` or touch
+  the archive repo: that is for the human.
 - If a build fails with "The Apple Broadcom firmware ... is not in the Nix store",
   stop and tell the human which machine and host; do not work around it.
 
-## 6. Runbook: scrub the firmware from git history (human only)
+## 6. Runbook: publish a clean history in a new repo (human only)
 
-Nothing below has been executed. It follows GitHub's procedure
-(<https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository>)
-with `git-filter-repo >= 2.47` (the nixpkgs build supports
-`--sensitive-data-removal`; checked). Firmware is not a credential, so
-**nothing needs rotating**, but the rewrite is irreversible for everyone who
-holds old hashes.
+Decided by the owner on 2026-11-02: the goal is to make the repo **public again
+without the firmware**, and the old repo is kept **private forever** as an
+archive. So nothing is force-pushed or purged on GitHub. Instead:
 
-### 6.1 When it is safe (read first)
+1. the old repo is renamed `cqjro/nixos-archive` (stays private, optionally
+   archived) and is never modified again;
+2. a **scratch clone** is rewritten **once**: firmware, the secrets thread's
+   extra paths and personal emails are all removed in the same
+   `git filter-repo` run (`docs/secrets.md` 2.7), and the six `workflow/*`
+   branches are rewritten with it;
+3. a brand-new **empty** repo `cqjro/nixos` (same name, so every URL in the docs
+   and in `rebuild.sh` stays valid) receives only `master` and the workflow
+   branches from that scratch clone, private first, public after the checks.
 
-The tip of `master` already has no firmware, so the rewrite changes **only
-hashes**; trees at the tip are identical. What matters is the pull-request refs:
-GitHub keeps `refs/pull/N/head` for every PR, those cannot be force-pushed, and
-each one that descends from the firmware commits pins the data until GitHub
-Support clears it. As of 2026-11-01 `origin` has only `master` and `dendritic`
-(no PR refs, no tags).
+Why this beats rewriting in place: no `push --force --mirror`, no PR-ref problem
+(the new repo has none), no GitHub Support decision, and the old history is still
+there if you ever want it (including the LittleNix firmware at `0181e6a`).
 
-**Recommended order:**
+**Rehearsed 2026-11-02** on a throwaway local clone (nothing contacted GitHub,
+the clone is deleted): 187 firmware objects found and 0 left; 0 non-noreply
+author/committer emails left; refs after the rewrite are `master` plus the six
+`workflow/*` branches; each branch is still based on the new `master` tip with
+its commit count intact (agent-security 3, firmware 7, notifications 6,
+pr-rebuild-docs 4, schedules 2, secrets 10 commits ahead); the tip tree differs
+from the old one in exactly two files (`modules/_archive/rclone.nix` and
+`modules/home-manager/terminal/git.nix`, one email line each). Not rehearsed: the
+GitHub steps (rename, create, push, visibility).
 
-1. Let the six workflow threads finish and **commit locally**; do not push them
-   or open PRs yet.
-2. **Merge nothing from them first.** Run this runbook now, while there are zero
-   PRs.
-3. Re-clone, re-create the workflow branches (6.5), push them and open the PRs
-   against the rewritten `master`.
+### 6.1 What renaming does to existing clones
 
-If you open and merge the workflow PRs first, every one of them adds a PR ref
-that carries the old history and you must involve GitHub Support (6.4) even if
-you would otherwise have skipped it. Rewriting later also invalidates every open
-branch, worktree and PR on all machines at once.
+GitHub redirects the old name to the renamed repo, including `git clone`,
+`git fetch` and `git push` (GitHub docs, "Renaming a repository"). **But if you
+create a new repo with the original name, the redirect stops.** So:
 
-Decided by the owner: `dendritic` (338 commits, tip `a54f8c4`) is obsolete (the
-config already uses the dendritic pattern on `master`), so **delete it** instead
-of rewriting it: `git push origin --delete dendritic` after the rewrite, and
-never re-create it. The 6.3 mirror push would otherwise rewrite it too.
+- Until the new `cqjro/nixos` exists, old clones keep working against
+  `nixos-archive` through the redirect.
+- Once it exists, an old clone's `origin` (`https://github.com/cqjro/nixos.git`)
+  points at the **new** repo. A `pull` then fails with unrelated histories and a
+  normal `push` is rejected, but **a force push from an old clone would put the
+  firmware back**. Treat every old clone and worktree as tainted: replace them
+  (6.4), never repair them.
+- A clone you keep as a local archive: `git remote set-url origin https://github.com/cqjro/nixos-archive.git`.
 
-### 6.2 Prepare
+### 6.2 Before you start
+
+1. **No thread may be running** and every branch must be committed. Check each:
+   ```bash
+   for w in ~/.t3/worktrees/.nixos/*/; do echo "$w: $(git -C "$w" status --short | wc -l) uncommitted"; done
+   git -C ~/.nixos status -sb        # master must be in sync with origin/master
+   ```
+   Do not start threads that use `~/.nixos` until step 6.4 is done. Read what you
+   want from the threads first: deleting their worktrees later loses their diffs
+   and checkpoints.
+2. **Place the firmware outside the repo** (section 3, "Placing the files") and
+   confirm `OK` from the importer.
+3. **Tools:** `nix shell nixpkgs#git-filter-repo nixpkgs#git` for the rewrite;
+   gitleaks and trufflehog run through `nix run` below.
+
+### 6.3 Rewrite in a scratch clone (reversible, touches nothing real)
 
 ```bash
-# on GOD-KILLER, nothing running in ~/.nixos or T3 worktrees
-nix shell nixpkgs#git-filter-repo nixpkgs#git
+nix shell nixpkgs#git-filter-repo nixpkgs#git      # a subshell with the tools
 
-# 1. Make sure the firmware exists outside git on every machine (hash-checked):
-nix run ~/.nixos#t2-firmware-import -- REDRUM        # expect OK
-#    LittleNix: run the same on the LittleNix machine; if the files exist only in
-#    git history, export them first:  git -C ~/.nixos archive 0181e6a hosts/LittleNix/firmware/brcm | tar -x -C /tmp/ln
-#    then move them to /var/lib/firmware-src/LittleNix/brcm and import.
-# 2. Identify ignored local files you must carry over to the new clones:
-git -C ~/.nixos ls-files --others --ignored --exclude-standard
-#    expect firmware/, .log/, modules/server/youtube/{config,token,client_secret}.json
-#    (copy those by hand after re-cloning; do NOT copy firmware back into the repo)
-# 3. Fresh clone, away from ~/.nixos and any worktree:
-cd /tmp && git clone https://github.com/cqjro/nixos.git nixos-rewrite && cd nixos-rewrite
-# 4. Record the blob ids that must disappear (for verification):
+# 1. Clone the LOCAL repo (the workflow branches exist only there), away from ~/.nixos
+rm -rf /tmp/nixos-rewrite && git clone file:///home/cairo/.nixos /tmp/nixos-rewrite
+cd /tmp/nixos-rewrite
+git branch -D -r origin/dendritic        # obsolete branch stays in the archive only
+
+# 2. Record what must disappear, to prove it later
 git rev-list --all --objects | grep -E ' (modules/)?hosts/(REDRUM|LittleNix)/firmware/' \
   | cut -d' ' -f1 | sort -u > /tmp/firmware-objects.txt
-wc -l < /tmp/firmware-objects.txt        # expect ~187
-# 5. Record the tip tree so you can prove the rewrite changed no file at the tip:
-git rev-parse origin/master^{tree} > /tmp/tip-tree.txt
-```
+wc -l < /tmp/firmware-objects.txt        # expect 187
+git rev-parse origin/master^{tree} > /tmp/old-tip-tree.txt
 
-### 6.3 Rewrite and verify
+# 3. Email files (the helper lives on workflow/secrets; the files list the very
+#    addresses being removed, so they stay OUTSIDE any repo and are deleted after)
+git show origin/workflow/secrets:modules/scripts/history-email-scrub.sh > /tmp/history-email-scrub.sh
+bash /tmp/history-email-scrub.sh /tmp/nixos-rewrite ~/rewrite-emails   # prints counts only
 
-```bash
-git filter-repo --sensitive-data-removal --invert-paths \
+# 4. The one rewrite
+git filter-repo --invert-paths \
   --path hosts/REDRUM/firmware --path hosts/LittleNix/firmware \
-  --path modules/hosts/REDRUM/firmware --path modules/hosts/LittleNix/firmware
-# --sensitive-data-removal re-fetches all refs from origin first, so no ref that
-# holds the data is left behind. Note "First Changed Commit(s)" in the output.
+  --path modules/hosts/REDRUM/firmware --path modules/hosts/LittleNix/firmware \
+  --path modules/system/networking/school-wifi.nix --path nixos-switch.log --path result \
+  --mailmap ~/rewrite-emails/mailmap.txt --replace-text ~/rewrite-emails/replace-text.txt
+```
 
-# Verify: none of the recorded objects may exist, and no path may mention them
+`filter-repo` deletes the `origin` remote, which is what you want: the archive
+can no longer be pushed to from here by accident.
+
+**Verify (all of these must pass, otherwise discard `/tmp/nixos-rewrite` and
+stop):**
+
+```bash
+git remote -v                                                   # expect no output
+git for-each-ref --format='%(refname)'                          # expect master + 6 workflow/* (no dendritic)
 git cat-file --batch-check < /tmp/firmware-objects.txt | grep -vc missing   # expect 0
-git rev-list --all --objects | grep -ci -E 'brcm|/firmware/'                 # expect 0
-git count-objects -vH                                                        # size-pack should drop by ~25-30 MB
-grep -c '^refs/pull/.*/head$' .git/filter-repo/changed-refs                  # expect 0 (PR refs)
-test "$(git rev-parse master^{tree})" = "$(cat /tmp/tip-tree.txt)" && echo tip-tree-unchanged   # must print
+git rev-list --all --objects | grep -ci -E 'brcm|/firmware/'    # expect 0
+git log --all --name-only --pretty=format: | sort -u | grep -ciE 'school-wifi|nixos-switch\.log|^result$'   # expect 0
+git log --all --format='%ae%n%ce' | sort -u | grep -vc noreply  # expect 0
+for b in $(git for-each-ref --format='%(refname:short)' 'refs/heads/workflow/*'); do
+  echo "$b: $(git rev-list --count master..$b) ahead, on master tip: $([ "$(git merge-base master $b)" = "$(git rev-parse master)" ] && echo yes || echo NO)"; done
+# tip tree may differ from the old one in the two email files only:
+git archive master | tar -x -C /tmp --one-top-level=newtip
+git -C /home/cairo/.nixos archive master | tar -x -C /tmp --one-top-level=oldtip
+diff -rq /tmp/oldtip /tmp/newtip      # expect exactly rclone.nix and git.nix
+nix run nixpkgs#gitleaks -- detect --source . --log-opts=--all --redact=100 --no-banner    # expect: no leaks found
+nix run nixpkgs#trufflehog -- git file://$PWD --no-verification | tail -3                  # expect only the known false positives (docs/secrets.md 2.3)
 ```
 
-Stop and discard `/tmp/nixos-rewrite` if the PR count is not 0 or the tip tree
-differs. Optionally run `gitleaks detect --log-opts=--all` on this clone while
-you are here (no credentials were found by file name in history, but the secrets
-audit thread owns the real scan).
+### 6.4 GitHub and the machines
 
-```bash
-git remote -v                         # origin must still point at https://github.com/cqjro/nixos.git
-git push --force --mirror origin      # point of no return; rewrites every ref
-git push origin --delete dendritic    # decided in 6.1
-```
+The point of no return is **making the new repo public** (6.5), not the push.
 
-`--sensitive-data-removal` keeps `origin` (plain `filter-repo` would remove it),
-so there is no `git remote add` step. If `git remote -v` shows nothing, add it
-back with `git remote add origin https://github.com/cqjro/nixos.git`.
+1. **Rename the old repo:** github.com/cqjro/nixos → Settings → General →
+   Repository name → `nixos-archive`. Confirm it is **Private**. Optionally
+   Settings → General → Danger Zone → *Archive this repository* (read-only, so
+   nothing can be pushed to it).
+2. **Create the new repo, empty:** `gh repo create cqjro/nixos --private`
+   (no README, licence or gitignore; it must not be a fork or a template copy of
+   the old repo, because forks share object storage with their parent and the old
+   firmware would stay reachable by SHA).
+3. **Push only what you intend, from the scratch clone** (no `--mirror`):
+   ```bash
+   cd /tmp/nixos-rewrite
+   git remote add origin https://github.com/cqjro/nixos.git
+   git push origin master 'refs/heads/workflow/*:refs/heads/workflow/*'
+   ```
+   Never add `nixos-archive` as a remote of this clone.
+4. **Retire the old clone on every machine** (GOD-KILLER first, no T3 thread
+   running):
+   ```bash
+   cd ~ && mv .nixos .nixos.pre-rewrite
+   git -C ~/.nixos.pre-rewrite remote set-url origin https://github.com/cqjro/nixos-archive.git
+   git clone https://github.com/cqjro/nixos.git ~/.nixos
+   # carry over only ignored runtime files, never firmware (REDRUM):
+   #   rsync -a ~/.nixos.pre-rewrite/modules/server/youtube/{config,token,client_secret}.json ~/.nixos/modules/server/youtube/
+   cd ~/.nixos && git fetch origin && git branch --list -r 'origin/workflow/*'   # the six branches are here
+   ```
+   No patch export is needed: the branches were rewritten with `master` in 6.3
+   and pushed in step 3, with their commits, order and authorship intact.
+5. **T3:** the worktrees under `~/.t3/worktrees/.nixos/*` pointed at the old clone
+   and are now broken; delete them (`rm -rf ~/.t3/worktrees/.nixos/*`) and let
+   T3 create new ones from the pushed branches. Old threads lose their diffs and
+   the 117 hidden `refs/t3/orchestration-v2/checkpoints/*` refs (they stay in
+   `.nixos.pre-rewrite`). How T3 reacts to a project whose repo was replaced in
+   place is **untested**; re-adding the project is the fallback. Existing thread
+   *conversations* are T3's own data and are not part of the repo.
+6. **REDRUM and LittleNix:** re-clone the same way when you next use them;
+   REDRUM also replaces `/var/lib/t3code/nixos` if it is used. `config-sync` and
+   `./rebuild.sh switch` fail on the old clone (unrelated histories) rather than
+   doing damage; nothing pulls automatically any more.
+7. **Clean up** once the new `~/.nixos` builds and you have everything you need:
+   `rm -rf /tmp/nixos-rewrite ~/rewrite-emails /tmp/firmware-objects.txt /tmp/history-email-scrub.sh /tmp/oldtip /tmp/newtip ~/.nixos.pre-rewrite`.
+   (`.nixos.pre-rewrite` holds the old history, including firmware; the private
+   archive repo keeps a copy anyway.)
 
-**Rehearsed 2026-11-02** against a throwaway local copy of `origin` (bare repo in
-`/tmp`, nothing contacted GitHub) with exactly these commands: 187 firmware
-objects found, 0 reachable afterwards, tip tree unchanged, only `master` and
-`dendritic` pushed, `dendritic` deletable. One thing to expect: the old objects
-still *exist* on the server after the push (a `cat-file` of the recorded ids
-still finds them) until the server runs garbage collection. On GitHub that is
-what Support is for (6.4); it is not a sign the rewrite failed.
+### 6.5 Making it public
 
-`refs/pull/*` rejections are expected and harmless when there are none; any other
-rejected ref means branch protection, so disable it, retry, and re-enable.
+Keep the new repo **private** until all of these hold; the flip cannot be taken
+back (anything public can be cloned or archived immediately):
 
-### 6.4 GitHub Support (cached views, orphaned objects)
+- the 6.3 checks passed and you looked at the secrets thread's findings
+  (`docs/secrets.md`; anything it says to rotate is rotated);
+- you opened the new repo in a browser: branches are `master` + `workflow/*`,
+  the repo is **not** marked "forked from", and `git log` shows only the
+  `cqjro` noreply identity;
+- GitHub account settings *Keep my email addresses private* and *Block command
+  line pushes that expose my email* are on (per the secrets thread; not
+  verified from here).
 
-**Is this step needed?** Only if the repo will be public again or you want the
-server-side copy gone. While it stays private, the unreachable old commits can be
-read only by people with access to the repo, and the copies that were exposed
-while it was public cannot be recalled by anything you do here. Support may
-decline, so do not make the repo public on the strength of this step alone.
-
-**Alternative that needs no Support decision (untested, from memory of GitHub's
-behaviour):** push the rewritten history to a brand-new repository, check it,
-then delete the old repo and rename the new one to `nixos`. The old objects go
-with the deleted repository (GitHub keeps deleted repos restorable for a limited
-period, reportedly 90 days; verify at <https://docs.github.com> before relying on
-it). You lose issues, stars and the old URL history; forks of the old public repo
-are unaffected either way.
-
-After a force push, the old commits are unreachable but GitHub keeps serving them
-by SHA (for example `github.com/cqjro/nixos/commit/2412d99`) until server-side
-garbage collection. Support only acts once every non-PR ref is clean and no fork
-still has the data, and may decline "non-sensitive" data; unlicensed firmware is
-not a credential, so **the outcome is theirs to decide (untested)**. Open a
-ticket at <https://support.github.com/> with: owner/repo `cqjro/nixos`, number of
-affected PRs (0 if you follow 6.1), the "First Changed Commit(s)" from the
-filter-repo output, and that the data is third-party proprietary firmware. Ask
-them to run garbage collection and clear cached views. If the repo was ever
-public, check for forks first (GitHub cannot tell you who owns them) and ask
-their owners to delete.
-
-Then check from a signed-in browser that the old commit URLs 404 and the repo's
-size dropped. Until Support confirms, the repo should stay private.
-
-### 6.5 Re-clone every machine
-
-Old hashes make every existing clone incompatible: a normal `git pull` fails
-with unrelated histories, and **a merge or push from an old clone restores the
-data**. Treat old clones as tainted; replace, do not repair. The same applies to
-the T3 checkpoint refs.
-
-Per machine (GOD-KILLER, REDRUM, LittleNix), with no T3 thread running on it:
-
-```bash
-cd ~ && mv .nixos .nixos.pre-rewrite
-git clone https://github.com/cqjro/nixos.git ~/.nixos            # HTTPS: agents push via gh credentials
-# carry over only ignored runtime files (never firmware):
-#   rsync -a .nixos.pre-rewrite/modules/server/youtube/{config,token,client_secret}.json ~/.nixos/modules/server/youtube/   (REDRUM)
-./rebuild.sh build "$(hostname)"                                  # sanity: should be empty output, exit 0
-# once satisfied and the firmware is confirmed under /var/lib/firmware-src:
-rm -rf ~/.nixos.pre-rewrite
-```
-
-- **REDRUM** also has the T3 agent clone `/var/lib/t3code/nixos` (if used) and
-  `config-sync` and `./rebuild.sh switch` (which fetches and fast-forwards
-  `master`): replace the clone the same way, or the next switch will refuse to
-  fast-forward onto unrelated history. Nothing pulls automatically any more
-  (`start.sh` only loads the SSH agent), so a stale clone fails only when used.
-- **T3 worktrees** (`~/.t3/worktrees/.nixos/*`, one per thread) are bound to
-  the old clone: `git worktree prune` is not enough because their object store is
-  the old repo. Delete them after re-cloning and let T3 create new worktrees.
-  Threads that were bound to a worktree lose their diffs/checkpoints (117
-  `refs/t3/orchestration-v2/checkpoints/*` refs exist in the old clone and are
-  not recreated). How T3 reacts to a project whose repo was replaced in place is
-  **untested**; re-adding the project is the fallback.
-- **Open branches / PRs.** Local-only branches (`workflow/*`) die with the old
-  clone. All six workflow branches sit on `eac96f8` and are clean, so (A) covers
-  every one of them. Before step 6.2 either (A) export each: `git format-patch -o ~/patches/<branch> master..<branch>`,
-  then recreate from the new `master` with `git switch -c <branch> && git am ~/patches/<branch>/*.patch`
-  (the trees match at the tip, so patches apply cleanly), or (B) push the
-  branches to `origin` *before* the rewrite so the mirror run rewrites them with
-  `master` (only safe while no PR exists, 6.1). Do not `git merge` old branches
-  into new `master`.
-- **Generations**: `rebuild.sh` commit subjects carry a generation number, not a
-  hash, and the rewrite keeps those subjects. The workflow/docs branch adopts
-  `system.configurationRevision` (`modules/essentials/config-revision.nix`), but
-  no generation has been built with it yet, so no recorded revision predates the
-  rewrite. `./rebuild.sh generations` finds older generations by matching the
-  `HOST: N … || message` subjects, which survive. A generation built with
-  `configurationRevision` *before* the rewrite would record a hash that no longer
-  resolves, so run the rewrite before the first such build or expect those to be
-  unresolvable.
-- **First thing after the re-clone: apply and merge the firmware branch** (its
-  patches). Rewritten `master` still contains the old REDRUM `builtins.path` on
-  `/home/cairo/.nixos/modules/hosts/REDRUM/firmware/brcm`, a path the new clone
-  does not have (and must not get back), so REDRUM does not evaluate or build
-  until the firmware change is in. LittleNix is in the same state: its old
-  `./firmware/brcm` is relative to the repo and is not tracked at the tip, so it
-  already fails to evaluate from any clean clone. Only GOD-KILLER is unaffected.
-- **`flake.lock`** does not pin this repo, so it is unaffected.
-- Nix store copies of the flake source from the days the firmware was tracked
-  (`/nix/store/*-source`) may contain the files; they are local, not shared, and
-  disappear on garbage collection once no generation references them.
+Then Settings → General → Danger Zone → Change visibility → Public.
 
 ### 6.6 After
 
+- **Open the workflow PRs on the new repo.** `workflow/secrets` already contains
+  `workflow/pr-rebuild-docs` (it was merged into it), so merge pr-rebuild-docs
+  first or the PRs will show the same commits twice. **Merge the firmware branch
+  before building REDRUM or LittleNix**: rewritten `master` still has the old
+  `builtins.path` on `/home/cairo/.nixos/modules/hosts/REDRUM/firmware/brcm` (and
+  LittleNix's repo-relative `./firmware/brcm`, untracked at the tip), so neither
+  host evaluates from a clean clone until the firmware change is in. GOD-KILLER
+  is unaffected.
+- **Generations**: `rebuild.sh` commit subjects carry a generation number, not a
+  hash, and the rewrite keeps those subjects. `system.configurationRevision` (the
+  workflow/docs branch, `modules/essentials/config-revision.nix`) records a commit
+  hash, so a generation built with it *before* the rewrite would record a hash
+  that no longer exists in the new repo. None has been built yet.
+- **`flake.lock`** does not pin this repo, so it is unaffected.
+- Nix store copies of the flake source from the days the firmware was tracked
+  (`/nix/store/*-source`) may contain the files; they are local and disappear on
+  garbage collection once no generation references them.
 - Remove nothing from `.gitignore`: it stays as the backstop.
 - Tell thread 5 (secret-guard) to add the firmware filename patterns above to its
-  path denylist and thread 4 that `Read`-denying `/var/lib/firmware-src` is
-  optional (the files are not secret), but Bash `cat`/`strings` of them is
-  unwanted.
+  path denylist; `Read`-denying `/var/lib/firmware-src` is optional (the files are
+  not secret), but Bash `cat`/`strings` of them is unwanted.
+
+### 6.7 What this cannot do
+
+Copies made while the old repo was public (clones, third-party archives such as
+Software Heritage, search-engine caches) are outside GitHub and cannot be
+recalled by anything here; the owner reports no forks. The new public repo never
+contains the firmware, which is the goal. GitHub Support is not needed for this
+design because the old objects stay in a private repo.
 
 ## 7. Handoffs to other threads
 
@@ -500,4 +502,4 @@ rm -rf ~/.nixos.pre-rewrite
 - **Security (thread 4):** the `t3code` user needs no extra access; do not grant
   it read access to `/var/lib/firmware-src`.
 - **Secrets (thread 5):** firmware filename patterns for the guard denylist;
-  history scan during 6.3.
+  history scan during 6.3 (its extra paths and the email files are already in the 6.3 command; `docs/secrets.md` 2.7 still says "force-push", which the new-repo plan replaces).
