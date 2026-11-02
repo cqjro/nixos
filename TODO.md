@@ -27,21 +27,20 @@ repeated as proposals.
         GOD-KILLER and REDRUM, then run `nix run .#t2-firmware-import -- REDRUM`
         on each (GOD-KILLER can already build REDRUM; REDRUM building itself
         needs this)
-  - [ ] LittleNix is parked (see `docs/firmware.md` "LittleNix (parked)"). Only
-        if you want to keep its firmware: export it from commit `0181e6a` to
-        `/var/lib/firmware-src/LittleNix/brcm` **before** the history rewrite
-        deletes it (a fresh install would wipe the machine's own copy too)
-  - [ ] Decide how workflow branches/worktrees cross the rewrite (patch export
-        recommended, `docs/firmware.md` 6.5), then **before any workflow PR is
-        opened** run the history rewrite (`docs/firmware.md` section 6) and
-        delete the obsolete `dendritic` branch
-  - [ ] Optional while the repo stays private: contact GitHub Support to
-        purge orphaned commits, or move to a fresh repo (`docs/firmware.md`
-        6.4). Needed before ever making the repo public again
-  - [ ] Re-clone every machine and T3 worktree, recreate the workflow branches,
-        and rotate anything the secrets scan finds in the old public history
-  - *Why this order:* every merged PR leaves a read-only `refs/pull/*` ref that
-    pins the old history and forces the GitHub Support step to cover it too.
+  - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
+        stay in the private archive repo; extract them only if you want to
+        build or reinstall it
+  - [ ] Wait for the secrets thread's findings and rotate anything it lists
+        (`docs/secrets.md`), then run the new-repo runbook (`docs/firmware.md`
+        section 6): rewrite a scratch clone once, rename the old repo to
+        `nixos-archive` (private), create an empty `cqjro/nixos`, push `master`
+        + the six `workflow/*` branches, re-clone every machine, delete the old
+        T3 worktrees
+  - [ ] Make `cqjro/nixos` public only after the checks in `docs/firmware.md`
+        6.5 (it cannot be taken back); then open the workflow PRs, merging the
+        firmware branch before building REDRUM or LittleNix
+  - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
+    old repo stays private as the archive and the public one never contains them.
 
 - [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
       (an archived `modules/_archive/waydroid.nix` already exists to
