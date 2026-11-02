@@ -58,6 +58,11 @@ secret_re+="|\.git-credentials|\.netrc|(^|[^[:alnum:]_])id_(rsa|ecdsa|ed25519)"
 secret_re+="|(^|[/[:space:]\"'=])(token\.json|client_secret\.json|hosts\.yml|api-token)"
 secret_re+="|(^|[/[:space:]\"'=])\.env([.[:space:]\"';|&)]|$)"
 
+# T2 Broadcom firmware: proprietary (not secret), so names are fine but
+# contents must never be read into a session, copied, archived or uploaded
+fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware/|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware([/[:space:]"'"'"']|$)'
+fw_op_re='(^|[;&|[:space:](])(cat|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object)([[:space:]]|$)|nix[[:space:]]+store[[:space:]]+(cat|dump-path)|nix-store[[:space:]]+--dump'
+
 # files that change what Claude Code (or a later session) is allowed to run
 config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settings|\.claude/hooks|\.claude\.json|\.mcp\.json'
 
@@ -66,6 +71,10 @@ check_bash() {
 
 	if grep -Eq -- "$secret_re" <<<"$cmd"; then
 		block "command references a credential/secret path. Secrets stay out of agent sessions; to search the repo use the Grep tool, and ask the human for anything that needs a credential (T3 request_secret)."
+	fi
+
+	if grep -Eq -- "$fw_re" <<<"$cmd" && grep -Eq -- "$fw_op_re" <<<"$cmd"; then
+		block "command would read, copy, archive or upload the proprietary T2 firmware. Listing names (ls, stat, nix path-info) is fine; moving the files is a human step (docs/firmware.md)."
 	fi
 
 	# drop fd duplications and /dev/null redirects so `jq . file 2>/dev/null`
@@ -251,6 +260,16 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect pass Bash 'rm -rf result'
 	expect ask Bash 'nix eval --impure --expr "builtins.readFile /home/cairo/Documents/x"'
 	expect pass Bash 'nix eval --expr "1 + 1"'
+	expect block Bash 'cat /var/lib/firmware-src/REDRUM/brcm/brcmfmac4364b3-pcie.apple,maui.txt'
+	expect block Bash 'tar czf /tmp/fw.tgz modules/hosts/LittleNix/firmware/'
+	expect block Bash 'git add -f modules/hosts/LittleNix/firmware/brcm'
+	expect block Bash 'base64 /nix/store/abc-brcm-firmware/lib/firmware/brcm/x.clm_blob'
+	expect block Bash 'cp ~/x.txcap_blob /home/cairo/.t3/userdata/attachments/'
+	expect block Bash 'nix store cat /nix/store/abc-brcm-firmware/x.ptb'
+	expect pass Bash 'ls -la /var/lib/firmware-src/REDRUM/brcm'
+	expect pass Bash 'nix path-info /nix/store/abc-brcm-firmware'
+	expect pass Bash 'git add modules/system/t2-firmware.nix'
+	expect pass Bash 'cat modules/system/t2-firmware.nix'
 	expect block Bash 'tailscale serve --bg 3773'
 	expect pass Bash 'tailscale status'
 	expect ask Bash 'gh issue create --repo someone/else --title x'

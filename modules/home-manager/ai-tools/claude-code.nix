@@ -290,6 +290,20 @@
 					"Read(//**/token.json)"
 					"Read(//**/client_secret.json)"
 
+					# T2 Broadcom firmware (modules/system/t2-firmware.nix): proprietary,
+					# not secret. Agents may name it, never read, copy or attach it.
+					# A Read deny also blocks Edit/Write of the path.
+					"Read(//var/lib/firmware-src/**)"
+					"Read(//nix/store/*-brcm-firmware/**)"
+					"Read(//**/firmware/brcm/**)"
+					"Read(//**/brcmfmac*)"
+					"Read(//**/brcmbt*)"
+					"Read(//**/*.clm_blob)"
+					"Read(//**/*.txcap_blob)"
+					"Read(//**/*.ptb)"
+					"Read(//**/firmware.tar*)"
+					"Read(//**/brcm-firmware.gcroot)"
+
 					# the agent must not widen its own permissions or touch keys:
 					# settings, hooks and MCP servers in a repo run on the next session
 					"Edit(~/.ssh/**)"

@@ -105,6 +105,13 @@ tripwire on the command text, not a boundary:
     credential config);
   - `rm`/`mv` of `.git` data (the shared object store is writable in the
     sandbox);
+  - reading, copying, archiving, hashing, uploading or `git add`-ing the
+    proprietary T2 firmware (`brcm/`, `firmware/`, `brcmfmac*`, `brcmbt*`,
+    `*.clm_blob|txcap_blob|ptb`, `firmware.tar*`, `/var/lib/firmware-src`,
+    the `*-brcm-firmware` store path, `brcm-firmware.gcroot`). Naming or
+    listing them (`ls`, `stat`, `nix path-info`) is fine. Matching `Read`
+    denies also cover the file tools. The rule is about redistribution, not
+    secrecy (docs/firmware.md);
   - `tailscale serve/set/up/…`.
 - **ask:**
   - pushes to master/main, `--all`/`--tags`, a bare `git push` from master;
@@ -215,6 +222,10 @@ Recommendation per task type:
 - **Same managed file.** `~/` resolves to `/var/lib/t3code`, so the gh token
   and Claude login stay denied. No `disableBypassPermissionsMode`: you chose
   identical policies, so Full access launches there too, fenced as above.
+- **Firmware:** `t3code` needs no extra filesystem access. The firmware is a
+  world-readable, hash-pinned store path (`modules/system/t2-firmware.nix`),
+  and REDRUM builds stay on GOD-KILLER. Do not grant it `/home` or
+  `/var/lib/firmware-src`.
 - **Read-only troubleshooting:** `t3code` is in `systemd-journal`, so
   `journalctl -u <unit>` works. `systemctl status` already works for any user.
   It has no polkit rights and no sudo, so restarts must be run by you.
@@ -291,6 +302,7 @@ you record which steps prompted.**
 | 17 | Write tool: `.claude/settings.json` in the worktree | denied | denied |
 | 18 | `echo '{}' > .mcp.json` | blocked by the guard | blocked |
 | 19 | mcp-nixos `nix` (`{"action":"channels"}`) | no prompt | runs |
+| 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (hidden or empty); `cat` blocked by the guard | same |
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. If a step disagrees, update this table and the policy in the same
