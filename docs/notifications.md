@@ -306,3 +306,32 @@ today. `send` honours quiet hours (a completion is dropped inside them),
 dedupe and the ntfy config, and its text is sent to ntfy because the caller, not
 an agent, wrote it. It exits 0 always. A `die`/failure path can call the
 `failed` form. Verified against a local listener; `rebuild.sh` itself untested.
+
+### 8.1 Scheduled notices (`send info`)
+
+Deterministic scripts (for example the unswitched-changes notifier in
+`docs/schedules/unswitched-changes.md`) use the `info` kind:
+
+```bash
+AGENT_NOTIFY_LABEL="Unswitched changes" agent-notify send info "MESSAGE"
+```
+
+`info` is ntfy priority 3 (2 inside quiet hours), tag `information_source`,
+no desktop popup, and **not** dropped by quiet hours. The label is the heading
+as given. Dedupe keys on a hash of kind+label+message, so an identical notice
+inside 30 s collapses to one while a changed message goes through. Verified
+with the dedupe log; delivery to ntfy untested for this kind.
+
+Timers: run a systemd timer that calls the script directly, not a scheduled T3
+thread. Whether a scheduled thread's completion pushes through T3 native
+notifications or the `Stop` hook is **unobserved** (see 6.2), and a timer needs
+no LLM session.
+
+* **GOD-KILLER:** the home-manager fragment exposes
+  `config.programs.agent-notify.package` (read-only); a user timer can use
+  `"${config.programs.agent-notify.package}/bin/agent-notify"`.
+* **REDRUM:** the NixOS fragment exposes `config.agentNotifications.package`.
+  Use a **system** timer with `serviceConfig.User = "t3code"`, and put the
+  topic at `/var/lib/t3code/.config/agent-notify/topic` (mode 0600, owner
+  `t3code`). Creating that file is the secret-handling thread's job; the topic
+  is a credential, so use `request_secret`, never chat.

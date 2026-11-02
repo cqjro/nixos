@@ -35,15 +35,20 @@ log() {
 
 if [ "${1:-}" = "send" ]; then
 	# non-hook callers (rebuild.sh): agent-notify send KIND MESSAGE
-	# KIND = approval|finished|failed; AGENT_NOTIFY_LABEL overrides the heading.
+	# KIND = approval|finished|failed|info; AGENT_NOTIFY_LABEL overrides the heading.
+	# info is a low-priority notice: no desktop popup, never dropped by quiet hours.
 	# The message is caller-supplied (not agent output), so it goes to ntfy too.
+	# The session id is a hash of kind+label+message, so an identical notice
+	# inside the dedupe window collapses to one.
 	force_text=1
 	case "${2:-finished}" in
 	approval) ev=Notification ;;
 	failed) ev=StopFailure ;;
+	info) ev=AgentNotifyInfo ;;
 	*) ev=Stop ;;
 	esac
-	payload=$(jq -nc --arg ev "$ev" --arg m "${3:-}" --arg cwd "$PWD" --arg s "send-$$-$(date +%s)" \
+	sid=$(printf '%s|%s|%s' "${2:-finished}" "${AGENT_NOTIFY_LABEL:-}" "${3:-}" | sha1sum | cut -c1-16)
+	payload=$(jq -nc --arg ev "$ev" --arg m "${3:-}" --arg cwd "$PWD" --arg s "send-$sid" \
 		'{hook_event_name: $ev, notification_type: "permission_prompt", message: $m, last_assistant_message: $m, error: $m, cwd: $cwd, session_id: $s}')
 elif [ "${1:-}" = "test" ]; then
 	case "${2:-approval}" in
@@ -83,6 +88,7 @@ Stop:*)
 	[ "$(field .stop_hook_active)" = "true" ] || kind=finished
 	;;
 StopFailure:*) kind=failed ;;
+AgentNotifyInfo:*) kind=info ;;
 esac
 if [ -z "$kind" ]; then
 	log "event=$event type=$ntype session=$session action=ignored"
@@ -155,6 +161,12 @@ failed)
 	label="Run failed"
 	detail=$(snippet "$(field '.error_type // .error // .reason')")
 	;;
+info)
+	prio=3
+	tags=information_source
+	label="Notice"
+	detail=$(snippet "$(field .message)")
+	;;
 *)
 	prio=3
 	tags=white_check_mark
@@ -172,6 +184,7 @@ if [ "$quiet" = 1 ]; then
 	fi
 	# still delivered (so a blocked agent is not invisible) but not urgent
 	prio=3
+	[ "$kind" = info ] && prio=2
 fi
 
 body="$label"
@@ -187,7 +200,7 @@ sent=""
 
 # desktop (GOD-KILLER). Hooks launched by systemd-run may lack the session
 # bus variables, so fall back to the per-user socket.
-if [ "$quiet" = 0 ] && command -v notify-send >/dev/null 2>&1; then
+if [ "$quiet" = 0 ] && [ "$kind" != info ] && command -v notify-send >/dev/null 2>&1; then
 	if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "/run/user/$(id -u)/bus" ]; then
 		DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
 		export DBUS_SESSION_BUS_ADDRESS

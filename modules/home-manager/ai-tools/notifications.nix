@@ -35,11 +35,17 @@ in
 	# User side (GOD-KILLER, or any host with home-manager). Adds hooks to the
 	# same programs.claude-code.settings that ai-tools/claude-code.nix defines;
 	# the module system merges the two, so claude-code.nix is not edited.
-	flake.modules.homeManager."agent-notifications" = { pkgs, ... }:
+	flake.modules.homeManager."agent-notifications" = { lib, pkgs, ... }:
 		let script = mkScript pkgs true;
 		in {
-			home.packages = [ script ];
-			programs.claude-code.settings.hooks = mkHooks "${script}/bin/agent-notify";
+			options.programs.agent-notify.package = lib.mkOption {
+				type = lib.types.package;
+				readOnly = true;
+				default = script;
+				description = "The agent-notify script, for user timers.";
+			};
+			config.home.packages = [ script ];
+			config.programs.claude-code.settings.hooks = mkHooks "${script}/bin/agent-notify";
 		};
 
 	# System side (REDRUM's t3code user, which home-manager never reaches). Puts
@@ -56,6 +62,12 @@ in
 				readOnly = true;
 				default = mkHooks "${script}/bin/agent-notify";
 				description = "Claude Code hooks for agent-notify, for managed-settings.json.";
+			};
+			options.agentNotifications.package = lib.mkOption {
+				type = lib.types.package;
+				readOnly = true;
+				default = script;
+				description = "The agent-notify script, for systemd units (e.g. a timer as t3code).";
 			};
 			config.environment.systemPackages = [ script ];
 		};

@@ -15,7 +15,7 @@ Human setup, phone steps and the test procedure are in
   on checks, comments or conflicts.
 - Scripts that need to notify (e.g. `rebuild.sh`) call
   `AGENT_NOTIFY_LABEL="Rebuild done" agent-notify send finished "MESSAGE"`
-  (kinds `approval|finished|failed`), falling back to `notify-send` when the
+  (kinds `approval|finished|failed|info`; `info` is priority 2-3, no desktop popup, not dropped by quiet hours), falling back to `notify-send` when the
   command is absent.
 - Never print or log the ntfy topic/token (`~/.config/agent-notify/`, treat as a
   secret; `Read`-deny it). Do not run `tailscale serve` for the optional ntfy
