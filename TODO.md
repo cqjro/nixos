@@ -161,21 +161,22 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
-- [ ] **LearnHarness** — install [LearnHarness](https://github.com/amosblomqvist/learnharness)
-      (AGPL-3.0 Electron desktop app: AI agents probe, plan, teach and drill you
-      on a persistent knowledge graph) on GOD-KILLER — **3/10** (not in nixpkgs
-      and no flake found; it ships a Linux AppImage and `.deb`, so the work is
-      packaging an upstream binary)
-  - [ ] Confirm there really is no flake/Nix expression (the repo listing was
-        truncated when checked 2026-11-02) and pick the release asset
-  - *Proposed approach:* copy `modules/home-manager/apps/xodus-nexus.nix` —
-    `fetchurl` the pinned AppImage from GitHub Releases + `appimageTools.wrapType2`,
-    pinned `version`/`hash`, added to GOD-KILLER's `machine.nix` imports. Add a
-    `# TODO-remove:` comment and a "Pending upstream fixes" row (AGENTS.md and
-    README, or `docs/agents/upstream-registry.md` once the docs refactor lands) in
-    the same change, as for Xodus Nexus. The AppImage can't self-update from the
-    store, so bump the pin instead. It needs a provider API key entered in-app;
-    keep that out of the repo.
+- [ ] **LearnHarness registry row** — the app is installed
+      (`modules/home-manager/apps/learnharness.nix`, pinned AppImage, GOD-KILLER
+      only); only the "Pending upstream fixes" bookkeeping is left — **1/10**
+      (deferred so it lands against the post-refactor docs layout instead of
+      conflicting with the `workflow/*` branches)
+  - [ ] Once `workflow/pr-rebuild-docs` is merged, add the LearnHarness row to
+        `docs/agents/upstream-registry.md` **and** the README's "Pending upstream
+        fixes" table: workaround = pinned AppImage via `fetchurl` +
+        `appimageTools.wrapType2`; blocked on = not in nixpkgs, no upstream
+        flake/Nix expression; re-enable when = `pkgs.learnharness` or an
+        upstream flake exists (then drop the pin). Then make the module's
+        `# TODO-remove:` comment cite the row number
+  - [ ] Remove this item in that same change
+  - *Note:* bump `version`/`hash` in the module to update — the AppImage can't
+    self-update from the store. The provider API key is entered in-app (kept in
+    the keyring), never in the repo.
 
 ## Server (REDRUM)
 
