@@ -30,6 +30,10 @@ repeated as proposals.
   - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
         stay in the private archive repo; extract them only if you want to
         build or reinstall it
+  - [ ] Split the audit report out of `docs/secrets.md` and squash
+        `workflow/secrets` into one commit **before** the rewrite
+        (`docs/firmware.md` 6.2a); the audit then goes only to the private
+        `nixos-archive` (6.4 step 1)
   - [ ] Wait for the secrets thread's findings and rotate anything it lists
         (`docs/secrets.md`), then run the new-repo runbook (`docs/firmware.md`
         section 6): rewrite a scratch clone once, rename the old repo to

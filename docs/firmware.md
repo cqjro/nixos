@@ -285,7 +285,7 @@ archive. So nothing is force-pushed or purged on GitHub. Instead:
    archived) and is never modified again;
 2. a **scratch clone** is rewritten **once**: firmware, the secrets thread's
    extra paths and personal emails are all removed in the same
-   `git filter-repo` run (`docs/secrets.md` 2.7), and the six `workflow/*`
+   `git filter-repo` run (section 2.7 of the private audit), and the six `workflow/*`
    branches are rewritten with it;
 3. a brand-new **empty** repo `cqjro/nixos` (same name, so every URL in the docs
    and in `rebuild.sh` stays valid) receives only `master` and the workflow
@@ -300,7 +300,7 @@ the clone is deleted): 187 firmware objects found and 0 left; 0 non-noreply
 author/committer emails left; refs after the rewrite are `master` plus the six
 `workflow/*` branches; each branch is still based on the new `master` tip with
 its commit count intact (agent-security 3, firmware 7, notifications 6,
-pr-rebuild-docs 4, schedules 2, secrets 10 commits ahead); the tip tree differs
+pr-rebuild-docs 4, schedules 2, secrets 10 commits ahead, counts before the 6.2a squash, which turns the secrets branch into pr-rebuild-docs plus one commit); the tip tree differs
 from the old one in exactly two files (`modules/_archive/rclone.nix` and
 `modules/home-manager/terminal/git.nix`, one email line each). Not rehearsed: the
 GitHub steps (rename, create, push, visibility).
@@ -335,6 +335,104 @@ create a new repo with the original name, the redirect stops.** So:
 3. **Tools:** `nix shell nixpkgs#git-filter-repo nixpkgs#git` for the rewrite;
    gitleaks and trufflehog run through `nix run` below.
 
+### 6.2a Split and squash `workflow/secrets` (before 6.3)
+
+Requested by the owner via the secrets thread. The dated audit report
+(`docs/secrets.md` sections 1 and 2: findings, exposure timeline, owner
+questions) must live **only** in the private `cqjro/nixos-archive`. Moving the
+file is not enough: every earlier commit of `workflow/secrets` contains that
+text, and the branch rides along in the 6.3 rewrite. So the branch history is
+squashed first and the audit file never enters the public repo.
+
+**Order, and why it differs from the request.** The task said "once the empty
+repo exists and before `workflow/secrets` is pushed". The binding constraint is
+the second half. Doing the squash **before 6.3** satisfies it with less risk: the
+6.3 scratch clone copies every local branch of `~/.nixos`, so with the old branch
+still present its audit history would go through the rewrite and into the clone
+that is pushed. Only committing the audit file to `nixos-archive` has to wait for
+the rename (6.4 step 1).
+
+Each block below is for you to run and approve; stop and ask if any output is not
+what is stated. Everything stays in `/tmp` and local branches; nothing is pushed.
+
+1. **Save the full history to a private path** (outside every repo, not synced):
+   ```bash
+   install -d -m 700 ~/private-backup
+   git -C ~/.nixos bundle create ~/private-backup/secrets-full.bundle eac96f8..workflow/secrets
+   git bundle verify ~/private-backup/secrets-full.bundle      # expect "is okay"
+   ```
+   The `eac96f8..` range keeps the old pre-rewrite `master` (and the firmware in
+   it) out of the bundle; restoring needs `master`, which the archive repo has.
+   Do not copy this bundle into any repo, T3 attachment or cloud folder.
+2. **Split, on a scratch worktree of the branch** (the real `workflow/secrets`
+   stays untouched: a worktree and a finished thread are bound to it):
+   ```bash
+   git -C ~/.nixos worktree add -b workflow/secrets-after-split /tmp/secrets-split workflow/secrets
+   cd /tmp/secrets-split
+   f=docs/secrets.md
+   s=$(grep -n '^## 1\. Do these first' $f | cut -d: -f1)
+   e=$(grep -n '^## 3\. Nix store exposure' $f | cut -d: -f1)
+   # the audit report goes to a PRIVATE file, never into this tree:
+   { printf '# Secrets audit (private; lives only in cqjro/nixos-archive)\n\n'; sed -n "${s},$((e-1))p" $f; } > ~/private-backup/secrets-audit.md
+   # public file: header + your short summary + sections 3 to 9 unchanged
+   { sed -n "1,$((s-1))p" $f; cat ~/private-backup/secrets-summary.md; echo; tail -n +$e $f; } > /tmp/secrets.new && mv /tmp/secrets.new $f
+   sed -i 's|\[1 Do these first\](#1-do-these-first) · \[2 Audit\](#2-audit) ·|[1 Summary](#1-summary) ·|' $f
+   ```
+   Write `~/private-backup/secrets-summary.md` in your editor **before** running
+   the block (the owner asked for about ten lines). Proposed text:
+
+   > ## 1. Summary
+   >
+   > - No credential was found in the working tree or in any git history that was
+   >   ever public (gitleaks and trufflehog over every commit).
+   > - The larger risk is at runtime: credentials in files an agent can reach (a
+   >   Full access thread runs without prompts) and anything pasted into a thread.
+   >   Sections 4, 6 and 7 are the response.
+   > - Rotation is a precaution, not the response to a known leak.
+   > - The dated audit report (method, findings, exposure timeline, decisions) is
+   >   kept in the private repository `cqjro/nixos-archive` as
+   >   `docs/secrets-audit.md`.
+
+   Rehearsed on a throwaway clone with an empty summary: the audit range was lines
+   14-342 of 796 (329 lines) and the public file kept 471 lines.
+3. **Fix the references the split broke.** List them and reword each to "see
+   `docs/secrets-audit.md` in the private `cqjro/nixos-archive`" or delete it:
+   ```bash
+   grep -nE '\b2\.[0-9]\b|\bF[0-9]+\b|section (1|2)\b|Do these first' \
+     docs/secrets.md docs/agents/secrets.md TODO.md README.md AGENTS.md CLAUDE.md \
+     modules/scripts/*.sh modules/_archive/secrets*
+   ```
+   The rehearsal found 4 hits in `docs/secrets.md` alone (a `2.5` and a `2.4`
+   cross-reference, and two rows of section 8) plus `history-email-scrub.sh`'s
+   header comment (`docs/secrets.md 2.7`) and the `TODO.md` item. In `TODO.md`,
+   delete the finished sub-items of "Secrets: finish before the new repo goes
+   public"; **its "Split `docs/secrets.md` …" line currently starts with a stray
+   `$1`** (a broken substitution), so rewrite that part by hand. Then
+   `git add -A && git commit -m "split audit out of docs/secrets.md"` on this branch.
+4. **Squash onto the docs branch** in a second clean worktree (3-way apply of the
+   branch's net change; `69b6e65` is the commit of `workflow/pr-rebuild-docs`
+   that `workflow/secrets` merged, so the diff is only the secrets thread's own work):
+   ```bash
+   git -C ~/.nixos worktree add -b workflow/secrets-squashed /tmp/secrets-squash workflow/pr-rebuild-docs
+   cd /tmp/secrets-squash
+   git diff 69b6e65 workflow/secrets-after-split -- . ':!docs/secrets-audit.md' | git apply --3way --index
+   git diff --name-only --diff-filter=U        # expect no output (no conflicts)
+   test ! -e docs/secrets-audit.md && echo audit-file-absent     # must print
+   git commit -m "secrets: audit docs, secret-guard hooks, email scrub helper"
+   ```
+   Rehearsed with the **unsplit** branch on a clone of the docs branch at
+   `f40408a`: the apply was clean (0 conflicts, 18 files). With your edits from
+   step 3 it is **not** rehearsed; if it reports conflicts, stop and do not
+   resolve them in a hurry.
+5. **Clean up the scratch worktrees** (keep the branch `workflow/secrets-squashed`):
+   `git -C ~/.nixos worktree remove --force /tmp/secrets-split` and the same for
+   `/tmp/secrets-squash` (the `-after-split` branch stays until after the push; it contains the
+   unsquashed history of the branch, so it must **not** be in the 6.3 clone: 6.3
+   step 1 drops it).
+
+The squashed branch is based on `workflow/pr-rebuild-docs`, so its PR shows the
+docs commits too until that one is merged: merge pr-rebuild-docs first.
+
 ### 6.3 Rewrite in a scratch clone (reversible, touches nothing real)
 
 ```bash
@@ -344,6 +442,10 @@ nix shell nixpkgs#git-filter-repo nixpkgs#git      # a subshell with the tools
 rm -rf /tmp/nixos-rewrite && git clone file:///home/cairo/.nixos /tmp/nixos-rewrite
 cd /tmp/nixos-rewrite
 git branch -D -r origin/dendritic        # obsolete branch stays in the archive only
+# the unsquashed secrets history must not enter the clone (6.2a): drop it, keep the squashed one under the real name
+git branch -D -r origin/workflow/secrets origin/workflow/secrets-after-split
+git update-ref refs/remotes/origin/workflow/secrets refs/remotes/origin/workflow/secrets-squashed
+git update-ref -d refs/remotes/origin/workflow/secrets-squashed
 
 # 2. Record what must disappear, to prove it later
 git rev-list --all --objects | grep -E ' (modules/)?hosts/(REDRUM|LittleNix)/firmware/' \
@@ -377,6 +479,8 @@ git cat-file --batch-check < /tmp/firmware-objects.txt | grep -vc missing   # ex
 git rev-list --all --objects | grep -ci -E 'brcm|/firmware/'    # expect 0
 git log --all --name-only --pretty=format: | sort -u | grep -ciE 'school-wifi|nixos-switch\.log|^result$'   # expect 0
 git log --all --format='%ae%n%ce' | sort -u | grep -vc noreply  # expect 0
+git log --all -p | grep -c 'The public wind[o]w'           # tripwire, expect 0 (the bracket stops it matching itself)
+git log --all --name-only --pretty=format: | sort -u | grep -c 'secrets-audit'   # expect 0
 for b in $(git for-each-ref --format='%(refname:short)' 'refs/heads/workflow/*'); do
   echo "$b: $(git rev-list --count master..$b) ahead, on master tip: $([ "$(git merge-base master $b)" = "$(git rev-parse master)" ] && echo yes || echo NO)"; done
 # tip tree may differ from the old one in the two email files only:
@@ -384,7 +488,7 @@ git archive master | tar -x -C /tmp --one-top-level=newtip
 git -C /home/cairo/.nixos archive master | tar -x -C /tmp --one-top-level=oldtip
 diff -rq /tmp/oldtip /tmp/newtip      # expect exactly rclone.nix and git.nix
 nix run nixpkgs#gitleaks -- detect --source . --log-opts=--all --redact=100 --no-banner    # expect: no leaks found
-nix run nixpkgs#trufflehog -- git file://$PWD --no-verification | tail -3                  # expect only the known false positives (docs/secrets.md 2.3)
+nix run nixpkgs#trufflehog -- git file://$PWD --no-verification | tail -3                  # expect only the known false positives (section 2.3 of the private audit, `docs/secrets-audit.md` in the archive)
 ```
 
 ### 6.4 GitHub and the machines
@@ -392,15 +496,26 @@ nix run nixpkgs#trufflehog -- git file://$PWD --no-verification | tail -3       
 The point of no return is **making the new repo public** (6.5), not the push.
 
 1. **Rename the old repo:** github.com/cqjro/nixos → Settings → General →
-   Repository name → `nixos-archive`. Confirm it is **Private**. Optionally
-   Settings → General → Danger Zone → *Archive this repository* (read-only, so
-   nothing can be pushed to it).
+   Repository name → `nixos-archive`. Confirm it is **Private**.
+   Then commit the audit report into it (from 6.2a), **before** the token swap in
+   step 3 (the new token cannot push here) and before archiving it:
+   ```bash
+   git clone https://github.com/cqjro/nixos-archive.git ~/nixos-archive-private   # outside ~/.nixos
+   install -D ~/private-backup/secrets-audit.md ~/nixos-archive-private/docs/secrets-audit.md
+   git -C ~/nixos-archive-private add docs/secrets-audit.md
+   git -C ~/nixos-archive-private commit -m "docs: secrets audit report (split from the public docs/secrets.md)"
+   git -C ~/nixos-archive-private push origin HEAD      # the archive's default branch
+   ```
+   Agents read the report later through this local clone, granted per session
+   with `/add-dir ~/nixos-archive-private`; never copy it into `~/.nixos`.
+   Optionally then Settings → General → Danger Zone → *Archive this repository*
+   (read-only, so nothing can be pushed to it).
 2. **Create the new repo, empty:** `gh repo create cqjro/nixos --private`
    (no README, licence or gitignore; it must not be a fork or a template copy of
    the old repo, because forks share object storage with their parent and the old
    firmware would stay reachable by SHA).
 3. **Replace the broad `gh` login with a fine-grained token** (requested by the
-   secrets thread; detail in `docs/secrets.md` 4.1 and 2.8). Do it **after** step
+   secrets thread; detail in `docs/secrets.md` 4.1 and section 2.8 of the private audit). Do it **after** step
    2, because a repo named `cqjro/nixos` must exist again before a token can be
    scoped to it, and **before** making the repo public (6.5). Four Full access
    threads ran on 2026-10-29..31, so treat the old `gh` token and the Claude login
@@ -461,7 +576,8 @@ Keep the new repo **private** until all of these hold; the flip cannot be taken
 back (anything public can be cloned or archived immediately):
 
 - the 6.3 checks passed and you looked at the secrets thread's findings
-  (`docs/secrets.md`; anything it says to rotate is rotated);
+  (the private audit and `docs/secrets.md`; anything it says to rotate is rotated);
+- the tripwire in 6.3 printed 0 and `docs/secrets-audit.md` is in no branch;
 - you opened the new repo in a browser: branches are `master` + `workflow/*`,
   the repo is **not** marked "forked from", and `git log` shows only the
   `cqjro` noreply identity;
@@ -525,4 +641,4 @@ design because the old objects stay in a private repo.
 - **Security (thread 4):** the `t3code` user needs no extra access; do not grant
   it read access to `/var/lib/firmware-src`.
 - **Secrets (thread 5):** firmware filename patterns for the guard denylist;
-  history scan during 6.3 (its extra paths and the email files are already in the 6.3 command; `docs/secrets.md` 2.7 still says "force-push", which the new-repo plan replaces).
+  history scan during 6.3 (its extra paths and the email files are already in the 6.3 command; the audit split and squash are 6.2a).
