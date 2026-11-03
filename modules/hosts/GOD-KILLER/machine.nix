@@ -36,6 +36,7 @@
 						discord
 						inputs.self.modules.homeManager."mcp-servers"
 						inputs.self.modules.homeManager."claude-code"
+						inputs.self.modules.homeManager."secret-guard"
 						inputs.self.modules.homeManager."github-cli"
 						inputs.self.modules.homeManager."t3code"
 					zen-browser

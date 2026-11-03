@@ -36,6 +36,12 @@
 		# "Pending upstream fixes" registry in AGENTS.md (row 7).
 		mcp-nixos.url = "github:utensils/mcp-nixos";
 
+		# archived: sops-nix module moved to modules/_archive/secrets.nix (see its header to reintegrate)
+		# sops-nix = {
+		# 	url = "github:Mic92/sops-nix";
+		# 	inputs.nixpkgs.follows = "nixpkgs";
+		# };
+
 		hyprland.url = "github:hyprwm/Hyprland";
 		# archived: not referenced by any live module
 		# hyprland-plugins = {

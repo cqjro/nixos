@@ -55,6 +55,7 @@ AGENTS.md              # Shared agent guidance (CLAUDE.md imports it for Claude 
 start.sh               # Startup script run by Hyprland: loads the SSH agent (no config pull)
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
 docs/agents/           # On-demand agent reference: workflow, review tiers, recipes, registry, gotchas
+docs/secrets.md          # Secrets audit, rotation runbook, secrets design (sops-nix deferred), T3 request_secret, secret-guard hooks
 docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
 
 modules/

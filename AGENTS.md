@@ -24,6 +24,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/review.md`](docs/agents/review.md) | reviewing a branch (tiers 0–3) |
 | [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
 | [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | permissions, pushes, pairing, T3 on REDRUM, the permissions smoke test |
+| [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
@@ -241,8 +242,10 @@ and `modules/server/t3code.nix` (REDRUM).
 - Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
   `token.json`, `client_secret.json`) are never read, printed or committed;
   the T2 firmware is never committed, read, printed or attached (`docs/firmware.md`).
-  Never ask the human to paste a
-  secret in chat — use T3's `request_secret`.
+  Never ask the human to paste a secret in chat, and never accept one: a secret a
+  T3 tool needs goes through `request_secret`; one the repo or a service needs is
+  pointed at a runtime path, with the human creating the file
+  ([`docs/agents/secrets.md`](docs/agents/secrets.md)).
 - `switch`, `test`, `dry`, `revert`, `push`, `git commit|push`, `gh pr
   create|merge` and `sudo` are human-approved. No passwordless sudo for
   `nixos-rebuild`; never run `tailscale serve`/`set`.
