@@ -298,7 +298,8 @@ there if you ever want it (including the LittleNix firmware at `0181e6a`).
 **Rehearsed 2026-11-02** on a throwaway local clone (nothing contacted GitHub,
 the clone is deleted): 187 firmware objects found and 0 left; 0 non-noreply
 author/committer emails left; refs after the rewrite are `master` plus the six
-`workflow/*` branches; each branch is still based on the new `master` tip with
+`workflow/*` branches; each branch still branches from the rewritten commit it was cut from
+(`eac96f8`; `master` has since moved 2 commits ahead of it, see 6.8) with
 its commit count intact (agent-security 3, firmware 7, notifications 6,
 pr-rebuild-docs 4, schedules 2, secrets 10 commits ahead, counts before the 6.2a squash, which turns the secrets branch into pr-rebuild-docs plus one commit); the tip tree differs
 from the old one in exactly two files (`modules/_archive/rclone.nix` and
@@ -327,6 +328,9 @@ create a new repo with the original name, the redirect stops.** So:
    for w in ~/.t3/worktrees/.nixos/*/; do echo "$w: $(git -C "$w" status --short | wc -l) uncommitted"; done
    git -C ~/.nixos status -sb        # master must be in sync with origin/master
    ```
+   **Do not run `./rebuild.sh switch` (it commits and fast-forwards `master`) or
+   commit to `master` between the 6.3 clone and the 6.4 retire**: a commit made in
+   that window is not in the new repo. If `master` advances after the clone, redo 6.3.
    Do not start threads that use `~/.nixos` until step 6.4 is done. Read what you
    want from the threads first: deleting their worktrees later loses their diffs
    and checkpoints.
@@ -481,8 +485,12 @@ git log --all --name-only --pretty=format: | sort -u | grep -ciE 'school-wifi|ni
 git log --all --format='%ae%n%ce' | sort -u | grep -vc noreply  # expect 0
 git log --all -p | grep -c 'The public wind[o]w'           # tripwire, expect 0 (the bracket stops it matching itself)
 git log --all --name-only --pretty=format: | sort -u | grep -c 'secrets-audit'   # expect 0
+# the branches were cut from the old eac96f8; master may have moved on since (6.8), so
+# check against the rewritten eac96f8 from filter-repo's commit map:
+old=$(git -C /home/cairo/.nixos rev-parse eac96f8)
+new=$(awk -v o="$old" '$1==o {print $2}' .git/filter-repo/commit-map)
 for b in $(git for-each-ref --format='%(refname:short)' 'refs/heads/workflow/*'); do
-  echo "$b: $(git rev-list --count master..$b) ahead, on master tip: $([ "$(git merge-base master $b)" = "$(git rev-parse master)" ] && echo yes || echo NO)"; done
+  echo "$b: $(git rev-list --count $new..$b) ahead, branched from the rewritten eac96f8: $([ "$(git merge-base master $b)" = "$new" ] && echo yes || echo NO)"; done
 # tip tree may differ from the old one in the two email files only:
 git archive master | tar -x -C /tmp --one-top-level=newtip
 git -C /home/cairo/.nixos archive master | tar -x -C /tmp --one-top-level=oldtip
@@ -729,6 +737,53 @@ If steps 1, 2 or 6 differ from `docs/agents/security.md`, report it to the
 7. **REDRUM firmware access:** the `t3code` user gets no access to `/home` or
    `/var/lib/firmware-src`. After the switch, `sudo -u t3code test -r /var/lib/firmware-src`
    must fail.
+
+#### Changes that landed on `master` while the branches were open (LearnHarness)
+
+Recorded from the LearnHarness install thread (informational; nothing to do before
+the freeze). On 2026-11-03 `master` gained two ordinary commits, already switched
+on GOD-KILLER and pushed to `origin/master`: `65aa855` (a `TODO.md` item) and
+`6cdc830` (`GOD-KILLER: 230 ... add LearnHarness AppImage`: new
+`modules/home-manager/apps/learnharness.nix`, a pinned v0.4.1 AppImage via
+`fetchurl` + `appimageTools.wrapType2` modelled on `xodus-nexus.nix`; one
+`learnharness` line in `modules/hosts/GOD-KILLER/machine.nix`; the `TODO.md` item
+rewritten into a smaller "LearnHarness registry row" follow-up). No firmware,
+secrets, hostnames or keys are involved, so the rewrite carries them unchanged.
+It is GOD-KILLER-only and does not affect REDRUM or LittleNix.
+
+What this means for the runbook:
+
+- **`master` is now 2 commits ahead of where every `workflow/*` branch was cut**
+  (`eac96f8`). The 6.3 base check therefore compares with the rewritten `eac96f8`
+  via filter-repo's commit map (rehearsed 2026-11-03 on a throwaway clone: all
+  six branches "branched from the rewritten eac96f8: yes", `master` 2 ahead).
+  The branches keep their old base; they pick up the two commits when merged.
+- **Do the 6.3 clone after these commits.** They are on local `master` and
+  `origin/master` now; a scratch clone started before 2026-11-03 must be redone.
+  Any later `./rebuild.sh switch` adds another `master` commit (6.2 warns).
+- **Conflicts:** a textual `git merge-tree` of the new `master` against all six
+  branches is clean. `workflow/secrets` also edits `GOD-KILLER/machine.nix`
+  (its `secret-guard` line is about 15 lines from the `learnharness` one); if it
+  ever conflicts, keep **both** lines. The firmware `TODO.md` block does not
+  overlap the LearnHarness item; keep both.
+
+Follow-ups for **after `workflow/pr-rebuild-docs` (or `notifications`, which
+merges it) lands**, because that branch moves the registry from `AGENTS.md` to
+`docs/agents/upstream-registry.md` and renumbers it:
+
+1. Add a LearnHarness row to `docs/agents/upstream-registry.md` **and** the
+   README's "Pending upstream fixes" table, next free number (`xodus-nexus` is row
+   6 there). Workaround: pinned AppImage (`fetchurl` + `appimageTools.wrapType2`)
+   in `modules/home-manager/apps/learnharness.nix`. Blocked on: not in nixpkgs, no
+   upstream flake or Nix expression (`github.com/amosblomqvist/learnharness`).
+   Re-enable when: `pkgs.learnharness` or an upstream flake exists, then drop the pin.
+2. Edit the `# TODO-remove:` comment in `learnharness.nix` to cite
+   `docs/agents/upstream-registry.md row N` (the form the other branches apply to
+   `xodus-nexus.nix`, `3d-printing.nix`, `nixdatifier.nix` and
+   `patch-qidi-studio-ua.py`); it currently says the row is still to be added and
+   points at `TODO.md`.
+3. Delete the "LearnHarness registry row" item from `TODO.md` in that same change
+   (remove, do not check off).
 
 ## 7. Handoffs to other threads
 
