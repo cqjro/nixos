@@ -168,9 +168,10 @@ setting). So the plan is:
 | Worker, warning/eval fix | Sonnet 5.5, medium; high if the dispatcher marks it non-trivial | Same. Escalate to Opus 5.5 only after two failed rounds, per thread 1's tiers. |
 | Row 1 (REDRUM kernel pin) | none | `notify-only`: needs kernel testing and a human-run REDRUM switch. |
 
-The `options` shape inside `modelSelection` is **unverified**; the capability
-catalog lists the option as `{id: "effort"}`. If a launch rejects it, omit
-`options` and set effort in the UI.
+`modelSelection.options` as `{"effort": "low"}` was accepted by `t3_thread_launch`
+(verified 2026-11-02). A task created *from* a thread inherits that thread's model, so a
+Haiku-low scheduled task is made by launching a Haiku-low thread and having it call
+`schedule_task` (how "Unswitched changes" was created).
 
 ## Webhook triggers
 

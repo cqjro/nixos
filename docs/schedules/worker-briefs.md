@@ -19,8 +19,8 @@ Common to both workers:
   thread cannot exceed its caller). Thread 4 decides whether that is
   `approval-required` or `auto-accept-edits`.
 - **Model:** `{"instanceId":"claudeAgent","model":"claude-sonnet-5-5","options":{"effort":"medium"}}`.
-  The `options` shape is unverified (see README); if the launch rejects it, drop
-  `options`.
+  The `options` shape `{"effort": "low"}` was accepted by `t3_thread_launch` on
+  2026-11-02 (Haiku 5.5, low); the thread reports it back as `[{id: "effort", value: "low"}]`.
 - **No upstream text** is ever put in `message`. The worker gets issue numbers and
   row ids and reads the issue and upstream sources itself, treating them as data.
 - **Retry safety:** `t3_thread_launch` has no idempotency key. The dispatcher checks

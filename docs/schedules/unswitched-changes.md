@@ -21,6 +21,14 @@ ways to run it on a schedule; pick one per machine.
 I recommend A for the notification itself, because B's only extra is a model reading one
 line of JSON. B is fully written below so you can choose.
 
+## Status
+
+Option B is live on GOD-KILLER: task `scheduled-task:f3b5c8c4-303e-4897-b7ed-a115076def3e`,
+every 6 h, bound to the Haiku-low thread `mcp:b584aa8a-e6e4-4699-b3fb-ffe3acef9cfb`
+("Unswitched changes"), created 2026-11-02. Until this branch is merged and switched into
+`~/.nixos`, each run replies "unswitched: script not installed yet" (step 0 of the prompt).
+Disable it with `update_scheduled_task enabled=false` if those idle turns bother you.
+
 ## What a run does
 
 1. **Fetch** `origin/master` into a private partial clone
