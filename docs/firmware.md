@@ -462,11 +462,17 @@ git rev-parse origin/master^{tree} > /tmp/old-tip-tree.txt
 git show origin/workflow/secrets:modules/scripts/history-email-scrub.sh > /tmp/history-email-scrub.sh
 bash /tmp/history-email-scrub.sh /tmp/nixos-rewrite ~/rewrite-emails   # prints counts only
 
+# 3b. One more path is removed but not named in this document: the unused school Wi-Fi
+#     module (deleted from the tree in 2026-09, still in history). Derive it from history
+#     into a private file instead of typing it here:
+[ -d ~/rewrite-emails ] && git log --all --name-only --pretty=format: | sort -u | grep -i 'school.*wifi' > ~/rewrite-emails/private-paths.txt
+cat ~/rewrite-emails/private-paths.txt     # expect exactly one path, under modules/system/networking/
+
 # 4. The one rewrite
 git filter-repo --invert-paths \
   --path hosts/REDRUM/firmware --path hosts/LittleNix/firmware \
   --path modules/hosts/REDRUM/firmware --path modules/hosts/LittleNix/firmware \
-  --path modules/system/networking/school-wifi.nix --path nixos-switch.log --path result \
+  --path nixos-switch.log --path result --paths-from-file ~/rewrite-emails/private-paths.txt \
   --mailmap ~/rewrite-emails/mailmap.txt --replace-text ~/rewrite-emails/replace-text.txt
 ```
 
@@ -481,7 +487,8 @@ git remote -v                                                   # expect no outp
 git for-each-ref --format='%(refname)'                          # expect master + 6 workflow/* (no dendritic)
 git cat-file --batch-check < /tmp/firmware-objects.txt | grep -vc missing   # expect 0
 git rev-list --all --objects | grep -ci -E 'brcm|/firmware/'    # expect 0
-git log --all --name-only --pretty=format: | sort -u | grep -ciE 'school-wifi|nixos-switch\.log|^result$'   # expect 0
+git log --all --name-only --pretty=format: | sort -u | grep -ciE 'nixos-switch\.log|^result$'   # expect 0
+git log --all --name-only --pretty=format: | sort -u | grep -cFf ~/rewrite-emails/private-paths.txt   # expect 0 (the file must not be empty: wc -l < ~/rewrite-emails/private-paths.txt = 1)
 git log --all --format='%ae%n%ce' | sort -u | grep -vc noreply  # expect 0
 git log --all -p | grep -c 'The public wind[o]w'           # tripwire, expect 0 (the bracket stops it matching itself)
 git log --all --name-only --pretty=format: | sort -u | grep -c 'secrets-audit'   # expect 0
