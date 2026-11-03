@@ -40,6 +40,9 @@ repeated as proposals.
         `nixos-archive` (private), create an empty `cqjro/nixos`, push `master`
         + the six `workflow/*` branches, re-clone every machine, delete the old
         T3 worktrees
+  - [ ] After the rewrite, work through the per-branch follow-ups in
+        `docs/firmware.md` 6.8 (pr-rebuild-docs: drop `--impure`, verify, review,
+        PR; agent-security: checks, hook paths, smoke test)
   - [ ] Make `cqjro/nixos` public only after the checks in `docs/firmware.md`
         6.5 (it cannot be taken back); then open the workflow PRs, merging the
         firmware branch before building REDRUM or LittleNix

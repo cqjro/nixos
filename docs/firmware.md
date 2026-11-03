@@ -621,6 +621,115 @@ recalled by anything here; the owner reports no forks. The new public repo never
 contains the firmware, which is the goal. GitHub Support is not needed for this
 design because the old objects stay in a private repo.
 
+### 6.8 After the rewrite: per-branch follow-ups
+
+Handed over by the threads whose worktrees 6.4 deletes (T3 cannot move a thread
+onto the new clone), so these steps belong to this runbook. Do them **after** the
+new repo is pushed and the firmware PR is merged. Nothing here is run by the
+firmware thread; the human runs or approves each step, and nothing is pushed or
+opened as a PR until the human says so.
+
+**Merge order (the firmware thread's suggestion):** firmware, then
+`pr-rebuild-docs`, then `agent-security`, then `secrets` (it contains
+`pr-rebuild-docs`, and its hooks must follow `agent-security`'s managed-settings
+rule, below), then `notifications` and `schedules`. The `host.nix` and
+`AGENTS.md` conflicts below are expected.
+
+#### `workflow/pr-rebuild-docs` (from the workflow/docs thread)
+
+State before the freeze: fully committed in `~/.nixos`, tip `f40408a`, nothing in
+it touches firmware paths. The 6.3 rewrite carries it along and it needs nothing
+before the freeze.
+
+1. **New thread for the branch:** `t3_thread_launch` with
+   `workspaceStrategy {type:"worktree", baseRef:"workflow/pr-rebuild-docs", branch:"workflow/pr-rebuild-docs", startFromOrigin:true}`
+   (or `existing_worktree` if one exists). Sonnet, medium effort. Pass it steps 2 to 6.
+2. `git merge origin/master` to bring in the merged firmware work. Conflicts are
+   likely in `AGENTS.md`, `README.md`, the `machine.nix` firmware lines and
+   `docs/agents/*`. Keep the firmware branch's versions of the firmware facts.
+3. **Drop `--impure` from `rebuild.sh`**, everywhere it is passed (eval, build,
+   test, dry, switch and `check`'s eval), and update the `AGENTS.md`/`README.md`
+   lines that mention it.
+4. **Verify:** `./rebuild.sh check GOD-KILLER REDRUM`, then
+   `./rebuild.sh build GOD-KILLER` and `./rebuild.sh build REDRUM`. REDRUM needs
+   the firmware imported into GOD-KILLER's store first (section 3); if it is
+   missing, stop and tell the user.
+5. **Review:** tier 1 `nix-reviewer`, then tier 2 `lockout-reviewer` (required,
+   `rebuild.sh` and `start.sh` changed). Pass them the branch and the affected
+   hosts, not the conversation.
+6. **Ask the user, then push** (`./rebuild.sh push`), open the PR from
+   `.github/pull_request_template.md`, and call `link_pull_request`.
+
+PR body, listed as **untested** for the user to try: the interactive
+`./rebuild.sh`; test/dry/revert; a real `switch`, including its new step that
+fetches and fast-forwards `master` first (only covered in a temp repo so far);
+`generations --target`; the start-todo skill's `t3_thread_launch`; `start.sh` at a
+real login (it now only loads the SSH agent and no longer pulls); a REDRUM-on-REDRUM
+build. After merge: `cd ~/.nixos && ./rebuild.sh switch GOD-KILLER`, then the user
+switches REDRUM. Two rules from this branch appear in `AGENTS.md`: every reply
+ends with a "Path to close" block, and nothing pulls `~/.nixos` automatically.
+
+#### `workflow/agent-security` (from thread 4)
+
+Three local commits on top of `eac96f8`, nothing pushed: `e001dab` (shared managed
+Claude policy, strict sandbox, `claude-guard` hook), `3e4f782` (firmware
+no-exfiltration rules), `e7c796b` (docs-thread handoff, `docs/agents/security.md`).
+None contains firmware or secrets. **No re-apply is needed:** the 6.3 rewrite
+carries all three (new SHAs). They touch `modules/home-manager/ai-tools/claude-code.nix`,
+`modules/scripts/claude-guard.sh`, `modules/server/t3code.nix`,
+`modules/hosts/host.nix`, `docs/agents/security.md` and one pointer line in
+`AGENTS.md`. Do not run any check until the rewrite and branch recreation are done.
+If steps 1, 2 or 6 differ from `docs/agents/security.md`, report it to the
+`workflow/agent-security` lane; do not patch the policy from the firmware branch.
+
+1. **Branch content:** `git log` on the recreated branch shows the three commits.
+   `claude-guard --self-test` passes: build with
+   `nix build .#nixosConfigurations.GOD-KILLER.config.environment.etc."claude-code/managed-settings.json".source`
+   and run the guard from that closure, or `./rebuild.sh build GOD-KILLER` and
+   `./rebuild.sh build REDRUM` then `claude-guard --self-test`. Both hosts build.
+2. **Firmware rules vs the new layout.** Read (not run) on the branch: the
+   `permissions.deny` Read rules in `claude-code.nix` already cover
+   `//var/lib/firmware-src/**`, `//nix/store/*-brcm-firmware/**`,
+   `//**/firmware/brcm/**`, `brcmfmac*`, `brcmbt*`, `firmware.tar*` and
+   `brcm-firmware.gcroot`, and `fw_re` plus the self-test cases in
+   `claude-guard.sh` include `cat /var/lib/firmware-src/...` and
+   `git add -f ... firmware/brcm`. Confirm by running the self-test; both cases
+   must be blocked. If anything under 6.x renames those paths, re-check.
+3. **Merge conflicts.** `modules/hosts/host.nix` will conflict with the other
+   threads (each adds module lines): keep all of them. The agent-security lines
+   are `inputs.self.modules.nixos.claude-code-policy`, after `keyring` on
+   GOD-KILLER and after `t3code` on REDRUM. For `AGENTS.md` take the docs thread's
+   version and add the index row
+   `| docs/agents/security.md | permissions, sandbox, the claude-guard hook, the security smoke test |`,
+   and correct "Agent safety essentials" on four points: one managed policy from
+   `claude-code.nix` covers both hosts; Full access no longer bypasses everything
+   because ask rules are refused there; branch commits and `gh pr create` are
+   allowed; Accept edits is the default for TODO threads.
+4. **Secrets and notifications hooks.** `allowManagedHooksOnly = true` is set, so
+   their hooks must be installed as
+   `environment.etc."claude-code/managed-settings.d/50-secret-guard.json"` (secrets)
+   and `60-notifications.json` (notifications); home-manager
+   `programs.claude-code.settings.hooks` will not do it and the hooks silently
+   never run. Notifications must also stop targeting the managed-settings block in
+   `t3code.nix`, which was removed. Read on 2026-11-02: neither
+   `workflow/secrets` nor `workflow/notifications` contains `managed-settings.d`
+   yet, so both need that change; check the recreated `workflow/secrets` before
+   its PR (the squash in 6.2a does not alter it).
+5. **After merge and switch** (human): `./rebuild.sh switch GOD-KILLER`, and switch
+   REDRUM on REDRUM itself. Then in a new thread check that
+   `jq .permissions ~/.claude/settings.json` shows empty `allow`/`ask`/`deny`, and
+   that `/etc/claude-code/managed-settings.json` exists on both hosts.
+6. **Smoke test:** run the 22-step table in `docs/agents/security.md` once in an
+   Accept edits thread and once in a Full access thread, and record which steps
+   prompted (the agent cannot see approval cards). Still unverified: the installed
+   `/etc` policy; `allowManagedHooksOnly`; how T3 shows the guard's "ask" prompts;
+   everything on REDRUM (whether the sandbox starts for the `t3code` user, whether
+   `GIT_CONFIG_*` identity reaches sandboxed commits, `journalctl` access via
+   `systemd-journal`); Auto mode's classifier quota cost.
+7. **REDRUM firmware access:** the `t3code` user gets no access to `/home` or
+   `/var/lib/firmware-src`. After the switch, `sudo -u t3code test -r /var/lib/firmware-src`
+   must fail.
+
 ## 7. Handoffs to other threads
 
 - **AGENTS.md / README.md (thread 1):** `--impure` is **no longer required** for
