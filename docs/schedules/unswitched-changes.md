@@ -135,6 +135,9 @@ You are a scheduled, unattended check on this machine. Nobody is watching: if an
 call is blocked or denied, STOP and name the blocked command; never try variants. You
 never edit files, never pull, fetch or switch in ~/.nixos, never use sudo.
 
+0. If <CHECKOUT>/docs/schedules/bin/schedule-precheck does not exist (the PR that adds it
+   is not merged and switched into this checkout yet), reply with exactly
+   "unswitched: script not installed yet" and stop. Do not look for it elsewhere.
 1. Run exactly:  <CHECKOUT>/docs/schedules/bin/schedule-precheck unswitched --notify
    (<CHECKOUT> is this machine's config checkout: /home/cairo/.nixos on GOD-KILLER.)
    The script does all git work in its own private clone and sends the notification
@@ -152,6 +155,12 @@ replaced by the path where `t3code` can read the script and `--remote-url
 https://github.com/cqjro/nixos.git` added to the command.
 
 ## REDRUM: human steps (T3 on GOD-KILLER cannot reach REDRUM's server)
+
+Checked: `t3_environment_read` reports one environment (GOD-KILLER) and
+`t3_project_list` one project (`/home/cairo/.nixos`). The T3 tools in a GOD-KILLER thread
+cannot see, launch on, or message a REDRUM thread, so I cannot create the REDRUM task
+from here. What I can do is make it a paste: open a new thread on REDRUM's environment
+(on Haiku, low effort) and send it the brief at the end of this section.
 
 REDRUM's T3 server is a separate environment, so this task (B) must be created from a
 thread opened on REDRUM, by you. Either path needs, in order:
@@ -206,3 +215,22 @@ trigger on the same prompt (add the `ref` check as step 0).
 - For option B: does a scheduled thread's completion push your phone through T3's native
   notifications or the `Stop` hook? If yes, B needs the "Stop" hook to skip threads titled
   "Unswitched changes", or A should be the only supported path.
+
+### REDRUM bootstrap brief (paste into a new Haiku-low thread on REDRUM's T3 server)
+
+```text
+Set up the "Unswitched changes" scheduled task on THIS machine (REDRUM). First check, and
+report each as OK or MISSING without trying to fix anything:
+  a. the script exists and is readable by this user:
+     ls -l <CHECKOUT>/docs/schedules/bin/schedule-precheck
+  b. git, nix, gh and nixos-version are on PATH (command -v ...)
+  c. the private repo is reachable: git ls-remote https://github.com/cqjro/nixos.git master
+  d. agent-notify is on PATH, and ~/.config/agent-notify/topic exists (do NOT print its contents)
+If anything is MISSING, stop and list what the human must do. Otherwise call schedule_task
+with title "Unswitched changes", schedule {"type":"interval","everyMs":21600000},
+bindToCurrentThread true, enabled true, and as the prompt the text in the "B. T3 scheduled
+task" code block of docs/schedules/unswitched-changes.md, with <CHECKOUT> replaced by the
+path from (a) and " --remote-url https://github.com/cqjro/nixos.git" appended to the
+schedule-precheck command. Then run the script once with --dry-run appended and report its
+JSON status line.
+```
