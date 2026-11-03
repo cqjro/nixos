@@ -598,6 +598,8 @@ back (anything public can be cloned or archived immediately):
   `cqjro` noreply identity;
 - the token swap (6.4 step 3) is done on every machine and the old *GitHub CLI*
   OAuth grant is revoked;
+- the Cloudflare Access step of the `TODO.md` hostnames item is done (or you
+  decided to leave the names exposed);
 - GitHub account settings *Keep my email addresses private* and *Block command
   line pushes that expose my email* are on (per the secrets thread; not
   verified from here).
