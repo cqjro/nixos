@@ -161,6 +161,22 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
+- [ ] **LearnHarness** — install [LearnHarness](https://github.com/amosblomqvist/learnharness)
+      (AGPL-3.0 Electron desktop app: AI agents probe, plan, teach and drill you
+      on a persistent knowledge graph) on GOD-KILLER — **3/10** (not in nixpkgs
+      and no flake found; it ships a Linux AppImage and `.deb`, so the work is
+      packaging an upstream binary)
+  - [ ] Confirm there really is no flake/Nix expression (the repo listing was
+        truncated when checked 2026-11-02) and pick the release asset
+  - *Proposed approach:* copy `modules/home-manager/apps/xodus-nexus.nix` —
+    `fetchurl` the pinned AppImage from GitHub Releases + `appimageTools.wrapType2`,
+    pinned `version`/`hash`, added to GOD-KILLER's `machine.nix` imports. Add a
+    `# TODO-remove:` comment and a "Pending upstream fixes" row (AGENTS.md and
+    README, or `docs/agents/upstream-registry.md` once the docs refactor lands) in
+    the same change, as for Xodus Nexus. The AppImage can't self-update from the
+    store, so bump the pin instead. It needs a provider API key entered in-app;
+    keep that out of the repo.
+
 ## Server (REDRUM)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for
