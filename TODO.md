@@ -18,31 +18,19 @@ repeated as proposals.
 
 ## System
 
-- [ ] **Finish the repo move** — `cqjro/nixos` is rewritten, pushed, private,
-      and all six workflow PRs (#1 to #6) are merged; these owner-only steps are
-      left — **3/10** (full detail in [`docs/firmware.md`](docs/firmware.md):
-      6.5 is the public switch, 6.9 is REDRUM). Delete this item when all are done
-  - [ ] **Before going public (6.5):**
-    - [ ] Cloudflare Access for the browser-only apps, or accept the hostnames as
-          they are (the "Hostnames" sub-item of "Secrets: finish before the new
-          repo goes public" below)
-    - [ ] Decide the `gh` token scope for the schedules: add *Issues: read and
-          write* on `cqjro/nixos` to the GOD-KILLER token (recommended, editable
-          in place), or use PR comments (`docs/schedules/README.md`, "GitHub
-          permissions"). Six labels already exist in the repo from a test run;
-          delete them if unwanted
-    - [ ] Then change visibility to Public (cannot be undone). The GitHub email
-          settings are done
-  - [ ] **Switch both hosts, only after reading `docs/agents/security.md`:**
-        `cd ~/.nixos && ./rebuild.sh switch GOD-KILLER -m "..."`, then REDRUM
-        (`dry` first, human-only). This installs the managed Claude policy
-        (`allowManagedHooksOnly`), the secret-guard and notification hooks and the
-        noreply git identity. Then the post-switch checks and the 24-step smoke
-        test in `docs/agents/security.md` (Accept edits and Full access)
-  - [ ] **REDRUM** (`docs/firmware.md` 6.9): re-clone `~/.nixos`, place the
-        firmware, run the importer, switch; give the `t3code` user its own
-        fine-grained token and re-clone `/var/lib/t3code/nixos` if it exists.
-        On GOD-KILLER also `chmod 750 /var/lib/firmware-src /var/lib/firmware-src/REDRUM`
+- [ ] **Finish the repo move** — `cqjro/nixos` is rewritten, pushed and private;
+      PRs #1 to #8 are merged; GOD-KILLER (generation 233) and REDRUM (generation
+      37) are switched on the new repo and the 24-step smoke test passed in
+      Accept edits and Full access. These owner-only steps are left — **2/10**
+      (detail in [`docs/firmware.md`](docs/firmware.md); 6.5 is the public
+      switch). Delete this item when all are done
+  - [ ] **Public switch (6.5):** change visibility to Public (cannot be undone).
+        Cloudflare Access for the browser-only apps is on hold; it can be added
+        before or after going public (the exposure is only the hostnames, see the
+        "Hostnames" sub-item of "Secrets: finish before the new repo goes public"
+        below). The GitHub email settings are done and the GOD-KILLER token has
+        Issues read and write (six labels from a test run still exist in the
+        repo; delete them if unwanted)
   - [ ] **notifications:** choose ntfy.sh or self-hosted, create the topic file
         (`request_secret`, never chat), subscribe the phone app, then test 6.2
   - [ ] **schedules:** approve the two prompts (`docs/schedules/upstream-check.md`,
@@ -53,9 +41,10 @@ repeated as proposals.
         to the deny list in `claude-code.nix`
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
-        optionally archive `nixos-archive` on GitHub; token expiry reminder
-        (tokens made 2026-11-03, 30-90 days); trim `docs/firmware.md` section 6
-        to a short history note
+        optionally archive `nixos-archive` on GitHub; token expiry reminders (the
+        GOD-KILLER token was made 2026-11-03, 30-90 days; the REDRUM `t3code`
+        token expires 2027-02-02); trim `docs/firmware.md` section 6 to a short
+        history note
   - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
         stay in the private archive repo; extract them only if you want to
         build or reinstall it

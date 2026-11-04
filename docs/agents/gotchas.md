@@ -117,3 +117,24 @@ and a one-line pointer in the AGENTS.md index.
   ["nvidia"]` in `tools/helpers/gpu.py`). Forcing software rendering on
   `renderD128` caused the HWC/composer to crash-loop (window opens/closes
   rapidly). Same-GPU software rendering does not bypass this.
+
+- **`rebuild.sh` output and plain-command exclusions** — `rebuild.sh` streams
+  to the screen only when stdout is a terminal. Piped (`| tail`) or in an agent
+  shell, the output goes to `.log/nixos-<action>.log` (e.g.
+  `nixos-dry-activate.log`) and the screen shows only the header line; read that
+  file instead. Likewise `gh`, `git push` and `./rebuild.sh` leave the sandbox
+  only as plain commands (`sandbox.excludedCommands`): chained with `&&`/`;`,
+  piped or with a long inline `--body`, they run sandboxed and `gh` fails with
+  "run gh auth login". Use `--body-file` for PR bodies.
+
+- **Sandbox placeholders in `git status`** — inside a sandboxed worktree,
+  `/dev/null` placeholder files (`.zshrc`, `.mcp.json`, `.claude/settings.json`,
+  …) show as untracked and `.git/config.lock` exists, so `git checkout -b` fails
+  on writing the upstream setting. Use `--no-track` and stage by path, never
+  `git add --all`. They exist only in the sandbox view.
+
+- **`gh auth status` output trips the secret-guard** — the masked
+  `Token: github_pat_****…` line matches the weak "credential assignment"
+  pattern and the prompt is blocked before the model sees it. Start the message
+  with `[allow-secret-pattern]` (square brackets included); a real full token is
+  a strong match and is never bypassed.
