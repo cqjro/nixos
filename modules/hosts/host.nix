@@ -39,6 +39,8 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.keyring
 				inputs.self.modules.nixos.claude-code-policy
 				inputs.self.modules.nixos."secret-guard"
+				inputs.self.modules.nixos."agent-notifications"
+				{ agent-notifications.desktop = true; }
 				inputs.self.modules.nixos.config-revision
 				inputs.self.modules.nixos."GOD-KILLER"
 				inputs.self.modules.nixos."GOD-KILLER-hardware"
@@ -126,6 +128,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.t3code
 				inputs.self.modules.nixos.claude-code-policy
 				inputs.self.modules.nixos."secret-guard"
+				inputs.self.modules.nixos."agent-notifications"
 				inputs.self.modules.nixos.youtube
 				inputs.self.modules.nixos.stylix
 				inputs.stylix.nixosModules.stylix
