@@ -28,6 +28,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
+| [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
 ## Quick commands

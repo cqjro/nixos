@@ -359,6 +359,15 @@ workaround.
 | 7 | `mcp-nixos` taken from its upstream flake (`inputs.mcp-nixos`, no `follows`) instead of `pkgs.mcp-nixos` | `flake.nix` (input), `modules/home-manager/ai-tools/mcp-servers.nix` (`# TODO-remove:`) | nixpkgs (rev `3ec6363`, observed 2026-10-30): `python3Packages.fastmcp-slim` 3.4.7 does `from mcp.shared.exceptions import McpError`, but `python3Packages.mcp` 2.2.0 renamed it to `MCPError`, so fastmcp-slim fails its `installCheckPhase` and `pkgs.mcp-nixos` 3.0.1 cannot build (skipping the check would still crash at import). The upstream flake builds because it ships its own nixpkgs (fastmcp 4.0.2). Not yet reported upstream | `nix build nixpkgs#mcp-nixos` succeeds on nixos-unstable; then use `pkgs.mcp-nixos` and delete the flake input |
 | 8 | LearnHarness packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`, GOD-KILLER only) | `modules/home-manager/apps/learnharness.nix` (`# TODO-remove:`) | not in nixpkgs (search.nixos.org unstable has no `learnharness`, checked 2026-11-03), and `amosblomqvist/learnharness` ships no `flake.nix` or Nix expression. The AppImage cannot self-update from the store; bump `version` + `hash` in the module | `pkgs.learnharness` lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
+## Scheduled threads
+
+Recurring T3 threads (upstream-fix registry polling, evaluation warnings per host, and a
+per-machine "merged but not switched yet" notice) share a deterministic pre-step,
+`docs/schedules/bin/schedule-precheck`, so a model only runs when something changed. Findings
+become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls or writes to
+`~/.nixos`. Prompts, the issue-permission requirement and the REDRUM steps are in
+[`docs/schedules/README.md`](docs/schedules/README.md).
+
 ## Scripts
 
 - `rebuild.sh` — the daily-driver workflow. Streams the rebuild live with

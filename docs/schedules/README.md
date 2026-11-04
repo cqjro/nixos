@@ -96,6 +96,11 @@ schedule-precheck health SCHEDULE MESSAGE…
   re-baselines; issues are the durable record).
 - **`--detect-only`** files and updates issues but reports nothing actionable.
   For a host that must not launch workers (see [Placement](#placement)).
+- **What it runs.** `buildflags` runs `nix eval --impure` on `origin/master` with the
+  caller's environment, i.e. it executes merged repo code at evaluation time; fine for a
+  self-authored repo, which is also why only merged `master` is evaluated, never a PR branch.
+  The shebang borrows `python3` from the flake registry's `nixpkgs` (unpinned, needs the
+  registry or network); the packaged unit in `unswitched-changes.md` option A avoids that.
 - **Safety of running it.** One allow rule (`Bash(docs/schedules/bin/schedule-precheck *)`)
   covers every `gh` and `nix` call inside it, so an unattended run needs no
   `gh issue *` rules. That is only as safe as the script itself, which the agent
