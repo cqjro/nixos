@@ -313,6 +313,11 @@ Read the matching entry before touching that area.
   `hosts/REDRUM/machine.nix`; do not import the shared module there.
 - **pnpm `packageManager` pins** and **non-reproducible pnpm FOD hashes** in
   `actual-budget-tweaks.nix` / `reactflux.nix`.
+- **`rebuild.sh` output is in `.log/` when piped; `gh` and `git push` must be
+  plain commands** (chained or piped, they run sandboxed and fail to
+  authenticate); sandbox `/dev/null` placeholders in `git status` (use
+  `--no-track`, stage by path); `gh auth status` needs `[allow-secret-pattern]`
+  to paste.
 
 ## Documentation Maintenance
 
