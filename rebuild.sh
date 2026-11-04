@@ -303,7 +303,7 @@ cmd_switch() {
         commit_all "$message"
     fi
     activate switch "$host" "$remote"
-    current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+    current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
     notify_ok "$host generation $current"
 }
 
@@ -393,7 +393,7 @@ cmd_interactive() {
     fi
     activate "$action" "$dir" "$remote"
     if [ "$action" = switch ]; then
-        current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+        current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
         current="generation $current"
     else
         current="test-activated $branch (no generation recorded)"

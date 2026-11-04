@@ -29,8 +29,8 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
 4. **Add the tunnel block**:
    `services.cloudflared.tunnels."<uuid>" = { credentialsFile = "/var/lib/cloudflared/<app>.json"; default = "http_status:404"; ingress = { "<host>.cqjro.ca" = "http://localhost:<port>"; }; };`
    The tunnel UUID is an **identifier, not a secret**: once `cloudflared tunnel
-   create <app>` has made the tunnel, commit its real UUID here (every
-   `modules/server` app does). The secret is the credentials JSON in
+   create <app>` has made the tunnel, commit its real UUID here (all eight
+   existing tunnels in `modules/server` are). The secret is the credentials JSON in
    `/var/lib/cloudflared/<app>.json`, which is never committed. Until the tunnel
    exists, use a placeholder UUID marked with a `# TODO:` comment. Keep the shared
    `hostname → port` table in the README accurate, and list the app in the

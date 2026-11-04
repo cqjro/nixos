@@ -143,8 +143,7 @@ Recipes (read the one you need, in [`docs/agents/module-recipes.md`](docs/agents
 
 - **Creating a server module (REDRUM)** — free `127.0.0.1` port, dedicated
   user, secrets under `/var/lib/<app>`, tunnel UUID committed (an identifier;
-  the credentials JSON is the secret), README +
-  Homepage updates.
+  the credentials JSON is the secret), README + Homepage updates.
 - **Theming the Actual Budget Tweaks sidecar** — the base16 → ABT token map and
   the browser-shim seed.
 - **Archiving a module** — never delete: move to `modules/_archive/` with a
