@@ -723,20 +723,17 @@ If steps 1, 2 or 6 differ from `docs/agents/security.md`, report it to the
    because ask rules are refused there; branch commits and `gh pr create` are
    allowed; Accept edits is the default for TODO threads.
 4. **Secrets and notifications hooks.** `allowManagedHooksOnly = true` is set, so
-   their hooks must be installed as
-   `environment.etc."claude-code/managed-settings.d/50-secret-guard.json"` (secrets)
-   and `60-notifications.json` (notifications); home-manager
-   `programs.claude-code.settings.hooks` will not do it and the hooks silently
-   never run. Notifications must also stop targeting the managed-settings block in
-   `t3code.nix`, which was removed. Read on 2026-11-02: neither
-   `workflow/secrets` nor `workflow/notifications` contains `managed-settings.d`
-   yet, so both need that change; check the recreated `workflow/secrets` before
-   its PR (the squash in 6.2a does not alter it).
+   home-manager `programs.claude-code.settings.hooks` silently never runs. The
+   agent-security branch defines the mechanism: a NixOS fragment sets
+   `claude-code-policy.hooks.<Event>` (merged at eval time into the one
+   `managed-settings.json`; see `docs/agents/security.md`, "Adding hooks"),
+   instead of the `managed-settings.d` drop-ins planned earlier. Both threads
+   were sent the exact requirement on 2026-11-03.
 5. **After merge and switch** (human): `./rebuild.sh switch GOD-KILLER`, and switch
    REDRUM on REDRUM itself. Then in a new thread check that
    `jq .permissions ~/.claude/settings.json` shows empty `allow`/`ask`/`deny`, and
    that `/etc/claude-code/managed-settings.json` exists on both hosts.
-6. **Smoke test:** run the 22-step table in `docs/agents/security.md` once in an
+6. **Smoke test:** run the 24-step table in `docs/agents/security.md` once in an
    Accept edits thread and once in a Full access thread, and record which steps
    prompted (the agent cannot see approval cards). Still unverified: the installed
    `/etc` policy; `allowManagedHooksOnly`; how T3 shows the guard's "ask" prompts;

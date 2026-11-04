@@ -43,11 +43,10 @@ repeated as proposals.
         the `t3code` user its own fine-grained token and re-clone
         `/var/lib/t3code/nixos` if it exists
   - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
-    - [ ] agent-security: the 7 checks (`docs/firmware.md` 6.8), add the firmware
-          filename patterns to the secret-guard denylist, settle how the
-          secrets and notifications hooks get installed (`managed-settings.d`),
-          smoke test (22 steps, Accept edits and Full access)
-    - [ ] notifications: move its hooks to `managed-settings.d` once the policy
+    - [ ] agent-security (agent work done on the branch): after its PR merges and
+          both hosts switch, the post-switch checks and the 24-step smoke test in
+          `docs/agents/security.md` ("After the switch", Accept edits and Full access)
+    - [ ] notifications: move its hooks to `claude-code-policy.hooks` once the policy
           lands; choose ntfy.sh or self-hosted; run test 6.2
     - [ ] schedules: say "commit the stale-hash fix" (`docs/schedules/README.md`
           line 241); approve the two schedule prompts; decide the old "Build

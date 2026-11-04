@@ -23,7 +23,8 @@ Read the others **when the task calls for them**:
 | [`docs/agents/workflow.md`](docs/agents/workflow.md) | branching, PRs, testing, merging, cross-machine handoff, generation tracking, model choice, the path to close and settling a thread |
 | [`docs/agents/review.md`](docs/agents/review.md) | reviewing a branch (tiers 0–3) |
 | [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
-| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | permissions, pushes, pairing, T3 on REDRUM, the permissions smoke test |
+| [`docs/agents/security.md`](docs/agents/security.md) | permissions, sandbox, the `claude-guard` hook, the security smoke test, adding a hook |
+| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | pushes, pairing, T3 on REDRUM |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
@@ -234,24 +235,39 @@ no home-manager).
 
 ## Agent safety essentials
 
-Details and history in [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md);
-policy lives in `modules/home-manager/ai-tools/claude-code.nix` (GOD-KILLER)
-and `modules/server/t3code.nix` (REDRUM).
+Permissions, sandbox and the `claude-guard` hook are one managed policy for both
+hosts (`flake.modules.nixos."claude-code-policy"` in
+`modules/home-manager/ai-tools/claude-code.nix`, installed as
+`/etc/claude-code/managed-settings.json`); details, the mode table and the
+smoke test in [`docs/agents/security.md`](docs/agents/security.md). Pushes,
+pairing and T3 on REDRUM: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md).
 
-- Threads run **Supervised**; T3's Full access bypasses every prompt.
+- TODO/worktree threads run **Accept edits**; policy, secrets or networking
+  work runs **Supervised**. Full access still keeps `deny` rules, the sandbox and
+  the guard, but every `ask` rule is refused there instead of prompting, so
+  avoid it.
 - Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
   `token.json`, `client_secret.json`) are never read, printed or committed;
   the T2 firmware is never committed, read, printed or attached (`docs/firmware.md`).
   Never ask the human to paste a
   secret in chat — use T3's `request_secret`.
-- `switch`, `test`, `dry`, `revert`, `push`, `git commit|push`, `gh pr
-  create|merge` and `sudo` are human-approved. No passwordless sudo for
-  `nixos-rebuild`; never run `tailscale serve`/`set`.
+- Allowed without a prompt: `git add`/`commit` on a branch, `gh pr create`,
+  `gh issue create`, `./rebuild.sh check|eval|build|generations`, `nix
+  eval|build`. Human-approved: `switch`, `test`, `dry`, `revert`, `push`,
+  `git push`, commits on `master`, `gh pr merge|comment|update-branch`, `gh api`
+  and `sudo`. No passwordless sudo for `nixos-rebuild`; never run
+  `tailscale serve`/`set` (the guard blocks it).
+- Hooks only run from the managed policy (`allowManagedHooksOnly`): a new hook
+  is a NixOS fragment setting `claude-code-policy.hooks.<Event>`
+  ([security.md](docs/agents/security.md#adding-hooks-merge-point)), never
+  home-manager `programs.claude-code.settings.hooks`, a project
+  `.claude/settings.json` or a skill: those are silently ignored.
 - Pushes go over HTTPS through the `gh` credential helper (no SSH agent in T3
   threads).
-- Reads outside the project prompt (`blockReadsOutsideWorkingDirectories`); a
-  "blocked … `/add-dir`" result means re-issue the call after the human grants
-  access. The agent cannot see the approval UI.
+- Bash runs in a sandbox that hides `/home` outside the worktree; reads outside
+  the project prompt (`blockReadsOutsideWorkingDirectories`). A "blocked …
+  `/add-dir`" result means re-issue the call after the human grants access.
+  The agent cannot see the approval UI.
 
 ## Pending upstream fixes
 

@@ -271,14 +271,18 @@ matches the rest of the config out of the box.
 (`modules/home-manager/ai-tools/t3code.nix`, themed from Stylix) driving Claude
 Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-tools/`:
 
-- **Permissions** (`claude-code.nix`) — `programs.claude-code` writes the policy
-  into `~/.claude/settings.json` (merged, so the file stays writable). Reads
-  outside the project prompt (like opencode's `external_directory`), secrets are
-  denied, and `sudo`, `rebuild.sh switch|push`, `git commit|push` and
-  `gh pr merge|create` always ask. T3's "Full access" mode **skips all of
-  these prompts** (`disableBypassPermissionsMode` neither stops it nor is
-  compatible with it — it made Full access threads fail, so it is not set), so
-  keep threads on Supervised.
+- **Permissions** (`claude-code.nix`, fragment `claude-code-policy`) — one
+  managed policy for GOD-KILLER and REDRUM in
+  `/etc/claude-code/managed-settings.json`, which agents cannot edit. Bash runs
+  in a bubblewrap sandbox that hides your home directory and limits the network
+  to GitHub and nixos.org; secrets and the T2 firmware are denied; a
+  `claude-guard` hook blocks dangerous commands (secret paths, `curl | sh`,
+  force pushes, `tailscale serve`, firmware reads). Branch commits, `gh pr
+  create` and `rebuild.sh check|eval|build` run without a prompt; `sudo`,
+  `rebuild.sh switch|test|push`, `git push`, commits on `master` and `gh pr
+  merge` ask. Only hooks from the managed policy run. Full access keeps the
+  sandbox, denies and guard but refuses every `ask` instead of prompting. Detail
+  and the smoke test: [`docs/agents/security.md`](docs/agents/security.md).
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
@@ -303,7 +307,8 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
   approve still uses your token — consider a fine-grained PAT limited to this
   repo if you want a smaller blast radius.
 - **One-time setup in T3** — Settings → Threads → New threads → Permissions →
-  **Supervised** (T3 defaults to Full access, which bypasses every prompt).
+  **Accept edits** (T3 defaults to Full access, which refuses every `ask` rule);
+  pick Supervised per thread for policy, secrets or networking work.
 
 ## Xbox Game Pass (Xodus Nexus)
 
@@ -742,8 +747,10 @@ CLI meets that model's minimum version, and the pinned nixpkgs' 2.1.238 left RED
 with only the legacy model ("only legacy Fable 5 is available" in Settings). The server only drives the provider, it does not ship one, so the module
 puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`/`t3`
 in the system profile), makes `gh` git's credential helper for the service only,
-and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
-(secrets unreadable; `git push`, `gh api`, `sudo` always ask). Log in once as the
+sets the service's git identity, adds the `t3code` user to `systemd-journal` (read
+logs, no access to your home) and puts the sandbox tools on its `PATH`. The Claude
+policy is the same `claude-code-policy` fragment as GOD-KILLER's (see "AI agents"
+above). Log in once as the
 `t3code` user after the switch — credentials land in `/var/lib/t3code`, never in
 the store:
 
