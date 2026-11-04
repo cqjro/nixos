@@ -43,10 +43,6 @@ repeated as proposals.
         the `t3code` user its own fine-grained token and re-clone
         `/var/lib/t3code/nixos` if it exists
   - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
-    - [ ] pr-rebuild-docs: merge `origin/master`, drop `--impure`, check/build
-          both hosts, tier 1 and 2 reviews; README default-password commands
-          (finding F4, required before public) with a hidden prompt; AGENTS.md
-          tunnel-UUID wording; LearnHarness registry row (`docs/firmware.md` 6.8)
     - [ ] agent-security: the 7 checks (`docs/firmware.md` 6.8), add the firmware
           filename patterns to the secret-guard denylist, settle how the
           secrets and notifications hooks get installed (`managed-settings.d`),
