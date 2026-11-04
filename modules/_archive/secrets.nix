@@ -1,4 +1,4 @@
-# Archived from modules/essentials/secrets.nix
+# Archived from modules/essentials/secrets.nix (written on branch workflow/secrets, 2026-11-01, and never merged to master)
 #
 # Why: sops-nix had a single consumer (Glance's login password and session key),
 # and the owner decided on 2026-11-02 to keep secrets as on-host files for now.

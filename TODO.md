@@ -169,7 +169,6 @@ repeated as proposals.
     evaluate ActivityWatch first (least code), fall back to a custom
     Hyprland→SQLite poller if its Wayland support is poor.
 
-
 - [ ] **Theme update** — revise the window shadows, specifically how focused
       vs unfocused windows are treated, and make that look better — **3/10**
       (shadows are a small block at `hyprland.nix:167-173`; iterate on
@@ -301,8 +300,6 @@ repeated as proposals.
         "T3 Code on REDRUM")
   - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
         show up in one client
-
-
 
 - [ ] **Secrets: finish before the new repo goes public** — the steps left from
       the secrets audit (`docs/secrets.md` section 4 and the private audit); do them before

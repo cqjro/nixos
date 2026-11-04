@@ -281,9 +281,12 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
   force pushes, `tailscale serve`, firmware reads). Branch commits, `gh pr
   create` and `rebuild.sh check|eval|build` run without a prompt; `sudo`,
   `rebuild.sh switch|test|push`, `git push`, commits on `master` and `gh pr
-  merge` ask. Only hooks from the managed policy run. Full access keeps the
-  sandbox, denies and guard but refuses every `ask` instead of prompting. Detail
-  and the smoke test: [`docs/agents/security.md`](docs/agents/security.md).
+  merge` ask. Only hooks from the managed policy run. A second hook,
+  `secret-guard`, blocks a message or tool call that carries a key or token and
+  guards the T2 firmware paths (on GOD-KILLER and REDRUM; `docs/secrets.md`).
+  Full access keeps the sandbox, denies and guard but refuses every `ask`
+  instead of prompting.
+  Detail and the smoke test: [`docs/agents/security.md`](docs/agents/security.md).
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
