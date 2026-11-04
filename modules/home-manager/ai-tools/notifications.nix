@@ -1,7 +1,7 @@
 { ... }:
 let
-	# Hook definitions shared by both fragments. `command` is the store path of
-	# the agent-notify script (modules/scripts/agent-notify.sh).
+	# Hook definitions. `command` is the store path of the agent-notify script
+	# (modules/scripts/agent-notify.sh).
 	mkHooks = command: let
 		entry = matcher: {
 			inherit matcher;
@@ -32,43 +32,35 @@ let
 	};
 in
 {
-	# User side (GOD-KILLER, or any host with home-manager). Adds hooks to the
-	# same programs.claude-code.settings that ai-tools/claude-code.nix defines;
-	# the module system merges the two, so claude-code.nix is not edited.
-	flake.modules.homeManager."agent-notifications" = { lib, pkgs, ... }:
-		let script = mkScript pkgs true;
-		in {
-			options.programs.agent-notify.package = lib.mkOption {
-				type = lib.types.package;
-				readOnly = true;
-				default = script;
-				description = "The agent-notify script, for user timers.";
-			};
-			config.home.packages = [ script ];
-			config.programs.claude-code.settings.hooks = mkHooks "${script}/bin/agent-notify";
-		};
-
-	# System side (REDRUM's t3code user, which home-manager never reaches). Puts
-	# the script on the system profile and exposes the hook set as
-	# `config.agentNotifications.hooks` for t3code.nix's managed-settings.json.
-	# Handoff to the permissions owner: merge it in with
-	#   hooks = config.agentNotifications.hooks;
-	# (see docs/notifications.md, "REDRUM").
+	# Approval / completion notifications (docs/notifications.md).
+	#
+	# The managed Claude policy sets `allowManagedHooksOnly`, so hooks come ONLY
+	# from `claude-code-policy.hooks` (docs/agents/security.md, "Adding hooks");
+	# home-manager `programs.claude-code.settings.hooks` would be ignored. Import
+	# this fragment only on hosts that also import `claude-code-policy`
+	# (GOD-KILLER, REDRUM); the option does not exist on LittleNix.
+	#
+	# The hook runs as the agent's user (cairo on GOD-KILLER, t3code on REDRUM,
+	# home /var/lib/t3code). The ntfy topic/token are read at run time from
+	# ~/.config/agent-notify (docs/notifications.md); nothing secret is in the
+	# store or the policy JSON.
 	flake.modules.nixos."agent-notifications" = { config, lib, pkgs, ... }:
-		let script = mkScript pkgs false;
+		let script = mkScript pkgs config.agent-notifications.desktop;
 		in {
-			options.agentNotifications.hooks = lib.mkOption {
-				type = lib.types.attrs;
-				readOnly = true;
-				default = mkHooks "${script}/bin/agent-notify";
-				description = "Claude Code hooks for agent-notify, for managed-settings.json.";
+			options.agent-notifications.desktop = lib.mkOption {
+				type = lib.types.bool;
+				default = false;
+				description = "Also raise a desktop popup (libnotify). True on GOD-KILLER, false on REDRUM.";
 			};
-			options.agentNotifications.package = lib.mkOption {
+			options.agent-notifications.package = lib.mkOption {
 				type = lib.types.package;
 				readOnly = true;
 				default = script;
 				description = "The agent-notify script, for systemd units (e.g. a timer as t3code).";
 			};
-			config.environment.systemPackages = [ script ];
+			config = {
+				environment.systemPackages = [ script ];
+				claude-code-policy.hooks = mkHooks "${script}/bin/agent-notify";
+			};
 		};
 }

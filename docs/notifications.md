@@ -34,7 +34,7 @@ host + worktree + branch, which the native text lacks.
 ## 2. Hook fallback (`agent-notify`)
 
 `modules/scripts/agent-notify.sh`, packaged and wired by
-`modules/home-manager/ai-tools/notifications.nix`. A deterministic bash script
+`modules/home-manager/ai-tools/notifications.nix` (a NixOS fragment, despite the path). A deterministic bash script
 (no LLM, no tokens spent) run by Claude Code hooks:
 
 | Hook | Becomes | ntfy priority | Desktop urgency |
@@ -174,26 +174,38 @@ self-hosted server `echo https://redrum.<tailnet>.ts.net:8443 >
 deny rules do not yet cover `~/.config/agent-notify/` (thread 4/5 handoff:
 add `Read(~/.config/agent-notify/**)`).
 
-### Wire it into the hosts (not done on this branch)
+### How it is wired (managed policy)
 
-GOD-KILLER: add `agent-notifications` to the `imports` list in
-`modules/hosts/GOD-KILLER/machine.nix` (`with inputs.self.modules.homeManager`).
-It merges hooks into `programs.claude-code.settings` without touching
-`claude-code.nix` (verified by evaluating GOD-KILLER with the fragment added:
-hooks present, the 28 allow rules intact).
+The managed Claude policy sets `allowManagedHooksOnly`, so Claude Code ignores
+home-manager `programs.claude-code.settings.hooks` and project, skill and agent
+hooks. The only place a hook can come from is the NixOS option
+`claude-code-policy.hooks` (`docs/agents/security.md`, "Adding hooks"). The
+NixOS fragment `agent-notifications` sets it, with the store path of the
+`agent-notify` script as the command. There is no home-manager fragment and no
+`t3code.nix` hand-off any more.
 
-REDRUM (handoff to thread 4, who owns `t3code.nix` and the managed settings):
+`modules/hosts/host.nix` imports the fragment on **GOD-KILLER and REDRUM
+only** (LittleNix has no `claude-code-policy`, so the option would not exist).
+`agent-notifications.desktop` picks the libnotify build: `true` on GOD-KILLER,
+`false` (default) on REDRUM, which is headless, so only ntfy is used there.
 
-1. Add `inputs.self.modules.nixos."agent-notifications"` to the REDRUM list in
-   `modules/hosts/host.nix`.
-2. In `t3code.nix`'s `managed-settings.json` attrset add
-   `hooks = config.agentNotifications.hooks;` (read-only option the fragment
-   defines). Managed hooks run alongside user hooks; if thread 4 ever sets
-   `allowManagedHooksOnly`, these keep working, user hooks would not.
-3. The t3code unit already sets `HOME` and `XDG_CONFIG_HOME` to
-   `/var/lib/t3code`, so the config dir above is found without further env.
-   `notify-send` is absent on REDRUM by design (headless): only ntfy is used.
-   Verified: REDRUM's toplevel evaluates with the fragment.
+* The hook runs as the agent's user: `cairo` on GOD-KILLER, `t3code` on REDRUM
+  (home `/var/lib/t3code`; the unit sets `HOME` and `XDG_CONFIG_HOME`, so
+  `/var/lib/t3code/.config/agent-notify` is found without more env).
+* The topic and token are read at run time from `~/.config/agent-notify`
+  (above). Nothing secret is in the store or in the world-readable
+  `managed-settings.json`. The file must be readable by the hook's user.
+* Nothing changes on the running machines until the owner switches. After the
+  switch, `/etc/claude-code/managed-settings.json` gains `Notification`,
+  `Stop`, `StopFailure` and `PermissionRequest`; `PreToolUse` is unchanged with
+  `claude-guard` first.
+* Verify the merge without switching:
+  `nix eval .#nixosConfigurations.<HOST>.config.claude-code-policy.hooks --apply 'h: builtins.mapAttrs (_: builtins.length) h'`.
+* Follow-up for the agent-security owner (their file): add
+  `Read(~/.config/agent-notify/**)` to the deny list in `claude-code.nix`.
+  The hook itself runs outside the agent's tool permissions, so it still reads
+  the file.
+
 
 ### Optional self-hosted ntfy (REDRUM)
 
@@ -241,7 +253,7 @@ runtime behaviour (ntfy-sh state dir, auth db, iOS upstream relay) is untested.
 
 ## 6. Test procedure (you run it; tick each on both devices)
 
-Setup: `agent-notifications` imported on GOD-KILLER and switched, topic file
+Setup: `agent-notifications` switched on GOD-KILLER (the hooks only exist after a switch), topic file
 created, ntfy app subscribed.
 
 **6.1 Script alone (no T3).** On GOD-KILLER:
@@ -262,8 +274,7 @@ HTTP listener, not a real ntfy server.)
 2. *Completion:* a trivial prompt ("say hi"). Expect `kind=finished`.
 3. *Failure:* hard to trigger on purpose. Cheapest: in a shell, run `claude -p hi --model nonexistent` (a `model_not_found` StopFailure) with the hook active, then read `payloads.jsonl` for the real field names; otherwise wait for the next rate limit.
 4. *Full access:* repeat 2 in a Full access thread; expect completion only.
-5. Do the same from a thread on REDRUM's T3 (after thread 4 wires the managed
-   hook): approval, completion; the title must say `REDRUM`.
+5. Do the same from a thread on REDRUM's T3 (after REDRUM is switched): approval, completion; the title must say `REDRUM`.
 6. *Dedupe/quiet:* send two completions <30 s apart (one push); set
    `quiet-hours` to cover now, finish a thread (no push), trigger an approval
    (push, priority 3).
@@ -277,11 +288,9 @@ per event type (or keep both, accepting duplicates).
   agent workflow section pointing here; list ntfy under the REDRUM port table
   only if the optional module is adopted (port 8089); mention
   `agent-notifications` among the `ai-tools` fragments.
-* **Thread 4 (permissions):** wire `config.agentNotifications.hooks` into the
-  managed settings (above); add `Read(~/.config/agent-notify/**)` to the deny
-  list; if sandboxing is enabled, allow network to `ntfy.sh` for the hook (hooks
-  are run by Claude Code, but check whether they inherit the sandbox) and write
-  access to `~/.local/state/agent-notify`.
+* **Agent-security owner:** add `Read(~/.config/agent-notify/**)` to the deny list
+  (see above). Hooks run outside the sandbox, so the hook still reaches ntfy and
+  writes `~/.local/state/agent-notify`.
 * **Thread 5 (secrets):** the ntfy topic/token are secrets of the
   "unguessable URL" kind; adopt whatever file-credential mechanism you choose.
 * **Thread 3 (schedules):** scheduled threads that find something should fail
@@ -327,11 +336,8 @@ thread. Whether a scheduled thread's completion pushes through T3 native
 notifications or the `Stop` hook is **unobserved** (see 6.2), and a timer needs
 no LLM session.
 
-* **GOD-KILLER:** the home-manager fragment exposes
-  `config.programs.agent-notify.package` (read-only); a user timer can use
-  `"${config.programs.agent-notify.package}/bin/agent-notify"`.
-* **REDRUM:** the NixOS fragment exposes `config.agentNotifications.package`.
-  Use a **system** timer with `serviceConfig.User = "t3code"`, and put the
+* **Both hosts:** the NixOS fragment exposes `config.agent-notifications.package`
+  (read-only) for a systemd unit. On REDRUM use a **system** timer with `serviceConfig.User = "t3code"`, and put the
   topic at `/var/lib/t3code/.config/agent-notify/topic` (mode 0600, owner
   `t3code`). Creating that file is the secret-handling thread's job; the topic
   is a credential, so use `request_secret`, never chat.
