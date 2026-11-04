@@ -640,6 +640,19 @@ design because the old objects stay in a private repo.
 
 ### 6.8 After the rewrite: per-branch follow-ups
 
+> **Status 2026-11-04: the workflow PRs (#1 to #6) are merged into `master`.**
+> The lane threads did their own follow-ups on their branches, so the numbered
+> steps below are a record, not open work. In particular `--impure` is already
+> gone from `rebuild.sh`, the README default-password commands use hidden
+> prompts, the LearnHarness registry row exists, and hooks are merged through
+> `claude-code-policy.hooks` instead of `managed-settings.d` drop-ins. What is
+> left is owner-only and is tracked in `TODO.md` ("Finish the repo move"): the
+> switch of both hosts, the post-switch checks and smoke test in
+> `docs/agents/security.md`, REDRUM (6.9), the ntfy setup and test 6.2, the
+> `gh` Issues permission, Cloudflare Access, and the public switch (6.5). The
+> commit hashes quoted in this section (for example `f40408a`) are from before
+> the history move and exist only in the private archive.
+
 Handed over by the threads whose worktrees 6.4 deletes (T3 cannot move a thread
 onto the new clone), so these steps belong to this runbook. Do them **after** the
 new repo is pushed and the firmware PR is merged. Nothing here is run by the

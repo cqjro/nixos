@@ -18,48 +18,44 @@ repeated as proposals.
 
 ## System
 
-- [ ] **Finish the repo move and open the workflow PRs** — `cqjro/nixos` is
-      rewritten, pushed and still private; these are the steps left before it
-      goes public and the lane threads can merge — **3/10** (full detail in
-      [`docs/firmware.md`](docs/firmware.md); the rewrite itself is done, section
-      6.9 is REDRUM). Delete this item when all are done
-  - [ ] **Before going public (6.5), you:**
-    - [ ] github.com/settings/emails: turn on *Keep my email addresses private*
-          and *Block command line pushes that expose my email* (the history and
-          `git.nix` already use the noreply address, so pushes are not blocked)
+- [ ] **Finish the repo move** — `cqjro/nixos` is rewritten, pushed, private,
+      and all six workflow PRs (#1 to #6) are merged; these owner-only steps are
+      left — **3/10** (full detail in [`docs/firmware.md`](docs/firmware.md):
+      6.5 is the public switch, 6.9 is REDRUM). Delete this item when all are done
+  - [ ] **Before going public (6.5):**
     - [ ] Cloudflare Access for the browser-only apps, or accept the hostnames as
-          they are (the "Hostnames" item in `TODO.md` on `workflow/secrets`)
-    - [ ] Decide the `gh` token scope for the schedules thread: add *Issues:
-          read and write* on `cqjro/nixos` to the GOD-KILLER token (recommended,
-          editable in place), or tell that thread to use PR comments instead
-    - [ ] Then change visibility to Public (cannot be undone)
-  - [ ] **PRs, in order** (all branches are pushed; none opened yet). Merge
-        **firmware first**, then pr-rebuild-docs (use *Create a merge commit*:
-        secrets and notifications contain its commits), agent-security,
-        secrets, notifications, schedules. Do not build REDRUM or LittleNix
-        before the firmware PR is merged
-  - [ ] **REDRUM** (`docs/firmware.md` 6.9, after the firmware PR merges):
-        re-clone `~/.nixos`, place the firmware, run the importer, switch; give
-        the `t3code` user its own fine-grained token and re-clone
-        `/var/lib/t3code/nixos` if it exists
-  - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
-    - [ ] agent-security (agent work done on the branch): after its PR merges and
-          both hosts switch, the post-switch checks and the 24-step smoke test in
-          `docs/agents/security.md` ("After the switch", Accept edits and Full access)
-    - [ ] notifications: choose ntfy.sh or
-          self-hosted, create the topic file, then run test 6.2 after the switch
-    - [ ] schedules: approve the two schedule prompts (`docs/schedules/upstream-check.md`,
-          `build-flags.md`) and update the two existing tasks; decide the old
-          "Build Flags" task (it still edits the checkout); REDRUM bootstrap via
-          `unswitched-changes.md`; after the workflow PR merges, switch each
-          machine so the unswitched check works; the `gh` Issues permission
-          decision above (`docs/schedules/README.md`, "GitHub permissions")
-    - [ ] secrets: findings are final (GO from its side); optional Claude
-          re-login; on a `machine.nix` conflict with LearnHarness keep both lines
-  - [ ] After going public: delete `~/.nixos.pre-rewrite`, `~/nixos-archive-private`
-        only when no longer needed (keep `~/private-backup`); optionally archive
-        `nixos-archive` on GitHub; token expiry reminder (tokens made 2026-11-03,
-        30-90 days)
+          they are (the "Hostnames" sub-item of "Secrets: finish before the new
+          repo goes public" below)
+    - [ ] Decide the `gh` token scope for the schedules: add *Issues: read and
+          write* on `cqjro/nixos` to the GOD-KILLER token (recommended, editable
+          in place), or use PR comments (`docs/schedules/README.md`, "GitHub
+          permissions"). Six labels already exist in the repo from a test run;
+          delete them if unwanted
+    - [ ] Then change visibility to Public (cannot be undone). The GitHub email
+          settings are done
+  - [ ] **Switch both hosts, only after reading `docs/agents/security.md`:**
+        `cd ~/.nixos && ./rebuild.sh switch GOD-KILLER -m "..."`, then REDRUM
+        (`dry` first, human-only). This installs the managed Claude policy
+        (`allowManagedHooksOnly`), the secret-guard and notification hooks and the
+        noreply git identity. Then the post-switch checks and the 24-step smoke
+        test in `docs/agents/security.md` (Accept edits and Full access)
+  - [ ] **REDRUM** (`docs/firmware.md` 6.9): re-clone `~/.nixos`, place the
+        firmware, run the importer, switch; give the `t3code` user its own
+        fine-grained token and re-clone `/var/lib/t3code/nixos` if it exists.
+        On GOD-KILLER also `chmod 750 /var/lib/firmware-src /var/lib/firmware-src/REDRUM`
+  - [ ] **notifications:** choose ntfy.sh or self-hosted, create the topic file
+        (`request_secret`, never chat), subscribe the phone app, then test 6.2
+  - [ ] **schedules:** approve the two prompts (`docs/schedules/upstream-check.md`,
+        `build-flags.md`) and update the two existing scheduled tasks; decide the
+        old "Build Flags" task (it still edits the checkout); REDRUM bootstrap via
+        `unswitched-changes.md`
+  - [ ] Optional: Claude re-login (secrets 4.4); add `Read(~/.config/agent-notify/**)`
+        to the deny list in `claude-code.nix`
+  - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
+        `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
+        optionally archive `nixos-archive` on GitHub; token expiry reminder
+        (tokens made 2026-11-03, 30-90 days); trim `docs/firmware.md` section 6
+        to a short history note
   - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
         stay in the private archive repo; extract them only if you want to
         build or reinstall it
