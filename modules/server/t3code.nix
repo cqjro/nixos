@@ -31,6 +31,10 @@ in
 			group = appUser;
 			home = workDir;
 			createHome = true;
+			# read every unit's journal for troubleshooting (`systemctl status`
+			# already works for any user over D-Bus). Read-only: no polkit rights,
+			# no sudo, and /home/cairo stays out of reach (0700).
+			extraGroups = [ "systemd-journal" ];
 		};
 		users.groups.${appUser} = {};
 
@@ -47,7 +51,9 @@ in
 			description = "T3 Code server";
 			after = [ "network.target" ];
 			wantedBy = [ "multi-user.target" ];
-			path = [ claude-code pkgs.gh pkgs.git pkgs.bashInteractive config.nix.package ];
+			# bubblewrap + socat: Claude Code's sandbox (the managed policy sets
+			# failIfUnavailable, so `claude` refuses to start without them)
+			path = [ claude-code pkgs.gh pkgs.git pkgs.bashInteractive config.nix.package pkgs.bubblewrap pkgs.socat ];
 
 			serviceConfig = {
 				Type = "simple";
@@ -64,9 +70,15 @@ in
 					# gh as git's credential helper for this service only (same idea as
 					# modules/home-manager/ai-tools/github-cli.nix, without touching
 					# cairo's git config): HTTPS pushes with the token from `gh auth login`
-					"GIT_CONFIG_COUNT=1"
+					"GIT_CONFIG_COUNT=3"
 					"GIT_CONFIG_KEY_0=credential.https://github.com.helper"
 					"GIT_CONFIG_VALUE_0=!${pkgs.gh}/bin/gh auth git-credential"
+					# commit identity (same as cairo's on GOD-KILLER); env, not a
+					# config file, so it also reaches the agent's sandboxed git
+					"GIT_CONFIG_KEY_1=user.name"
+					"GIT_CONFIG_VALUE_1=cqjro"
+					"GIT_CONFIG_KEY_2=user.email"
+					"GIT_CONFIG_VALUE_2=108373187+cqjro@users.noreply.github.com"
 				];
 				ExecStart = "${t3code}/bin/t3 serve --host 127.0.0.1 --port ${toString port}";
 				Restart = "on-failure";
@@ -74,59 +86,11 @@ in
 			};
 		};
 
-		# Managed Claude Code policy for the agent running as t3code (the
-		# home-manager policy in ai-tools/claude-code.nix only reaches cairo on
-		# GOD-KILLER). Linux reads /etc/claude-code/managed-settings.json for every
-		# user. Shorter than the desktop list: this user has no sudo, so the point is
-		# keeping the gh token unreadable and gating anything that leaves the box.
-		environment.etc."claude-code/managed-settings.json".text = builtins.toJSON {
-			permissions = {
-				# meant to fall back to asking instead of bypassing (T3's Full access).
-				# Unverified at the managed level; at the user level it did NOT hold
-				# (AGENTS.md "Consent model") — keep REDRUM threads on Supervised.
-				disableBypassPermissionsMode = "disable";
-				blockReadsOutsideWorkingDirectories = true;
-
-				allow = [
-					"Bash(systemctl status *)"
-					"Bash(systemctl is-active *)"
-					"Bash(systemctl cat *)"
-					"Bash(gh issue view *)"
-					"Bash(gh issue list *)"
-					"Bash(gh pr view *)"
-					"Bash(gh pr list *)"
-					"Bash(gh pr checks *)"
-					"Bash(gh repo view *)"
-				];
-
-				ask = [
-					"Bash(sudo *)"
-					"Bash(git commit *)"
-					"Bash(git push *)"
-					"Bash(gh pr merge *)"
-					"Bash(gh pr create *)"
-					"Bash(gh api *)"
-				];
-
-				deny = [
-					# the gh token and Claude login sit in ${workDir}; never print them
-					"Bash(gh auth token*)"
-					"Bash(gh auth status *)"
-					"Bash(gh auth refresh*)"
-					"Bash(gh auth login*)"
-					"Bash(gh auth logout*)"
-					"Bash(gh auth switch*)"
-					"Bash(git credential*)"
-					"Bash(*hosts.yml*)"
-					"Read(~/.config/gh/**)"
-					"Read(~/.claude/.credentials.json)"
-					"Read(//var/lib/**/*.env)"
-					"Read(//var/lib/cloudflared/**)"
-					"Read(//**/.env)"
-					"Read(//etc/ssh/ssh_host_*)"
-				];
-			};
-		};
+		# The agent's Claude Code policy is the shared managed policy
+		# (`claude-code-policy`, modules/home-manager/ai-tools/claude-code.nix,
+		# added to REDRUM in modules/hosts/host.nix): the same rules as the
+		# desktop, read by every user from /etc/claude-code. `~/` in its rules is
+		# ${workDir} for this user, so the gh token and Claude login stay denied.
 
 		# Reached over the tailnet only (no Cloudflare tunnel): Tailscale Serve
 		# publishes the loopback server on https://<magicdns-name>/ . `tailscale

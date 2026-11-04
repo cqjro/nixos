@@ -12,7 +12,7 @@
 			# flake/Nix expression, so the launcher is pinned as an AppImage.
 			# Switch to `pkgs.xodus-nexus` (or a flake input) when either is
 			# available. Tracked in the "Pending upstream fixes" registry
-			# (AGENTS.md row 8 / README).
+			# (docs/agents/upstream-registry.md row 6 / README).
 			version = "0.3.11";
 			src = pkgs.fetchurl {
 				url = "https://github.com/domsvoboda/xodus-nexus/releases/download/v${version}/Xodus-Nexus-${version}-x86_64.AppImage";

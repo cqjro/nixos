@@ -14,7 +14,7 @@
 # Same length, QDT-Slicer/QDT-Language markers preserved.
 #
 # Upstream: QIDITECH/QIDIStudio#244
-# Registry: AGENTS.md "Pending upstream fixes" row 5 (mirrored in README.md).
+# Registry: docs/agents/upstream-registry.md row 3 (mirrored in README.md).
 import sys
 
 OLD = (b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "

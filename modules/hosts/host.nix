@@ -37,6 +37,11 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.doodads
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.keyring
+				inputs.self.modules.nixos.claude-code-policy
+				inputs.self.modules.nixos."secret-guard"
+				inputs.self.modules.nixos."agent-notifications"
+				{ agent-notifications.desktop = true; }
+				inputs.self.modules.nixos.config-revision
 				inputs.self.modules.nixos."GOD-KILLER"
 				inputs.self.modules.nixos."GOD-KILLER-hardware"
 				inputs.self.modules.nixos."GOD-KILLER-monitors"
@@ -73,6 +78,7 @@ inputs.self.modules.nixos.games
 			inputs.self.modules.nixos.manifest
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.noctalia-greeter
+				inputs.self.modules.nixos.config-revision
 				inputs.self.modules.nixos."LittleNix"
 				inputs.self.modules.nixos."LittleNix-hardware"
 				inputs.self.modules.nixos."LittleNix-monitors"
@@ -96,6 +102,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos.config-revision
 				inputs.self.modules.nixos."REDRUM"
 				inputs.self.modules.nixos."REDRUM-hardware"
 				inputs.self.modules.nixos.tailscale
@@ -119,6 +126,9 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.miniflux
 				inputs.self.modules.nixos.reactflux
 				inputs.self.modules.nixos.t3code
+				inputs.self.modules.nixos.claude-code-policy
+				inputs.self.modules.nixos."secret-guard"
+				inputs.self.modules.nixos."agent-notifications"
 				inputs.self.modules.nixos.youtube
 				inputs.self.modules.nixos.stylix
 				inputs.stylix.nixosModules.stylix

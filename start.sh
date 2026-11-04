@@ -92,13 +92,14 @@ add_ssh_key() {
 	fi
 }
 
-# The GitHub connection test and the stash/pull/stash-pop config sync moved to
-# modules/scripts/config-sync.sh so they can also be run manually via the
-# `config-sync` zsh alias (start.sh just delegates to it).
+# start.sh no longer pulls the config on login: git is managed through T3
+# threads and PRs, and `./rebuild.sh switch` fast-forwards master itself. The
+# old sync is still available by hand as the `config-sync` zsh alias
+# (modules/scripts/config-sync.sh).
 
 # Main execution
 main() {
-    log "Starting SSH and NixOS configuration sync..."
+    log "Starting SSH agent setup..."
     
     # Wait a moment for the desktop environment to fully load
     sleep 2
@@ -120,19 +121,10 @@ main() {
     
     # Add SSH key to agent (this will show GUI prompt if needed)
     if add_ssh_key; then
-        # Sync NixOS configuration (GitHub test + stash/pull/stash-pop,
-        # defined in modules/scripts/config-sync.sh)
-        if "$NIXOS_CONFIG_DIR/modules/scripts/config-sync.sh"; then
-            log "Startup script completed successfully!"
-            notify "SSH and NixOS sync completed successfully"
-						exit 0
-        else
-            error "Config sync failed"
-            notify "Warning: Config sync failed - check logs"
-						exit 1
-        fi
+        log "Startup script completed successfully!"
+        exit 0
     else
-        error "Failed to add SSH key, skipping configuration sync"
+        error "Failed to add SSH key"
         notify "Error: Failed to load SSH key"
         exit 1
     fi
