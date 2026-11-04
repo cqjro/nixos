@@ -381,26 +381,36 @@ you record which steps prompted.**
 | 3 | `ls ~/.cache` | sandboxed; empty or `No such file` (home hidden) | same |
 | 4 | `cat ~/.ssh/known_hosts` | blocked by the guard, no prompt | same |
 | 5 | Read tool on `~/.config/gh/hosts.yml` | denied, no prompt | same |
-| 6 | `git commit --allow-empty -m "smoke test"` on the thread's branch, then `git reset --soft HEAD~1` | commit runs with no prompt. The reset is sandboxed and runs | same |
+| 6 | `git commit --allow-empty -m "smoke test"` on the thread's branch (run it in a worktree thread, not on `master` in `~/.nixos`), then `git reset --soft HEAD~1` | commit runs with no prompt. The reset is sandboxed and runs | same |
 | 7 | `nix eval --impure --raw .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath` | no prompt (excluded + allowed) | runs |
 | 8 | `nixos-rebuild build --flake .#GOD-KILLER --impure` | no prompt | runs |
 | 9 | `systemctl is-active nix-daemon` and `journalctl -u nix-daemon -n 1 --no-pager` | no prompt, `active` | runs |
-| 10 | `gh pr list --limit 1` | no prompt | runs |
+| 10 | `gh pr list --state all --limit 1` (a plain command: chained, piped or with `; echo $?` it is not excluded, runs in the sandbox and fails with "run gh auth login") | no prompt; lists a PR | runs |
 | 11 | `curl -s -o /dev/null -w '%{http_code}' https://example.com` | refused by sandbox network (`000`), no prompt | same |
 | 12 | `nix run nixpkgs#hello` | fails in sandbox (`cannot create Unix domain socket`) | same |
 | 13 | `git push --dry-run origin <branch>` | **prompt** (approve: dry run) | **blocked** by the guard |
-| 14 | `sudo -n true` | **prompt** (deny it) | **blocked** by the guard |
+| 14 | `sudo -n true` | **prompt** (deny it; approving fails safely with "no new privileges") | **blocked** by the guard |
 | 15 | `git push --force --dry-run origin <branch>` | blocked by the guard | blocked |
 | 16 | Edit tool: append a comment to `~/.zshrc` | denied | denied |
-| 17 | Write tool: `.claude/settings.json` in the worktree | denied | denied |
+| 17 | Write tool: `.claude/settings.json` in the worktree | denied, or stopped by the `claude-guard` hook ("human-only") | same |
 | 18 | `echo '{}' > .mcp.json` | blocked by the guard | blocked |
 | 19 | mcp-nixos `nix` (`{"action":"channels"}`) | no prompt | runs |
-| 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (empty); `cat` blocked by the guard | same |
+| 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (empty); `cat` blocked by the guard or the secret-guard hook | same |
 | 21 | `./rebuild.sh check GOD-KILLER` and `./rebuild.sh generations` | no prompt | runs |
-| 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it) | **blocked** by the guard |
+| 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it; approving runs a harmless dry-activate and shows the GUI sudo password prompt) | **blocked** by the guard |
 | 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (REDRUM, or GOD-KILLER if it has the import) | `0` (store copies hidden), no prompt | same |
 | 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
 
+In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
+rule …)": with no card to approve, that counts as blocked.
+
+In a sandboxed worktree, `git status` lists `/dev/null` placeholder files
+(`.zshrc`, `.mcp.json`, `.claude/settings.json`, …) and `.git/config.lock`
+exists as a placeholder, so `git checkout -b` fails on writing the upstream
+setting: use `--no-track`, and stage by path instead of `git add --all`. The
+placeholders exist only in the sandbox view.
+
 Record the date, Claude Code version (`claude --version`) and T3 version with
-each run. If a step disagrees, update this table and the policy in the same
+each run. Last full run: 2026-11-04, Claude Code 2.1.308, Accept edits and
+Full access, all 24 steps as above (T3 version not recorded). If a step disagrees, update this table and the policy in the same
 change.
