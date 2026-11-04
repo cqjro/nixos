@@ -85,8 +85,8 @@ in
 			# World-readable on purpose (not a secret; no home-dir 0700 problem for
 			# the t3code user), writable by the human who places the files.
 			systemd.tmpfiles.rules = [
-				"d /var/lib/firmware-src 0755 cairo users -"
-				"d /var/lib/firmware-src/${host} 0755 cairo users -"
+				"d /var/lib/firmware-src 0750 cairo users -"
+				"d /var/lib/firmware-src/${host} 0750 cairo users -"
 			];
 		};
 	};

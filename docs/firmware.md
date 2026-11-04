@@ -133,7 +133,7 @@ its store once (a one-line import), pinned with a GC root so it survives
   It wraps `pkgs.requireFile { name = "brcm-firmware"; hashMode = "recursive"; }`
   in a `runCommand` that copies into `lib/firmware/brcm` and sets
   `allowSubstitutes = false` so no cache is ever asked for it. It also creates
-  `/var/lib/firmware-src[/<host>]` (0755, `cairo:users`). The same file exports
+  `/var/lib/firmware-src[/<host>]` (0750, `cairo:users`, so the `t3code` agent user cannot list them; the store copy that builds use is world-readable). The same file exports
   `packages.x86_64-linux.t2-firmware-import`.
 - `modules/scripts/t2-firmware-import.sh` (the `t2-firmware-import` command):
   `nix run .#t2-firmware-import -- HOST [DIR]` hashes `DIR`, adds it to the store
@@ -793,6 +793,55 @@ merges it) lands**, because that branch moves the registry from `AGENTS.md` to
    points at `TODO.md`.
 3. Delete the "LearnHarness registry row" item from `TODO.md` in that same change
    (remove, do not check off).
+
+### 6.9 REDRUM after the move
+
+Run as `cairo` on REDRUM (over SSH) **after the firmware PR is merged**. Until
+then REDRUM keeps running its current generation; just do not `switch` it. The
+old clone has no remote that matches the new history, so `config-sync` and
+`./rebuild.sh switch` on it fail rather than do damage.
+
+1. **Replace the clone, keeping the old one** (it holds the firmware and any
+   ignored runtime files):
+   ```bash
+   cd ~ && mv .nixos .nixos.pre-rewrite
+   git clone git@github.com:cqjro/nixos.git ~/.nixos
+   git -C ~/.nixos log --oneline -1
+   ```
+   The clone uses the SSH key REDRUM already has (README "Installation"). The
+   last line should be the merged firmware commit or later.
+2. **Put the firmware where the module looks** (copy, from the old clone), then
+   check the pinned hash:
+   ```bash
+   sudo install -d -o cairo -g users /var/lib/firmware-src /var/lib/firmware-src/REDRUM
+   cp -a ~/.nixos.pre-rewrite/modules/hosts/REDRUM/firmware/brcm /var/lib/firmware-src/REDRUM/
+   cd ~/.nixos && nix run .#t2-firmware-import -- REDRUM
+   ```
+   Expect `OK: matches the hash pinned for REDRUM`. Alternative from GOD-KILLER:
+   `rsync -a /var/lib/firmware-src/REDRUM/brcm/ redrum:/var/lib/firmware-src/REDRUM/brcm/`.
+3. **Carry over ignored runtime files, never firmware:** list what the old clone
+   had with `git -C ~/.nixos.pre-rewrite status --ignored --short`; the YouTube
+   JSON files normally live in `/var/lib/nixos-config/modules/server/youtube/`
+   (outside the clone) and need nothing.
+4. **Switch** (you, with the sudo prompt): `./rebuild.sh switch REDRUM -m "<message>"`.
+5. **The `t3code` user gets its own token** (agents on REDRUM have their own
+   login, stored in `/var/lib/t3code`). On github.com create a fine-grained
+   token for **only `cqjro/nixos`** with Contents and Pull requests read and
+   write (plus Issues if you chose that for GOD-KILLER), 30-90 days. Then:
+   ```bash
+   sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token; unset T'
+   sudo -u t3code -H gh repo view cqjro/nixos --json name --jq .name
+   ```
+   Expect `nixos`. If a clone for T3 exists at `/var/lib/t3code/nixos`:
+   `sudo -u t3code -H sh -c 'cd /var/lib/t3code && mv nixos nixos.pre-rewrite && git clone https://github.com/cqjro/nixos.git nixos'`.
+6. **Check** that the `t3code` user cannot read the firmware staging directory
+   (agent-security check 7): `sudo -u t3code -H ls /var/lib/firmware-src`
+   should fail with "Permission denied".
+7. **Clean up** after a successful switch: `rm -rf ~/.nixos.pre-rewrite`. The
+   firmware now lives in `/var/lib/firmware-src` and the store.
+
+LittleNix stays parked ("LittleNix (parked)" above); re-clone it the same way if
+you ever use it.
 
 ## 7. Handoffs to other threads
 
