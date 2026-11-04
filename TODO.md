@@ -169,17 +169,6 @@ repeated as proposals.
     evaluate ActivityWatch first (least code), fall back to a custom
     Hyprland→SQLite poller if its Wayland support is poor.
 
-- [ ] **Secrets audit** — do a configuration audit for better implementing
-      secrets (e.g. replace hand-written files under `/var/lib` and gitignored
-      tokens with something declarative like sops-nix or age) — **7/10**
-  - *Proposed approach:* migrate incrementally, not in one sweep. Add either
-    `sops-nix` or `agenix` as a flake input (neither exists today), create a
-    host key, and start with the highest-value single secret (e.g. the
-    Cloudflare tunnel creds / miniflux `admin.env`); document the pattern in the
-    server-module recipe, then convert the remaining `/var/lib` secrets one
-    module at a time, verifying each host rebuilds. Age-based (agenix) fits the
-    current "one file per host" style more cleanly than committing sops blobs.
-
 - [ ] **Theme update** — revise the window shadows, specifically how focused
       vs unfocused windows are treated, and make that look better — **3/10**
       (shadows are a small block at `hyprland.nix:167-173`; iterate on
@@ -312,4 +301,58 @@ repeated as proposals.
   - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
         show up in one client
 
-
+- [ ] **Secrets: finish before the new repo goes public** — the steps left from
+      the secrets audit (`docs/secrets.md` section 4 and the private audit); do them before
+      `cqjro/nixos` is made public (`docs/firmware.md` 6.5) — **4/10**
+  - [ ] REDRUM's `t3code` user needs its own fine-grained token (limited to
+        `cqjro/nixos`, Contents + Pull requests) when REDRUM is re-cloned:
+        `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
+        (`docs/secrets.md` 4.1; GOD-KILLER's broad login is already replaced and
+        revoked). The Claude re-login (4.4) is optional
+  - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
+        are locally managed (`hostname → port` ingress rules), and they are
+        **not** in certificate logs today (only the wildcard is), so a public repo
+        would be their first publication. Recommended: keep them and add
+        Cloudflare Access (steps below). Alternative if the names must stay
+        private: placeholders in the repo plus a local override (`--impure`), or
+        Cloudflare-managed tunnels. Decide, then act (`docs/secrets.md`, "Open
+        decision: service hostnames")
+    - [ ] Put Cloudflare Access (Zero Trust, free tier) in front of the
+          browser-only apps, **before** the repo goes public: Cloudflare
+          dashboard → Zero Trust → Access → Applications → Add an application →
+          Self-hosted → hostname (`home.cqjro.ca` Glance, `status.cqjro.ca`
+          Beszel, then Homepage) → Allow policy for your email, one-time PIN.
+          Check each in a private browser window: it must ask for the PIN
+          first
+    - [ ] Apps with mobile or API clients (Miniflux + ReactFlux, Linkwarden,
+          Actual) need a bypass rule or service token for those clients, so
+          leave them on their own logins; `docs` (and possibly `budget`) are covered by the
+          Tailscale item below
+  - [ ] Decide what to do with the security-posture docs (`AGENTS.md`,
+        `docs/agents/t3-claude.md` also say where credentials live). Tool-standard
+        paths (`~/.ssh`, `~/.config/gh`) are public knowledge and the `/var/lib`
+        paths are already in the modules, so the split above is the main fix
+  - [ ] **Move `docs.cqjro.ca` (and possibly `budget.cqjro.ca`) off the
+        internet onto Tailscale** — Paperless (`modules/server/paperless.nix`) and
+        Actual Budget (`modules/server/actual-budget.nix`, with the ABT sidecar in
+        `actual-budget-tweaks.nix`) are reachable from the internet through
+        Cloudflare tunnels; make them tailnet-only — **4/10**
+    - [ ] Publish each over Tailscale Serve from a root oneshot, like
+          `t3code-tailscale-serve` in `modules/server/t3code.nix` (agents must not
+          run `tailscale serve`/`set` themselves). Port 443 is taken by T3 Code, so
+          give each app its own `--https=<port>`; budget goes through the sidecar
+          (`127.0.0.1:8086`), not Actual's `5006`
+    - [ ] Remove the cloudflared ingress block and the `<uuid>.cfargotunnel.com`
+          CNAME for each app, then delete the now-unused tunnel and its
+          credentials file; update the README tunnel/DNS tables, the Homepage and
+          Glance links, and the hostname table
+    - [ ] Decide `budget` separately: Actual's desktop/mobile sync clients and
+          Paperless's mobile app then need Tailscale on every device that syncs;
+          the browser UI still works from any tailnet device
+    - [ ] Check the HTTPS-certificate trade-off: Tailscale HTTPS certificates are
+          publicly logged, which would reveal the machine and tailnet name
+          (Tailscale's docs; not rechecked here). Plain `http` over the tailnet
+          avoids that (`tailscale serve --http=<port>`); never use Funnel, which
+          is the internet-facing variant
+    - [ ] Verify from a device off the tailnet that both hostnames no longer
+          answer, and on-tailnet that they do

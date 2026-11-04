@@ -21,10 +21,12 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    a `DynamicUser` service, pin it with
    `systemd.services.<svc>.serviceConfig = { DynamicUser = lib.mkForce false; User = "<app>"; Group = "<app>"; };`.
 
-3. **Keep secrets off the Nix store**: write them once by hand under
-   `/var/lib/<app>/` on REDRUM (e.g. miniflux `admin.env`), reference them via
-   paths / `EnvironmentFile` in the module, and document the exact create
-   commands in the README's "Create app secrets" step.
+3. **Keep secrets off the Nix store**: reference a runtime path, never a value.
+   Write the value once by hand under `/var/lib/<app>/` (e.g. miniflux `admin.env`)
+   and point `EnvironmentFile`/`credentialsFile` at it (`docs/agents/secrets.md`;
+   sops-nix is archived, see `modules/_archive/secrets.nix`); document its create
+   commands in the README's "Create app secrets" step, and never put the password
+   on a shell command line.
 
 4. **Add the tunnel block**:
    `services.cloudflared.tunnels."<uuid>" = { credentialsFile = "/var/lib/cloudflared/<app>.json"; default = "http_status:404"; ingress = { "<host>.cqjro.ca" = "http://localhost:<port>"; }; };`
