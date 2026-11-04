@@ -8,10 +8,9 @@
 		let
 			# TODO-remove: LearnHarness is not in nixpkgs and upstream ships no
 			# flake/Nix expression, so the app is pinned as an AppImage. Switch to
-			# `pkgs.learnharness` (or a flake input) when either is available. Its
-			# "Pending upstream fixes" registry row is still to be added (it waits
-			# on the docs refactor that moves the registry to
-			# docs/agents/upstream-registry.md; see TODO.md).
+			# `pkgs.learnharness` (or a flake input) when either is available.
+			# Tracked in the "Pending upstream fixes" registry
+			# (docs/agents/upstream-registry.md row 8 / README).
 			version = "0.4.1";
 			src = pkgs.fetchurl {
 				url = "https://github.com/amosblomqvist/learnharness/releases/download/v${version}/LearnHarness-${version}-x86_64.AppImage";

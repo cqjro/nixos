@@ -17,7 +17,7 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 - [Pending upstream fixes](#pending-upstream-fixes)
 - [Scripts](#scripts)
 - [Installation](#installation)
-- [Rebuilding](#rebuilding)
+- [Change workflow](#change-workflow)
 
 ## Machines
 
@@ -48,9 +48,13 @@ the desktop client rejects the pinned nixpkgs' older 0.0.33 server).
 
 ```
 flake.nix              # Flake inputs (flake-parts + import-tree scaffolding)
-rebuild.sh             # Interactive rebuild: selects a host, diffs, commits, pushes
-start.sh               # Startup script run by Hyprland: loads SSH agent, syncs config
+rebuild.sh             # Staged rebuild (check/eval/build/test/switch/push/generations) + interactive flow
+AGENTS.md              # Shared agent guidance (CLAUDE.md imports it for Claude Code)
+.claude/               # Reviewer subagents and workflow skills (start-todo, ship-pr, merge-pr)
+.github/               # Pull request template
+start.sh               # Startup script run by Hyprland: loads the SSH agent (no config pull)
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
+docs/agents/           # On-demand agent reference: workflow, review tiers, recipes, registry, gotchas
 docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
 
 modules/
@@ -278,11 +282,18 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
-- **Rebuilds** — agents run `./rebuild.sh build HOST` freely (silent on success
-  without a terminal; the log is `.log/nixos-build.log`); the switch needs
-  your approval in T3 *and* your password in a GUI dialog. Remote hosts (REDRUM)
-  are built by the agent but switched by you in a terminal. `switch` commits
-  only when there are changes and never pushes.
+- **Rebuilds** — agents run `./rebuild.sh check|eval|build HOST` freely (silent
+  on success without a terminal; the log is `.log/nixos-build.log`).
+  `test`/`dry`/`switch` need your approval in T3 *and* your password in a GUI
+  dialog. Remote hosts (REDRUM) are built by the agent but activated by you in
+  a terminal. See [Change workflow](#change-workflow).
+- **Agent docs** — `AGENTS.md` is the shared guide for any agent; `CLAUDE.md`
+  imports it (`@AGENTS.md`) and adds Claude-only notes; long reference material
+  is in `docs/agents/` and is read on demand, keeping per-thread context small.
+- **Reviewers and skills** (`.claude/`) — read-only reviewer subagents
+  (`nix-reviewer` on Haiku, `lockout-reviewer` on Sonnet for network/SSH/boot
+  changes, `deep-reviewer` on Opus as an escalation) and the `start-todo`,
+  `ship-pr` and `merge-pr` skills that drive the PR workflow.
 - **Pushing** (`github-cli.nix`) — `gh` is git's credential helper over HTTPS,
   so an approved `git push` works from an agent thread without an SSH agent or
   access to `~/.ssh`. The `origin` remote must be
@@ -319,8 +330,9 @@ Proton-based runtime (no Windows install).
 Workarounds currently in the tree because of bugs or gaps **upstream**. Each
 entry is a deliberate, temporary reduction in scope — re-check it whenever a
 rebuild conversation starts, and drop the workaround once the upstream fix
-lands. Keep this list in sync with the "Pending upstream fixes" section of
-`AGENTS.md`, and add a row here in the same commit that introduces a new
+lands. Keep this list in sync with the agent copy in
+`docs/agents/upstream-registry.md` (`./rebuild.sh check` compares the row
+numbers), and add a row here in the same commit that introduces a new
 workaround.
 
 | # | Workaround | Where | Blocked on | Re-enable when |
@@ -332,23 +344,36 @@ workaround.
 | 5 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
 | 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 | 7 | `mcp-nixos` taken from its upstream flake (`inputs.mcp-nixos`, no `follows`) instead of `pkgs.mcp-nixos` | `flake.nix` (input), `modules/home-manager/ai-tools/mcp-servers.nix` (`# TODO-remove:`) | nixpkgs (rev `3ec6363`, observed 2026-10-30): `python3Packages.fastmcp-slim` 3.4.7 does `from mcp.shared.exceptions import McpError`, but `python3Packages.mcp` 2.2.0 renamed it to `MCPError`, so fastmcp-slim fails its `installCheckPhase` and `pkgs.mcp-nixos` 3.0.1 cannot build (skipping the check would still crash at import). The upstream flake builds because it ships its own nixpkgs (fastmcp 4.0.2). Not yet reported upstream | `nix build nixpkgs#mcp-nixos` succeeds on nixos-unstable; then use `pkgs.mcp-nixos` and delete the flake input |
+| 8 | LearnHarness packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`, GOD-KILLER only) | `modules/home-manager/apps/learnharness.nix` (`# TODO-remove:`) | not in nixpkgs (search.nixos.org unstable has no `learnharness`, checked 2026-11-03), and `amosblomqvist/learnharness` ships no `flake.nix` or Nix expression. The AppImage cannot self-update from the store; bump `version` + `hash` in the module | `pkgs.learnharness` lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
 ## Scripts
 
 - `rebuild.sh` — the daily-driver workflow. Streams the rebuild live with
-  syntax highlighting (`bat`), shows only the errors on failure (log kept at
-  `.log/nixos-switch.log`), rebuilds locally or remotely
-  (`--target-host --elevate sudo`), commits with generation metadata, and
-  pushes to `origin/master`. With no arguments it is interactive; the same
-  steps are also available as non-interactive stages so an AI agent can drive
-  them (see [AI agents](#ai-agents)): `rebuild.sh build HOST` (unprivileged
-  build + closure diff), `rebuild.sh switch HOST -m "msg" [--target USER@IP]`
-  (switch + commit; asks for the sudo password in a GUI dialog when there is no
-  terminal) and `rebuild.sh push`.
+  syntax highlighting (`bat`), shows only the errors on failure (logs kept in
+  `.log/nixos-<action>.log`), and rebuilds locally or remotely
+  (`--target-host --elevate sudo`). It works on whichever checkout it lives in
+  (a T3 worktree or `~/.nixos`). With no arguments it is interactive: pick a host,
+  review the diff, build, commit, then **switch** on `master` or **test** on any
+  other branch, and push the current branch. The same steps are
+  non-interactive stages so an AI agent can drive them (see
+  [Change workflow](#change-workflow)):
+
+  | Stage | Does | Privileges |
+  | --- | --- | --- |
+  | `check [HOST...]` | script syntax, tracked secrets/firmware, whitespace, registry sync, eval of each host | none |
+  | `eval HOST` | evaluate only (prints the drvPath) | none |
+  | `build HOST` | build + closure diff against the running system | none |
+  | `test HOST [--target USER@IP]` | activate without a boot entry/generation | sudo (GUI askpass) |
+  | `dry HOST [--target USER@IP]` | dry-activate: what a switch would restart | sudo |
+  | `revert` | re-activate the recorded generation after a `test` | sudo |
+  | `switch HOST [-m MSG] [--target USER@IP]` | `master` only: fetch and fast-forward to `origin/master`, commit a dirty tree with MSG, then switch | sudo |
+  | `push` | push the current branch (never forced; `master` only from a terminal) | git credentials |
+  | `generations [--target USER@IP]` | each generation with the commit/PR it was built from | none |
 - `start.sh` — run from Hyprland on login: sets up the SSH agent with a GUI
-  passphrase prompt and pulls the latest config, delegating the sync itself to
-  `config-sync.sh` (see [How start.sh works](#how-startsh-works) below).
-- `modules/scripts/config-sync.sh` — the config sync on its own: verifies GitHub
+  passphrase prompt. It no longer pulls the config: git is managed through T3
+  threads and PRs, and `./rebuild.sh switch` fast-forwards `master` itself
+  (see [How start.sh works](#how-startsh-works) below).
+- `modules/scripts/config-sync.sh` — a manual, rarely needed config pull: verifies GitHub
   SSH auth and does the stash/pull/stash-pop against `~/.nixos`. Available from
   any terminal as the `config-sync` zsh alias (`bash
   ${../../scripts/config-sync.sh}`), so it works outside of login — e.g. midway
@@ -366,7 +391,7 @@ workaround.
 
 ### How `start.sh` works
 
-`start.sh` re-syncs the NixOS config from GitHub every time you log in, without
+`start.sh` loads your SSH key into an agent every time you log in, without
 blocking the desktop. Hyprland launches it on session start
 (`hl.exec_cmd("bash $HOME/.nixos/start.sh")` in the `hyprland.start` hook in
 `modules/home-manager/desktop/hyprland.nix`), and the final line
@@ -391,17 +416,18 @@ The flow:
    unrelated processes can reuse the same agent.
 6. **Load the key** — `ssh-add`s `~/.ssh/id_ed25519` through the GUI prompt
    (detached from any TTY with `setsid` so it never blocks on stdin).
-7. **Sync the config** — runs `modules/scripts/config-sync.sh`, which verifies
-   GitHub auth (`ssh -T git@github.com`, non-fatal) and then does the
-   stash/pull/stash-pop described below. Its own log lives at
-   `~/.nixos/.log/config-sync.log`.
+
+There is no config sync step any more. `~/.nixos` stays a clean `master` that
+only changes when you switch: `./rebuild.sh switch HOST` fetches and
+fast-forwards it first. Branch work happens in T3 worktrees and reaches
+`master` through merged PRs.
 
 ### `config-sync.sh` (the `config-sync` alias)
 
 The GitHub check and the stash/pull/pop logic live in
-`modules/scripts/config-sync.sh` so the sync can be re-run on demand — `start.sh`
-just executes it after loading the SSH key. Whenever you need to pull the latest
-config outside of a login:
+`modules/scripts/config-sync.sh`. Nothing runs it automatically any more, and
+you rarely need it: `./rebuild.sh switch` already fast-forwards `master`. It is
+kept for pulling `~/.nixos` by hand without switching:
 
 - **Anywhere in a terminal** — `config-sync` (zsh alias wired in
   `modules/home-manager/terminal/zsh.nix`, like `rebuild`).
@@ -488,32 +514,91 @@ To deploy an existing machine:
 git clone git@github.com:cqjro/nixos.git ~/.nixos
 cd ~/.nixos
 
-# 2. Rebuild any host from the repo (flake is self-contained, so this works
+# 2. T2 hosts only (REDRUM, LittleNix), before their first build on this machine:
+#    put the Apple brcm firmware in /var/lib/firmware-src/<HOST>/brcm (never in
+#    the repo) and import it into the Nix store; see docs/firmware.md
+nix run .#t2-firmware-import -- REDRUM
+
+# 3. Rebuild any host from the repo (flake is self-contained, so this works
 #    from any machine with Nix installed)
-sudo nixos-rebuild switch --flake ".#GOD-KILLER" --impure
+sudo nixos-rebuild switch --flake ".#GOD-KILLER"
 #     replace GOD-KILLER with LittleNix or REDRUM as appropriate
 ```
 
 For a fresh install from the live ISO, first bring up NixOS (installer →
-`nixos-generate-config` → boot), then:
+`nixos-generate-config` → boot), then (for a T2 host, import its firmware as in
+step 2 first):
 
 ```bash
 # Prefer the standalone installer for correct hardware/partition setup, or:
-nixos-install --flake ".#GOD-KILLER" --impure
+nixos-install --flake ".#GOD-KILLER"
 ```
 
 Notes:
 
-- `--impure` is required because the flake reads files from `~/.nixos` that
-  aren't declared as inputs (e.g. the REDRUM/littleNix `brcm-firmware` bundle).
+- All hosts evaluate without `--impure`: the T2 firmware is a hash-pinned store
+  path (`modules/system/t2-firmware.nix`), so clean clones and worktrees can
+  evaluate every host; only *building* a T2 host needs its firmware imported on
+  that machine. The firmware is proprietary — never commit, push or share it
+  (see `docs/firmware.md`).
 - Remote machines are configured for SSH keys over `git@github.com`, so
   `rebuild.sh` can deploy to any host and push the result back from anywhere.
-- Monitoring and applying per-host generation metadata
-  (`nixos-rebuild list-generations`) is built into `rebuild.sh`.
+- Every generation records the commit it was built from
+  (`system.configurationRevision` plus a `git-<sha>` boot-menu label, from
+  `modules/essentials/config-revision.nix`); `./rebuild.sh generations` lists
+  them with the commit subject. See [Change workflow](#change-workflow).
+
+## Change workflow
+
+GitHub (`cqjro/nixos`) is the hub between machines, and every change is a
+branch plus a PR. Only merged `master` becomes a recorded generation. The full
+agent procedure is in `docs/agents/workflow.md`.
+
+1. **Branch per item.** Each TODO item gets its own T3 thread in its own
+   worktree on `todo/<slug>`, branched from `origin/master` (the `start-todo`
+   skill sets this up and picks the model from the item's effort score). `~/.nixos`
+   stays on a clean `master`.
+2. **Verify.** The agent runs `./rebuild.sh check` and `./rebuild.sh build`
+   for the affected hosts:
+   - **GOD-KILLER** builds GOD-KILLER and REDRUM.
+   - **REDRUM** builds only itself, and only *evaluates* GOD-KILLER (`./rebuild.sh eval GOD-KILLER`).
+3. **Try it without recording it.** `./rebuild.sh test HOST` activates the
+   branch build but writes no boot entry or generation. `./rebuild.sh revert`
+   or a reboot undoes it. `./rebuild.sh dry HOST` only reports what would
+   restart, which is the safer choice for network/SSH changes on headless REDRUM.
+4. **Review.** Reviews are tiered, cheapest first:
+   1. Deterministic checks, which are free.
+   2. A Haiku convention reviewer.
+   3. A Sonnet lockout reviewer, only for network, SSH, boot or tunnel changes.
+   4. Opus, only as an escalation.
+
+   Results go in the PR description (`.github/pull_request_template.md`).
+5. **PR and merge.** When you ask, the agent pushes the branch and opens the PR
+   (`gh pr create`). The PR is linked to the T3 thread. When you say "merge
+   it", the agent runs `gh pr merge --squash --delete-branch`. Approving that
+   permission card in T3 *is* the approval, because GitHub won't let you
+   approve PRs made with your own token.
+6. **Switch.** On each affected host, run
+   `cd ~/.nixos && ./rebuild.sh switch HOST` (it fetches and fast-forwards master first). `switch`
+   refuses to run off `master`.
+7. **Trace a generation.** `./rebuild.sh generations` maps each generation to
+   its commit and PR number. Older generations show the message from their
+   old `HOST: <gen> … || message` commit.
+
+Every agent reply ends with a **Path to close**: one ordered list of the
+remaining steps, each tagged *Agent* or *You*, ending with the step that
+closes the thread, plus any work delegated to other threads. Once nothing is
+left but delegated work or waiting, the agent recommends settling (or snoozing)
+the thread instead.
+
+The post-switch "generation metadata" commit is gone. A commit now exists
+before the switch, and the generation records it, so `master` only receives
+reviewed merges or your own direct commits from the interactive flow.
 
 ## One-off tasks
 
-Run the interactive rebuild with test-then-switch and a full history:
+Run the interactive rebuild (build → commit → switch on `master`, or test on a
+branch → push):
 
 ```bash
 ./rebuild.sh
@@ -529,9 +614,11 @@ nix develop .#youtube-sync
 
 REDRUM exposes apps through **Cloudflare Tunnels** via `services.cloudflared` in
 `modules/server/*.nix`. Each app gets its own tunnel, credentials file and
-DNS record. The tunnel UUID + credentials are *not* in the repo; provision them
-once per app with the steps below, then fill the placeholder tunnel IDs and
-secret files on the server.
+DNS record. The tunnel UUIDs are in the modules: they are identifiers, not
+secrets. The tunnel *credentials* (`/var/lib/cloudflared/<app>.json`) are the
+secret and are never in the repo. For a new app, provision the tunnel with the
+steps below, commit its UUID in the module, and place the credentials file on
+the server.
 
 ### 1. One-time Cloudflare auth (per machine)
 
@@ -587,20 +674,28 @@ you manage in the dashboard (no `certificateFile` is used here).
 
 ### 5. Create app secrets (off the Nix store)
 
+Each secret is typed at a hidden prompt (`read -rs`, works in zsh and bash) and written with
+`install -m 600 -o <user>`, so it never lands in shell history, in `ps`, or in
+a world-readable file. `printf` is a shell builtin, so the value is not on any
+command line either.
+
 ```bash
 sudo mkdir -p /var/lib/paperless
-sudo sh -c 'echo "change-me-admin-password" > /var/lib/paperless/admin-password'
-sudo chown paperless:paperless /var/lib/paperless/admin-password
+printf 'Paperless admin password: '; read -rs P; echo
+printf '%s\n' "$P" | sudo install -m 600 -o paperless -g paperless /dev/stdin /var/lib/paperless/admin-password
+unset P
 
 sudo mkdir -p /var/lib/beszel
 # KEY + optional TOKEN come from Beszel → Add System dialog
-sudo sh -c 'printf "KEY=<public key>\nTOKEN=<universal token>\n" > /var/lib/beszel/agent.env'
-sudo chown beszel-agent:beszel-agent /var/lib/beszel/agent.env
+printf 'Beszel KEY: '; read -rs K; echo; printf 'Beszel TOKEN (optional): '; read -rs T; echo
+printf 'KEY=%s\nTOKEN=%s\n' "$K" "$T" | sudo install -m 600 -o beszel-agent -g beszel-agent /dev/stdin /var/lib/beszel/agent.env
+unset K T
 
 sudo mkdir -p /var/lib/miniflux
 # Miniflux first-run credentials (the module's adminCredentialsFile)
-sudo sh -c 'printf "ADMIN_USERNAME=admin\nADMIN_PASSWORD=<change-me>\n" > /var/lib/miniflux/admin.env'
-sudo chown miniflux:miniflux /var/lib/miniflux/admin.env
+printf 'Miniflux admin password: '; read -rs P; echo
+printf 'ADMIN_USERNAME=admin\nADMIN_PASSWORD=%s\n' "$P" | sudo install -m 600 -o miniflux -g miniflux /dev/stdin /var/lib/miniflux/admin.env
+unset P
 ```
 
 (Linkwarden additionally wants `/var/lib/linkwarden/nextauth-secret` and

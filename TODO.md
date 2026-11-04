@@ -43,10 +43,6 @@ repeated as proposals.
         the `t3code` user its own fine-grained token and re-clone
         `/var/lib/t3code/nixos` if it exists
   - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
-    - [ ] pr-rebuild-docs: merge `origin/master`, drop `--impure`, check/build
-          both hosts, tier 1 and 2 reviews; README default-password commands
-          (finding F4, required before public) with a hidden prompt; AGENTS.md
-          tunnel-UUID wording; LearnHarness registry row (`docs/firmware.md` 6.8)
     - [ ] agent-security: the 7 checks (`docs/firmware.md` 6.8), add the firmware
           filename patterns to the secret-guard denylist, settle how the
           secrets and notifications hooks get installed (`managed-settings.d`),
@@ -211,23 +207,6 @@ repeated as proposals.
     still in progress — and quit any other HID++ manager so the two don't fight
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
-
-- [ ] **LearnHarness registry row** — the app is installed
-      (`modules/home-manager/apps/learnharness.nix`, pinned AppImage, GOD-KILLER
-      only); only the "Pending upstream fixes" bookkeeping is left — **1/10**
-      (deferred so it lands against the post-refactor docs layout instead of
-      conflicting with the `workflow/*` branches)
-  - [ ] Once `workflow/pr-rebuild-docs` is merged, add the LearnHarness row to
-        `docs/agents/upstream-registry.md` **and** the README's "Pending upstream
-        fixes" table: workaround = pinned AppImage via `fetchurl` +
-        `appimageTools.wrapType2`; blocked on = not in nixpkgs, no upstream
-        flake/Nix expression; re-enable when = `pkgs.learnharness` or an
-        upstream flake exists (then drop the pin). Then make the module's
-        `# TODO-remove:` comment cite the row number
-  - [ ] Remove this item in that same change
-  - *Note:* bump `version`/`hash` in the module to update — the AppImage can't
-    self-update from the store. The provider API key is entered in-app (kept in
-    the keyring), never in the repo.
 
 ## Server (REDRUM)
 
