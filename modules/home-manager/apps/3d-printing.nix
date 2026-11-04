@@ -37,7 +37,7 @@
 			# it cannot run, rendering the pages blank. See
 			# QIDITECH/QIDIStudio#244.
 			# Both workarounds are tracked in the "Pending upstream fixes"
-			# registry (AGENTS.md rows 4 and 5 / README).
+			# registry (docs/agents/upstream-registry.md rows 2 and 3 / README).
 			appimageContents = pkgs.appimageTools.extract {
 				inherit (pkgs.qidi-studio) pname version src;
 				postExtract = ''

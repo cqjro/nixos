@@ -13,7 +13,7 @@
 #        inputs.nix-flatpak.nixosModules.nix-flatpak
 #   4. Add the fragment to the module list of each target host:
 #        inputs.self.modules.nixos."flatpak"
-#   5. Rebuild the host with ./rebuild.sh (or nixos-rebuild switch --flake ".#<HOST>" --impure).
+#   5. Rebuild the host with ./rebuild.sh (or nixos-rebuild switch --flake ".#<HOST>").
 { ... }:
 {
 	# configured using nix-flatpak

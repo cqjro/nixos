@@ -12,19 +12,10 @@
 			};
 		};
 
-		hardware.firmware = [
-			(pkgs.stdenvNoCC.mkDerivation (final: {
-				name = "brcm-firmware";
-				src = builtins.path {
-					path = /home/cairo/.nixos/modules/hosts/REDRUM/firmware/brcm;
-					name = "brcm-firmware";
-				};
-				installPhase = ''
-					mkdir -p $out/lib/firmware/brcm
-					cp ${final.src}/* "$out/lib/firmware/brcm"
-				'';
-			}))
-		];
+		# Apple Broadcom Wi-Fi/Bluetooth firmware: proprietary, extracted from macOS and
+		# NOT in git. Pinned by hash; place the files per docs/firmware.md.
+		imports = [ inputs.self.modules.nixos."t2-firmware" ];
+		t2-firmware.hash = "sha256-JZmV/AGsxtMeLcYKFjHQ/oUwZhcxk9AJu7q8FT+pwq8=";
 
 		# Home-Manager
 		home-manager = {

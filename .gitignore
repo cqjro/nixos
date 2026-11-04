@@ -3,7 +3,19 @@
 result
 result-*
 
+# Apple Broadcom Wi-Fi/Bluetooth firmware for T2 Macs: proprietary, extracted from
+# macOS, never commit. It lives outside the repo (/var/lib/firmware-src/<HOST>/brcm,
+# see docs/firmware.md); these patterns are a backstop for a stray copy, a firmware
+# tarball, or an importer GC-root symlink ending up in a checkout or worktree.
 firmware/
+brcm/
+firmware.tar*
+brcm-firmware.gcroot
+brcmfmac*
+brcmbt*
+*.clm_blob
+*.txcap_blob
+*.ptb
 
 client_secret.json
 token.json
