@@ -272,14 +272,18 @@ matches the rest of the config out of the box.
 (`modules/home-manager/ai-tools/t3code.nix`, themed from Stylix) driving Claude
 Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-tools/`:
 
-- **Permissions** (`claude-code.nix`) — `programs.claude-code` writes the policy
-  into `~/.claude/settings.json` (merged, so the file stays writable). Reads
-  outside the project prompt (like opencode's `external_directory`), secrets are
-  denied, and `sudo`, `rebuild.sh switch|push`, `git commit|push` and
-  `gh pr merge|create` always ask. T3's "Full access" mode **skips all of
-  these prompts** (`disableBypassPermissionsMode` neither stops it nor is
-  compatible with it — it made Full access threads fail, so it is not set), so
-  keep threads on Supervised.
+- **Permissions** (`claude-code.nix`, fragment `claude-code-policy`) — one
+  managed policy for GOD-KILLER and REDRUM in
+  `/etc/claude-code/managed-settings.json`, which agents cannot edit. Bash runs
+  in a bubblewrap sandbox that hides your home directory and limits the network
+  to GitHub and nixos.org; secrets and the T2 firmware are denied; a
+  `claude-guard` hook blocks dangerous commands (secret paths, `curl | sh`,
+  force pushes, `tailscale serve`, firmware reads). Branch commits, `gh pr
+  create` and `rebuild.sh check|eval|build` run without a prompt; `sudo`,
+  `rebuild.sh switch|test|push`, `git push`, commits on `master` and `gh pr
+  merge` ask. Only hooks from the managed policy run. Full access keeps the
+  sandbox, denies and guard but refuses every `ask` instead of prompting. Detail
+  and the smoke test: [`docs/agents/security.md`](docs/agents/security.md).
 - **mcp-nixos** (`mcp-servers.nix`) — real NixOS / Home Manager / nixpkgs
   package, option and version data over MCP instead of guessed attribute names,
   delivered to Claude Code via `programs.mcp` + `enableMcpIntegration`.
@@ -304,7 +308,8 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
   approve still uses your token — consider a fine-grained PAT limited to this
   repo if you want a smaller blast radius.
 - **One-time setup in T3** — Settings → Threads → New threads → Permissions →
-  **Supervised** (T3 defaults to Full access, which bypasses every prompt).
+  **Accept edits** (T3 defaults to Full access, which refuses every `ask` rule);
+  pick Supervised per thread for policy, secrets or networking work.
 
 ## Xbox Game Pass (Xodus Nexus)
 
@@ -345,6 +350,7 @@ workaround.
 | 5 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
 | 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 | 7 | `mcp-nixos` taken from its upstream flake (`inputs.mcp-nixos`, no `follows`) instead of `pkgs.mcp-nixos` | `flake.nix` (input), `modules/home-manager/ai-tools/mcp-servers.nix` (`# TODO-remove:`) | nixpkgs (rev `3ec6363`, observed 2026-10-30): `python3Packages.fastmcp-slim` 3.4.7 does `from mcp.shared.exceptions import McpError`, but `python3Packages.mcp` 2.2.0 renamed it to `MCPError`, so fastmcp-slim fails its `installCheckPhase` and `pkgs.mcp-nixos` 3.0.1 cannot build (skipping the check would still crash at import). The upstream flake builds because it ships its own nixpkgs (fastmcp 4.0.2). Not yet reported upstream | `nix build nixpkgs#mcp-nixos` succeeds on nixos-unstable; then use `pkgs.mcp-nixos` and delete the flake input |
+| 8 | LearnHarness packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`, GOD-KILLER only) | `modules/home-manager/apps/learnharness.nix` (`# TODO-remove:`) | not in nixpkgs (search.nixos.org unstable has no `learnharness`, checked 2026-11-03), and `amosblomqvist/learnharness` ships no `flake.nix` or Nix expression. The AppImage cannot self-update from the store; bump `version` + `hash` in the module | `pkgs.learnharness` lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
 
 ## Scripts
 
@@ -614,9 +620,11 @@ nix develop .#youtube-sync
 
 REDRUM exposes apps through **Cloudflare Tunnels** via `services.cloudflared` in
 `modules/server/*.nix`. Each app gets its own tunnel, credentials file and
-DNS record. The tunnel UUID + credentials are *not* in the repo; provision them
-once per app with the steps below, then fill the placeholder tunnel IDs and
-secret files on the server.
+DNS record. The tunnel UUIDs are in the modules: they are identifiers, not
+secrets. The tunnel *credentials* (`/var/lib/cloudflared/<app>.json`) are the
+secret and are never in the repo. For a new app, provision the tunnel with the
+steps below, commit its UUID in the module, and place the credentials file on
+the server.
 
 ### 1. One-time Cloudflare auth (per machine)
 
@@ -672,20 +680,28 @@ you manage in the dashboard (no `certificateFile` is used here).
 
 ### 5. Create app secrets (off the Nix store)
 
+Each secret is typed at a hidden prompt (`read -rs`, works in zsh and bash) and written with
+`install -m 600 -o <user>`, so it never lands in shell history, in `ps`, or in
+a world-readable file. `printf` is a shell builtin, so the value is not on any
+command line either.
+
 ```bash
 sudo mkdir -p /var/lib/paperless
-sudo sh -c 'echo "change-me-admin-password" > /var/lib/paperless/admin-password'
-sudo chown paperless:paperless /var/lib/paperless/admin-password
+printf 'Paperless admin password: '; read -rs P; echo
+printf '%s\n' "$P" | sudo install -m 600 -o paperless -g paperless /dev/stdin /var/lib/paperless/admin-password
+unset P
 
 sudo mkdir -p /var/lib/beszel
 # KEY + optional TOKEN come from Beszel → Add System dialog
-sudo sh -c 'printf "KEY=<public key>\nTOKEN=<universal token>\n" > /var/lib/beszel/agent.env'
-sudo chown beszel-agent:beszel-agent /var/lib/beszel/agent.env
+printf 'Beszel KEY: '; read -rs K; echo; printf 'Beszel TOKEN (optional): '; read -rs T; echo
+printf 'KEY=%s\nTOKEN=%s\n' "$K" "$T" | sudo install -m 600 -o beszel-agent -g beszel-agent /dev/stdin /var/lib/beszel/agent.env
+unset K T
 
 sudo mkdir -p /var/lib/miniflux
 # Miniflux first-run credentials (the module's adminCredentialsFile)
-sudo sh -c 'printf "ADMIN_USERNAME=admin\nADMIN_PASSWORD=<change-me>\n" > /var/lib/miniflux/admin.env'
-sudo chown miniflux:miniflux /var/lib/miniflux/admin.env
+printf 'Miniflux admin password: '; read -rs P; echo
+printf 'ADMIN_USERNAME=admin\nADMIN_PASSWORD=%s\n' "$P" | sudo install -m 600 -o miniflux -g miniflux /dev/stdin /var/lib/miniflux/admin.env
+unset P
 ```
 
 (Linkwarden additionally wants `/var/lib/linkwarden/nextauth-secret` and
@@ -732,8 +748,10 @@ CLI meets that model's minimum version, and the pinned nixpkgs' 2.1.238 left RED
 with only the legacy model ("only legacy Fable 5 is available" in Settings). The server only drives the provider, it does not ship one, so the module
 puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`/`t3`
 in the system profile), makes `gh` git's credential helper for the service only,
-and writes a managed Claude policy to `/etc/claude-code/managed-settings.json`
-(secrets unreadable; `git push`, `gh api`, `sudo` always ask). Log in once as the
+sets the service's git identity, adds the `t3code` user to `systemd-journal` (read
+logs, no access to your home) and puts the sandbox tools on its `PATH`. The Claude
+policy is the same `claude-code-policy` fragment as GOD-KILLER's (see "AI agents"
+above). Log in once as the
 `t3code` user after the switch — credentials land in `/var/lib/t3code`, never in
 the store:
 

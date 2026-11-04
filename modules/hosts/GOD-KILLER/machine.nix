@@ -53,6 +53,7 @@
 						calibre
 					apps-packages
 					xodus-nexus
+					learnharness
 					keyring
 					nixdatifier
 					inputs.self.modules.homeManager."3d-printing"

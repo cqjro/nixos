@@ -150,17 +150,17 @@ activate() {
         # Remote rebuild: no local sudo. nixos-rebuild SSHes out as the target user
         # and escalates privileges on the remote side.
         read -ra flags <<<"$(elevate_flags)"
-        cmd=(nixos-rebuild "$action" --flake ".#$host" --impure --target-host "$remote" "${flags[@]}")
+        cmd=(nixos-rebuild "$action" --flake ".#$host" --target-host "$remote" "${flags[@]}")
     else
         # Local rebuild: needs local sudo.
-        cmd=(as_root nixos-rebuild "$action" --flake ".#$host" --impure)
+        cmd=(as_root nixos-rebuild "$action" --flake ".#$host")
     fi
     echo "NixOS: $action $host..."
     run_logged "$LOG_DIR/nixos-$action.log" "${cmd[@]}" || exit 1
 }
 
 build_host() {
-    run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1" --impure
+    run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1"
 }
 
 # switch records a generation, so it only runs from master: try branches with `test`.
@@ -243,8 +243,8 @@ cmd_check() {
 
     for host in "${hosts[@]}"; do
         echo "== eval $host"
-        if ! out=$(nix eval --impure --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath" 2>&1); then
-            echo "FAIL: $(echo "$out" | grep -E '^ *error:' | tail -1 | sed 's/^ *//') (full: nix eval .#nixosConfigurations.$host.config.system.build.toplevel.drvPath --impure)"; fail=1
+        if ! out=$(nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath" 2>&1); then
+            echo "FAIL: $(echo "$out" | grep -E '^ *error:' | tail -1 | sed 's/^ *//') (full: nix eval .#nixosConfigurations.$host.config.system.build.toplevel.drvPath)"; fail=1
         fi
     done
     [ "$fail" -eq 0 ] && echo "All checks passed." || { echo "Some checks failed."; return 1; }
@@ -255,7 +255,7 @@ cmd_eval() {
     [ -n "$host" ] || die "usage: rebuild.sh eval HOST"
     require_host "$host"
     git add --all # flakes only see tracked files
-    nix eval --impure --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath"
+    nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath"
     echo
 }
 
@@ -303,7 +303,7 @@ cmd_switch() {
         commit_all "$message"
     fi
     activate switch "$host" "$remote"
-    current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+    current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
     notify_ok "$host generation $current"
 }
 
@@ -393,7 +393,7 @@ cmd_interactive() {
     fi
     activate "$action" "$dir" "$remote"
     if [ "$action" = switch ]; then
-        current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+        current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
         current="generation $current"
     else
         current="test-activated $branch (no generation recorded)"

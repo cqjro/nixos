@@ -50,7 +50,7 @@ picking the T3 environment in the client.
 2. **Implement.** Follow AGENTS.md conventions; check options and packages
    with mcp-nixos before using them. Update README/AGENTS/docs and remove the
    TODO.md item in the same branch.
-3. **Commit** on the branch (ask rule). Plain descriptive subjects, no
+3. **Commit** on the branch (allowed; a commit on `master` asks). Plain descriptive subjects, no
    generation metadata. Several commits are fine; the merge squashes them.
 4. **Verify** (agent, no root): `./rebuild.sh check HOST...` (tier 0), then
    `./rebuild.sh build HOST` for every affected host this machine may build.
@@ -66,7 +66,7 @@ picking the T3 environment in the client.
 6. **Review** — see [review.md](review.md) for the tiers.
 7. **Push** the branch: `./rebuild.sh push` (pushes the current branch, never
    forced; refuses `master` without a terminal).
-8. **Open the PR** (ask rule): `gh pr create --base master --head <branch>
+8. **Open the PR** (allowed for this repo; `--repo` elsewhere asks): `gh pr create --base master --head <branch>
    --title "<what changed>" --body-file <filled template>` using
    [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
    Then call T3's `link_pull_request` with the PR URL. If asked to babysit it,

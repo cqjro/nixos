@@ -25,7 +25,7 @@ Stop and report at the first failure; do not push a branch that fails tier 0.
    `lockout-reviewer` subagent the same way.
 5. **Tier 3.** Only per docs/agents/review.md (two failed rounds, effort ≥ 7,
    or the human asks): `deep-reviewer` with the unresolved findings.
-6. **Commit** remaining changes on the branch (ask rule) with a plain
+6. **Commit** remaining changes on the branch (allowed; a commit on `master` asks) with a plain
    descriptive subject.
 7. **Push and PR** — only when the human has said to:
    `./rebuild.sh push`, then fill `.github/pull_request_template.md` into a

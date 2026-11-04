@@ -23,7 +23,8 @@ Read the others **when the task calls for them**:
 | [`docs/agents/workflow.md`](docs/agents/workflow.md) | branching, PRs, testing, merging, cross-machine handoff, generation tracking, model choice, the path to close and settling a thread |
 | [`docs/agents/review.md`](docs/agents/review.md) | reviewing a branch (tiers 0–3) |
 | [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
-| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | permissions, pushes, pairing, T3 on REDRUM, the permissions smoke test |
+| [`docs/agents/security.md`](docs/agents/security.md) | permissions, sandbox, the `claude-guard` hook, the security smoke test, adding a hook |
+| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | pushes, pairing, T3 on REDRUM |
 | [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
@@ -49,9 +50,10 @@ nix develop .#youtube-sync        # devshell for the youtube-sync helper
   for REDRUM and LittleNix comes from the Nix store
   (`modules/system/t2-firmware.nix`, `pkgs.requireFile` pinned by hash), so
   evaluation needs no files and no `--impure`; only a *build* of a T2 host needs
-  the firmware imported into that machine's store (`docs/firmware.md`). If a
-  build reports the firmware missing, stop and tell the human which machine and
-  host — do not work around it.
+  the firmware imported into that machine's store: the human places it in
+  `/var/lib/firmware-src/<HOST>/brcm` and runs `nix run .#t2-firmware-import --
+  HOST` (`docs/firmware.md`). If a build reports the firmware missing, stop and
+  tell the human which machine and host — do not work around it.
 - `rebuild.sh` works on the checkout it lives in (worktree-safe). Always run
   `./rebuild.sh` from the checkout, never the `rebuild` zsh alias (a frozen
   store copy).
@@ -77,7 +79,7 @@ modules/
   home-manager/    # user config: ai-tools/, apps/, desktop/, keyboard/, languages/, terminal/
   scripts/         # helper shell/python scripts
   server/          # REDRUM services (actual-budget, linkwarden, tailscale, …)
-  system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, …
+  system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, t2-firmware, …
   theme/           # stylix scheme + openrgb + webstyling/ + discord-theme
   _archive/        # retired modules — prefer archiving here over deleting
 ```
@@ -142,8 +144,8 @@ Other conventions:
 Recipes (read the one you need, in [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md)):
 
 - **Creating a server module (REDRUM)** — free `127.0.0.1` port, dedicated
-  user, secrets under `/var/lib/<app>`, placeholder tunnel UUID, README +
-  Homepage updates.
+  user, secrets under `/var/lib/<app>`, tunnel UUID committed (an identifier;
+  the credentials JSON is the secret), README + Homepage updates.
 - **Theming the Actual Budget Tweaks sidecar** — the base16 → ABT token map and
   the browser-shim seed.
 - **Archiving a module** — never delete: move to `modules/_archive/` with a
@@ -234,11 +236,17 @@ no home-manager).
 
 ## Agent safety essentials
 
-Details and history in [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md);
-policy lives in `modules/home-manager/ai-tools/claude-code.nix` (GOD-KILLER)
-and `modules/server/t3code.nix` (REDRUM).
+Permissions, sandbox and the `claude-guard` hook are one managed policy for both
+hosts (`flake.modules.nixos."claude-code-policy"` in
+`modules/home-manager/ai-tools/claude-code.nix`, installed as
+`/etc/claude-code/managed-settings.json`); details, the mode table and the
+smoke test in [`docs/agents/security.md`](docs/agents/security.md). Pushes,
+pairing and T3 on REDRUM: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md).
 
-- Threads run **Supervised**; T3's Full access bypasses every prompt.
+- TODO/worktree threads run **Accept edits**; policy, secrets or networking
+  work runs **Supervised**. Full access still keeps `deny` rules, the sandbox and
+  the guard, but every `ask` rule is refused there instead of prompting, so
+  avoid it.
 - Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
   `token.json`, `client_secret.json`) are never read, printed or committed;
   the T2 firmware is never committed, read, printed or attached (`docs/firmware.md`).
@@ -246,14 +254,23 @@ and `modules/server/t3code.nix` (REDRUM).
   T3 tool needs goes through `request_secret`; one the repo or a service needs is
   pointed at a runtime path, with the human creating the file
   ([`docs/agents/secrets.md`](docs/agents/secrets.md)).
-- `switch`, `test`, `dry`, `revert`, `push`, `git commit|push`, `gh pr
-  create|merge` and `sudo` are human-approved. No passwordless sudo for
-  `nixos-rebuild`; never run `tailscale serve`/`set`.
+- Allowed without a prompt: `git add`/`commit` on a branch, `gh pr create`,
+  `gh issue create`, `./rebuild.sh check|eval|build|generations`, `nix
+  eval|build`. Human-approved: `switch`, `test`, `dry`, `revert`, `push`,
+  `git push`, commits on `master`, `gh pr merge|comment|update-branch`, `gh api`
+  and `sudo`. No passwordless sudo for `nixos-rebuild`; never run
+  `tailscale serve`/`set` (the guard blocks it).
+- Hooks only run from the managed policy (`allowManagedHooksOnly`): a new hook
+  is a NixOS fragment setting `claude-code-policy.hooks.<Event>`
+  ([security.md](docs/agents/security.md#adding-hooks-merge-point)), never
+  home-manager `programs.claude-code.settings.hooks`, a project
+  `.claude/settings.json` or a skill: those are silently ignored.
 - Pushes go over HTTPS through the `gh` credential helper (no SSH agent in T3
   threads).
-- Reads outside the project prompt (`blockReadsOutsideWorkingDirectories`); a
-  "blocked … `/add-dir`" result means re-issue the call after the human grants
-  access. The agent cannot see the approval UI.
+- Bash runs in a sandbox that hides `/home` outside the worktree; reads outside
+  the project prompt (`blockReadsOutsideWorkingDirectories`). A "blocked …
+  `/add-dir`" result means re-issue the call after the human grants access.
+  The agent cannot see the approval UI.
 
 ## Pending upstream fixes
 
