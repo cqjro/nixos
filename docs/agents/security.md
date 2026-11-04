@@ -57,6 +57,19 @@ Verified:
 - Sandboxed `git commit` in a linked worktree works, once `~/.config/git`
   is readable. Without it git has no identity.
 
+**`Read` deny rules also hide paths inside the sandbox, but only some forms**
+(canary probes with nested `claude -p` sessions, Claude Code 2.1.308,
+2026-11-03). Absolute paths and single-level globs are expanded at startup and
+hidden from every sandboxed command, not just the Read tool. Symlinks into them
+are hidden too. Rules that start with `//**/` are **not** expanded and only
+cover the Read/Grep/Glob tools. So for Bash:
+
+| Rule | Hidden from sandboxed Bash |
+| --- | --- |
+| `//var/lib/firmware-src/**` | yes (listing shows an empty dir) |
+| `//nix/store/*-brcm-firmware*/**` (the import, its copy and the `-zstd` copy behind `/run/current-system/firmware/brcm`) | yes: of 192 entries only the empty top-level dirs and `.drv`/`.lock` files stay visible; startup cost unchanged |
+| `//**/firmware/brcm/**`, `//**/brcmfmac*`, `//**/.env`, `//**/token.json`, `//**/client_secret.json` | **no**: the guard's text patterns are the only Bash-level check |
+
 `autoAllowBashIfSandboxed`: sandboxed commands run **without a prompt**.
 Ask rules that match command content (`git push *` and so on) still prompt,
 and deny rules plus the guard still apply. This is where most of the saved
@@ -171,24 +184,51 @@ never execute. Side effects: `/goal` is unavailable, and a status line can only
 come from managed settings. *(after switch: the key is managed-only, so the
 `--settings` tests could not exercise it.)*
 
-### Adding hooks or rules from other modules (merge point)
+### Adding hooks (merge point)
 
-Claude Code merges `managed-settings.json` and then
-`/etc/claude-code/managed-settings.d/*.json` in alphabetical order: lists
-(hooks, allow/ask/deny, allowedDomains) concatenate, and scalars from later
-files win. Another module adds to the policy without touching
-`claude-code.nix`:
+Because of `allowManagedHooksOnly`, the managed policy is the **only** place a
+hook can come from. Home-manager `programs.claude-code.settings.hooks`, a
+repo's `.claude/settings*.json`, skills and subagents are all ignored. Another
+module adds hooks through the NixOS option the policy fragment defines,
+without touching `claude-code.nix`:
 
 ```nix
-environment.etc."claude-code/managed-settings.d/50-secret-guard.json".text = builtins.toJSON {
-	hooks.UserPromptSubmit = [ { hooks = [ { type = "command"; command = "${script}/bin/x"; timeout = 10; } ]; } ];
-};
+flake.modules.nixos."secret-guard" = { pkgs, ... }:
+	let script = pkgs.writeShellApplication { name = "secret-guard"; /* … */ };
+	in {
+		claude-code-policy.hooks = {
+			UserPromptSubmit = [ { hooks = [ { type = "command"; command = "${script}/bin/secret-guard prompt"; timeout = 10; } ]; } ];
+			PreToolUse = [ { matcher = "Bash|Write|Edit|MultiEdit|NotebookEdit|Read|Grep|Glob"; hooks = [ { type = "command"; command = "${script}/bin/secret-guard tool"; timeout = 10; } ]; } ];
+		};
+	};
 ```
 
-Reserved numbers: `50-` secrets (thread 5), `60-` notifications (thread 6).
-Hooks run **outside** the sandbox as the session's user (cairo, or t3code on
-REDRUM). Because of `allowManagedHooksOnly`, home-manager
-`programs.claude-code.settings.hooks` would be ignored, so use a drop-in.
+- **Type:** `attrsOf (listOf attrs)`, keyed by event name (`PreToolUse`,
+  `UserPromptSubmit`, `Notification`, `PermissionRequest`, `Stop`,
+  `StopFailure`, …). The entries use Claude Code's settings JSON shape. Lists
+  from all modules concatenate per event (checked by eval: an extra
+  `PreToolUse` and a `Stop` entry land after `claude-guard`, on both hosts).
+  `claude-guard` is `mkBefore`, so it stays first.
+- **Wiring:** the fragment goes in the GOD-KILLER and/or REDRUM NixOS lists in
+  `modules/hosts/host.nix`. It must only be imported on hosts that also import
+  `claude-code-policy`, otherwise eval fails with "option does not exist"
+  (LittleNix has no policy).
+- **Commands** are absolute store paths (`${script}/bin/…`), never a path in the
+  repo or a home directory: hooks run **outside** the sandbox, as the session's
+  user (cairo, or `t3code` on REDRUM, whose home is `/var/lib/t3code`).
+  Anything the script needs at runtime goes in its `runtimeInputs`. A secret
+  (such as an ntfy token) is read at runtime from a root-placed file, never
+  interpolated into the JSON. The JSON is world-readable in the store and in
+  `/etc`.
+- **Decisions:** exit 2 or `permissionDecision: "deny"` blocks, and any deny
+  wins. Hooks for one event run in parallel, so two hooks' `ask`/`allow`
+  results are not combined predictably. Under Full access an `ask` is
+  auto-approved, so a hook that must hold there has to deny, as `claude-guard`
+  does.
+- **Why not `managed-settings.d/*.json` drop-ins:** Claude Code reads them, but
+  how it merges `hooks` across files can't be checked before a switch. The
+  option merges at eval time into the one `managed-settings.json`, so
+  `./rebuild.sh eval` shows the result. Don't add drop-ins for hooks.
 
 ## T3 runtime modes
 
@@ -225,10 +265,12 @@ Recommendation per task type:
 - **Same managed file.** `~/` resolves to `/var/lib/t3code`, so the gh token
   and Claude login stay denied. No `disableBypassPermissionsMode`: you chose
   identical policies, so Full access launches there too, fenced as above.
-- **Firmware:** `t3code` needs no extra filesystem access. The firmware is a
-  world-readable, hash-pinned store path (`modules/system/t2-firmware.nix`),
-  and REDRUM builds stay on GOD-KILLER. Do not grant it `/home` or
-  `/var/lib/firmware-src`.
+- **Firmware:** `t3code` needs no extra filesystem access and must not get
+  any. Do not grant it `/home` or `/var/lib/firmware-src`, which is
+  `0750 cairo:users` on T2 hosts. The firmware's world-readable, hash-pinned
+  store copies (`modules/system/t2-firmware.nix`) are hidden inside the sandbox
+  by `Read(//nix/store/*-brcm-firmware*/**)`. The guard covers unsandboxed
+  commands. REDRUM builds stay on GOD-KILLER.
 - **Read-only troubleshooting:** `t3code` is in `systemd-journal`, so
   `journalctl -u <unit>` works. `systemctl status` already works for any user.
   It has no polkit rights and no sudo, so restarts must be run by you.
@@ -253,6 +295,16 @@ Recommendation per task type:
 - **Guard rules are text patterns.** `git -C x push`, quoting tricks, and
   scripts that run commands indirectly can evade them. The sandbox and deny
   rules are the boundary.
+- **Leading-`**` deny rules don't reach sandboxed Bash** (table in section
+  1). `cat ./some/dir/token.json` is stopped only if the guard's `secret_re`
+  sees the name in the command text; `find … -exec cat` would not be. Secrets
+  kept under hidden `/home` paths or app-owned `/var/lib/<app>` dirs are
+  unaffected. The worktree is the exposed area. The secret-guard scan (thread
+  5) is the second check there.
+- **The nix daemon reads store paths as root.** Unsandboxed `nix store
+  cat|dump-path|export` and `nix-store --dump|--export` could
+  read the firmware store paths. The guard blocks these when the command names
+  a firmware path. A path built from a variable or `$(…)` evades it.
 - **`~/.nixos/.git` is writable from the sandbox.** Destructive git and
   `rm .git` are gated, but unpushed branches can still be damaged by commands
   the patterns miss. Push branches early.
@@ -303,7 +355,12 @@ follows:
 2. Start a **new** thread: Claude Code reads managed settings at startup.
 3. Check that `~/.claude/settings.json` now has empty permission lists:
    `jq .permissions ~/.claude/settings.json`.
-4. Run the smoke test below.
+4. On both hosts, `jq '{h: .allowManagedHooksOnly, s: .sandbox.enabled}'
+   /etc/claude-code/managed-settings.json` prints `true`/`true`.
+5. On REDRUM: `sudo -u t3code test -r /var/lib/firmware-src/REDRUM/brcm` must
+   fail, and `sudo -u t3code journalctl -n 1 --no-pager` must print a line.
+6. Run the smoke test below. On REDRUM, run it in a thread on REDRUM's T3
+   server (as `t3code`).
 
 ## Smoke test (re-runnable)
 
@@ -333,9 +390,11 @@ you record which steps prompted.**
 | 17 | Write tool: `.claude/settings.json` in the worktree | denied | denied |
 | 18 | `echo '{}' > .mcp.json` | blocked by the guard | blocked |
 | 19 | mcp-nixos `nix` (`{"action":"channels"}`) | no prompt | runs |
-| 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (hidden or empty); `cat` blocked by the guard | same |
+| 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (empty); `cat` blocked by the guard | same |
 | 21 | `./rebuild.sh check GOD-KILLER` and `./rebuild.sh generations` | no prompt | runs |
 | 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it) | **blocked** by the guard |
+| 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (REDRUM, or GOD-KILLER if it has the import) | `0` (store copies hidden), no prompt | same |
+| 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. If a step disagrees, update this table and the policy in the same

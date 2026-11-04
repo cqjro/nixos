@@ -38,11 +38,12 @@
 	#      including T3 Full access (bypassPermissions).
 	#   3. ask rules: prompts in Supervised / Accept edits / Auto. Full access
 	#      auto-approves prompts, so the guard turns these into blocks there.
-	# Other modules add to the policy with drop-ins (lists merge, scalars from
-	# later files win), e.g. secret scanning or notification hooks:
-	#   environment.etc."claude-code/managed-settings.d/50-<name>.json".text = builtins.toJSON { hooks = { ... }; };
-	# Only hooks delivered this way (or here) run: allowManagedHooksOnly.
-	flake.modules.nixos."claude-code-policy" = { pkgs, ... }:
+	# Other modules add hooks through the `claude-code-policy.hooks` option
+	# (lists concatenate; see docs/agents/security.md, "Adding hooks"), e.g.:
+	#   claude-code-policy.hooks.PreToolUse = [ { matcher = "Read"; hooks = [ { type = "command"; command = "${script}/bin/x"; timeout = 10; } ]; } ];
+	# Only hooks in this policy run (allowManagedHooksOnly): home-manager
+	# `programs.claude-code.settings.hooks` and repo/skill hooks are ignored.
+	flake.modules.nixos."claude-code-policy" = { config, lib, pkgs, ... }:
 		let
 			guard = pkgs.writeShellApplication {
 				name = "claude-guard";
@@ -304,9 +305,13 @@
 
 					# T2 Broadcom firmware (modules/system/t2-firmware.nix): proprietary,
 					# not secret. Agents may name it, never read, copy or attach it.
-					# A Read deny also blocks Edit/Write of the path.
+					# A Read deny also blocks Edit/Write of the path. The first two
+					# are also hidden inside the Bash sandbox (absolute paths and
+					# single-level globs are expanded into it; leading `**` patterns
+					# below only cover the Read/Grep/Glob tools). `*-brcm-firmware*` covers
+					# the import, the copy and the `-zstd` copy behind /run/current-system/firmware.
 					"Read(//var/lib/firmware-src/**)"
-					"Read(//nix/store/*-brcm-firmware/**)"
+					"Read(//nix/store/*-brcm-firmware*/**)"
 					"Read(//**/firmware/brcm/**)"
 					"Read(//**/brcmfmac*)"
 					"Read(//**/brcmbt*)"
@@ -349,21 +354,21 @@
 
 			askRules = pkgs.writeText "claude-ask-rules.json" (builtins.toJSON permissions.ask);
 		in {
-			# sandbox runtime (the T3 Code package wraps these into its own PATH;
-			# a terminal `claude` needs them system-wide). The REDRUM service PATH
-			# is set in modules/server/t3code.nix.
-			environment.systemPackages = [ pkgs.bubblewrap pkgs.socat guard ];
+			options.claude-code-policy.hooks = lib.mkOption {
+				type = lib.types.attrsOf (lib.types.listOf (lib.types.attrsOf lib.types.anything));
+				default = { };
+				example = lib.literalExpression ''{ Stop = [ { hooks = [ { type = "command"; command = "''${script}/bin/notify"; timeout = 10; } ]; } ]; }'';
+				description = ''
+					Claude Code hooks by event name, written into the managed policy.
+					Definitions from several modules concatenate per event. With
+					`allowManagedHooksOnly` this is the only place a hook can come from.
+					Commands run outside the sandbox as the session's user, so use
+					store paths, never a path in the repo or the home directory.
+				'';
+			};
 
-			environment.etc."claude-code/managed-settings.json".text = builtins.toJSON {
-				inherit permissions;
-
-				# only hooks from /etc/claude-code (root-owned, from this repo) run:
-				# hooks an agent writes into a repo's .claude/settings.json, a skill
-				# or a subagent never execute. Also disables /goal and user-level
-				# statusLine.
-				allowManagedHooksOnly = true;
-
-				hooks.PreToolUse = [
+			config = {
+				claude-code-policy.hooks.PreToolUse = lib.mkBefore [
 					{
 						matcher = "Bash|Edit|Write|MultiEdit|NotebookEdit";
 						hooks = [
@@ -376,37 +381,54 @@
 					}
 				];
 
-				sandbox = {
-					enabled = true;
-					# refuse to start rather than silently run unsandboxed
-					failIfUnavailable = true;
-					# strict: no `dangerouslyDisableSandbox` retries
-					allowUnsandboxedCommands = false;
-					# sandboxed Bash runs without a prompt; content ask rules
-					# (git push, rm of .git via the guard, ...) still prompt
-					autoAllowBashIfSandboxed = true;
-					inherit excludedCommands;
-					# home is hidden from sandboxed commands; git still needs its
-					# config (identity, gh credential-helper line; no secrets in it)
-					filesystem.allowRead = [ "~/.config/git" ];
-					# hosts sandboxed commands (curl, git over https, ...) may reach.
-					# Strict: anything else is refused instead of prompting, because
-					# Full access auto-approves that prompt (curl example.com went
-					# through in a bypass test). Does not limit WebFetch, MCP or
-					# excluded commands.
-					network.strictAllowlist = true;
-					network.allowedDomains = [
-						"github.com"
-						"api.github.com"
-						"codeload.github.com"
-						"raw.githubusercontent.com"
-						"objects.githubusercontent.com"
-						"cache.nixos.org"
-						"channels.nixos.org"
-						"nixos.org"
-						"search.nixos.org"
-						"wiki.t2linux.org"
-					];
+				# sandbox runtime (the T3 Code package wraps these into its own PATH;
+				# a terminal `claude` needs them system-wide). The REDRUM service PATH
+				# is set in modules/server/t3code.nix.
+				environment.systemPackages = [ pkgs.bubblewrap pkgs.socat guard ];
+
+				environment.etc."claude-code/managed-settings.json".text = builtins.toJSON {
+					inherit permissions;
+
+					# only hooks from /etc/claude-code (root-owned, from this repo) run:
+					# hooks an agent writes into a repo's .claude/settings.json, a skill
+					# or a subagent never execute. Also disables /goal and user-level
+					# statusLine.
+					allowManagedHooksOnly = true;
+
+					inherit (config.claude-code-policy) hooks;
+
+					sandbox = {
+						enabled = true;
+						# refuse to start rather than silently run unsandboxed
+						failIfUnavailable = true;
+						# strict: no `dangerouslyDisableSandbox` retries
+						allowUnsandboxedCommands = false;
+						# sandboxed Bash runs without a prompt; content ask rules
+						# (git push, rm of .git via the guard, ...) still prompt
+						autoAllowBashIfSandboxed = true;
+						inherit excludedCommands;
+						# home is hidden from sandboxed commands; git still needs its
+						# config (identity, gh credential-helper line; no secrets in it)
+						filesystem.allowRead = [ "~/.config/git" ];
+						# hosts sandboxed commands (curl, git over https, ...) may reach.
+						# Strict: anything else is refused instead of prompting, because
+						# Full access auto-approves that prompt (curl example.com went
+						# through in a bypass test). Does not limit WebFetch, MCP or
+						# excluded commands.
+						network.strictAllowlist = true;
+						network.allowedDomains = [
+							"github.com"
+							"api.github.com"
+							"codeload.github.com"
+							"raw.githubusercontent.com"
+							"objects.githubusercontent.com"
+							"cache.nixos.org"
+							"channels.nixos.org"
+							"nixos.org"
+							"search.nixos.org"
+							"wiki.t2linux.org"
+						];
+					};
 				};
 			};
 		};

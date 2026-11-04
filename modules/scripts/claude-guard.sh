@@ -60,8 +60,8 @@ secret_re+="|(^|[/[:space:]\"'=])\.env([.[:space:]\"';|&)]|$)"
 
 # T2 Broadcom firmware: proprietary (not secret), so names are fine but
 # contents must never be read into a session, copied, archived or uploaded
-fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware(/|[[:space:]"'"'"']|$)|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware([/[:space:]"'"'"']|$)'
-fw_op_re='(^|[;&|[:space:](])(cat|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object|show|cat-file|archive)([[:space:]]|$)|nix[[:space:]]+store[[:space:]]+(cat|dump-path)|nix-store[[:space:]]+--dump'
+fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware(/|[[:space:]"'"'"']|$)|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware(-[[:alnum:]]+)?([/[:space:]"'"'"']|$)'
+fw_op_re='(^|[;&|[:space:](])(cat|zcat|zstdcat|unzstd|xzcat|unxz|bzcat|bunzip2|gunzip|lz4cat|bat|nl|tac|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|adb|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object|show|cat-file|archive)([[:space:]]|$)|nix[[:space:]]+(copy|bundle|nar[[:space:]]+(cat|dump-path)|store[[:space:]]+(cat|dump-path|export))|nix-store[[:space:]]+(--dump|--export)'
 
 # files that change what Claude Code (or a later session) is allowed to run
 config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settings|\.claude/hooks|\.claude\.json|\.mcp\.json'
@@ -266,7 +266,16 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect block Bash 'base64 /nix/store/abc-brcm-firmware/lib/firmware/brcm/x.clm_blob'
 	expect block Bash 'cp ~/x.txcap_blob /home/cairo/.t3/userdata/attachments/'
 	expect block Bash 'nix store cat /nix/store/abc-brcm-firmware/x.ptb'
+	expect block Bash 'zstdcat /run/current-system/firmware/brcm/brcmfmac4364b3-pcie.bin.zst'
+	expect block Bash 'xzcat /nix/store/abc-firmware/lib/firmware/brcm/x.clm_blob.xz | head'
+	expect block Bash 'adb push /var/lib/firmware-src/REDRUM/brcm /sdcard/'
+	expect block Bash 'tar czf /tmp/fw.tgz /nix/store/abc-brcm-firmware-zstd'
+	expect block Bash 'nix copy --to file:///tmp/cache /nix/store/abc-brcm-firmware'
+	expect block Bash 'nix-store --export /nix/store/abc-brcm-firmware-zstd > /tmp/x'
+	expect block Bash 'strings /nix/store/abc-brcm-firmware/brcmfmac4364b3-pcie.apple,maui.txcap_blob'
 	expect pass Bash 'ls -la /var/lib/firmware-src/REDRUM/brcm'
+	expect pass Bash 'ls /run/current-system/firmware/brcm'
+	expect pass Bash 'cat docs/firmware.md'
 	expect pass Bash 'nix path-info /nix/store/abc-brcm-firmware'
 	expect pass Bash 'git add modules/system/t2-firmware.nix'
 	expect pass Bash 'cat modules/system/t2-firmware.nix'
