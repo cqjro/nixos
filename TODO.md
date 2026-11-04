@@ -18,6 +18,57 @@ repeated as proposals.
 
 ## System
 
+- [ ] **Finish the repo move and open the workflow PRs** — `cqjro/nixos` is
+      rewritten, pushed and still private; these are the steps left before it
+      goes public and the lane threads can merge — **3/10** (full detail in
+      [`docs/firmware.md`](docs/firmware.md); the rewrite itself is done, section
+      6.9 is REDRUM). Delete this item when all are done
+  - [ ] **Before going public (6.5), you:**
+    - [ ] github.com/settings/emails: turn on *Keep my email addresses private*
+          and *Block command line pushes that expose my email* (the history and
+          `git.nix` already use the noreply address, so pushes are not blocked)
+    - [ ] Cloudflare Access for the browser-only apps, or accept the hostnames as
+          they are (the "Hostnames" item in `TODO.md` on `workflow/secrets`)
+    - [ ] Decide the `gh` token scope for the schedules thread: add *Issues:
+          read and write* on `cqjro/nixos` to the GOD-KILLER token (recommended,
+          editable in place), or tell that thread to use PR comments instead
+    - [ ] Then change visibility to Public (cannot be undone)
+  - [ ] **PRs, in order** (all branches are pushed; none opened yet). Merge
+        **firmware first**, then pr-rebuild-docs (use *Create a merge commit*:
+        secrets and notifications contain its commits), agent-security,
+        secrets, notifications, schedules. Do not build REDRUM or LittleNix
+        before the firmware PR is merged
+  - [ ] **REDRUM** (`docs/firmware.md` 6.9, after the firmware PR merges):
+        re-clone `~/.nixos`, place the firmware, run the importer, switch; give
+        the `t3code` user its own fine-grained token and re-clone
+        `/var/lib/t3code/nixos` if it exists
+  - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
+    - [ ] pr-rebuild-docs: merge `origin/master`, drop `--impure`, check/build
+          both hosts, tier 1 and 2 reviews; README default-password commands
+          (finding F4, required before public) with a hidden prompt; AGENTS.md
+          tunnel-UUID wording; LearnHarness registry row (`docs/firmware.md` 6.8)
+    - [ ] agent-security: the 7 checks (`docs/firmware.md` 6.8), add the firmware
+          filename patterns to the secret-guard denylist, settle how the
+          secrets and notifications hooks get installed (`managed-settings.d`),
+          smoke test (22 steps, Accept edits and Full access)
+    - [ ] notifications: move its hooks to `managed-settings.d` once the policy
+          lands; choose ntfy.sh or self-hosted; run test 6.2
+    - [ ] schedules: say "commit the stale-hash fix" (`docs/schedules/README.md`
+          line 241); approve the two schedule prompts; decide the old "Build
+          Flags" task; REDRUM bootstrap via `unswitched-changes.md`; after the
+          workflow PR merges, switch each machine so the unswitched check works
+    - [ ] secrets: findings are final (GO from its side); optional Claude
+          re-login; on a `machine.nix` conflict with LearnHarness keep both lines
+  - [ ] After going public: delete `~/.nixos.pre-rewrite`, `~/nixos-archive-private`
+        only when no longer needed (keep `~/private-backup`); optionally archive
+        `nixos-archive` on GitHub; token expiry reminder (tokens made 2026-11-03,
+        30-90 days)
+  - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
+        stay in the private archive repo; extract them only if you want to
+        build or reinstall it
+  - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
+    old repo stays private as the archive and the public one never contains them.
+
 - [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
       (an archived `modules/_archive/waydroid.nix` already exists to
       reintegrate; the kiosk session/autologin is the hard half)
@@ -160,6 +211,23 @@ repeated as proposals.
     still in progress — and quit any other HID++ manager so the two don't fight
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
+
+- [ ] **LearnHarness registry row** — the app is installed
+      (`modules/home-manager/apps/learnharness.nix`, pinned AppImage, GOD-KILLER
+      only); only the "Pending upstream fixes" bookkeeping is left — **1/10**
+      (deferred so it lands against the post-refactor docs layout instead of
+      conflicting with the `workflow/*` branches)
+  - [ ] Once `workflow/pr-rebuild-docs` is merged, add the LearnHarness row to
+        `docs/agents/upstream-registry.md` **and** the README's "Pending upstream
+        fixes" table: workaround = pinned AppImage via `fetchurl` +
+        `appimageTools.wrapType2`; blocked on = not in nixpkgs, no upstream
+        flake/Nix expression; re-enable when = `pkgs.learnharness` or an
+        upstream flake exists (then drop the pin). Then make the module's
+        `# TODO-remove:` comment cite the row number
+  - [ ] Remove this item in that same change
+  - *Note:* bump `version`/`hash` in the module to update — the AppImage can't
+    self-update from the store. The provider API key is entered in-app (kept in
+    the keyring), never in the repo.
 
 ## Server (REDRUM)
 
