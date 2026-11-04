@@ -46,7 +46,7 @@ repeated as proposals.
     - [ ] agent-security (agent work done on the branch): after its PR merges and
           both hosts switch, the post-switch checks and the 24-step smoke test in
           `docs/agents/security.md` ("After the switch", Accept edits and Full access)
-    - [ ] notifications (PR #5, hooks now in `claude-code-policy.hooks`): choose ntfy.sh or
+    - [ ] notifications: choose ntfy.sh or
           self-hosted, create the topic file, then run test 6.2 after the switch
     - [ ] schedules: say "commit the stale-hash fix" (`docs/schedules/README.md`
           line 241); approve the two schedule prompts; decide the old "Build

@@ -313,6 +313,10 @@ Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-t
 - **One-time setup in T3** — Settings → Threads → New threads → Permissions →
   **Accept edits** (T3 defaults to Full access, which refuses every `ask` rule);
   pick Supervised per thread for policy, secrets or networking work.
+- **Notifications** (`notifications.nix`, fragment `agent-notifications`) — approval,
+  completion and failure alerts through `claude-code-policy.hooks`: desktop popups on
+  GOD-KILLER, ntfy push to a phone on both hosts (ntfy only on REDRUM). Setup and
+  tests in [`docs/notifications.md`](docs/notifications.md).
 
 ## Xbox Game Pass (Xodus Nexus)
 

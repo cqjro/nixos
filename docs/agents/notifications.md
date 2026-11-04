@@ -3,9 +3,10 @@
 Human setup, phone steps and the test procedure are in
 [docs/notifications.md](../notifications.md); this is what an agent needs.
 
-- Hooks (`Notification`, `PermissionRequest`, `Stop`, `StopFailure`) call
-  `agent-notify` (`modules/scripts/agent-notify.sh`, fragment
-  NixOS fragment `agent-notifications` in `modules/home-manager/ai-tools/notifications.nix`, which feeds `claude-code-policy.hooks` because `allowManagedHooksOnly` ignores every other hook source; GOD-KILLER and REDRUM only).
+  `agent-notify` (`modules/scripts/agent-notify.sh`; NixOS fragment
+  `agent-notifications` in `modules/home-manager/ai-tools/notifications.nix`, which feeds
+  `claude-code-policy.hooks` because `allowManagedHooksOnly` ignores every other hook
+  source; GOD-KILLER and REDRUM only).
   It is deterministic: no LLM, no polling, exit 0 always.
 - `PermissionRequest` ranks approvals by command: `gh pr merge` and
   `./rebuild.sh switch|test` are priority 5 (approving the card **is** the

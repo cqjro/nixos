@@ -72,6 +72,7 @@ event=$(field .hook_event_name)
 ntype=$(field .notification_type)
 cwd=$(field .cwd)
 session=$(field .session_id)
+session=${session//[^A-Za-z0-9_-]/_}
 [ -n "$session" ] || session=unknown
 
 # The generic permission_prompt Notification carries no command; the
@@ -194,6 +195,8 @@ body="$label"
 remote_body="$label"
 if [ "${force_text:-0}" = 1 ] || [ "$kind" != finished ] || [ -f "$cfg/include-text" ]; then
 	remote_body="$body"
+	# a PermissionRequest command may carry an inline token: ship only the tool name
+	[ "$event" = PermissionRequest ] && [ "${force_text:-0}" != 1 ] && [ ! -f "$cfg/include-text" ] && remote_body="$label: $(field .tool_name)"
 fi
 
 sent=""
