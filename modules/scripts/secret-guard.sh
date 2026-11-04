@@ -17,6 +17,7 @@ patterns="${SECRET_GUARD_PATTERNS:-$(dirname "${BASH_SOURCE[0]}")/secret-guard-p
 bypass="[allow-secret-pattern]"
 
 input="$(cat)"
+pmode="$(jq -r '.permission_mode // "default"' <<<"$input" 2>/dev/null)"
 case "$mode" in
 	prompt)
 		text="$(jq -r '.prompt // empty' <<<"$input" 2>/dev/null)" || exit 0
@@ -76,7 +77,14 @@ case "$mode" in
 			Read | Grep | Glob) decision=ask ;;
 			*) decision=ask ;;
 		esac
-		reason="Secret guard: this ${tool:-tool} call matched: ${hit}. A credential must not be written into files, commands or the repo (keep it in an on-host file, see docs/secrets.md; or request_secret for a T3 tool); proprietary firmware must never enter git (docs/firmware.md)."
+		# Full access (bypassPermissions) answers every prompt itself, so a hook's
+		# "ask" is never shown and the call would go through: refuse instead
+		note=""
+		if [ "$decision" = ask ] && [ "$pmode" = bypassPermissions ]; then
+			decision=deny
+			note=" Refused because this thread is in Full access, where T3 approves prompts automatically; rerun it in a Supervised thread."
+		fi
+		reason="Secret guard: this ${tool:-tool} call matched: ${hit}. A credential must not be written into files, commands or the repo (keep it in an on-host file, see docs/secrets.md; or request_secret for a T3 tool); proprietary firmware must never enter git (docs/firmware.md).${note}"
 		jq -n --arg d "$decision" --arg r "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: $d, permissionDecisionReason: $r}}'
 		;;
 esac

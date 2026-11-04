@@ -64,6 +64,8 @@ Ordered by risk (blast radius × likelihood it was reachable). Steps marked
 
 ### 4.1 GitHub (highest risk) **you**
 
+> **Status 2026-11-03:** done on GOD-KILLER (fine-grained token limited to `cqjro/nixos`; the broad "GitHub CLI" grant revoked). Still open: REDRUM's `t3code` user gets its own token when it is re-cloned (TODO.md).
+
 Blast radius: the current `gh` token covers every private repo you own.
 
 1. On each machine, replace the broad login with a fine-grained PAT:
@@ -396,9 +398,16 @@ This is advisory text. The enforceable layers are the hooks (section 7), the
 
 ## 7. Keeping secrets out of prompts: secret-guard
 
-`modules/home-manager/ai-tools/secret-guard.nix` (fragment
-`homeManager."secret-guard"`, imported by GOD-KILLER's `machine.nix`) installs
-two Claude Code hooks backed by `modules/scripts/secret-guard.sh`:
+`modules/home-manager/ai-tools/secret-guard.nix` defines the NixOS fragment
+`nixos."secret-guard"`, imported in `host.nix` by **GOD-KILLER and REDRUM** (the
+hosts that import `claude-code-policy`). It sets `claude-code-policy.hooks`, because
+the managed policy has `allowManagedHooksOnly = true`: Claude Code reads hooks
+**only** from there and silently ignores home-manager
+`programs.claude-code.settings.hooks`, project `.claude/settings.json`, skills and
+subagents (`docs/agents/security.md`, "Adding hooks (merge point)"). The fragment
+installs two hooks backed by `modules/scripts/secret-guard.sh`, with store-path
+commands; `claude-guard` stays first in `PreToolUse`. LittleNix has no policy, so it
+must not import the fragment.
 
 | Hook | Does |
 | --- | --- |
@@ -416,7 +425,7 @@ back in the block message and written to the transcript. Even so, **the text
 you typed still lands in the on-disk transcript and prompt history** (the same
 docs): a blocked secret is *not* safe, only unsent. Rotate anything you pasted.
 
-Self-test: `bash modules/scripts/secret-guard-test.sh` (33 cases; fake tokens
+Self-test: `bash modules/scripts/secret-guard-test.sh` (79 cases; fake tokens
 are assembled at run time). Retro-scan: `secret-guard-scan.sh`.
 
 ### 7.1 Does it work under T3?
@@ -426,8 +435,8 @@ are assembled at run time). Retro-scan: `secret-guard-scan.sh`.
 | `PreToolUse` hooks configured in a project `.claude/settings.local.json` fire under T3, and are picked up mid-session | **Verified 2026-11-01** (probe logged a hook event for a Bash call in this thread) |
 | `UserPromptSubmit` fires for a message typed in the T3 composer | **Verified 2026-11-02**: the probe logged 12 `UserPromptSubmit` events from the owner's messages in this thread (and 110 `PreToolUse`). Still open: whether a *blocking* one shows its reason in the UI (needs the `SECGUARD-MARKER` message below) |
 | A blocking `UserPromptSubmit` surfaces in the T3 UI (shows the reason, not an error loop) | **Verified 2026-11-02** (owner-observed): the UI shows `UserPromptSubmit operation blocked by hook: <reason>`, with the hook's reason text, and the agent does not run. A normal message afterwards is expected to continue the thread (not separately checked) |
-| Hooks defined at user level (`~/.claude/settings.json`) fire under T3 | **Untested**: only the project-level path was exercised. They should, since T3 starts the same `claude` binary, but it has not been observed |
-| Hooks run on REDRUM's `t3code` user | **Not applicable yet**: it reads `/etc/claude-code/managed-settings.json`, not home-manager. Handoff H3 |
+| Hooks from the managed policy (`claude-code-policy.hooks`, the only source now) fire under T3 | **Untested until the owner switches.** Everything above was observed with a project-level probe, a different channel that `allowManagedHooksOnly` now ignores; the managed channel is the same Claude Code mechanism, but it has not been observed for secret-guard. Evaluated: `claude-code-policy.hooks` has `PreToolUse` = 2 (`claude-guard` first, then secret-guard) and `UserPromptSubmit` = 1 on GOD-KILLER and REDRUM. Smoke-test step 24 in `docs/agents/security.md` is the check after the switch |
+| Hooks run on REDRUM's `t3code` user | **Wired, untested**: REDRUM imports the fragment too, so the same managed JSON carries them (`/etc/claude-code/managed-settings.json`). Needs a REDRUM switch by the owner |
 
 **The test (done 2026-11-02).** A probe in this worktree's untracked
 `.claude/settings.local.json` logged each hook event (never the prompt) and blocked
@@ -444,7 +453,8 @@ token, a random password); pastes via any client that bypasses Claude Code
 store hashes and commit SHAs would trigger it constantly. `gitleaks` as a
 pre-commit/pre-push hook is the matching layer for files (handoff H4).
 
-**Firmware (not a secret).** The pattern file also carries the firmware denylist (names and paths only, from the firmware thread): `hosts/*/firmware`, `modules/hosts/*/firmware`, `/var/lib/firmware-src`, `brcm/`, `firmware/`, `brcmfmac*`, `brcmbt*`, `*.clm_blob`, `*.txcap_blob`, `*.ptb`, `firmware.tar*`. Three rules, all of which **ask** instead of denying (the files are proprietary, not credentials): a `git add|stage|commit` that names one; a Bash `cat|less|head|tail|strings|xxd|hexdump|od|base64|cp|mv|scp|rsync|tar|zip|curl|nc` of one (`ls`, `find` and the `t2-firmware-import` app are untouched); and a `Read`/`Grep`/`Glob` whose **path** is one (a grep *pattern* that merely mentions `brcmfmac` is fine). It is a speed bump for agents, not a guarantee: `git add --all`, which `rebuild.sh` runs itself, is not caught, and Bash can reach files in ways a regex cannot see, so `.gitignore` (thread 2), tier-0 (H7) and not granting the `t3code` user access to `/var/lib/firmware-src` are the real controls.
+**Firmware (not a secret).** The pattern file also carries the firmware denylist (names and paths only, from the firmware and agent-security threads): `hosts/*/firmware`, `modules/hosts/*/firmware`, `/var/lib/firmware-src`, `brcm/`, `firmware/`, `brcmfmac*`, `brcmbt*`, `*.clm_blob`, `*.txcap_blob`, `*.ptb` and `firmware.tar*` (blobs also with a `.zst`/`.xz`/`.gz` suffix), the T2 store directories `*-brcm-firmware` and `*-brcm-firmware-zstd` (`/run/current-system/firmware` resolves into the zstd one) and `brcm-firmware.gcroot`. Four rules: a `git add|stage|commit` that names one; a Bash read, copy or upload of one with `cat less more head tail xxd hexdump strings od base64 cp mv scp rsync tar zip 7z curl nc zcat zstdcat unzstd xzcat unxz bzcat gunzip lz4cat bat nl tac dd tee adb gh wget` (`ls`, `find`, `nix path-info` and the `t2-firmware-import` app are untouched); the Nix daemon's root-run reads, `nix store cat|dump-path|export`, `nix nar cat|dump-path`, `nix copy`, `nix bundle` and `nix-store --dump|--export`, when the same command names a firmware path; and a `Read`/`Grep`/`Glob` whose **path** is one (a grep *pattern* that merely mentions `brcmfmac` is fine). These **ask** in a Supervised thread because the files are proprietary, not credentials; **under Full access (`permission_mode` `bypassPermissions`) T3 approves every `ask` itself, so the hook returns `deny` instead**, the same conversion `claude-guard` makes. This is the second layer behind `claude-guard`'s `fw_re`/`fw_op_re`, which block Bash outright in every mode. It is a speed bump for agents, not a guarantee: `git add --all`, which `rebuild.sh` runs itself, is not caught, and Bash can reach files in ways a regex cannot see, so `.gitignore`, tier-0 (H7) and not granting the `t3code` user access to `/var/lib/firmware-src` are the real controls.
+
 
 
 ## 8. Handoffs and open items
@@ -456,7 +466,7 @@ pre-commit/pre-push hook is the matching layer for files (handoff H4).
 | H2 | Firmware thread (owner of the 6.3 run) | Superseded by the new-repo plan. The scans over the old public history found **no credential**; the extra paths (listed in `docs/firmware.md` 6.3), the mailmap and the replace-text are already in your 6.3 command. The authoritative list of what must be decided before that single run is in the private audit; send me or the owner any change to it first, because the new repo is pushed once. Your firmware filename patterns are in the guard (7.2). Re-run gitleaks/trufflehog on the scratch clone before the push. |
 
 
-| H3 | Thread 4 (permissions) | (a) `claude-code.nix`: add `Read` denies for `/etc/ssh/ssh_host_*` (and `~/.config/sops/**` if sops-nix is ever reintegrated); with the sandbox, `denyRead` the same plus `~/.ssh`, `~/.config/gh`, `~/.claude/.credentials.json`. (b) Hook merge: `secret-guard.nix` sets `programs.claude-code.settings.hooks.{UserPromptSubmit,PreToolUse}`; the module system **concatenates** lists from both files (verified by eval with a second `PreToolUse` entry), so thread 4's own hooks coexist. Hooks run in definition order and any `deny` wins, but two `ask`/`allow` results from different hooks are not combined predictably. (c) REDRUM: the `t3code` user reads only `/etc/claude-code/managed-settings.json`; mirror the two hooks there, using `${pkgs.secret-guard}`-style store paths built in `t3code.nix`. (d) Never put `disableBypassPermissionsMode` back; under Full access the `Read` denies do not stop Bash, so the sandbox and PAT scoping (4.1) are the real controls. |
+| H3 | Thread 4 (permissions) | **(b) and (c) done** with the move to `claude-code-policy.hooks` (this branch, after PR #3): the fragment is wired on GOD-KILLER and REDRUM, and the home-manager hook and its import are gone. (a) `claude-code.nix`: add `Read` denies for `/etc/ssh/ssh_host_*` (and `~/.config/sops/**` if sops-nix is ever reintegrated); with the sandbox, `denyRead` the same plus `~/.ssh`, `~/.config/gh`, `~/.claude/.credentials.json`. (b) Hook merge: `claude-code-policy.hooks` lists concatenate across modules (checked by eval). Any `deny` wins, but two `ask`/`allow` results from different hooks are not combined predictably, and under Full access an `ask` is auto-approved, so secret-guard now turns its own `ask` into `deny` when `permission_mode` is `bypassPermissions` (as `claude-guard` does). (c) REDRUM: done by the same fragment. (d) Never put `disableBypassPermissionsMode` back; under Full access the `Read` denies do not stop Bash, so the sandbox and PAT scoping (4.1) are the real controls. |
 | H4 | Thread 1/4 | Add `gitleaks` (already builds via `nix run nixpkgs#gitleaks`) as a `rebuild.sh`/pre-push check on the staged diff. |
 | H5 | Thread 3 (schedules) | Scheduled prompts are stored in plain text: no credentials in them; use the GitHub CLI login of the machine, or `request_secret` + `secretRef` for webhooks. |
 | H6 | Thread 6 (notifications) | If ntfy is added, its topic name is a bearer secret: keep it in an on-host file (as thread 6 already does), not in `notifications.nix`. |

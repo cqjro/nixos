@@ -307,13 +307,11 @@ repeated as proposals.
 - [ ] **Secrets: finish before the new repo goes public** — the steps left from
       the secrets audit (`docs/secrets.md` section 4 and the private audit); do them before
       `cqjro/nixos` is made public (`docs/firmware.md` 6.5) — **4/10**
-  - [ ] Replace the broad `gh` login with a fine-grained token limited to the
-        **new** `cqjro/nixos` (Contents + Pull requests; create it after the repo
-        exists) and revoke the "GitHub CLI" grant (`docs/secrets.md` 4.1; the
-        firmware thread has the reminder for its runbook). Four Full access
-        threads ran (2026-10-29 to 10-31), but no transcript shows a credential
-        file being read, so this is for the smaller blast radius now that agents
-        push to a public repo; the Claude re-login (4.4) is optional
+  - [ ] REDRUM's `t3code` user needs its own fine-grained token (limited to
+        `cqjro/nixos`, Contents + Pull requests) when REDRUM is re-cloned:
+        `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
+        (`docs/secrets.md` 4.1; GOD-KILLER's broad login is already replaced and
+        revoked). The Claude re-login (4.4) is optional
   - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
         are locally managed (`hostname → port` ingress rules), and they are
         **not** in certificate logs today (only the wildcard is), so a public repo

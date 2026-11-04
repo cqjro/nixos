@@ -2,15 +2,20 @@
 {
 	# Hooks that stop credentials reaching an agent (see docs/secrets.md):
 	#   UserPromptSubmit  blocks a message that contains a key/token/private key
-	#   PreToolUse        denies file writes / asks on commands carrying one
+	#   PreToolUse        denies file writes / asks on commands carrying one, and
+	#                     guards the T2 firmware paths (ask; deny under Full access)
 	# Logic lives in modules/scripts/secret-guard.sh, patterns in
 	# modules/scripts/secret-guard-patterns.txt (self-test: secret-guard-test.sh).
 	#
-	# Lands in the same `programs.claude-code.settings` attrset as claude-code.nix:
-	# the module system concatenates the `hooks.<Event>` lists from both files, so
-	# adding hooks there does not clobber these. Opt in per host by adding
-	# `secret-guard` to the imports of that host's machine.nix.
-	flake.modules.homeManager."secret-guard" = { pkgs, ... }:
+	# The managed Claude policy sets `allowManagedHooksOnly`, so hooks are read ONLY
+	# from `claude-code-policy.hooks` (claude-code.nix, docs/agents/security.md
+	# "Adding hooks (merge point)"); home-manager `programs.claude-code.settings.hooks`
+	# and project/skill hooks are ignored. Lists concatenate across modules and
+	# `claude-guard` stays first in PreToolUse.
+	#
+	# Import this fragment only on hosts that also import `claude-code-policy`
+	# (GOD-KILLER, REDRUM); the option does not exist on LittleNix.
+	flake.modules.nixos."secret-guard" = { pkgs, ... }:
 	let
 		guard = pkgs.writeShellApplication {
 			name = "secret-guard";
@@ -22,9 +27,9 @@
 		};
 	in
 	{
-		home.packages = [ guard ];
-
-		programs.claude-code.settings.hooks = {
+		# command paths are store paths: hooks run outside the sandbox as the
+		# session's user, and the JSON is world-readable (no secret in it)
+		claude-code-policy.hooks = {
 			UserPromptSubmit = [
 				{
 					hooks = [
