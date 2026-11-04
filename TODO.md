@@ -212,23 +212,6 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
-- [ ] **LearnHarness registry row** — the app is installed
-      (`modules/home-manager/apps/learnharness.nix`, pinned AppImage, GOD-KILLER
-      only); only the "Pending upstream fixes" bookkeeping is left — **1/10**
-      (deferred so it lands against the post-refactor docs layout instead of
-      conflicting with the `workflow/*` branches)
-  - [ ] Once `workflow/pr-rebuild-docs` is merged, add the LearnHarness row to
-        `docs/agents/upstream-registry.md` **and** the README's "Pending upstream
-        fixes" table: workaround = pinned AppImage via `fetchurl` +
-        `appimageTools.wrapType2`; blocked on = not in nixpkgs, no upstream
-        flake/Nix expression; re-enable when = `pkgs.learnharness` or an
-        upstream flake exists (then drop the pin). Then make the module's
-        `# TODO-remove:` comment cite the row number
-  - [ ] Remove this item in that same change
-  - *Note:* bump `version`/`hash` in the module to update — the AppImage can't
-    self-update from the store. The provider API key is entered in-app (kept in
-    the keyring), never in the repo.
-
 ## Server (REDRUM)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for

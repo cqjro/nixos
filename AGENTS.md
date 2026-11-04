@@ -48,9 +48,10 @@ nix develop .#youtube-sync        # devshell for the youtube-sync helper
   for REDRUM and LittleNix comes from the Nix store
   (`modules/system/t2-firmware.nix`, `pkgs.requireFile` pinned by hash), so
   evaluation needs no files and no `--impure`; only a *build* of a T2 host needs
-  the firmware imported into that machine's store (`docs/firmware.md`). If a
-  build reports the firmware missing, stop and tell the human which machine and
-  host — do not work around it.
+  the firmware imported into that machine's store: the human places it in
+  `/var/lib/firmware-src/<HOST>/brcm` and runs `nix run .#t2-firmware-import --
+  HOST` (`docs/firmware.md`). If a build reports the firmware missing, stop and
+  tell the human which machine and host — do not work around it.
 - `rebuild.sh` works on the checkout it lives in (worktree-safe). Always run
   `./rebuild.sh` from the checkout, never the `rebuild` zsh alias (a frozen
   store copy).
@@ -76,7 +77,7 @@ modules/
   home-manager/    # user config: ai-tools/, apps/, desktop/, keyboard/, languages/, terminal/
   scripts/         # helper shell/python scripts
   server/          # REDRUM services (actual-budget, linkwarden, tailscale, …)
-  system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, …
+  system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, t2-firmware, …
   theme/           # stylix scheme + openrgb + webstyling/ + discord-theme
   _archive/        # retired modules — prefer archiving here over deleting
 ```
@@ -141,7 +142,8 @@ Other conventions:
 Recipes (read the one you need, in [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md)):
 
 - **Creating a server module (REDRUM)** — free `127.0.0.1` port, dedicated
-  user, secrets under `/var/lib/<app>`, placeholder tunnel UUID, README +
+  user, secrets under `/var/lib/<app>`, tunnel UUID committed (an identifier;
+  the credentials JSON is the secret), README +
   Homepage updates.
 - **Theming the Actual Budget Tweaks sidecar** — the base16 → ABT token map and
   the browser-shim seed.
