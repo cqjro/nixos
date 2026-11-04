@@ -82,8 +82,9 @@ in
 				'')
 			];
 
-			# World-readable on purpose (not a secret; no home-dir 0700 problem for
-			# the t3code user), writable by the human who places the files.
+			# 0750 cairo:users: the files are not secret, but agents (the t3code user
+			# on REDRUM) should not be able to list or read the staging copy. Builds
+			# use the world-readable store path, which does not need this directory.
 			systemd.tmpfiles.rules = [
 				"d /var/lib/firmware-src 0750 cairo users -"
 				"d /var/lib/firmware-src/${host} 0750 cairo users -"
