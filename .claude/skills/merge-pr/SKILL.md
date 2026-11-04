@@ -14,7 +14,7 @@ description: Merge an approved PR for this NixOS flake (squash) and hand the hum
 3. `gh pr merge <N> --squash --delete-branch`. The human approving this
    permission card is the approval; never retry a denied merge.
 4. Tell the human how to roll it out, per affected host, from the host itself:
-   `cd ~/.nixos && git pull --ff-only && ./rebuild.sh switch HOST`
+   `cd ~/.nixos && ./rebuild.sh switch HOST` (it fetches and fast-forwards master first)
    (REDRUM: over SSH; lockout-surface changes: `./rebuild.sh dry REDRUM` first
    and keep console access). Afterwards `./rebuild.sh generations` shows the
    new generation next to the PR title.

@@ -18,6 +18,52 @@ repeated as proposals.
 
 ## System
 
+- [ ] **Finish the repo move and open the workflow PRs** — `cqjro/nixos` is
+      rewritten, pushed and still private; these are the steps left before it
+      goes public and the lane threads can merge — **3/10** (full detail in
+      [`docs/firmware.md`](docs/firmware.md); the rewrite itself is done, section
+      6.9 is REDRUM). Delete this item when all are done
+  - [ ] **Before going public (6.5), you:**
+    - [ ] github.com/settings/emails: turn on *Keep my email addresses private*
+          and *Block command line pushes that expose my email* (the history and
+          `git.nix` already use the noreply address, so pushes are not blocked)
+    - [ ] Cloudflare Access for the browser-only apps, or accept the hostnames as
+          they are (the "Hostnames" item in `TODO.md` on `workflow/secrets`)
+    - [ ] Decide the `gh` token scope for the schedules thread: add *Issues:
+          read and write* on `cqjro/nixos` to the GOD-KILLER token (recommended,
+          editable in place), or tell that thread to use PR comments instead
+    - [ ] Then change visibility to Public (cannot be undone)
+  - [ ] **PRs, in order** (all branches are pushed; none opened yet). Merge
+        **firmware first**, then pr-rebuild-docs (use *Create a merge commit*:
+        secrets and notifications contain its commits), agent-security,
+        secrets, notifications, schedules. Do not build REDRUM or LittleNix
+        before the firmware PR is merged
+  - [ ] **REDRUM** (`docs/firmware.md` 6.9, after the firmware PR merges):
+        re-clone `~/.nixos`, place the firmware, run the importer, switch; give
+        the `t3code` user its own fine-grained token and re-clone
+        `/var/lib/t3code/nixos` if it exists
+  - [ ] **Lane threads, each waiting for your "go" once the firmware PR is merged:**
+    - [ ] agent-security (agent work done on the branch): after its PR merges and
+          both hosts switch, the post-switch checks and the 24-step smoke test in
+          `docs/agents/security.md` ("After the switch", Accept edits and Full access)
+    - [ ] notifications: move its hooks to `claude-code-policy.hooks` once the policy
+          lands; choose ntfy.sh or self-hosted; run test 6.2
+    - [ ] schedules: say "commit the stale-hash fix" (`docs/schedules/README.md`
+          line 241); approve the two schedule prompts; decide the old "Build
+          Flags" task; REDRUM bootstrap via `unswitched-changes.md`; after the
+          workflow PR merges, switch each machine so the unswitched check works
+    - [ ] secrets: findings are final (GO from its side); optional Claude
+          re-login; on a `machine.nix` conflict with LearnHarness keep both lines
+  - [ ] After going public: delete `~/.nixos.pre-rewrite`, `~/nixos-archive-private`
+        only when no longer needed (keep `~/private-backup`); optionally archive
+        `nixos-archive` on GitHub; token expiry reminder (tokens made 2026-11-03,
+        30-90 days)
+  - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
+        stay in the private archive repo; extract them only if you want to
+        build or reinstall it
+  - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
+    old repo stays private as the archive and the public one never contains them.
+
 - [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
       (an archived `modules/_archive/waydroid.nix` already exists to
       reintegrate; the kiosk session/autologin is the hard half)
@@ -122,17 +168,6 @@ repeated as proposals.
     check nixpkgs) as a turnkey alternative; (c) `wakatime`-style. Recommended:
     evaluate ActivityWatch first (least code), fall back to a custom
     Hyprland→SQLite poller if its Wayland support is poor.
-
-- [ ] **Secrets audit** — do a configuration audit for better implementing
-      secrets (e.g. replace hand-written files under `/var/lib` and gitignored
-      tokens with something declarative like sops-nix or age) — **7/10**
-  - *Proposed approach:* migrate incrementally, not in one sweep. Add either
-    `sops-nix` or `agenix` as a flake input (neither exists today), create a
-    host key, and start with the highest-value single secret (e.g. the
-    Cloudflare tunnel creds / miniflux `admin.env`); document the pattern in the
-    server-module recipe, then convert the remaining `/var/lib` secrets one
-    module at a time, verifying each host rebuilds. Age-based (agenix) fits the
-    current "one file per host" style more cleanly than committing sops blobs.
 
 - [ ] **Theme update** — revise the window shadows, specifically how focused
       vs unfocused windows are treated, and make that look better — **3/10**
@@ -266,4 +301,58 @@ repeated as proposals.
   - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
         show up in one client
 
-
+- [ ] **Secrets: finish before the new repo goes public** — the steps left from
+      the secrets audit (`docs/secrets.md` section 4 and the private audit); do them before
+      `cqjro/nixos` is made public (`docs/firmware.md` 6.5) — **4/10**
+  - [ ] REDRUM's `t3code` user needs its own fine-grained token (limited to
+        `cqjro/nixos`, Contents + Pull requests) when REDRUM is re-cloned:
+        `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
+        (`docs/secrets.md` 4.1; GOD-KILLER's broad login is already replaced and
+        revoked). The Claude re-login (4.4) is optional
+  - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
+        are locally managed (`hostname → port` ingress rules), and they are
+        **not** in certificate logs today (only the wildcard is), so a public repo
+        would be their first publication. Recommended: keep them and add
+        Cloudflare Access (steps below). Alternative if the names must stay
+        private: placeholders in the repo plus a local override (`--impure`), or
+        Cloudflare-managed tunnels. Decide, then act (`docs/secrets.md`, "Open
+        decision: service hostnames")
+    - [ ] Put Cloudflare Access (Zero Trust, free tier) in front of the
+          browser-only apps, **before** the repo goes public: Cloudflare
+          dashboard → Zero Trust → Access → Applications → Add an application →
+          Self-hosted → hostname (`home.cqjro.ca` Glance, `status.cqjro.ca`
+          Beszel, then Homepage) → Allow policy for your email, one-time PIN.
+          Check each in a private browser window: it must ask for the PIN
+          first
+    - [ ] Apps with mobile or API clients (Miniflux + ReactFlux, Linkwarden,
+          Actual) need a bypass rule or service token for those clients, so
+          leave them on their own logins; `docs` (and possibly `budget`) are covered by the
+          Tailscale item below
+  - [ ] Decide what to do with the security-posture docs (`AGENTS.md`,
+        `docs/agents/t3-claude.md` also say where credentials live). Tool-standard
+        paths (`~/.ssh`, `~/.config/gh`) are public knowledge and the `/var/lib`
+        paths are already in the modules, so the split above is the main fix
+  - [ ] **Move `docs.cqjro.ca` (and possibly `budget.cqjro.ca`) off the
+        internet onto Tailscale** — Paperless (`modules/server/paperless.nix`) and
+        Actual Budget (`modules/server/actual-budget.nix`, with the ABT sidecar in
+        `actual-budget-tweaks.nix`) are reachable from the internet through
+        Cloudflare tunnels; make them tailnet-only — **4/10**
+    - [ ] Publish each over Tailscale Serve from a root oneshot, like
+          `t3code-tailscale-serve` in `modules/server/t3code.nix` (agents must not
+          run `tailscale serve`/`set` themselves). Port 443 is taken by T3 Code, so
+          give each app its own `--https=<port>`; budget goes through the sidecar
+          (`127.0.0.1:8086`), not Actual's `5006`
+    - [ ] Remove the cloudflared ingress block and the `<uuid>.cfargotunnel.com`
+          CNAME for each app, then delete the now-unused tunnel and its
+          credentials file; update the README tunnel/DNS tables, the Homepage and
+          Glance links, and the hostname table
+    - [ ] Decide `budget` separately: Actual's desktop/mobile sync clients and
+          Paperless's mobile app then need Tailscale on every device that syncs;
+          the browser UI still works from any tailnet device
+    - [ ] Check the HTTPS-certificate trade-off: Tailscale HTTPS certificates are
+          publicly logged, which would reveal the machine and tailnet name
+          (Tailscale's docs; not rechecked here). Plain `http` over the tailnet
+          avoids that (`tailscale serve --http=<port>`); never use Funnel, which
+          is the internet-facing variant
+    - [ ] Verify from a device off the tailnet that both hostnames no longer
+          answer, and on-tailnet that they do

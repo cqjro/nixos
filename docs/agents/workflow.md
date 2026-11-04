@@ -30,7 +30,8 @@ picking the T3 environment in the client.
 ## Checkouts
 
 - `~/.nixos` (main checkout) stays on `master` and clean. It is where the
-  human switches from, and where `config-sync`/`start.sh` pull.
+  human switches from. Nothing pulls it automatically: `./rebuild.sh switch`
+  fetches and fast-forwards `master` itself, and agents never touch it.
 - Work happens in T3 worktrees (`~/.t3/worktrees/.nixos/<branch>`), one per
   branch. `./rebuild.sh` operates on the checkout it lives in, so run it from
   the worktree. Uncommitted edits are not copied into new worktrees; push
@@ -49,7 +50,7 @@ picking the T3 environment in the client.
 2. **Implement.** Follow AGENTS.md conventions; check options and packages
    with mcp-nixos before using them. Update README/AGENTS/docs and remove the
    TODO.md item in the same branch.
-3. **Commit** on the branch (ask rule). Plain descriptive subjects, no
+3. **Commit** on the branch (allowed; a commit on `master` asks). Plain descriptive subjects, no
    generation metadata. Several commits are fine; the merge squashes them.
 4. **Verify** (agent, no root): `./rebuild.sh check HOST...` (tier 0), then
    `./rebuild.sh build HOST` for every affected host this machine may build.
@@ -65,7 +66,7 @@ picking the T3 environment in the client.
 6. **Review** — see [review.md](review.md) for the tiers.
 7. **Push** the branch: `./rebuild.sh push` (pushes the current branch, never
    forced; refuses `master` without a terminal).
-8. **Open the PR** (ask rule): `gh pr create --base master --head <branch>
+8. **Open the PR** (allowed for this repo; `--repo` elsewhere asks): `gh pr create --base master --head <branch>
    --title "<what changed>" --body-file <filled template>` using
    [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
    Then call T3's `link_pull_request` with the PR URL. If asked to babysit it,
@@ -81,8 +82,9 @@ picking the T3 environment in the client.
     GitHub's self-approval is unavailable). The squash commit's subject is the
     PR title plus `(#N)`.
 11. **Switch** the affected hosts from merged master (human-approved):
-    on the host, in `~/.nixos`: `git pull --ff-only`, then
-    `./rebuild.sh switch HOST`. Optionally note the result on the PR
+    on the host, in `~/.nixos`: `./rebuild.sh switch HOST` (it fetches and
+    fast-forwards `master` first, and refuses if `master` has diverged or the
+    tree is dirty while behind). Optionally note the result on the PR
     (`gh pr comment <N> --body "GOD-KILLER: generation 231"`).
 
 `switch` refuses to run off `master`, so unmerged work can only ever be
@@ -127,3 +129,57 @@ every thread draws from the same quota, so more threads is not more throughput
 
 Avoid `ultra` reviews (billed) and T3's heaviest multi-agent effort for routine
 config work. The `start-todo` skill applies this table when launching a thread.
+
+## Path to close
+
+A thread exists to finish one piece of work, so every reply to the human ends
+by showing the way to finishing it. Use this block, after the answer itself:
+
+```markdown
+### Path to close
+1. **Agent** — re-run `check` and `build` for GOD-KILLER and REDRUM.
+2. **You** — approve the push card.
+3. **Agent** — open the PR and link it to this thread.
+4. **You** — say "merge it", then `./rebuild.sh switch REDRUM`. *(closes the thread)*
+
+**Delegated:** scheduled drift check → [Scheduled threads](t3-thread://v1/<threadId>)
+**Waiting on:** firmware PR merging first
+```
+
+- **One ordered list, both perspectives.** Tag each step **Agent** (what this
+  thread will do next) or **You** (decisions, approvals, commands only the
+  human can run, such as `switch`, sudo or anything on another machine).
+  Order the steps by dependency, so the first one is always the next thing to
+  happen, and mark the last one *(closes the thread)*.
+- **Concrete steps.** Each step names a command, file, PR or decision, not
+  "follow up". Questions the human must answer are **You** steps.
+- **Delegated** lists work handed to another thread, subagent or scheduled
+  task, linked as `t3-thread://v1/<threadId>` or by task id. Delegated work
+  does not keep this thread open; the receiving thread owns it.
+- **Waiting on** lists outside events (another PR, a reboot, an upstream fix)
+  that gate a step. Omit empty sections.
+- Keep it short and update it every reply. Drop finished steps, and do not
+  repeat what the answer above already explained.
+
+### Settling
+
+When the list is empty, or every remaining step is delegated, replace it with a
+recommendation to settle, after checking:
+
+- commits are pushed (or deliberately local, and the human knows why);
+- every PR from this thread is linked (`list_thread_pull_requests`), merged or
+  handed off, and `unwatch_pull_request` has been called;
+- delegated work has a named owner thread or task;
+- the worktree has no uncommitted changes (`git status`), and docs, TODO.md
+  and memory are updated.
+
+Then recommend one of:
+
+- **Settle** — done. T3's `t3_thread_organize` `settle`, only after the human
+  agrees; it takes effect when the turn ends.
+- **Snooze until <event>** — the only thing left is waiting, e.g. for a PR
+  merge or a reboot.
+- **Archive** — the work was abandoned or superseded (say by what).
+
+After a merge, also suggest removing the thread's worktree once nothing else
+uses the branch.

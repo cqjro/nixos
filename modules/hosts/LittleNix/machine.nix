@@ -1,17 +1,13 @@
 { inputs, ... }:
 {
 	flake.modules.nixos."LittleNix" = { pkgs, ... }: {
-		# T2 Mac Hardware Import
-		hardware.firmware = [
-			(pkgs.stdenvNoCC.mkDerivation (final: {
-				name = "brcm-firmware";
-				src = ./firmware/brcm;
-				installPhase = ''
-					mkdir -p $out/lib/firmware/brcm
-					cp ${final.src}/* "$out/lib/firmware/brcm"
-				'';
-			}))
-		];
+		# T2 Mac Hardware Import: Apple Broadcom Wi-Fi/Bluetooth firmware, proprietary
+		# and NOT in git. Pinned by hash; place the files per docs/firmware.md.
+		imports = [ inputs.self.modules.nixos."t2-firmware" ];
+		# UNVERIFIED: this is the hash of the copy that was committed in the 2025 git
+		# history (now only in the private archive repo). If the files on the LittleNix
+		# machine differ, the importer prints the real hash: `nix run .#t2-firmware-import -- LittleNix`.
+		t2-firmware.hash = "sha256-bA/Thojm8PRCMrTwV40FhNZ++Y5pfRmPavgCNHkw+J4=";
 
 		# Home-Manager
 		home-manager = {

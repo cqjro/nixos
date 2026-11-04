@@ -9,7 +9,7 @@
 #   rebuild.sh test HOST [--target USER@IP]        activate without recording a generation; a reboot reverts it
 #   rebuild.sh dry HOST [--target USER@IP]         dry-activate: show what a switch would restart
 #   rebuild.sh revert                              re-activate the recorded generation after a test
-#   rebuild.sh switch HOST [-m MSG] [--target USER@IP]   master only: commit a dirty tree with MSG, then switch
+#   rebuild.sh switch HOST [-m MSG] [--target USER@IP]   master only: fast-forward to origin/master, commit a dirty tree with MSG, then switch
 #   rebuild.sh push                                push the current branch to origin (never forced)
 #   rebuild.sh generations [--target USER@IP]      list generations with the commit each was built from
 #
@@ -150,27 +150,36 @@ activate() {
         # Remote rebuild: no local sudo. nixos-rebuild SSHes out as the target user
         # and escalates privileges on the remote side.
         read -ra flags <<<"$(elevate_flags)"
-        cmd=(nixos-rebuild "$action" --flake ".#$host" --impure --target-host "$remote" "${flags[@]}")
+        cmd=(nixos-rebuild "$action" --flake ".#$host" --target-host "$remote" "${flags[@]}")
     else
         # Local rebuild: needs local sudo.
-        cmd=(as_root nixos-rebuild "$action" --flake ".#$host" --impure)
+        cmd=(as_root nixos-rebuild "$action" --flake ".#$host")
     fi
     echo "NixOS: $action $host..."
     run_logged "$LOG_DIR/nixos-$action.log" "${cmd[@]}" || exit 1
 }
 
 build_host() {
-    run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1" --impure
+    run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1"
 }
 
-# switch records a generation, so it only runs from master: try branches with `test`
+# switch records a generation, so it only runs from master: try branches with `test`.
+# It also brings master up to date (fetch + fast-forward) so a switch always builds
+# the latest merged work; nothing pulls in the background any more.
 require_master() {
     local branch
     branch=$(current_branch)
     [ "$branch" = master ] || die "switch records a generation, so it only runs on master (this is '$branch'). Use './rebuild.sh test HOST' to try a branch, or merge its PR first."
-    if git rev-parse -q --verify origin/master >/dev/null && ! git merge-base --is-ancestor origin/master HEAD; then
-        echo "Warning: master is behind origin/master (as of the last fetch); consider 'git pull --ff-only' first." >&2
+    if ! GIT_TERMINAL_PROMPT=0 timeout 30 git fetch --quiet origin master; then
+        echo "Warning: could not fetch origin/master; using the local master as it is." >&2
+        return 0
     fi
+    git merge-base --is-ancestor origin/master HEAD && return 0 # up to date (or ahead)
+    git merge-base --is-ancestor HEAD origin/master \
+        || die "master and origin/master have diverged; reconcile them by hand before switching."
+    ! tree_dirty || die "origin/master has new commits and this checkout has uncommitted changes; move the changes to a branch before switching."
+    git merge --ff-only --quiet origin/master || die "Failed to fast-forward master to origin/master!"
+    echo "Fast-forwarded master to $(git log -1 --format='%h %s')."
 }
 
 commit_all() {
@@ -234,8 +243,8 @@ cmd_check() {
 
     for host in "${hosts[@]}"; do
         echo "== eval $host"
-        if ! out=$(nix eval --impure --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath" 2>&1); then
-            echo "FAIL: $(echo "$out" | grep -E '^ *error:' | tail -1 | sed 's/^ *//') (full: nix eval .#nixosConfigurations.$host.config.system.build.toplevel.drvPath --impure)"; fail=1
+        if ! out=$(nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath" 2>&1); then
+            echo "FAIL: $(echo "$out" | grep -E '^ *error:' | tail -1 | sed 's/^ *//') (full: nix eval .#nixosConfigurations.$host.config.system.build.toplevel.drvPath)"; fail=1
         fi
     done
     [ "$fail" -eq 0 ] && echo "All checks passed." || { echo "Some checks failed."; return 1; }
@@ -246,7 +255,7 @@ cmd_eval() {
     [ -n "$host" ] || die "usage: rebuild.sh eval HOST"
     require_host "$host"
     git add --all # flakes only see tracked files
-    nix eval --impure --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath"
+    nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath"
     echo
 }
 
@@ -294,7 +303,7 @@ cmd_switch() {
         commit_all "$message"
     fi
     activate switch "$host" "$remote"
-    current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+    current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
     notify_ok "$host generation $current"
 }
 
@@ -346,6 +355,9 @@ cmd_interactive() {
     branch=$(current_branch)
     if [ "$branch" = master ]; then action=switch; else action=test; fi
     echo "Branch: $branch -> $action"
+    if [ "$action" = switch ]; then
+        require_master
+    fi
 
     if tree_dirty; then
         # Autoformat your nix files
@@ -381,7 +393,7 @@ cmd_interactive() {
     fi
     activate "$action" "$dir" "$remote"
     if [ "$action" = switch ]; then
-        current=$(current_generation "$remote") || die "Failed to get current generation metadata!"
+        current=$(current_generation "$remote") || { echo "Warning: switched, but could not read the generation number (check with ./rebuild.sh generations)." >&2; current="?"; }
         current="generation $current"
     else
         current="test-activated $branch (no generation recorded)"
