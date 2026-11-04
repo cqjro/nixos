@@ -396,7 +396,10 @@ Notes:
   fallback needs Google Chrome.
 - **Secrets and firmware are gitignored** and must never be committed
   (`client_secret.json`, `token.json`, `config.json`, `firmware/`). The
-  YouTube automation needs `token.json` present on the target host.
+  YouTube automation needs `token.json` present on the target host. The T2
+  Wi-Fi/Bluetooth firmware is proprietary and lives outside the repo (store path
+  pinned by hash via `modules/system/t2-firmware.nix`); never read, print or
+  attach its contents. See `docs/firmware.md`.
 - **YouTube playlist sync is quota-bound** (REDRUM, `modules/server/youtube-automation.nix`
   + `modules/scripts/sync_playlist.py`). The Data API allows 10,000 units/day
   (reads 1, playlist insert/delete 50); polling every subscription's uploads
