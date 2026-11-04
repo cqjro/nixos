@@ -305,6 +305,11 @@ Recommendation per task type:
   cat|dump-path|export` and `nix-store --dump|--export` could
   read the firmware store paths. The guard blocks these when the command names
   a firmware path. A path built from a variable or `$(…)` evades it.
+- **REDRUM's `t3code` reads the whole system journal** (`systemd-journal`
+  group), including other services' logs. A service that logs a token or a
+  secret's contents exposes it to REDRUM agents. Keep secrets out of logs.
+- **LittleNix has no managed policy** and no Claude Code. If an agent tool is
+  ever added there, import `claude-code-policy` in the same change.
 - **`~/.nixos/.git` is writable from the sandbox.** Destructive git and
   `rm .git` are gated, but unpushed branches can still be damaged by commands
   the patterns miss. Push branches early.
