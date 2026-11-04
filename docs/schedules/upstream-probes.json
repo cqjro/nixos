@@ -91,12 +91,19 @@
 			"probes": [
 				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#mcp-nixos" }
 			]
+		},
+		{
+			"id": "row-8",
+			"registryRow": 8,
+			"slug": "learnharness-package",
+			"title": "LearnHarness pinned AppImage",
+			"action": "auto-pr",
+			"fixWhen": "any",
+			"probes": [
+				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/le", "ref": "nixos-unstable", "pattern": "^learnharness" },
+				{ "type": "path-exists", "repo": "amosblomqvist/learnharness", "path": "flake.nix" }
+			]
 		}
 	],
-	"ignore": [
-		{
-			"match": "LittleNix/firmware/brcm' does not exist",
-			"reason": "Known: LittleNix cannot evaluate where its gitignored firmware is absent. Thread 2 (firmware module) fixes it; delete this entry when that PR merges."
-		}
-	]
+	"ignore": []
 }

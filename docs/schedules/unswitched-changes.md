@@ -14,9 +14,9 @@ ways to run it on a schedule; pick one per machine.
 | Runs as | systemd timer, no T3 involved | `schedule_task` interval, Haiku low, read-only |
 | Cost | zero tokens | one small turn per run (about 4 a day at 6 h), against the Pro quota |
 | Silent when nothing is pending | yes | the script is, but **the thread still finishes** every run, so T3's own "thread finished" push and the `Stop` hook (docs/notifications.md) can fire each time. **Untested**: please check whether a scheduled run pings your phone |
-| Works with T3 server off / GOD-KILLER not logged in | timer yes (user timer needs a session, a system timer does not) | no |
+| Works with T3 server off / GOD-KILLER not logged in | yes (a system service) | no |
 | Needs a clone readable by `t3code` on REDRUM | no (script makes its own) | no (same), but needs the script and a T3 thread on REDRUM |
-| Status | snippet below, **untested**, not applied (outside `docs/schedules/`) | prompt and JSON below, never run through T3 |
+| Status | snippet below, **untested**, not applied (a new NixOS fragment outside `docs/schedules/`) | live on GOD-KILLER since 2026-11-02, replies "script not installed yet" until this PR is merged and switched |
 
 I recommend A for the notification itself, because B's only extra is a model reading one
 line of JSON. B is fully written below so you can choose.
@@ -47,9 +47,10 @@ Disable it with `update_scheduled_task enabled=false` if those idle turns bother
    `HOST has N merged changes not switched yet: <title (#N)>; … Run: cd ~/.nixos && ./rebuild.sh switch HOST`
    (up to five titles, then "+K more"; PR number from the squash subject; old
    `HOST: <gen> … || message` commits show their message).
-5. **Delivery** (`--notify`): `agent-notify send finished "<message>"` with
-   `AGENT_NOTIFY_LABEL="Unswitched changes"` (the Notifications thread's non-hook entry
-   point). No `agent-notify` on PATH → the message is only in the report.
+5. **Delivery** (`--notify`): `agent-notify send info "<message>"` with
+   `AGENT_NOTIFY_LABEL="Unswitched changes"` (the `info` kind of the merged notifications
+   module: low priority, no popup, not dropped by quiet hours). No `agent-notify` on PATH →
+   the message is only in the report.
 
 ### Edge cases (each says so instead of guessing)
 
@@ -75,45 +76,54 @@ State is `unswitched-<HOST>.json` in the script's state directory. A notice is s
 the situation changes (status, master head, or running revision) and then repeated every
 `--remind-hours` (default 24) while it is still true; diagnostic notices (dirty, no
 revision, not on master) repeat at 7× that. When the host catches up the state clears.
-`agent-notify` additionally applies its own quiet hours (a "finished" is dropped inside
-them), so the reminder is what catches a notice swallowed overnight.
+`info` notices are not dropped by quiet hours (they go out at priority 2 inside them), so the
+reminder is only for a notice you missed, not one the filter ate.
 
 ### Verified
 
 On GOD-KILLER, against the real private repo and a dry/faked `agent-notify`: all
 statuses above (using `--revision` to simulate each), GOD-KILLER and REDRUM scoping,
 unknown host, the notify-once / remind / clear state machine, and that `~/.nixos` stays
-untouched (`git status` clean, worktree list unchanged). **Not verified:** the real
-`agent-notify` (lives on the notifications branch), a real `nixos-version` revision
+untouched (`git status` clean, worktree list unchanged). **Not verified:** a real
+`agent-notify send info` delivery (the script passes `info` and the label; I did not fire a
+real notification at your phone), a real `nixos-version` revision
 (this machine's generation has none, so it correctly reports `no-revision`), and either
 scheduler path.
 
 ## A. Timer snippet (untested, not applied)
 
-Belongs next to the notifications module (thread 6's lane), shown here so the unit is
-reviewable. GOD-KILLER as a home-manager user timer; the script and `agent-notify` come
-from the packaged scripts once they exist.
+A NixOS fragment, written against the merged notifications module
+(`config.agent-notifications.package`, read-only, from
+`modules/home-manager/ai-tools/notifications.nix`). It is not in the repo because it belongs
+outside `docs/schedules/`; add it as `flake.modules.nixos."unswitched-check"` and list it in
+`modules/hosts/host.nix` for the hosts that should check themselves.
 
 ```nix
-systemd.user.services.unswitched-check = {
-	Unit.Description = "Notify about merged changes not switched yet";
-	Service = {
-		Type = "oneshot";
-		ExecStart = "${pkgs.bash}/bin/bash -c 'exec ${config.home.homeDirectory}/.nixos/docs/schedules/bin/schedule-precheck unswitched --notify'";
-		Environment = [ "PATH=${lib.makeBinPath [ pkgs.git pkgs.nix pkgs.gh pkgs.coreutils config.programs.agent-notify.package ]}:/run/current-system/sw/bin" ];
+flake.modules.nixos."unswitched-check" = { config, inputs, pkgs, ... }: {
+	systemd.services.unswitched-check = {
+		description = "Notify about merged changes not switched yet";
+		serviceConfig = {
+			Type = "oneshot";
+			User = "cairo"; # "t3code" on REDRUM (its topic file is /var/lib/t3code/.config/agent-notify/topic)
+			ExecStart = "${pkgs.python3}/bin/python3 ${inputs.self}/docs/schedules/bin/schedule-precheck unswitched --notify";
+		};
+		path = [ pkgs.git pkgs.gh config.agent-notifications.package "/run/current-system/sw" ];
 	};
-};
-systemd.user.timers.unswitched-check = {
-	Unit.Description = "Check for unswitched changes hourly";
-	Timer = { OnBootSec = "5min"; OnUnitActiveSec = "1h"; };
-	Install.WantedBy = [ "timers.target" ];
+	systemd.timers.unswitched-check = {
+		wantedBy = [ "timers.target" ];
+		timerConfig = { OnBootSec = "5min"; OnUnitActiveSec = "1h"; };
+	};
 };
 ```
 
-(`config.programs.agent-notify.package` is a placeholder for whatever option thread 6's
-module exposes.) The script runs from the checkout it lives in without writing to it, so
-the timer needs the checkout to exist but not to be current; a stale script still compares
-correctly because the git data comes from the private clone.
+Running the script from `${inputs.self}` (the flake source in the store) means no checkout
+has to exist or be current, and removes the Python-via-`nix shell` shebang need; the script
+then is the version of the generation, and the git data still comes from the private clone
+(the script falls back to `https://github.com/cqjro/nixos.git` when it is not inside a git
+checkout). Credentials: the private fetch needs the user's `gh` git credential helper
+(`gh` is on `path`; `cairo` has it from home-manager, but `t3code` only has it inside the
+`t3code` service's environment, `GIT_CONFIG_*` in `modules/server/t3code.nix`, which this
+unit would have to copy). Once the repo is public no credentials are needed at all.
 
 ## B. T3 scheduled task
 
@@ -173,15 +183,17 @@ from here. What I can do is make it a paste: open a new thread on REDRUM's envir
 REDRUM's T3 server is a separate environment, so this task (B) must be created from a
 thread opened on REDRUM, by you. Either path needs, in order:
 
-1. **The script on REDRUM, readable by `t3code`.** The repo clone for `t3code` is not set up
-   yet (`docs/agents/workflow.md`), so either wait for it, or package the script into the
-   `t3code` user's tools in `modules/server/t3code.nix` (thread 4/the workflow thread's
-   lane), which also removes the Python-via-`nix shell` shebang need.
+1. **The script on REDRUM, readable by `t3code`.** Option A needs nothing (the unit runs it from
+   the store). For B, the repo clone for `t3code` is not set up yet (`docs/firmware.md` 6.9),
+   so wait for it, or run the script from the store path the A unit would use.
 2. **Credentials for the private repo** as `t3code`: the `gh` git credential helper
-   (`GIT_CONFIG_*` already set in `t3code.nix`) plus a fine-grained token limited to
-   `cqjro/nixos`, contents read only (thread 5). The first run clones through it.
-3. **Delivery:** `agent-notify` on PATH for `t3code` and its ntfy topic in
-   `/var/lib/t3code/.config/agent-notify/topic` (thread 6). Without it the report is
+   (`GIT_CONFIG_*` already set in `t3code.nix`) plus its own fine-grained token limited to
+   `cqjro/nixos`, contents read only (the REDRUM step in `docs/firmware.md` 6.9). The first
+   run clones through it. Not needed once the repo is public.
+3. **Delivery:** `agent-notify` is installed system-wide on REDRUM by the `agent-notifications`
+   fragment (already in REDRUM's module list). What is missing is the ntfy topic file
+   `/var/lib/t3code/.config/agent-notify/topic` (mode 0600, owner `t3code`; the topic is a
+   credential, enter it with `request_secret`, never in chat). Without it the report is
    written but nothing reaches the phone.
 4. `nixos-version` on the task's PATH (`/run/current-system/sw/bin`).
 5. Create the task from a REDRUM thread (B) or enable the timer (A). For A on REDRUM use a
@@ -211,34 +223,18 @@ The value is small next to the lock-in and the turns spent, so I would not do it
 the 6 h delay actually bothers you. If it does, replace the interval with the webhook
 trigger on the same prompt (add the `ref` check as step 0).
 
-## For the Notifications thread
+## Delivery semantics (`agent-notify send info`)
 
-- This uses `agent-notify send finished MSG` with `AGENT_NOTIFY_LABEL`. It works but is
-  dressed as a completion: quiet hours drop it, and its priority is the completion
-  priority. Request: a `send info` kind (priority 2–3, no desktop popup, label as given,
-  still subject to dedupe) so a reminder is not styled as "Thread finished".
-- The message contains merged-commit titles. `send` text goes to ntfy by design; that is
-  your own topic, but on ntfy.sh it transits a third party. Titles are mostly
-  descriptive, not secret; tell me if you want them dropped (count only).
-- For option B: does a scheduled thread's completion push your phone through T3's native
-  notifications or the `Stop` hook? If yes, B needs the "Stop" hook to skip threads titled
-  "Unswitched changes", or A should be the only supported path.
+From the merged notifications module (`docs/agents/notifications.md`, `docs/notifications.md`
+section 8.1): `info` is ntfy priority 3 (2 inside quiet hours), tag `information_source`, no
+desktop popup, and **not** dropped by quiet hours; the label is the heading as given
+(`Unswitched changes`); an identical message inside 30 s collapses to one.
 
-### REDRUM bootstrap brief (paste into a new Haiku-low thread on REDRUM's T3 server)
-
-```text
-Set up the "Unswitched changes" scheduled task on THIS machine (REDRUM). First check, and
-report each as OK or MISSING without trying to fix anything:
-  a. the script exists and is readable by this user:
-     ls -l <CHECKOUT>/docs/schedules/bin/schedule-precheck
-  b. git, nix, gh and nixos-version are on PATH (command -v ...)
-  c. the private repo is reachable: git ls-remote https://github.com/cqjro/nixos.git master
-  d. agent-notify is on PATH, and ~/.config/agent-notify/topic exists (do NOT print its contents)
-If anything is MISSING, stop and list what the human must do. Otherwise call schedule_task
-with title "Unswitched changes", schedule {"type":"interval","everyMs":21600000},
-bindToCurrentThread true, enabled true, and as the prompt the text in the "B. T3 scheduled
-task" code block of docs/schedules/unswitched-changes.md, with <CHECKOUT> replaced by the
-path from (a) and " --remote-url https://github.com/cqjro/nixos.git" appended to the
-schedule-precheck command. Then run the script once with --dry-run appended and report its
-JSON status line.
-```
+- The message contains merged-commit titles. Caller-written text goes to ntfy by design:
+  that is your own topic, but on ntfy.sh it transits a third party. The titles are PR
+  titles, mostly descriptive, none secret by policy. If you would rather send a count only,
+  say so and the script will drop the titles.
+- Whether a scheduled thread's completion pushes your phone through T3's native
+  notifications or the `Stop` hook is still **unobserved** (`docs/notifications.md` 6.2).
+  It only matters for option B: if it does, B pings every 6 h with "thread finished" even
+  when nothing is pending, and A is the better choice.

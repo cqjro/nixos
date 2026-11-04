@@ -143,19 +143,28 @@ class Issues:
 
 	def __init__(self, repo, dry):
 		self.repo, self.dry, self.cache, self.created = repo, dry, None, []
+		self.unavailable = None  # why issue bookkeeping is off (e.g. token lacks Issues permission)
 
 	def ensure_labels(self):
 		if self.dry:
 			return
-		have = {l["name"] for l in json.loads(gh(["label", "list", "--repo", self.repo, "--json", "name", "--limit", "200"]))}
-		for name, (color, desc) in LABELS.items():
-			if name not in have:
-				gh(["label", "create", name, "--repo", self.repo, "--color", color, "--description", desc])
+		try:
+			have = {l["name"] for l in json.loads(gh(["label", "list", "--repo", self.repo, "--json", "name", "--limit", "200"]))}
+			for name, (color, desc) in LABELS.items():
+				if name not in have:
+					gh(["label", "create", name, "--repo", self.repo, "--color", color, "--description", desc])
+		except RuntimeError as e:
+			self.unavailable = str(e)
 
 	def load(self):
 		if self.cache is None:
-			out = gh(["issue", "list", "--repo", self.repo, "--label", "scheduled", "--state", "all",
-				"--limit", "300", "--json", "number,state,title,body,labels,url"])
+			self.cache = {}
+			try:
+				out = gh(["issue", "list", "--repo", self.repo, "--label", "scheduled", "--state", "all",
+					"--limit", "300", "--json", "number,state,title,body,labels,url"])
+			except RuntimeError as e:
+				self.unavailable = str(e)  # report-only mode: probes still run, nothing is filed
+				return self.cache
 			self.cache = {}
 			for i in json.loads(out):
 				m = re.search(rf"<!-- {MARK}: (\S+) -->", i.get("body") or "")
@@ -167,24 +176,36 @@ class Issues:
 		return self.load().get(key)
 
 	def create(self, key, title, body, labels):
+		if self.unavailable:
+			return None
 		if self.dry:
 			self.created.append({"key": key, "title": title, "dry": True})
 			return None
 		body = f"<!-- {MARK}: {key} -->\n{body}\n\n_Filed by a scheduled run; see docs/schedules/README.md. Closing this issue is a final answer: schedules never reopen it._"
-		url = gh(["issue", "create", "--repo", self.repo, "--title", title, "--body", body,
-			*sum((["--label", l] for l in ["scheduled", *labels]), [])]).strip()
+		try:
+			url = gh(["issue", "create", "--repo", self.repo, "--title", title, "--body", body,
+				*sum((["--label", l] for l in ["scheduled", *labels]), [])]).strip()
+		except RuntimeError as e:  # most likely the token lacks Issues: write; keep probing, report only
+			self.unavailable = str(e)
+			return None
 		num = int(url.rsplit("/", 1)[1])
 		self.cache[key] = {"number": num, "state": "OPEN", "title": title, "url": url, "labels": [{"name": l} for l in labels]}
 		self.created.append({"key": key, "number": num, "url": url})
 		return num
 
 	def comment(self, number, text):
-		if not self.dry:
-			gh(["issue", "comment", str(number), "--repo", self.repo, "--body", text])
+		if not self.dry and not self.unavailable:
+			try:
+				gh(["issue", "comment", str(number), "--repo", self.repo, "--body", text])
+			except RuntimeError as e:
+				self.unavailable = str(e)
 
 	def close(self, number, text):
-		if not self.dry:
-			gh(["issue", "close", str(number), "--repo", self.repo, "--comment", text])
+		if not self.dry and not self.unavailable:
+			try:
+				gh(["issue", "close", str(number), "--repo", self.repo, "--comment", text])
+			except RuntimeError as e:
+				self.unavailable = str(e)
 
 
 # ---------------------------------------------------------------------- upstream
@@ -302,12 +323,17 @@ def cmd_upstream(a, root, state, issues):
 		f["issue"] = {"number": existing["number"], "state": existing["state"]} if existing else None
 		# fix signal -> one issue per row; closed issues are a final answer
 		if status == "fix-candidate":
-			if existing is None:
+			if existing is None and issues.unavailable:
+				f["issueSkipped"] = True
+			elif existing is None:
 				if len(issues.created) < a.max_new:
 					body = render_upstream_body(row, details)
 					num = issues.create(key, f"Registry row {row['registryRow']}: {row['title']} may be fixed upstream", body, ["upstream-fix"])
-					f["issue"] = {"number": num, "state": "OPEN"}
-					f["issueEvent"] = "created"
+					if num is None and not a.dry_run:
+						f["issueSkipped"] = True
+					else:
+						f["issue"] = {"number": num, "state": "OPEN"}
+						f["issueEvent"] = "created"
 				else:
 					f["issueEvent"] = "deferred (new-issue cap reached)"
 			elif existing["state"] == "OPEN" and (prev or {}).get("commentedFp") != fingerprint:
@@ -433,12 +459,17 @@ def cmd_buildflags(a, root, state, issues):
 			is_new = key not in seen["keys"]
 			item = {"key": key, "kind": f["kind"], "hosts": f["hosts"], "text": f["text"][:300], "new": is_new,
 				"issue": {"number": existing["number"], "state": existing["state"]} if existing else None}
-			if existing is None:
+			if existing is None and issues.unavailable:
+				item["issueSkipped"] = True
+			elif existing is None:
 				if f["kind"] == "eval-failure" or len(issues.created) < a.max_new:
 					title = ("Evaluation fails on " if f["kind"] == "eval-failure" else "Rebuild warning: ") + f"{', '.join(f['hosts'])}: {f['text'][:70]}"
 					num = issues.create(key, title, render_warning_body(f), [f["kind"]])
-					item["issue"] = {"number": num, "state": "OPEN"}
-					item["issueEvent"] = "created"
+					if num is None and not a.dry_run:
+						item["issueSkipped"] = True
+					else:
+						item["issue"] = {"number": num, "state": "OPEN"}
+						item["issueEvent"] = "created"
 				else:
 					item["issueEvent"] = "digest"  # over the cap: waits for a later run
 					if not seen["keys"].get(key, {}).get("inDigest"):
@@ -468,7 +499,7 @@ def cmd_buildflags(a, root, state, issues):
 		if f.get("issue") and f["issue"]["state"] == "OPEN" and f.get("kind") in ("rebuild-warning", "eval-failure")
 		and f.get("issueEvent") != "digest" and not _has_label(issues, f["key"], "worker-launched")][:3]
 	report["changed"] = bool(report["errors"] or report["actionable"]) or any(
-		f.get("issueEvent") in ("created", "digest") and f.get("new") or f.get("kind") == "resolved" for f in report["findings"])
+		(f.get("issueEvent") in ("created", "digest") or f.get("issueSkipped")) and f.get("new") or f.get("kind") == "resolved" for f in report["findings"])
 	if not a.dry_run:
 		state.save("buildflags-state.json", seen)
 	return report
@@ -601,7 +632,7 @@ def cmd_unswitched(a, root, state, issues):
 		agent = shutil.which("agent-notify")
 		if agent:
 			env = dict(os.environ, AGENT_NOTIFY_LABEL="Unswitched changes")
-			rc, _, _ = run([agent, "send", "finished", message], env=env, timeout=30)
+			rc, _, _ = run([agent, "send", "info", message], env=env, timeout=30)
 			report["delivery"] = "agent-notify" if rc == 0 else f"agent-notify failed ({rc})"
 		else:
 			report["delivery"] = "none (agent-notify not on PATH; message is in the report)"
@@ -617,6 +648,8 @@ def cmd_mark_launched(a, state, issues):
 	"""mark-launched KEY THREAD_ID: label the issue so later runs do not launch a second worker."""
 	key, thread = a.args
 	ex = issues.find(key)
+	if issues.unavailable:
+		return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
 	if ex is None:
 		return {"ok": False, "error": f"no issue for {key}"}
 	if not a.dry_run:
@@ -631,9 +664,13 @@ def cmd_health(a, state, issues):
 	issues.ensure_labels()
 	key = f"schedule-health:{sched}:{datetime.now(timezone.utc).strftime('%Y-%m')}"
 	ex = issues.find(key)
+	if issues.unavailable:
+		return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
 	body = f"Scheduled run `{sched}` failed or went stale at {now()}.\n\n```\n{message}\n```"
 	if ex is None:
 		num = issues.create(key, f"Scheduled run '{sched}' is failing", body, ["schedule-health"])
+		if num is None and not a.dry_run:
+			return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
 		return {"ok": True, "issue": num, "event": "created"}
 	if ex["state"] == "OPEN":
 		issues.comment(ex["number"], body)
@@ -678,6 +715,8 @@ def main():
 		print(json.dumps(report, indent=1))
 		return 3
 	report["issuesCreated"] = issues.created
+	if issues.unavailable:
+		report["warnings"] = [f"issue bookkeeping is off (report-only): {issues.unavailable}. The gh token needs Issues: read and write on {issues.repo}."]
 	# heartbeat for the staleness check
 	hb = state.load("heartbeat.json", {})
 	if not report["errors"] and not a.dry_run:

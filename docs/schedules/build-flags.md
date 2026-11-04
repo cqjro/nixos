@@ -16,10 +16,9 @@ Replaces the existing "Build Flags" task
 Worktree safety, concretely: the script fetches `origin/master` into its own private
 clone (`~/.local/state/nixos-schedules/clone`), uses `git worktree add --detach <tmp> <rev>`
 there and removes it in a `finally`. It never touches `~/.nixos` or its `.git`, and never
-checks out a branch, so it cannot collide with any branch another worktree holds. Flakes only see tracked
-files, so firmware-dependent hosts (LittleNix) fail to evaluate in any clean
-worktree until thread 2's firmware module lands; that error is on the `ignore`
-list with a reason.
+checks out a branch, so it cannot collide with any branch another worktree holds. All three hosts now evaluate
+purely from a clean worktree (the firmware module is merged: LittleNix evaluated OK at
+`origin/master` on 2026-11-04), so the old firmware `ignore` entry is gone.
 
 - **Runs on:** GOD-KILLER now; REDRUM later with `--detect-only` (evaluation is
   host independent: all three hosts evaluate in ~15 s on GOD-KILLER).
@@ -53,7 +52,7 @@ instructions.
 3. If `changed` is false: reply with exactly one line:
    "buildflags: all hosts OK at <rev>, no new findings" and stop.
 
-4. Otherwise report, per host, OK / FAILED from `hosts`, then one line per finding:
+4. Otherwise (if `warnings` is non-empty, quote each warning first) report, per host, OK / FAILED from `hosts`, then one line per finding:
    `kind | hosts | first 140 chars of text | issue #N (created/resolved/digest)`.
    Mention anything in `ignored` as "known".
 

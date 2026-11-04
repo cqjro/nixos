@@ -48,10 +48,12 @@ repeated as proposals.
           `docs/agents/security.md` ("After the switch", Accept edits and Full access)
     - [ ] notifications: choose ntfy.sh or
           self-hosted, create the topic file, then run test 6.2 after the switch
-    - [ ] schedules: say "commit the stale-hash fix" (`docs/schedules/README.md`
-          line 241); approve the two schedule prompts; decide the old "Build
-          Flags" task; REDRUM bootstrap via `unswitched-changes.md`; after the
-          workflow PR merges, switch each machine so the unswitched check works
+    - [ ] schedules: approve the two schedule prompts (`docs/schedules/upstream-check.md`,
+          `build-flags.md`) and update the two existing tasks; decide the old
+          "Build Flags" task (it still edits the checkout); REDRUM bootstrap via
+          `unswitched-changes.md`; after the workflow PR merges, switch each
+          machine so the unswitched check works; the `gh` Issues permission
+          decision above (`docs/schedules/README.md`, "GitHub permissions")
     - [ ] secrets: findings are final (GO from its side); optional Claude
           re-login; on a `machine.nix` conflict with LearnHarness keep both lines
   - [ ] After going public: delete `~/.nixos.pre-rewrite`, `~/nixos-archive-private`
@@ -84,30 +86,6 @@ repeated as proposals.
   - [ ] YouTube
   - [ ] Reddit
   - [ ] Instagram
-
-- [ ] **Upstream-fixes watchdog** — build a monitor (background process or
-      agent) that tracks the "Pending upstream fixes" registry rows in
-      `docs/agents/upstream-registry.md` (mirrored in `README.md`), periodically re-checks each upstream
-      issue/PR, and prompts me (or an agent) when a fix has landed so the
-      workaround can be removed and verified — **7/10**
-  - *Proposed approach:* parse the registry table (its `Blocked on` column is
-    already structured, e.g. `NixOS/nixos-hardware#2027`), then for each row
-    poll the GitHub API (`gh`/`nix search` for nixpkgs-landed cases). Run it as a
-    systemd user timer writing to a status file, and surface landed fixes as a
-    `notify-send` + a line in `Rebuild warnings`-style log. A cheaper v1: a
-    script that, on the next rebuild, greps the registry, checks each linked
-    issue state, and prints a "remove workaround #N" reminder.
-
-- [ ] **Rebuild warnings catcher** — build a system that captures the warnings
-      emitted during `./rebuild.sh` runs (currently streamed through `bat`
-      and discarded), documents them somewhere durable, and queues them for
-      agents to investigate and solve later — **4/10**
-  - *Proposed approach:* `rebuild.sh:74` already `tee`s the full output to
-    `./.log/nixos-switch.log` — so warnings are *persisted* today, just never
-    extracted. Add a post-build step that greps that log for
-    `warning|deprecated|insecure|trace:` and appends a deduplicated section to a
-    durable file (e.g. `.log/warnings.md` or a `WARNINGS.md` queue). Because
-    `.log/` is likely gitignored, confirm the durable target before wiring it.
 
 - [ ] **Game window control** — figure out the optimal way of controlling
       games on different windows (focus, moving between monitors/workspaces)

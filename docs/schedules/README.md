@@ -127,6 +127,39 @@ and every `t3_thread_launch` call below.
 | One worker per run | The dispatcher launches at most one worker; it handles up to three of the listed issues in one PR. The `worker-launched` label stops the next run launching a duplicate. |
 | First run | The first `buildflags` run files a backlog (seven distinct warnings today across the three hosts: three issues plus a digest). Run it with `--dry-run` first if you want to see it. |
 
+## GitHub permissions
+
+The issue-based design needs the `gh` token on the machine that runs the schedules to have
+**Issues: read and write** on `cqjro/nixos`, on top of Contents and Pull requests. The script
+(`schedule-precheck`) lists issues, creates and comments on and closes them, edits labels on
+them (`worker-launched`) and creates labels. Probes of other repositories (nixpkgs,
+nixos-hardware, QIDIStudio, nixdatifier, xodus-nexus, learnharness) only read public data.
+
+Status on 2026-11-04: the GOD-KILLER token **lacks it** (`gh issue create` and plain
+`gh issue list` fail with "Resource not accessible by personal access token"). Without it the
+script degrades instead of failing: probes and evaluation still run, nothing is filed,
+the report carries a `warnings` entry saying so, new findings are reported with
+`issueSkipped: true`, and no worker is ever `actionable` (a worker needs an issue to point
+at). The `unswitched` check does not use issues and is unaffected. Testing this degraded mode
+against the real repo **created the six labels** (`scheduled`, `upstream-fix`,
+`rebuild-warning`, `eval-failure`, `worker-launched`, `schedule-health`) in `cqjro/nixos`,
+because the current token may create labels; no issue was created. The labels are what the
+script would create anyway.
+
+**Decision for the owner (open):** add the permission (recommended: one setting, no code
+change, and `Fixes #N` closes issues on merge), or use PR comments instead.
+
+*If the owner chooses PR comments instead*, these files change and nothing else:
+`docs/schedules/bin/schedule-precheck` (the `Issues` class and `LABELS`, `cmd_mark_launched`,
+`cmd_health`: `gh issue *` becomes `gh pr list/comment` against one standing draft PR on a
+dedicated branch such as `auto/schedule-findings`, with the same `<!-- sched-key -->` marker
+per comment; "close" becomes a "resolved" comment because comments have no state or labels,
+so `worker-launched` moves into the marker), `upstream-check.md` and `build-flags.md` (the
+prompts say "issue"), `worker-briefs.md` (`gh issue view/comment`, `Fixes #N` become the PR
+comment and a link in the PR body), this README (dedupe table, label list, the token line for
+the secrets lane), and the owner item in `TODO.md`. The cost: no auto-close on merge, and a
+standing PR must carry at least one commit.
+
 ## Placement
 
 Each T3 server has its own scheduler, and a scheduled task runs on the server
@@ -144,9 +177,8 @@ REDRUM's server.
 REDRUM prerequisites before moving detection there (none exist yet): a repo
 checkout readable by the `t3code` user (thread 4 / REDRUM docs), `gh` login for
 that user with a fine-grained token limited to `cqjro/nixos` (issues + PRs,
-thread 5), `nix` flakes enabled, and the firmware module (thread 2) so LittleNix
-and REDRUM evaluate without the absolute `/home/cairo` path. Until then, keep
-both on GOD-KILLER.
+thread 5), and `nix` flakes enabled (the firmware module is merged, so evaluation no longer needs
+the absolute `/home/cairo` path). Until then, keep both on GOD-KILLER.
 
 A missed run (GOD-KILLER off at Saturday noon): whether T3's scheduler catches
 up on boot is **unknown and untested**. Observe it: leave GOD-KILLER off over
@@ -234,11 +266,11 @@ are why the design is worth having:
   `xodus*` in `pkgs/by-name/xo`; no `flake.nix` in `xodus-nexus`).
 - **Seven distinct evaluation warnings** exist today (texlive.combine, renamed
   `programs.noctalia-greeter`, nixcord, `programs.rofi.font`, opencode `tui`,
-  two avahi options) plus `pnpm: Override nodejs-slim` on REDRUM. LittleNix fails
-  to evaluate (missing firmware path), which is ignored with a reason until
-  thread 2 merges.
+  two avahi options) plus `pnpm: Override nodejs-slim` on REDRUM. LittleNix failed
+  to evaluate on 2026-11-01 (missing firmware path); after the firmware PR merged it evaluates
+  OK and the ignore entry was removed.
 - **Stale cross-references:** `3d-printing.nix` and `nixdatifier.nix` cited the wrong
-  registry rows; the workflow branch already fixes them (`917d021`).
+  registry rows; the workflow branch already fixes them.
 
 ## Rollout
 
@@ -279,10 +311,10 @@ worker briefs, Haiku low for scheduled checks, and the registry at
   have none. Ship it properly (home-manager package or `writers.writePython3Bin` with
   `gh git nix` as runtime inputs) next to the other scripts in `modules/scripts/`, and add it
   to the REDRUM `t3code` user's tools.
-- `TODO.md` items "Upstream-fixes watchdog" and "Rebuild warnings catcher" are implemented
-  by this work. Remove them once the schedules are verified live (the repo rule is to remove
-  an item when it is implemented; removing them earlier would hide that nothing runs yet).
-  The watchdog item's registry pointer is already updated on this branch.
+- The `TODO.md` items "Upstream-fixes watchdog" and "Rebuild warnings catcher" are removed
+  by this PR (implemented by the probes and `buildflags`). They are *built*, not yet *live*: the
+  prompts are unapproved and the token lacks Issues permission, so the owner items stay in
+  `TODO.md`.
 
 **Thread 4 (permissions):**
 
@@ -302,9 +334,9 @@ The schedules need nothing else.
 
 **Thread 6 (notifications):** the dispatchers end with a one-paragraph summary and the worker
 waits on a PR approval, so "thread finished" and "approval needed" are the right wake signals.
-The unswitched check delivers through `agent-notify send finished` with a label; the specific
-requests (an `info` kind, scheduled-thread completion pings, the REDRUM `t3code` topic file)
-are in the last section of [`unswitched-changes.md`](./unswitched-changes.md).
+The unswitched check delivers through `agent-notify send info` with a label (the `info` kind
+now exists on `master`); what is still open (whether a scheduled thread's completion pings
+the phone, the REDRUM `t3code` topic file) is in the last section of
+[`unswitched-changes.md`](./unswitched-changes.md).
 
-**Thread 2 (firmware):** when the firmware module merges, delete the LittleNix
-entry in `upstream-probes.json`'s `ignore` list.
+**Firmware thread:** nothing left; its `ignore` entry is already removed.
