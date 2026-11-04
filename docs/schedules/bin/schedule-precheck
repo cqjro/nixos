@@ -1,0 +1,733 @@
+#!/usr/bin/env -S nix shell nixpkgs#python3 --command python3
+"""Deterministic pre-step for the scheduled T3 threads (no LLM involved).
+
+  schedule-precheck upstream   poll the "Pending upstream fixes" probes
+  schedule-precheck buildflags evaluate every host at origin/master and collect warnings
+  schedule-precheck unswitched run on each host: merged master commits not yet switched here
+  schedule-precheck mark-launched KEY THREAD_ID   label an issue once a worker owns it
+  schedule-precheck health SCHEDULE MESSAGE...    file/update the "schedule is failing" issue
+
+Both print one JSON report on stdout. `changed` is false when nothing new
+happened, and the scheduled prompt then stops after one line, so the model only
+does real work when there is something to do. Issue bookkeeping (one GitHub
+issue per finding, updated in place) is done here, not by the model, and only
+from structured fields this script produced: upstream text never reaches an
+issue body, which keeps prompt injection out of the loop.
+
+Nothing here writes to ~/.nixos (the checkout the human switches from): git work
+happens in a private partial clone and its throw-away worktrees under
+$NIXOS_SCHEDULE_STATE (default ~/.local/state/nixos-schedules). The script only
+READS ~/.nixos, once, for the origin URL. Design notes: docs/schedules/README.md.
+
+Needs python3, gh, git and nix on PATH. The shebang borrows python3 from nixpkgs because
+agent shells have none; package it with home-manager later (see README).
+
+Exit codes: 0 report produced (even with findings), 2 usage, 3 the script itself
+failed (the report's `errors` explains; the prompt files the health issue).
+"""
+
+import argparse
+import hashlib
+import shutil
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+MARK = "sched-key"
+LABELS = {
+	"scheduled": ("ededed", "Filed or updated by a scheduled run"),
+	"upstream-fix": ("0e8a16", "A registry workaround may be removable"),
+	"rebuild-warning": ("fbca04", "Evaluation warning from a host build"),
+	"eval-failure": ("d73a4a", "A host fails to evaluate"),
+	"worker-launched": ("5319e7", "A worker thread is already on this"),
+	"schedule-health": ("c5def5", "A scheduled run itself is failing"),
+}
+# nix client noise that is not a finding
+NOISE = (
+	"warning: Git tree",
+	"warning: ignoring the client-specified setting",
+	"warning: unknown setting",
+	"warning: the following",
+	"warning: download buffer is full",
+)
+
+
+def now():
+	return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def run(cmd, cwd=None, timeout=900, env=None):
+	try:
+		p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
+		return p.returncode, p.stdout, p.stderr
+	except subprocess.TimeoutExpired:
+		return 124, "", f"timeout after {timeout}s: {' '.join(cmd[:4])}"
+	except FileNotFoundError as e:
+		return 127, "", str(e)
+
+
+def gh(args, timeout=60):
+	rc, out, err = run(["gh", *args], timeout=timeout)
+	if rc != 0:
+		raise RuntimeError(f"gh {' '.join(args[:3])}: {err.strip().splitlines()[-1] if err.strip() else rc}")
+	return out
+
+
+def sha(text, n=10):
+	return hashlib.sha1(text.encode()).hexdigest()[:n]
+
+
+class State:
+	def __init__(self, root: Path):
+		self.root = root
+		root.mkdir(parents=True, exist_ok=True)
+
+	def load(self, name, default):
+		p = self.root / name
+		try:
+			return json.loads(p.read_text())
+		except (OSError, ValueError):
+			return default
+
+	def save(self, name, data):
+		p = self.root / name
+		tmp = p.with_suffix(".tmp")
+		tmp.write_text(json.dumps(data, indent="\t", sort_keys=True) + "\n")
+		tmp.replace(p)
+
+
+def state_root(arg):
+	if arg:
+		return Path(arg)
+	base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local/state")
+	return Path(base) / "nixos-schedules"
+
+
+def origin_url(override):
+	if override:
+		return override
+	rc, out, _ = run(["git", "-C", str(HERE.parents[2]), "remote", "get-url", "origin"], timeout=20)
+	return out.strip() if rc == 0 and out.strip() else "https://github.com/cqjro/nixos.git"
+
+
+def ensure_clone(state, url):
+	"""Private partial clone of master; `git fetch` here never touches ~/.nixos."""
+	clone = state.root / "clone"
+	if not (clone / ".git").exists():
+		rc, _, err = run(["git", "clone", "--quiet", "--filter=blob:none", "--no-tags", "--single-branch", "--branch", "master", url, str(clone)], timeout=900)
+		if rc != 0:
+			raise RuntimeError("git clone: " + (err.strip().splitlines() or [rc])[-1])
+	else:
+		rc, _, err = run(["git", "fetch", "--quiet", "--no-tags", "origin", "master"], cwd=clone, timeout=300)
+		if rc != 0:
+			raise RuntimeError("git fetch origin master: " + (err.strip().splitlines() or [rc])[-1])
+	return clone
+
+
+def git_show(clone, path, rev="origin/master"):
+	rc, out, _ = run(["git", "show", f"{rev}:{path}"], cwd=clone, timeout=60)
+	return out if rc == 0 else None
+
+
+# ---------------------------------------------------------------- GitHub issues
+
+class Issues:
+	"""One issue per finding key, found by an HTML-comment marker in the body."""
+
+	def __init__(self, repo, dry):
+		self.repo, self.dry, self.cache, self.created = repo, dry, None, []
+		self.unavailable = None  # why issue bookkeeping is off (e.g. token lacks Issues permission)
+
+	def ensure_labels(self):
+		if self.dry:
+			return
+		try:
+			have = {l["name"] for l in json.loads(gh(["label", "list", "--repo", self.repo, "--json", "name", "--limit", "200"]))}
+			for name, (color, desc) in LABELS.items():
+				if name not in have:
+					gh(["label", "create", name, "--repo", self.repo, "--color", color, "--description", desc])
+		except RuntimeError as e:
+			self.unavailable = str(e)
+
+	def load(self):
+		if self.cache is None:
+			self.cache = {}
+			try:
+				out = gh(["issue", "list", "--repo", self.repo, "--label", "scheduled", "--state", "all",
+					"--limit", "300", "--json", "number,state,title,body,labels,url"])
+			except RuntimeError as e:
+				self.unavailable = str(e)  # report-only mode: probes still run, nothing is filed
+				return self.cache
+			self.cache = {}
+			for i in json.loads(out):
+				m = re.search(rf"<!-- {MARK}: (\S+) -->", i.get("body") or "")
+				if m:
+					self.cache[m.group(1)] = i
+		return self.cache
+
+	def find(self, key):
+		return self.load().get(key)
+
+	def create(self, key, title, body, labels):
+		if self.unavailable:
+			return None
+		if self.dry:
+			self.created.append({"key": key, "title": title, "dry": True})
+			return None
+		body = f"<!-- {MARK}: {key} -->\n{body}\n\n_Filed by a scheduled run; see docs/schedules/README.md. Closing this issue is a final answer: schedules never reopen it._"
+		try:
+			url = gh(["issue", "create", "--repo", self.repo, "--title", title, "--body", body,
+				*sum((["--label", l] for l in ["scheduled", *labels]), [])]).strip()
+		except RuntimeError as e:  # most likely the token lacks Issues: write; keep probing, report only
+			self.unavailable = str(e)
+			return None
+		num = int(url.rsplit("/", 1)[1])
+		self.cache[key] = {"number": num, "state": "OPEN", "title": title, "url": url, "labels": [{"name": l} for l in labels]}
+		self.created.append({"key": key, "number": num, "url": url})
+		return num
+
+	def comment(self, number, text):
+		if not self.dry and not self.unavailable:
+			try:
+				gh(["issue", "comment", str(number), "--repo", self.repo, "--body", text])
+			except RuntimeError as e:
+				self.unavailable = str(e)
+
+	def close(self, number, text):
+		if not self.dry and not self.unavailable:
+			try:
+				gh(["issue", "close", str(number), "--repo", self.repo, "--comment", text])
+			except RuntimeError as e:
+				self.unavailable = str(e)
+
+
+# ---------------------------------------------------------------------- upstream
+
+def table_rows(clone: Path):
+	"""Count registry rows in origin/master, wherever the table lives."""
+	rc, out, _ = run(["git", "ls-tree", "-r", "--name-only", "origin/master", "docs/agents/"], cwd=clone, timeout=30)
+	extra = [f for f in out.split() if f.endswith(".md")] if rc == 0 else []
+	for path in ["docs/agents/upstream-registry.md", "README.md", "AGENTS.md", *extra]:
+		text = git_show(clone, path)
+		if not text:
+			continue
+		m = re.search(r"^#+ Pending upstream fixes.*?(?=^## |\Z)", text, re.S | re.M)
+		if m:
+			rows = re.findall(r"^\| (\d+) \|", m.group(0), re.M)
+			if rows:
+				return Path(path).name, sorted(int(r) for r in rows)
+	return None, []
+
+
+def probe(p):
+	"""Return (fingerprint dict, fix_signal bool, detail dict) for one probe."""
+	t = p["type"]
+	if t == "issue":
+		o = json.loads(gh(["issue", "view", str(p["number"]), "--repo", p["repo"], "--json", "state,stateReason,updatedAt,comments,title"]))
+		fp = {"state": o["state"], "stateReason": o.get("stateReason"), "comments": len(o["comments"]), "updatedAt": o["updatedAt"]}
+		return fp, o["state"] == "CLOSED", {"ref": f"{p['repo']}#{p['number']}", **fp}
+	if t == "file":
+		q = f"repos/{p['repo']}/contents/{p['path']}?ref={p['ref']}"
+		try:
+			blob = json.loads(gh(["api", q]))["sha"]
+		except RuntimeError as e:
+			if "Not Found" in str(e):
+				return {"blob": None}, False, {"ref": f"{p['repo']}:{p['path']}", "exists": False}
+			raise
+		detail = {"ref": f"{p['repo']}:{p['path']}@{p['ref']}", "blob": blob[:12]}
+		fix = False
+		if p.get("mustContain") or p.get("mustNotContain"):
+			text = gh(["api", "-H", "Accept: application/vnd.github.raw", q], timeout=120)
+			has = {s: (s in text) for s in p.get("mustContain", [])}
+			gone = {s: (s not in text) for s in p.get("mustNotContain", [])}
+			detail["contains"], detail["absent"] = has, gone
+			fix = all(has.values()) and all(gone.values())
+		return {"blob": blob, **{k: v for k, v in detail.items() if k in ("contains", "absent")}}, fix, detail
+	if t == "tree-match":
+		names = json.loads(gh(["api", f"repos/{p['repo']}/contents/{p['path']}?ref={p['ref']}", "--jq", "[.[].name]"]))
+		hits = sorted(n for n in names if re.search(p["pattern"], n))
+		return {"hits": hits}, bool(hits), {"ref": f"{p['repo']}:{p['path']}@{p['ref']}", "hits": hits}
+	if t == "path-exists":
+		try:
+			gh(["api", f"repos/{p['repo']}/contents/{p['path']}"])
+			return {"exists": True}, True, {"ref": f"{p['repo']}:{p['path']}", "exists": True}
+		except RuntimeError as e:
+			if "Not Found" in str(e):
+				return {"exists": False}, False, {"ref": f"{p['repo']}:{p['path']}", "exists": False}
+			raise
+	if t == "nix-dry-build":
+		rc, out, err = run(["nix", "build", "--dry-run", "--no-link", p["flakeref"]], timeout=900)
+		text = out + err
+		if rc != 0:
+			raise RuntimeError(f"nix build --dry-run {p['flakeref']}: {(err.strip().splitlines() or [rc])[-1]}")
+		built = "will be built" in text
+		return {"willBuild": built}, not built, {"ref": p["flakeref"], "willBuild": built}
+	raise RuntimeError(f"unknown probe type {t}")
+
+
+def cmd_upstream(a, root, state, issues):
+	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
+	seen = state.load("upstream-state.json", {"rows": {}})
+	report = {"schedule": "upstream", "ranAt": now(), "findings": [], "errors": [], "changed": False}
+	try:
+		rowfile, rownums = table_rows(ensure_clone(state, a.url))
+	except Exception as e:  # noqa: BLE001 - registry drift check is advisory
+		rowfile, rownums = None, []
+		report["errors"].append(f"registry check skipped: {e}")
+	probed = {r["registryRow"] for r in cfg["rows"]}
+	if rownums and set(rownums) != probed:
+		report["errors"].append(f"registry rows {sorted(set(rownums) ^ probed)} in {rowfile} and upstream-probes.json disagree")
+	issues.ensure_labels()
+	for row in cfg["rows"]:
+		rid = row["id"]
+		prev = seen["rows"].get(rid)
+		fps, signals, details, err = [], [], [], None
+		try:
+			for p in row["probes"]:
+				if p["type"] == "nix-dry-build" and a.skip_nix:
+					continue
+				fp, f, d = probe(p)
+				fps.append(fp)
+				signals.append(f)
+				details.append(d)
+		except Exception as e:  # noqa: BLE001 - a failing probe must not stop the others
+			err = str(e)
+		join = any if row.get("fixWhen") == "any" else all
+		fix = bool(signals) and join(signals)
+		fingerprint = sha(json.dumps(fps, sort_keys=True), 16)
+		if err:
+			misses = (prev or {}).get("errorRuns", 0) + 1
+			status = "error"
+			seen["rows"][rid] = {**(prev or {}), "errorRuns": misses, "lastError": err}
+		elif fix:
+			status = "fix-candidate"  # a fix signal on the very first run still counts
+		elif prev is None:
+			status = "baseline"
+		elif prev.get("fingerprint") != fingerprint:
+			status = "changed"
+		else:
+			status = "blocked"
+		f = {"id": rid, "registryRow": row["registryRow"], "title": row["title"], "status": status, "prevStatus": (prev or {}).get("status"),
+			"action": row["action"], "slug": row["slug"], "details": details}
+		if err:
+			f["error"] = err
+		key = f"upstream-fix:{rid}"
+		existing = issues.find(key)
+		f["issue"] = {"number": existing["number"], "state": existing["state"]} if existing else None
+		# fix signal -> one issue per row; closed issues are a final answer
+		if status == "fix-candidate":
+			if existing is None and issues.unavailable:
+				f["issueSkipped"] = True
+			elif existing is None:
+				if len(issues.created) < a.max_new:
+					body = render_upstream_body(row, details)
+					num = issues.create(key, f"Registry row {row['registryRow']}: {row['title']} may be fixed upstream", body, ["upstream-fix"])
+					if num is None and not a.dry_run:
+						f["issueSkipped"] = True
+					else:
+						f["issue"] = {"number": num, "state": "OPEN"}
+						f["issueEvent"] = "created"
+				else:
+					f["issueEvent"] = "deferred (new-issue cap reached)"
+			elif existing["state"] == "OPEN" and (prev or {}).get("commentedFp") != fingerprint:
+				issues.comment(existing["number"], f"Probe fingerprint changed (`{fingerprint}`):\n\n```json\n{json.dumps(details, indent=1)}\n```")
+				f["issueEvent"] = "commented"
+			elif existing["state"] == "CLOSED":
+				f["issueEvent"] = "suppressed (issue closed by a human)"
+		if status != "error":
+			seen["rows"][rid] = {"fingerprint": fingerprint, "status": status, "checkedAt": now(),
+				"commentedFp": fingerprint if f.get("issueEvent") in ("created", "commented") else (prev or {}).get("commentedFp")}
+		report["findings"].append(f)
+	for f in report["findings"]:
+		f["workerEligible"] = (f["status"] == "fix-candidate" and f["action"] == "auto-pr" and f["issue"] is not None
+			and f["issue"]["state"] == "OPEN" and not _has_label(issues, f"upstream-fix:{f['id']}", "worker-launched"))
+	report["actionable"] = [] if a.detect_only else [f["id"] for f in report["findings"] if f["workerEligible"]]
+	report["changed"] = bool(report["errors"] or report["actionable"]) or any(
+		f["status"] == "changed" or f.get("issueEvent") or (f["status"] == "fix-candidate" and f["prevStatus"] != "fix-candidate")
+		for f in report["findings"])
+	if not a.dry_run:
+		state.save("upstream-state.json", seen)
+	return report
+
+
+def render_upstream_body(row, details):
+	return "\n".join([
+		f"Registry row **{row['registryRow']}** ({row['title']}) has a fix signal.",
+		"",
+		"Probe results (structured, machine-collected):",
+		"",
+		"```json", json.dumps(details, indent=1), "```",
+		"",
+		"A fix signal is not proof. The worker must re-read the upstream source itself, then follow the row's removal steps from the registry.",
+		"Registry action for this row: `" + row["action"] + "`.",
+	])
+
+
+def _has_label(issues, key, label):
+	i = issues.find(key)
+	return bool(i) and any(l["name"] == label for l in i.get("labels", []))
+
+
+# -------------------------------------------------------------------- buildflags
+
+def parse_eval_stderr(text):
+	"""Split nix stderr into warning/trace/error blocks (continuations are indented or blank)."""
+	blocks, cur = [], None
+	for line in text.splitlines():
+		m = re.match(r"^(evaluation warning|warning|trace|error):\s*(.*)$", line)
+		if m:
+			if cur:
+				blocks.append(cur)
+			cur = {"kind": "error" if m.group(1) == "error" else "warning", "text": m.group(2), "raw": line}
+		elif cur and (line == "" or line[0] in " \t"):
+			cur["raw"] += "\n" + line
+			if cur["kind"] == "error" and line.strip().startswith("error:"):
+				cur["text"] = line.strip()[len("error:"):].strip()  # the root cause is the last `error:` line
+			elif cur["kind"] == "warning" and line.strip():
+				cur["text"] += " " + line.strip()
+		else:
+			if cur:
+				blocks.append(cur)
+			cur = None
+	if cur:
+		blocks.append(cur)
+	return [b for b in blocks if not b["raw"].startswith(NOISE)]
+
+
+def normalise(text):
+	text = re.sub(r"/nix/store/[a-z0-9]{32}-", "/nix/store/HASH-", text)
+	text = re.sub(r":\d+(:\d+)?\b", ":L", text)
+	return re.sub(r"\s+", " ", text).strip()[:400]
+
+
+def eval_host(tree: Path, host):
+	t0 = time.time()
+	rc, out, err = run(["nix", "eval", "--impure", "--raw", f".#nixosConfigurations.{host}.config.system.build.toplevel.drvPath"], cwd=tree, timeout=1200)
+	return {"host": host, "ok": rc == 0, "seconds": round(time.time() - t0), "blocks": parse_eval_stderr(err), "rc": rc}
+
+
+def cmd_buildflags(a, root, state, issues):
+	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
+	ignore = [(re.compile(i["match"]), i["reason"]) for i in cfg.get("ignore", [])]
+	seen = state.load("buildflags-state.json", {"keys": {}})
+	report = {"schedule": "buildflags", "ranAt": now(), "hosts": {}, "findings": [], "errors": [], "changed": False}
+	tmp = None
+	try:
+		clone = ensure_clone(state, a.url)
+		rev = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
+		if a.tree_path:
+			tree, report["rev"] = Path(a.tree_path), "local-path"
+		else:
+			tmp = tempfile.mkdtemp(prefix="sched-eval-", dir=str(state.root))
+			rc, _, err = run(["git", "worktree", "add", "--detach", tmp, rev], cwd=clone, timeout=600)
+			if rc != 0:
+				raise RuntimeError("git worktree add: " + err.strip()[-200:])
+			tree, report["rev"] = Path(tmp), rev[:12]
+		rc, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+		hosts = a.hosts or sorted(Path(x).name for x in out.split())
+		issues.ensure_labels()
+		current = {}
+		for h in hosts:
+			r = eval_host(tree, h)
+			report["hosts"][h] = {"ok": r["ok"], "seconds": r["seconds"], "warnings": 0, "ignored": 0}
+			for b in r["blocks"]:
+				kind = "eval-failure" if b["kind"] == "error" else "rebuild-warning"
+				if b["kind"] == "error" and r["ok"]:
+					continue
+				norm = normalise(b["text"])
+				reason = next((why for rx, why in ignore if rx.search(norm)), None)
+				key = f"{kind}:{h}:{sha(norm)}" if kind == "eval-failure" else f"{kind}:{sha(norm)}"
+				f = current.setdefault(key, {"key": key, "kind": kind, "hosts": [], "text": norm, "ignored": reason})
+				f["hosts"].append(h)
+				if reason:
+					report["hosts"][h]["ignored"] += 1
+				elif kind == "rebuild-warning":
+					report["hosts"][h]["warnings"] += 1
+		new, digest = [], []
+		for key, f in sorted(current.items()):
+			if f["ignored"]:
+				continue
+			f["hosts"] = sorted(set(f["hosts"]))
+			existing = issues.find(key)
+			is_new = key not in seen["keys"]
+			item = {"key": key, "kind": f["kind"], "hosts": f["hosts"], "text": f["text"][:300], "new": is_new,
+				"issue": {"number": existing["number"], "state": existing["state"]} if existing else None}
+			if existing is None and issues.unavailable:
+				item["issueSkipped"] = True
+			elif existing is None:
+				if f["kind"] == "eval-failure" or len(issues.created) < a.max_new:
+					title = ("Evaluation fails on " if f["kind"] == "eval-failure" else "Rebuild warning: ") + f"{', '.join(f['hosts'])}: {f['text'][:70]}"
+					num = issues.create(key, title, render_warning_body(f), [f["kind"]])
+					if num is None and not a.dry_run:
+						item["issueSkipped"] = True
+					else:
+						item["issue"] = {"number": num, "state": "OPEN"}
+						item["issueEvent"] = "created"
+				else:
+					item["issueEvent"] = "digest"  # over the cap: waits for a later run
+					if not seen["keys"].get(key, {}).get("inDigest"):
+						digest.append(item)
+			report["findings"].append(item)
+			seen["keys"][key] = {"lastSeen": now(), "hosts": f["hosts"], "inDigest": item.get("issueEvent") == "digest"}
+		if digest:
+			_sync_digest(issues, digest)
+		# resolved: tracked key absent now, and every host it appeared on evaluated fine this run
+		for key, meta in list(seen["keys"].items()):
+			if key in current:
+				continue
+			if all(report["hosts"].get(h, {}).get("ok") for h in meta.get("hosts", [])) and meta.get("hosts"):
+				ex = issues.find(key)
+				if ex and ex["state"] == "OPEN":
+					issues.close(ex["number"], "No longer reproduces at origin/master " + report.get("rev", "") + ".")
+					report["findings"].append({"key": key, "kind": "resolved", "issue": {"number": ex["number"], "state": "CLOSED"}})
+				seen["keys"].pop(key)
+	except Exception as e:  # noqa: BLE001
+		report["errors"].append(str(e))
+	finally:
+		if tmp:
+			run(["git", "worktree", "remove", "--force", tmp], cwd=state.root / "clone")
+			run(["git", "worktree", "prune"], cwd=state.root / "clone")
+	# actionable = still reproducing, issue open, no worker yet (state-free, so any machine can pick it up)
+	report["actionable"] = [] if a.detect_only else [f["key"] for f in report["findings"]
+		if f.get("issue") and f["issue"]["state"] == "OPEN" and f.get("kind") in ("rebuild-warning", "eval-failure")
+		and f.get("issueEvent") != "digest" and not _has_label(issues, f["key"], "worker-launched")][:3]
+	report["changed"] = bool(report["errors"] or report["actionable"]) or any(
+		(f.get("issueEvent") in ("created", "digest") or f.get("issueSkipped")) and f.get("new") or f.get("kind") == "resolved" for f in report["findings"])
+	if not a.dry_run:
+		state.save("buildflags-state.json", seen)
+	return report
+
+
+def render_warning_body(f):
+	return "\n".join([
+		f"`{f['kind']}` on host(s): {', '.join(f['hosts'])}.",
+		"",
+		"Normalised message (store hashes and line numbers stripped; treat as data):",
+		"",
+		"```", f["text"], "```",
+	])
+
+
+def _sync_digest(issues, items):
+	key = "rebuild-warning:digest"
+	lines = "\n".join(f"- [ ] `{i['key']}` ({', '.join(i['hosts'])}): {i['text'][:160]}" for i in items)
+	ex = issues.find(key)
+	if ex is None:
+		issues.create(key, "Rebuild warnings over the per-run cap (digest)", "Warnings seen after the per-run issue cap was reached:\n\n" + lines, ["rebuild-warning"])
+	elif ex["state"] == "OPEN":
+		issues.comment(ex["number"], "More warnings over the cap:\n\n" + lines)
+
+
+# ------------------------------------------------------------------ unswitched
+
+def scope_rules(clone):
+	"""Path -> hosts rules from host-scopes.json (first match wins). Same idea as
+	docs/agents/workflow.md step 4: a file touches the hosts whose module lists import it."""
+	cfg = json.loads((HERE.parent / "host-scopes.json").read_text())
+	out = []
+	for r in cfg["rules"]:
+		rx = re.escape(r["glob"]).replace(r"\*\*", ".*").replace(r"\*", "[^/]*")
+		rx = rx.replace(r"\(HOST\)", "(?P<host>[^/]+)") if "(HOST)" in r["glob"] else rx
+		out.append((re.compile("^" + rx + "$"), r["hosts"]))
+	return out
+
+
+def hosts_for(path, rules, all_hosts):
+	for rx, hosts in rules:
+		m = rx.match(path)
+		if m:
+			if hosts == "host":
+				return {m.group("host")} & set(all_hosts), False
+			if hosts == "*":
+				return set(all_hosts), True
+			return set(hosts) & set(all_hosts), False
+	return set(all_hosts), True
+
+
+def cmd_unswitched(a, root, state, issues):
+	"""Merged commits on origin/master that this host has not switched to yet. Read-only."""
+	host = (a.hosts or [os.uname().nodename])[0]
+	report = {"schedule": "unswitched", "ranAt": now(), "host": host, "errors": [], "changed": False}
+	clone = ensure_clone(state, a.url)
+	head = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
+	_, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+	all_hosts = sorted(Path(x).name for x in out.split())
+	if host not in all_hosts:
+		report["errors"].append(f"unknown host {host!r}; pass --host (known: {', '.join(all_hosts)})")
+		return report
+	report["head"] = head[:12]
+	# 1. the running generation's commit
+	if a.revision is not None:
+		raw = a.revision
+	else:
+		rc, o, e = run(["nixos-version", "--json"], timeout=30)
+		if rc != 0:
+			report["errors"].append("nixos-version --json failed: " + e.strip()[-150:])
+			return report
+		raw = (json.loads(o).get("configurationRevision") or "")
+	status, rev, commits, message = "ok", raw.removesuffix("-dirty"), [], None
+	report["revision"] = raw or None
+	if not raw or raw == "unknown":
+		status = "no-revision"
+		message = f"{host}'s running generation predates config-revision (it records no commit), so I can't tell what is unswitched. The first switch from merged master fixes this."
+	elif raw.endswith("-dirty"):
+		status = "dirty"
+		message = f"{host}'s running generation was built from a dirty tree ({rev[:12]}-dirty), so I can't tell exactly what is unswitched."
+	if status == "ok" or status == "dirty":
+		if run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=clone)[0] != 0:
+			status = "unknown-revision"
+			message = f"{host}'s running generation was built from {rev[:12]}, which is not on origin/master or not pushed (an emergency or branch build?). Can't compare."
+		elif run(["git", "merge-base", "--is-ancestor", rev, "origin/master"], cwd=clone)[0] != 0:
+			status = "not-on-master" if status == "ok" else status
+			if status == "not-on-master":
+				message = f"{host}'s running generation ({rev[:12]}) is not an ancestor of origin/master (a branch or test build?). Can't compare."
+	if status in ("ok", "dirty"):
+		rules = scope_rules(clone)
+		_, log, _ = run(["git", "log", "--first-parent", "--format=%H%x1f%s", f"{rev}..origin/master"], cwd=clone, timeout=60)
+		for line in log.splitlines():
+			sha_, _, subj = line.partition("\x1f")
+			_, files, _ = run(["git", "diff-tree", "-r", "-m", "--first-parent", "--no-commit-id", "--name-only", sha_], cwd=clone)
+			touched, may = set(), False
+			for f in files.split("\n"):
+				if f:
+					h, wild = hosts_for(f, rules, all_hosts)
+					touched |= h
+					may = may or (wild and host in h)
+			if host in touched:
+				title = subj.split("||", 1)[-1].strip() if re.match(r"^[\w-]+: \d+ ", subj) else subj
+				pr = re.search(r"\(#(\d+)\)\s*$", title)
+				commits.append({"sha": sha_[:12], "title": title[:90], "pr": int(pr.group(1)) if pr else None, "mayAffect": may})
+		report["commitsSinceRevision"] = len(log.splitlines())
+		if status == "ok" and not commits:
+			status = "up-to-date"
+		elif commits:
+			shown = "; ".join(c["title"] for c in commits[:5]) + (f"; +{len(commits) - 5} more" if len(commits) > 5 else "")
+			head_msg = f"{host} has {len(commits)} merged change{'s' if len(commits) != 1 else ''} not switched yet: {shown}."
+			message = (message + " " if message else "") + head_msg + f" Run: cd ~/.nixos && ./rebuild.sh switch {host}"
+			status = "pending" if status == "ok" else "dirty-pending"
+		elif status == "dirty":
+			message += " No merged commit since its base touches this host."
+	report.update(status=status, commits=commits, message=message)
+	# 2. notify only on a state change, plus a reminder while it stays true
+	fp = sha(f"{status}|{head}|{raw}", 12)
+	seen = state.load(f"unswitched-{host}.json", {})
+	if status in ("up-to-date", "ok"):
+		message = None
+		report["message"] = None
+	due = False
+	if message:
+		hours = a.remind_hours if status in ("pending", "dirty-pending") else a.remind_hours * 7
+		age = (time.time() - seen.get("notifiedEpoch", 0)) / 3600
+		due = seen.get("fingerprint") != fp or age >= hours
+	report["notify"] = bool(due)
+	report["changed"] = bool(due)
+	if due and a.notify and not a.dry_run:
+		agent = shutil.which("agent-notify")
+		if agent:
+			env = dict(os.environ, AGENT_NOTIFY_LABEL="Unswitched changes")
+			rc, _, _ = run([agent, "send", "info", message], env=env, timeout=30)
+			report["delivery"] = "agent-notify" if rc == 0 else f"agent-notify failed ({rc})"
+		else:
+			report["delivery"] = "none (agent-notify not on PATH; message is in the report)"
+	if not a.dry_run and (due and a.notify or not message):
+		seen = {"fingerprint": fp if message else None, "notifiedEpoch": time.time() if due and a.notify else 0, "status": status}
+		state.save(f"unswitched-{host}.json", seen)
+	return report
+
+
+# ------------------------------------------------------------- bookkeeping verbs
+
+def cmd_mark_launched(a, state, issues):
+	"""mark-launched KEY THREAD_ID: label the issue so later runs do not launch a second worker."""
+	key, thread = a.args
+	ex = issues.find(key)
+	if issues.unavailable:
+		return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
+	if ex is None:
+		return {"ok": False, "error": f"no issue for {key}"}
+	if not a.dry_run:
+		gh(["issue", "edit", str(ex["number"]), "--repo", issues.repo, "--add-label", "worker-launched"])
+		issues.comment(ex["number"], f"Worker thread launched: `{thread}`")
+	return {"ok": True, "issue": ex["number"]}
+
+
+def cmd_health(a, state, issues):
+	"""health SCHEDULE MESSAGE: one schedule-health issue per schedule per month, commented on repeat failures."""
+	sched, message = a.args[0], " ".join(a.args[1:])[:1500]
+	issues.ensure_labels()
+	key = f"schedule-health:{sched}:{datetime.now(timezone.utc).strftime('%Y-%m')}"
+	ex = issues.find(key)
+	if issues.unavailable:
+		return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
+	body = f"Scheduled run `{sched}` failed or went stale at {now()}.\n\n```\n{message}\n```"
+	if ex is None:
+		num = issues.create(key, f"Scheduled run '{sched}' is failing", body, ["schedule-health"])
+		if num is None and not a.dry_run:
+			return {"ok": False, "error": f"issues unavailable: {issues.unavailable}"}
+		return {"ok": True, "issue": num, "event": "created"}
+	if ex["state"] == "OPEN":
+		issues.comment(ex["number"], body)
+	return {"ok": True, "issue": ex["number"], "event": "commented" if ex["state"] == "OPEN" else "suppressed (closed)"}
+
+
+# ------------------------------------------------------------------------- main
+
+def main():
+	ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+	ap.add_argument("command", choices=["upstream", "buildflags", "unswitched", "mark-launched", "health"])
+	ap.add_argument("args", nargs="*", help="mark-launched KEY THREAD_ID | health SCHEDULE MESSAGE...")
+	ap.add_argument("--repo", default="cqjro/nixos", help="GitHub repo holding the issues")
+	ap.add_argument("--max-new", type=int, default=3, help="max new issues per run (eval failures are exempt)")
+	ap.add_argument("--dry-run", action="store_true", help="no issue writes, no state writes")
+	ap.add_argument("--tree-path", help="buildflags: evaluate this directory instead of a fresh origin/master worktree (debugging)")
+	ap.add_argument("--host", dest="hosts", action="append", help="buildflags: limit to a host (repeatable); unswitched: the host to check (default: this machine's hostname)")
+	ap.add_argument("--notify", action="store_true", help="unswitched: deliver through agent-notify instead of only reporting")
+	ap.add_argument("--remind-hours", type=int, default=24, help="unswitched: repeat a still-pending notice after this long (diagnostic notices: 7x)")
+	ap.add_argument("--revision", help="unswitched: pretend this is the running configurationRevision (testing)")
+	ap.add_argument("--remote-url", dest="url", help="git URL of the config repo (default: origin of the checkout this script lives in)")
+	ap.add_argument("--detect-only", action="store_true", help="file/update issues but report no actionable work (for hosts that must not launch workers)")
+	ap.add_argument("--skip-nix", action="store_true", help="upstream: skip probes that run `nix build --dry-run` (slow, downloads nixpkgs)")
+	ap.add_argument("--state-dir", default=os.environ.get("NIXOS_SCHEDULE_STATE"))
+	a = ap.parse_args()
+	a.url = origin_url(a.url)
+	root = None  # nothing below may touch the checkout the human switches from
+	state = State(state_root(a.state_dir))
+	issues = Issues(a.repo, a.dry_run)
+	if a.command in ("mark-launched", "health"):
+		fn = cmd_mark_launched if a.command == "mark-launched" else cmd_health
+		try:
+			print(json.dumps(fn(a, state, issues)))
+			return 0
+		except Exception as e:  # noqa: BLE001
+			print(json.dumps({"ok": False, "error": str(e)}))
+			return 3
+	try:
+		report = {"upstream": cmd_upstream, "buildflags": cmd_buildflags, "unswitched": cmd_unswitched}[a.command](a, root, state, issues)
+	except Exception as e:  # noqa: BLE001
+		report = {"schedule": a.command, "ranAt": now(), "changed": True, "findings": [], "errors": [f"script failed: {e}"]}
+		print(json.dumps(report, indent=1))
+		return 3
+	report["issuesCreated"] = issues.created
+	if issues.unavailable:
+		report["warnings"] = [f"issue bookkeeping is off (report-only): {issues.unavailable}. The gh token needs Issues: read and write on {issues.repo}."]
+	# heartbeat for the staleness check
+	hb = state.load("heartbeat.json", {})
+	if not report["errors"] and not a.dry_run:
+		hb[a.command] = report["ranAt"]
+		state.save("heartbeat.json", hb)
+	report["lastSuccess"] = hb.get(a.command)
+	if hb.get(a.command):
+		report["daysSinceLastSuccess"] = round((datetime.now(timezone.utc) - datetime.strptime(hb[a.command], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds() / 86400, 1)
+	print(json.dumps(report, indent=1))
+	return 0
+
+
+if __name__ == "__main__":
+	sys.exit(main())

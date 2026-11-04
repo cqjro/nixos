@@ -1,0 +1,21 @@
+{
+	"_comment": "Which hosts a changed path may affect, first match wins. 'host' = the host named in the path; '*' = every host (a coarse 'may affect', as docs/agents/workflow.md step 4 would judge by hand); [] = none (docs and tooling that never enters a closure). Used by `schedule-precheck unswitched`.",
+	"rules": [
+		{ "glob": "modules/hosts/(HOST)/**", "hosts": "host" },
+		{ "glob": "modules/hosts/host.nix", "hosts": "*" },
+		{ "glob": "modules/server/**", "hosts": ["REDRUM"] },
+		{ "glob": "modules/_archive/**", "hosts": [] },
+		{ "glob": "modules/scripts/sync_playlist.py", "hosts": ["REDRUM"] },
+		{ "glob": "modules/scripts/abt-browser-shim.js", "hosts": ["REDRUM"] },
+		{ "glob": "docs/**", "hosts": [] },
+		{ "glob": ".claude/**", "hosts": [] },
+		{ "glob": ".github/**", "hosts": [] },
+		{ "glob": "*.md", "hosts": [] },
+		{ "glob": ".gitignore", "hosts": [] },
+		{ "glob": "modules/**", "hosts": "*" },
+		{ "glob": "flake.nix", "hosts": "*" },
+		{ "glob": "flake.lock", "hosts": "*" },
+		{ "glob": "rebuild.sh", "hosts": "*" },
+		{ "glob": "start.sh", "hosts": "*" }
+	]
+}

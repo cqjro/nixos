@@ -1,0 +1,109 @@
+{
+	"_comment": "Structured mirror of the 'Pending upstream fixes' registry (docs/agents/upstream-registry.md, mirrored in README.md). One entry per registry row; schedule-precheck warns when the row numbers disagree. A probe reports a fix SIGNAL, never proof: the worker re-verifies upstream itself. action: auto-pr = a worker may open a removal PR; notify-only = file the issue and stop (needs a human-run switch or kernel testing).",
+	"rows": [
+		{
+			"id": "row-1",
+			"registryRow": 1,
+			"slug": "redrum-t2-pin",
+			"title": "REDRUM nixpkgs pin (t2linux patchset vs linux >= 6.18.47)",
+			"action": "notify-only",
+			"probes": [
+				{ "type": "issue", "repo": "NixOS/nixos-hardware", "number": 2027 }
+			]
+		},
+		{
+			"id": "row-2",
+			"registryRow": 2,
+			"slug": "qidi-studio-fhs-env",
+			"title": "qidi-studio FHS env override (libsoup_3, libpng, CA, GIO TLS)",
+			"action": "auto-pr",
+			"fixWhen": "all",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "NixOS/nixpkgs",
+					"path": "pkgs/by-name/qi/qidi-studio/package.nix",
+					"ref": "nixos-unstable",
+					"mustContain": ["libsoup_3", "libpng", "glib-networking", "SSL_CERT_FILE"]
+				}
+			]
+		},
+		{
+			"id": "row-3",
+			"registryRow": 3,
+			"slug": "qidi-studio-ua-patch",
+			"title": "qidi-studio webview User-Agent binary patch (QIDIStudio#244)",
+			"action": "auto-pr",
+			"probes": [
+				{ "type": "issue", "repo": "QIDITECH/QIDIStudio", "number": 244 }
+			]
+		},
+		{
+			"id": "row-4",
+			"registryRow": 4,
+			"slug": "nixdatifier-diskusage-timeout",
+			"title": "nixdatifier diskusage timeout patch",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "Muddyblack/nixdatifier",
+					"path": "package/contents/tools/sh/diskusage",
+					"ref": "HEAD",
+					"mustNotContain": ["timeout --kill-after=5s 120s \"$@\""]
+				}
+			]
+		},
+		{
+			"id": "row-5",
+			"registryRow": 5,
+			"slug": "nixdatifier-window-border",
+			"title": "nixdatifier window border recolour",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "Muddyblack/nixdatifier",
+					"path": "package/contents/ui/FullView.qml",
+					"ref": "HEAD",
+					"mustNotContain": ["UI.Theme.wash(fullView.accentColor, .18)"]
+				}
+			]
+		},
+		{
+			"id": "row-6",
+			"registryRow": 6,
+			"slug": "xodus-nexus-package",
+			"title": "Xodus Nexus pinned AppImage",
+			"action": "auto-pr",
+			"fixWhen": "any",
+			"probes": [
+				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/xo", "ref": "nixos-unstable", "pattern": "^xodus" },
+				{ "type": "path-exists", "repo": "domsvoboda/xodus-nexus", "path": "flake.nix" }
+			]
+		},
+		{
+			"id": "row-7",
+			"registryRow": 7,
+			"slug": "mcp-nixos-flake-input",
+			"title": "mcp-nixos from its upstream flake instead of pkgs.mcp-nixos",
+			"action": "auto-pr",
+			"probes": [
+				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#mcp-nixos" }
+			]
+		},
+		{
+			"id": "row-8",
+			"registryRow": 8,
+			"slug": "learnharness-package",
+			"title": "LearnHarness pinned AppImage",
+			"action": "auto-pr",
+			"fixWhen": "any",
+			"probes": [
+				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/le", "ref": "nixos-unstable", "pattern": "^learnharness" },
+				{ "type": "path-exists", "repo": "amosblomqvist/learnharness", "path": "flake.nix" }
+			]
+		}
+	],
+	"ignore": []
+}
