@@ -32,6 +32,8 @@ free-form issue key that this script then trusts:
     this, so it still sees the caller's NIX_* variables: docs/agents/security.md,
     smoke step 30, checks that the exclusion does not apply to a command with leading
     VAR=value assignments);
+  - children never inherit the caller's working directory (run() defaults cwd to the
+    passwd home), so a repo the agent left its shell in cannot supply git/gh config;
   - hosts, revisions, issue keys, thread ids and schedule names are validated against
     fixed patterns or lists, and --max-new/--remind-hours are clamped.
 Any new option of that kind must go through the same gate or validation, and a change
@@ -110,7 +112,7 @@ def clean_env(extra=None):
 
 def run(cmd, cwd=None, timeout=900, env=None):
 	try:
-		p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=clean_env(env))
+		p = subprocess.run(cmd, cwd=cwd or str(real_home()), capture_output=True, text=True, timeout=timeout, env=clean_env(env))
 		return p.returncode, p.stdout, p.stderr
 	except subprocess.TimeoutExpired:
 		return 124, "", f"timeout after {timeout}s: {' '.join(cmd[:4])}"
