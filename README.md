@@ -270,7 +270,11 @@ matches the rest of the config out of the box.
 
 `GOD-KILLER` runs coding agents through [T3 Code](https://github.com/pingdotgg/t3code)
 (`modules/home-manager/ai-tools/t3code.nix`, themed from Stylix) driving Claude
-Code, with `gh` for GitHub. Everything is declared in `modules/home-manager/ai-tools/`:
+Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
+`t3code.nix` builds the native capture helper (nixpkgs does not; see
+[Pending upstream fixes](#pending-upstream-fixes) row 9) and `hyprland.nix` binds
+`CTRL + SHIFT + 2` to its global shortcut. Everything is declared in
+`modules/home-manager/ai-tools/`:
 
 - **Permissions** (`claude-code.nix`, fragment `claude-code-policy`) — one
   managed policy for GOD-KILLER and REDRUM in
