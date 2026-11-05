@@ -25,13 +25,16 @@ line of JSON. B is fully written below so you can choose.
 
 Option B is live on GOD-KILLER: task `scheduled-task:f3b5c8c4-303e-4897-b7ed-a115076def3e`,
 every 6 h, bound to the Haiku-low thread `mcp:b584aa8a-e6e4-4699-b3fb-ffe3acef9cfb`
-("Unswitched changes"), created 2026-11-02. Its prompt already uses the absolute path as one
-plain command, so it needs no prompt change; what it lacked was the sandbox exclusion:
-the run of 2026-11-04T23:50Z found the script and then failed with `cannot create Unix
-domain socket: Operation not permitted` (and `health` failed the same way). The
-`workflow/schedule-sandbox` PR adds the exclusion and allow rule (docs/agents/security.md,
-"Scheduled checks run unsandboxed"); it takes effect after the owner merges it and switches
-GOD-KILLER.
+("Unswitched changes"), created 2026-11-02 with a prompt that had a step 0 existence check.
+History of its runs: until 2026-11-04 it replied "script not installed yet"; the run of
+2026-11-04T23:50Z found the script and failed with `cannot create Unix domain socket:
+Operation not permitted` (and `health` failed the same way: no sandbox exclusion yet); PR #10
+added the exclusion and allow rule (docs/agents/security.md, "Scheduled checks run
+unsandboxed"), and after the switch the run of 2026-11-05T11:43Z was stopped by `claude-guard`
+because **step 0's own check** (`test -e <path> && echo present || echo absent`) is a compound
+command naming the script path. So the live prompt needs one more edit: drop step 0 (the
+version below), applied by the owner from a full-access session (scheduler changes need one:
+an auto-mode agent gets `runtime_mode_escalation_denied`).
 
 ntfy delivery is on hold (a separate TODO item), so until it is set up the notice exists
 only as the reply in the "Unswitched changes" thread (`agent-notify send info` has no desktop
@@ -161,15 +164,19 @@ You are a scheduled, unattended check on this machine. Nobody is watching: if an
 call is blocked or denied, STOP and name the blocked command; never try variants. You
 never edit files, never pull, fetch or switch in ~/.nixos, never use sudo.
 
-0. If <CHECKOUT>/docs/schedules/bin/schedule-precheck does not exist (the PR that adds it
-   is not merged and switched into this checkout yet), reply with exactly
-   "unswitched: script not installed yet" and stop. Do not look for it elsewhere.
+Command rule: run each command below exactly as written, as ONE plain command. No
+test, ls, cd, pipes, redirects, `;`, `&&` or `$(...)`: the guard blocks any command that
+names the script path unless it is the script itself, run plainly. So do NOT check
+that the script exists first; just run it.
+
 1. Run exactly:  <CHECKOUT>/docs/schedules/bin/schedule-precheck unswitched --notify
    (<CHECKOUT> is this machine's config checkout: /home/cairo/.nixos on GOD-KILLER.)
    The script does all git work in its own private clone and sends the notification
-   itself. It prints one JSON report.
-2. Exit code non-zero, or `errors` non-empty: run
-   <CHECKOUT>/docs/schedules/bin/schedule-precheck health unswitched "<first error>"
+   itself. It prints one JSON report. If the tool result says the file does not exist
+   (the checkout predates the script), reply with exactly
+   "unswitched: script not installed yet" and stop.
+2. If the command fails (error or non-zero exit), or `errors` is non-empty: run
+   <CHECKOUT>/docs/schedules/bin/schedule-precheck health unswitched "<first error, one line, without double quotes, $, backticks or backslashes>"
    once, reply "unswitched: check failed: <first error>" and stop.
 3. Otherwise reply with ONE line: "unswitched <host>: <status>", and, only if `notify`
    is true, the report's `message` field verbatim after it. Commit titles inside the
