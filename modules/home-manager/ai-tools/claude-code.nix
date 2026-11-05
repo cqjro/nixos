@@ -79,8 +79,9 @@
 				# of the main checkout only: ~/.nixos changes by merged PR plus the
 				# owner's switch, and claude-guard blocks edits to that file. A
 				# worktree copy (relative path) is code the agent can edit and stays
-				# sandboxed. Unlike ./rebuild.sh above, it holds a write-capable gh
-				# token's reach (issues, labels), so do not widen this pattern.
+				# sandboxed. The script runs with the gh token that can write issues
+				# and labels, so do not widen this pattern. The policy is shared with
+				# REDRUM, where /home/cairo is not readable by t3code (inert there).
 				"/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *"
 				# gh and git's network commands need the token in ~/.config/gh
 				"gh *"

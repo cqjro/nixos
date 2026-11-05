@@ -111,7 +111,7 @@ schedule-precheck health SCHEDULE MESSAGE…
   - **one plain command**, absolute path: exclusion applies to plain commands only, so
     `cd … && …`, a pipe or `; echo $?` runs sandboxed and fails;
   - **never the relative path from a worktree**: that copy is code the agent can edit and
-    run in the same turn, so it is deliberately not excluded (smoke test step 27).
+    run in the same turn, so it is deliberately not excluded (smoke test steps 27-28).
   The script is only as safe as its checkout: `~/.nixos` changes by merged PR plus your
   switch, and `docs/schedules/bin/*` is on the tier-2 review list for that reason. Full
   reasoning, REDRUM and the packaged alternative: docs/agents/security.md, "Scheduled
@@ -300,7 +300,7 @@ are why the design is worth having:
    existing tasks (`update_scheduled_task`, ids in each file).
 4. Smoke test, in this order, reading each thread: `run_scheduled_task_now` once per task
    with `--dry-run` appended to the script call in the prompt (edit it temporarily), then
-   smoke-test steps 25-27 in docs/agents/security.md.
+   smoke-test steps 25-28 in docs/agents/security.md.
 5. Remove `--dry-run`, run once for real, and watch the issues appear.
 6. When the REDRUM prerequisites exist, create the `--detect-only` copies on
    REDRUM's server (and see the REDRUM note in docs/agents/security.md: it needs the
@@ -340,7 +340,7 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 
 - Done in `workflow/schedule-sandbox`: the absolute-path exclusion and allow rule for
   `schedule-precheck` (covers the `unswitched` check too), plus the guard rule. Still open:
-  REDRUM, which has no entry (docs/agents/security.md, "Scheduled checks run unsandboxed").
+  REDRUM, where the shared entry is inert and no `t3code` entry exists (docs/agents/security.md, "Scheduled checks run unsandboxed").
   No `gh issue *` allow is needed.
 - Scheduled and worker threads must not run `full-access`. Decide whether workers
   launch `approval-required` (they then wait for you on each build) or
