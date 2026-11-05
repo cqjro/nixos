@@ -82,7 +82,7 @@ merge, push to master, or switch any host.
      row, do not renumber; `./rebuild.sh check` fails if the two tables' row numbers differ),
    - the matching entry in docs/schedules/upstream-probes.json,
    - any TODO.md item or doc that refers to the workaround,
-   - rows 1 and 7 only: follow modules/hosts/REDRUM/T2-PIN.md / the mcp-nixos steps.
+   - row 1 only: follow modules/hosts/REDRUM/T2-PIN.md.
 4. Verify with the workflow tooling, from this worktree: `./rebuild.sh check <affected hosts>`
    (tier 0: syntax, secrets/firmware, whitespace, registry sync, eval), then
    `./rebuild.sh build <host>` for each affected host this machine may build. On REDRUM

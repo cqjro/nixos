@@ -281,6 +281,14 @@ registry at [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.m
 (mirrored in the README's table). They are deliberate, temporary reductions in
 scope — never "clean one up" without confirming the upstream fix.
 
+**Rule: stay on the latest nixpkgs and pin the broken app, not the system.**
+When a bump to the latest `nixos-unstable` breaks one package, do not hold
+`nixpkgs` back. Remove the dead usage if it is unused; otherwise take that one
+package from the last known-good rev through its own pinned input (e.g.
+`inputs.nixpkgs-opencode`), and register it as a workaround (`# TODO-remove:`,
+a row in both tables, a probe entry) so the weekly check unpins it once
+upstream is fixed.
+
 **Standing instruction: in every rebuild conversation, read the registry and
 re-check each entry for an upstream fix before doing anything else** (look at
 the linked issue/PR or upstream commit log; do not assume from elapsed time).

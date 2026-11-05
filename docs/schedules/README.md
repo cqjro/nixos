@@ -277,10 +277,10 @@ is true would cut the LLM floor to zero.
 These are the real results of the new tooling against the live world, and they
 are why the design is worth having:
 
-- **Row 7 looks fixed upstream.** `nix build --dry-run github:NixOS/nixpkgs/nixos-unstable#mcp-nixos`
-  reports only fetches (nothing to build): `pkgs.mcp-nixos` is now 3.0.2 and
-  substitutable. The flake lock pins an older nixpkgs (`3ec6363`), so removal
-  also needs to be checked against the locked revision.
+- **Row 7 was fixed upstream** (resolved: the `mcp-nixos` input was removed
+  after bumping `nixpkgs` to `1d06008`, where `pkgs.mcp-nixos` 3.0.2 builds). The
+  probe found it on nixos-unstable while the lock still pinned `3ec6363`, so
+  removal has to be checked against the locked revision.
 - **Row 2 is partly fixed.** nixos-unstable's `qidi-studio` now has `libsoup_3`
   in `extraPkgs` (package version 2.07.02.73) but not `libpng`, `glib-networking`
   or a CA path, so the override stays; the probe records which pieces landed.

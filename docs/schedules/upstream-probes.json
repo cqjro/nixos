@@ -83,16 +83,6 @@
 			]
 		},
 		{
-			"id": "row-7",
-			"registryRow": 7,
-			"slug": "mcp-nixos-flake-input",
-			"title": "mcp-nixos from its upstream flake instead of pkgs.mcp-nixos",
-			"action": "auto-pr",
-			"probes": [
-				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#mcp-nixos" }
-			]
-		},
-		{
 			"id": "row-8",
 			"registryRow": 8,
 			"slug": "learnharness-package",
@@ -114,6 +104,16 @@
 			"probes": [
 				{ "type": "file", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code/unwrapped.nix", "ref": "nixos-unstable", "mustContain": ["hyprland-snap-shot"] },
 				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code", "ref": "nixos-unstable", "pattern": "snap-shot" }
+			]
+		},
+		{
+			"id": "row-10",
+			"registryRow": 10,
+			"slug": "opencode-previous-nixpkgs",
+			"title": "opencode from the previous nixpkgs instead of the main nixpkgs",
+			"action": "auto-pr",
+			"probes": [
+				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#opencode" }
 			]
 		}
 	],
