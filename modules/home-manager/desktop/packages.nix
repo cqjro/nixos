@@ -10,7 +10,6 @@ in
 			# hyprlock
 
 			# Config Dependencies
-			ags
 			grim
 			slurp
 			wl-clipboard

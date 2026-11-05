@@ -29,13 +29,6 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
-		# TODO-remove: mcp-nixos from its own flake (own nixpkgs, so deliberately NO
-		# `follows`) because pkgs.mcp-nixos does not build on current nixpkgs:
-		# fastmcp-slim 3.4.7 imports McpError, which mcp 2.2.0 renamed to MCPError.
-		# Drop this input once `nix build nixpkgs#mcp-nixos` works again; see the
-		# "Pending upstream fixes" registry in AGENTS.md (row 7).
-		mcp-nixos.url = "github:utensils/mcp-nixos";
-
 		# archived: sops-nix module moved to modules/_archive/secrets.nix (see its header to reintegrate)
 		# sops-nix = {
 		# 	url = "github:Mic92/sops-nix";
@@ -115,6 +108,11 @@
 		# nix-flatpak = {
 		# 	url = "github:gmodena/nix-flatpak";
 		# };
+
+		# TODO-remove: opencode from the previous nixpkgs (nixos-unstable 2026-10-23)
+		# because its node_modules fixed-output hash is stale on the main nixpkgs;
+		# see the "Pending upstream fixes" registry (row 10).
+		nixpkgs-opencode.url = "github:nixos/nixpkgs/3ec636362e1816bc2f0888fa0fa2c69f1bc9e504";
 
 		nixpkgs-openconnect-sso.url = "github:nixos/nixpkgs/46397778ef1f73414b03ed553a3368f0e7e33c2f";
 
