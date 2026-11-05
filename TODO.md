@@ -33,9 +33,8 @@ repeated as proposals.
         repo; delete them if unwanted)
   - [ ] **schedules:** the three tasks are live (Unswitched and Upstream run, with
         Upstream workers enabled). Still to do: enable the paused "Build Flags" task
-        (its first run files about four issues and launches one worker); row 7 waits
-        for a `nixpkgs` lock bump (issue #14); REDRUM bootstrap via
-        `unswitched-changes.md`
+        (its first run files about four issues and launches one worker); REDRUM
+        bootstrap via `unswitched-changes.md`
   - [ ] Optional: Claude re-login (secrets 4.4)
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
