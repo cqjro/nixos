@@ -286,8 +286,9 @@ re-check each entry for an upstream fix before doing anything else** (look at
 the linked issue/PR or upstream commit log; do not assume from elapsed time).
 Report landed fixes explicitly and remove the workaround in its own branch;
 otherwise report status briefly and move on. Adding a workaround requires a
-`# TODO-remove:` comment at the site and the same row in both tables
-(`./rebuild.sh check` compares the row numbers).
+`# TODO-remove:` comment at the site, the same row in both tables and an entry
+in `docs/schedules/upstream-probes.json` (`./rebuild.sh check` compares the row
+numbers; without the probe entry the weekly schedule stops on a mismatch).
 
 ## Gotchas
 

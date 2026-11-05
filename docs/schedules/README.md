@@ -329,10 +329,11 @@ worker briefs, Haiku low for scheduled checks, and the registry at
   should become a read of the open `upstream-fix` issues once the schedule is live; the
   replacement wording is in `upstream-check.md`. Not before, or nothing polls the registry.
 - The registry now exists in three places: `docs/agents/upstream-registry.md`, the README
-  mirror (`./rebuild.sh check` compares those two) and `upstream-probes.json`
-  (`schedule-precheck` warns when its row numbers differ). Consider extending the check, or
-  generating the probe file's row list from the registry. A worker that removes a row deletes
-  it from all three.
+  mirror and `upstream-probes.json`. `./rebuild.sh check` compares the row numbers of all
+  three (the probe file was added to the check after row 9 was merged without a probe and
+  the weekly run stopped on the mismatch); `schedule-precheck` also errors when they differ.
+  Consider generating the probe file's row list from the registry. A worker that removes a
+  row deletes it from all three.
 - Packaging: `schedule-precheck` borrows `python3` through `nix shell` because agent shells
   have none. Ship it properly (home-manager package or `writers.writePython3Bin` with
   `gh git nix` as runtime inputs) next to the other scripts in `modules/scripts/`, and add it
