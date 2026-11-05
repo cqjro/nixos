@@ -31,14 +31,11 @@ repeated as proposals.
         below). The GitHub email settings are done and the GOD-KILLER token has
         Issues read and write (six labels from a test run still exist in the
         repo; delete them if unwanted)
-  - [ ] **notifications:** choose ntfy.sh or self-hosted, create the topic file
-        (`request_secret`, never chat), subscribe the phone app, then test 6.2
   - [ ] **schedules:** approve the two prompts (`docs/schedules/upstream-check.md`,
         `build-flags.md`) and update the two existing scheduled tasks; decide the
         old "Build Flags" task (it still edits the checkout); REDRUM bootstrap via
         `unswitched-changes.md`
-  - [ ] Optional: Claude re-login (secrets 4.4); add `Read(~/.config/agent-notify/**)`
-        to the deny list in `claude-code.nix`
+  - [ ] Optional: Claude re-login (secrets 4.4)
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
@@ -50,6 +47,26 @@ repeated as proposals.
         build or reinstall it
   - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
     old repo stays private as the archive and the public one never contains them.
+
+- [ ] **Agent notifications: decide the setup** — the `agent-notify` hooks are
+      installed on both hosts and the desktop popups are verified (they appear in
+      `~/.local/state/agent-notify/events.log`); what is left is deciding how
+      notifications should work, then the phone side — **3/10** (reference:
+      [`docs/notifications.md`](docs/notifications.md))
+  - [ ] Decide what should notify and where: T3's native app push, the hooks, or
+        both (the native push has fixed text and no machine name; the hooks carry
+        host, worktree and branch); and whether approvals, completions and
+        failures all matter, or only approvals
+  - [ ] Choose the transport: ntfy.sh with a private topic (recommended; the topic
+        is the credential, approval text transits a third party) or self-hosted
+        on REDRUM (`modules/server/ntfy.nix`, optional, human-run `tailscale
+        serve`)
+  - [ ] Create the topic file on GOD-KILLER, subscribe the phone app, copy the
+        topic to REDRUM for `t3code`, and run test 6.2 (hooks under T3, Supervised
+        thread, then REDRUM); quiet hours if wanted
+  - [ ] Add `Read(~/.config/agent-notify/**)` to the deny list in `claude-code.nix`
+  - *Note:* only Supervised threads prompt at all (Full access has nothing to
+    approve), so approval pushes depend on the modes you actually run
 
 - [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
       (an archived `modules/_archive/waydroid.nix` already exists to
