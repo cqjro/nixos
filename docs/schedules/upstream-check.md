@@ -41,7 +41,7 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
 
 2. If the command fails (the tool result reports an error or a non-zero exit), or the
    report's `errors` list is non-empty: run
-   /home/cairo/.nixos/docs/schedules/bin/schedule-precheck health upstream "<first error, one line>"
+   /home/cairo/.nixos/docs/schedules/bin/schedule-precheck health upstream "<first error, one line, without double quotes, $, backticks or backslashes>"
    once, report the failure in two lines, and stop. Do not diagnose.
 
 3. If `changed` is false: reply with exactly one line:

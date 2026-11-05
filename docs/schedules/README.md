@@ -113,9 +113,11 @@ schedule-precheck health SCHEDULE MESSAGE…
   `claude-guard` blocks Edit/Write on it), so one allow rule covers every `gh` and `nix`
   call inside it and an unattended run needs no `gh issue *` rules. Rules for prompts:
   - **one plain command**, absolute path: exclusion applies to plain commands only, so
-    `cd … && …`, a pipe or `; echo $?` runs sandboxed and fails;
+    `cd … && …`, a pipe or `; echo $?` runs sandboxed and fails, and `claude-guard` blocks
+    any command naming the script path that is not a single plain command. A `health`
+    message therefore must not contain `"`, `$`, a backtick or a backslash;
   - **never the relative path from a worktree**: that copy is code the agent can edit and
-    run in the same turn, so it is deliberately not excluded (smoke test steps 27-29).
+    run in the same turn, so it is deliberately not excluded (smoke test steps 27-32).
   The script is only as safe as its checkout: `~/.nixos` changes by merged PR plus your
   switch, and `docs/schedules/bin/*` is on the tier-2 review list for that reason. Full
   reasoning, REDRUM and the packaged alternative: docs/agents/security.md, "Scheduled
@@ -304,7 +306,7 @@ are why the design is worth having:
    existing tasks (`update_scheduled_task`, ids in each file).
 4. Smoke test, in this order, reading each thread: `run_scheduled_task_now` once per task
    with `--dry-run` appended to the script call in the prompt (edit it temporarily), then
-   smoke-test steps 25-29 in docs/agents/security.md.
+   smoke-test steps 25-32 in docs/agents/security.md.
 5. Remove `--dry-run`, run once for real, and watch the issues appear.
 6. When the REDRUM prerequisites exist, create the `--detect-only` copies on
    REDRUM's server (and see the REDRUM note in docs/agents/security.md: it needs the

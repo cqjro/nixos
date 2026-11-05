@@ -1,4 +1,4 @@
-#!/usr/bin/env -S nix shell nixpkgs#python3 --command python3
+#!/usr/bin/env -S nix shell nixpkgs#python3 --command python3 -I
 """Deterministic pre-step for the scheduled T3 threads (no LLM involved).
 
   schedule-precheck upstream   poll the "Pending upstream fixes" probes
@@ -21,12 +21,21 @@ Design notes: docs/schedules/README.md.
 
 SECURITY INVARIANT (docs/agents/security.md, "Scheduled checks run unsandboxed"): the
 main checkout's copy of this script runs OUTSIDE the agent sandbox with the owner's gh
-token, and an agent controls its command line. So no argument or environment variable
-may choose a path, URL, repository or command that this script then trusts. The
-options that do (--state-dir, --tree-path, --remote-url, --repo) are refused unless the
-HUMAN created ~/.config/nixos-schedules/allow-overrides (mode 0600/0644, owned by the
-user; agents cannot write there). Any new option of that kind must go through the same
-gate, and a change to argument parsing is a tier-2 review item.
+token, and an agent controls its arguments (and possibly the environment it starts
+with). So nothing the caller supplies may choose a path, URL, repository, command or
+free-form issue key that this script then trusts:
+  - --state-dir, --tree-path, --remote-url, --repo are refused unless the HUMAN created
+    ~/.config/nixos-schedules/allow-overrides (user-owned, not group/world-writable);
+  - every child process gets a rebuilt environment (clean_env): fixed PATH, passwd
+    home, no GIT_*/GH_*/NIX_*/PYTHON*/LD_*/proxy/SSL variables are inherited, and the
+    shebang runs python with -I. (The `nix shell` in the shebang starts before any of
+    this, so it still sees the caller's NIX_* variables: docs/agents/security.md,
+    smoke step 30, checks that the exclusion does not apply to a command with leading
+    VAR=value assignments);
+  - hosts, revisions, issue keys, thread ids and schedule names are validated against
+    fixed patterns or lists, and --max-new/--remind-hours are clamped.
+Any new option of that kind must go through the same gate or validation, and a change
+to argument parsing is a tier-2 review item.
 
 Needs python3, gh, git and nix on PATH. The shebang borrows python3 from nixpkgs because
 agent shells have none; package it with home-manager later (see README).
@@ -54,6 +63,10 @@ DEFAULT_REPO = "cqjro/nixos"
 DEFAULT_URL = "https://github.com/cqjro/nixos.git"
 # git never runs a program named by a config file it finds (fsmonitor, hooks, ext:: remotes)
 GIT = ["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "protocol.ext.allow=never"]
+SAFE_PATH = "/run/current-system/sw/bin:/etc/profiles/per-user/{user}/bin:/nix/var/nix/profiles/default/bin"
+HEX_REV = re.compile(r"[0-9a-f]{7,40}(-dirty)?")
+KEY_RE = re.compile(r"(upstream-fix|rebuild-warning|eval-failure):[\w:.-]{1,80}")
+THREAD_RE = re.compile(r"[\w:-]{1,80}")
 MARK = "sched-key"
 LABELS = {
 	"scheduled": ("ededed", "Filed or updated by a scheduled run"),
@@ -77,9 +90,27 @@ def now():
 	return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def clean_env(extra=None):
+	"""Environment for every child: nothing inherited from the caller (see SECURITY INVARIANT)."""
+	uid = os.getuid()
+	user = pwd.getpwuid(uid).pw_name
+	env = {
+		"PATH": SAFE_PATH.format(user=user),
+		"HOME": str(real_home()),
+		"USER": user,
+		"LOGNAME": user,
+		"LANG": "C.UTF-8",
+		"GIT_TERMINAL_PROMPT": "0",
+		"XDG_RUNTIME_DIR": f"/run/user/{uid}",  # agent-notify's desktop path
+		"DBUS_SESSION_BUS_ADDRESS": f"unix:path=/run/user/{uid}/bus",
+	}
+	env.update(extra or {})
+	return env
+
+
 def run(cmd, cwd=None, timeout=900, env=None):
 	try:
-		p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
+		p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=clean_env(env))
 		return p.returncode, p.stdout, p.stderr
 	except subprocess.TimeoutExpired:
 		return 124, "", f"timeout after {timeout}s: {' '.join(cmd[:4])}"
@@ -144,6 +175,8 @@ def origin_url(override):
 def ensure_clone(state, url):
 	"""Private partial clone of master; `git fetch` here never touches ~/.nixos."""
 	clone = state.root / "clone"
+	if clone.is_symlink() or (clone / ".git").is_symlink():
+		raise RuntimeError(f"{clone} contains a symlink; refusing to run git in it")
 	if (clone / ".git").exists() and (clone / ".git").stat().st_uid != os.getuid():
 		raise RuntimeError(f"{clone} is not owned by the current user; refusing to run git in it")
 	if not (clone / ".git").exists():
@@ -457,7 +490,11 @@ def cmd_buildflags(a, root, state, issues):
 				raise RuntimeError("git worktree add: " + err.strip()[-200:])
 			tree, report["rev"] = Path(tmp), rev[:12]
 		rc, out, _ = run([*GIT, "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
-		hosts = a.hosts or sorted(Path(x).name for x in out.split())
+		discovered = sorted(Path(x).name for x in out.split())
+		hosts = a.hosts or discovered
+		bad = [h for h in hosts if h not in discovered]
+		if bad:
+			raise RuntimeError(f"unknown host(s) {bad}; known: {', '.join(discovered)}")
 		issues.ensure_labels()
 		current = {}
 		for h in hosts:
@@ -598,6 +635,9 @@ def cmd_unswitched(a, root, state, issues):
 			report["errors"].append("nixos-version --json failed: " + e.strip()[-150:])
 			return report
 		raw = (json.loads(o).get("configurationRevision") or "")
+	if raw and raw != "unknown" and not HEX_REV.fullmatch(raw):
+		report["errors"].append("revision is not a commit hash (expected hex, optionally -dirty)")
+		return report
 	status, rev, commits, message = "ok", raw.removesuffix("-dirty"), [], None
 	report["revision"] = raw or None
 	if not raw or raw == "unknown":
@@ -655,10 +695,9 @@ def cmd_unswitched(a, root, state, issues):
 	report["notify"] = bool(due)
 	report["changed"] = bool(due)
 	if due and a.notify and not a.dry_run:
-		agent = shutil.which("agent-notify")
+		agent = shutil.which("agent-notify", path=clean_env()["PATH"])
 		if agent:
-			env = dict(os.environ, AGENT_NOTIFY_LABEL="Unswitched changes")
-			rc, _, _ = run([agent, "send", "info", message], env=env, timeout=30)
+			rc, _, _ = run([agent, "send", "info", message], env={"AGENT_NOTIFY_LABEL": "Unswitched changes"}, timeout=30)
 			report["delivery"] = "agent-notify" if rc == 0 else f"agent-notify failed ({rc})"
 		else:
 			report["delivery"] = "none (agent-notify not on PATH; message is in the report)"
@@ -672,6 +711,8 @@ def cmd_unswitched(a, root, state, issues):
 
 def cmd_mark_launched(a, state, issues):
 	"""mark-launched KEY THREAD_ID: label the issue so later runs do not launch a second worker."""
+	if len(a.args) != 2 or not KEY_RE.fullmatch(a.args[0]) or not THREAD_RE.fullmatch(a.args[1]):
+		return {"ok": False, "error": "usage: mark-launched KEY THREAD_ID (KEY like upstream-fix:row-7, THREAD_ID word characters only)"}
 	key, thread = a.args
 	ex = issues.find(key)
 	if issues.unavailable:
@@ -686,6 +727,8 @@ def cmd_mark_launched(a, state, issues):
 
 def cmd_health(a, state, issues):
 	"""health SCHEDULE MESSAGE: one schedule-health issue per schedule per month, commented on repeat failures."""
+	if not a.args or a.args[0] not in ("upstream", "buildflags", "unswitched"):
+		return {"ok": False, "error": "usage: health upstream|buildflags|unswitched MESSAGE..."}
 	sched, message = a.args[0], " ".join(a.args[1:])[:1500]
 	issues.ensure_labels()
 	key = f"schedule-health:{sched}:{datetime.now(timezone.utc).strftime('%Y-%m')}"
@@ -710,12 +753,12 @@ def main():
 	ap.add_argument("command", choices=["upstream", "buildflags", "unswitched", "mark-launched", "health"])
 	ap.add_argument("args", nargs="*", help="mark-launched KEY THREAD_ID | health SCHEDULE MESSAGE...")
 	ap.add_argument("--repo", default=DEFAULT_REPO, help="GitHub repo holding the issues (override needs the gate file)")
-	ap.add_argument("--max-new", type=int, default=3, help="max new issues per run (eval failures are exempt)")
+	ap.add_argument("--max-new", type=lambda v: max(0, min(5, int(v))), default=3, help="max new issues per run (eval failures are exempt)")
 	ap.add_argument("--dry-run", action="store_true", help="no issue writes, no state writes")
 	ap.add_argument("--tree-path", help="buildflags: evaluate this directory instead of a fresh origin/master worktree (debugging)")
 	ap.add_argument("--host", dest="hosts", action="append", help="buildflags: limit to a host (repeatable); unswitched: the host to check (default: this machine's hostname)")
 	ap.add_argument("--notify", action="store_true", help="unswitched: deliver through agent-notify instead of only reporting")
-	ap.add_argument("--remind-hours", type=int, default=24, help="unswitched: repeat a still-pending notice after this long (diagnostic notices: 7x)")
+	ap.add_argument("--remind-hours", type=lambda v: max(1, int(v)), default=24, help="unswitched: repeat a still-pending notice after this long (diagnostic notices: 7x)")
 	ap.add_argument("--revision", help="unswitched: pretend this is the running configurationRevision (testing)")
 	ap.add_argument("--remote-url", dest="url", help="git URL of the config repo (default: origin of the checkout this script lives in)")
 	ap.add_argument("--detect-only", action="store_true", help="file/update issues but report no actionable work (for hosts that must not launch workers)")
