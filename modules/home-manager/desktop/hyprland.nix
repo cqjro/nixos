@@ -35,6 +35,7 @@
 
       dsp = {
         exec_cmd = app: mkLuaInline "hl.dsp.exec_cmd(${toLua { } app})";
+        global = name: mkLuaInline "hl.dsp.global(${toLua { } name})";
         focus = arg: mkLuaInline "hl.dsp.focus(${toLua { } arg})";
         workspace = {
           toggle_special = name: mkLuaInline "hl.dsp.workspace.toggle_special(${toLua { } name})";
@@ -227,6 +228,9 @@
             # (bind "${mainMod} + SHIFT + L" (dsp.exec_cmd "hyprlock") { })
             (bind "ALT + S" (dsp.exec_cmd "grimblast copysave screen") { locked = true; })
             (bind "ALT + SHIFT + S" (dsp.exec_cmd "grimblast copysave area") { locked = true; })
+            # T3 Code "Capture window" shortcut (same line the app's setup would append);
+            # appId is the non-development desktop entry, com.t3tools.T3Code
+            (bind "CTRL + SHIFT + 2" (dsp.global "com.t3tools.T3Code:capture-window") { })
             (bind "${mainMod} + H" (dsp.focus { direction = "left"; }) { })
             (bind "${mainMod} + J" (dsp.focus { direction = "down"; }) { })
             (bind "${mainMod} + K" (dsp.focus { direction = "up"; }) { })

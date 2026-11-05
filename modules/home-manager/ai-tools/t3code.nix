@@ -89,9 +89,40 @@
 				searchMatchActiveForeground = c.base00;
 			};
 		};
+
+		# TODO-remove: nixpkgs' t3code builds the Electron app but not the native
+		# Hyprland capture helper, so "Allow snapshots" fails with "The Hyprland
+		# capture helper is missing from this build". Build it from the same
+		# source and install it where the unpackaged app looks for its bundle
+		# (<libexec/t3code>/native/hyprland-snap-shot/target/release/). The app
+		# realpaths itself into t3code-unwrapped, so the file has to live there
+		# (not only in the symlinkJoin wrapper), as a regular file: it lstat-rejects
+		# links. Overriding the unwrapped package rebuilds the app locally.
+		# See docs/agents/upstream-registry.md row 9.
+		t3codeUnwrapped = pkgs.t3code.unwrapped;
+		hyprlandCaptureHelper = pkgs.rustPlatform.buildRustPackage {
+			pname = "t3code-hyprland-snap-shot";
+			inherit (t3codeUnwrapped) version src;
+			sourceRoot = "${t3codeUnwrapped.src.name}/native/hyprland-snap-shot";
+			cargoHash = "sha256-oki1DAzUJ/8YIFhaJlw2wOukiQMcAaexdJqxDcFXFW4=";
+			meta = {
+				description = "Native Hyprland window capture helper for T3 Code";
+				inherit (t3codeUnwrapped.meta) homepage license platforms;
+				mainProgram = "t3-hyprland-snap-shot";
+			};
+		};
+		t3codeWithCapture = pkgs.t3code.override {
+			t3code-unwrapped = t3codeUnwrapped.overrideAttrs (old: {
+				postInstall = (old.postInstall or "") + ''
+					install -Dm755 ${hyprlandCaptureHelper}/bin/t3-hyprland-snap-shot \
+						"$out"/libexec/t3code/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot
+				'';
+			});
+		};
 	in {
 		programs.t3code = {
 			enable = true;
+			package = t3codeWithCapture;
 			# merged into settings.json (the file stays writable by the app)
 			userSettings.defaultTheme = "stylix";
 		};
