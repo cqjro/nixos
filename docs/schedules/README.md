@@ -86,9 +86,13 @@ schedule-precheck health SCHEDULE MESSAGE…
 - **Nothing here writes to `~/.nixos`.** The human's switch checkout is never fetched,
   pulled, worktree'd or logged into by a schedule (user rule: cross-machine awareness
   is a notification, never a pull). All git work happens in a private partial clone,
-  `$NIXOS_SCHEDULE_STATE/clone` (default `~/.local/state/nixos-schedules/`, a few MB),
-  made and fetched by the script; its origin URL is read once from the checkout the
-  script lives in (`--remote-url` overrides). Throw-away worktrees are created inside
+  `~/.local/state/nixos-schedules/clone` (a few MB, under the passwd home, not `$HOME`),
+  made and fetched by the script from the constant URL `https://github.com/cqjro/nixos.git`
+  (it does not read `~/.nixos/.git/config`, which the sandbox lets agents write).
+  `--state-dir`, `--tree-path`, `--remote-url` and `--repo` exist for debugging and are
+  **refused** unless you create `~/.config/nixos-schedules/allow-overrides`, because this
+  script runs outside the sandbox and an agent chooses its arguments (docs/agents/security.md).
+  `$NIXOS_SCHEDULE_STATE`/`$XDG_STATE_HOME` are ignored. Throw-away worktrees are created inside
   that clone's state directory and removed afterwards. (My first version wrote a
   worktree entry and a `.log/` state file into `~/.nixos`; this fixes that.)
 - **State** is the same directory: `upstream-state.json`, `buildflags-state.json`,
@@ -111,7 +115,7 @@ schedule-precheck health SCHEDULE MESSAGE…
   - **one plain command**, absolute path: exclusion applies to plain commands only, so
     `cd … && …`, a pipe or `; echo $?` runs sandboxed and fails;
   - **never the relative path from a worktree**: that copy is code the agent can edit and
-    run in the same turn, so it is deliberately not excluded (smoke test steps 27-28).
+    run in the same turn, so it is deliberately not excluded (smoke test steps 27-29).
   The script is only as safe as its checkout: `~/.nixos` changes by merged PR plus your
   switch, and `docs/schedules/bin/*` is on the tier-2 review list for that reason. Full
   reasoning, REDRUM and the packaged alternative: docs/agents/security.md, "Scheduled
@@ -300,7 +304,7 @@ are why the design is worth having:
    existing tasks (`update_scheduled_task`, ids in each file).
 4. Smoke test, in this order, reading each thread: `run_scheduled_task_now` once per task
    with `--dry-run` appended to the script call in the prompt (edit it temporarily), then
-   smoke-test steps 25-28 in docs/agents/security.md.
+   smoke-test steps 25-29 in docs/agents/security.md.
 5. Remove `--dry-run`, run once for real, and watch the issues appear.
 6. When the REDRUM prerequisites exist, create the `--detect-only` copies on
    REDRUM's server (and see the REDRUM note in docs/agents/security.md: it needs the

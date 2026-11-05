@@ -14,10 +14,19 @@ issue per finding, updated in place) is done here, not by the model, and only
 from structured fields this script produced: upstream text never reaches an
 issue body, which keeps prompt injection out of the loop.
 
-Nothing here writes to ~/.nixos (the checkout the human switches from): git work
-happens in a private partial clone and its throw-away worktrees under
-$NIXOS_SCHEDULE_STATE (default ~/.local/state/nixos-schedules). The script only
-READS ~/.nixos, once, for the origin URL. Design notes: docs/schedules/README.md.
+Nothing here writes to ~/.nixos (the checkout the human switches from) or reads its
+git config: git work happens in a private partial clone and its throw-away worktrees
+under ~/.local/state/nixos-schedules (the real home from the passwd entry, not $HOME).
+Design notes: docs/schedules/README.md.
+
+SECURITY INVARIANT (docs/agents/security.md, "Scheduled checks run unsandboxed"): the
+main checkout's copy of this script runs OUTSIDE the agent sandbox with the owner's gh
+token, and an agent controls its command line. So no argument or environment variable
+may choose a path, URL, repository or command that this script then trusts. The
+options that do (--state-dir, --tree-path, --remote-url, --repo) are refused unless the
+HUMAN created ~/.config/nixos-schedules/allow-overrides (mode 0600/0644, owned by the
+user; agents cannot write there). Any new option of that kind must go through the same
+gate, and a change to argument parsing is a tier-2 review item.
 
 Needs python3, gh, git and nix on PATH. The shebang borrows python3 from nixpkgs because
 agent shells have none; package it with home-manager later (see README).
@@ -27,6 +36,7 @@ failed (the report's `errors` explains; the prompt files the health issue).
 """
 
 import argparse
+import pwd
 import hashlib
 import shutil
 import json
@@ -40,6 +50,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+DEFAULT_REPO = "cqjro/nixos"
+DEFAULT_URL = "https://github.com/cqjro/nixos.git"
+# git never runs a program named by a config file it finds (fsmonitor, hooks, ext:: remotes)
+GIT = ["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "protocol.ext.allow=never"]
 MARK = "sched-key"
 LABELS = {
 	"scheduled": ("ededed", "Filed or updated by a scheduled run"),
@@ -103,36 +117,48 @@ class State:
 		tmp.replace(p)
 
 
+def real_home():
+	return Path(pwd.getpwuid(os.getuid()).pw_dir)  # not $HOME: a prefixed env var could redirect it
+
+
+def overrides_allowed():
+	"""The human opts in to path/URL/repo overrides by creating this file (debugging, tests)."""
+	gate = real_home() / ".config/nixos-schedules/allow-overrides"
+	try:
+		st = gate.stat()
+	except OSError:
+		return False
+	return gate.is_file() and st.st_uid == os.getuid() and not st.st_mode & 0o022
+
+
 def state_root(arg):
-	if arg:
+	if arg:  # only reachable through the gate (checked in main)
 		return Path(arg)
-	base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local/state")
-	return Path(base) / "nixos-schedules"
+	return real_home() / ".local/state/nixos-schedules"
 
 
 def origin_url(override):
-	if override:
-		return override
-	rc, out, _ = run(["git", "-C", str(HERE.parents[2]), "remote", "get-url", "origin"], timeout=20)
-	return out.strip() if rc == 0 and out.strip() else "https://github.com/cqjro/nixos.git"
+	return override or DEFAULT_URL  # never read ~/.nixos/.git/config: an agent can write it
 
 
 def ensure_clone(state, url):
 	"""Private partial clone of master; `git fetch` here never touches ~/.nixos."""
 	clone = state.root / "clone"
+	if (clone / ".git").exists() and (clone / ".git").stat().st_uid != os.getuid():
+		raise RuntimeError(f"{clone} is not owned by the current user; refusing to run git in it")
 	if not (clone / ".git").exists():
-		rc, _, err = run(["git", "clone", "--quiet", "--filter=blob:none", "--no-tags", "--single-branch", "--branch", "master", url, str(clone)], timeout=900)
+		rc, _, err = run([*GIT, "clone", "--quiet", "--filter=blob:none", "--no-tags", "--single-branch", "--branch", "master", url, str(clone)], timeout=900)
 		if rc != 0:
 			raise RuntimeError("git clone: " + (err.strip().splitlines() or [rc])[-1])
 	else:
-		rc, _, err = run(["git", "fetch", "--quiet", "--no-tags", "origin", "master"], cwd=clone, timeout=300)
+		rc, _, err = run([*GIT, "fetch", "--quiet", "--no-tags", "origin", "master"], cwd=clone, timeout=300)
 		if rc != 0:
 			raise RuntimeError("git fetch origin master: " + (err.strip().splitlines() or [rc])[-1])
 	return clone
 
 
 def git_show(clone, path, rev="origin/master"):
-	rc, out, _ = run(["git", "show", f"{rev}:{path}"], cwd=clone, timeout=60)
+	rc, out, _ = run([*GIT, "show", f"{rev}:{path}"], cwd=clone, timeout=60)
 	return out if rc == 0 else None
 
 
@@ -212,7 +238,7 @@ class Issues:
 
 def table_rows(clone: Path):
 	"""Count registry rows in origin/master, wherever the table lives."""
-	rc, out, _ = run(["git", "ls-tree", "-r", "--name-only", "origin/master", "docs/agents/"], cwd=clone, timeout=30)
+	rc, out, _ = run([*GIT, "ls-tree", "-r", "--name-only", "origin/master", "docs/agents/"], cwd=clone, timeout=30)
 	extra = [f for f in out.split() if f.endswith(".md")] if rc == 0 else []
 	for path in ["docs/agents/upstream-registry.md", "README.md", "AGENTS.md", *extra]:
 		text = git_show(clone, path)
@@ -421,16 +447,16 @@ def cmd_buildflags(a, root, state, issues):
 	tmp = None
 	try:
 		clone = ensure_clone(state, a.url)
-		rev = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
+		rev = run([*GIT, "rev-parse", "origin/master"], cwd=clone)[1].strip()
 		if a.tree_path:
 			tree, report["rev"] = Path(a.tree_path), "local-path"
 		else:
 			tmp = tempfile.mkdtemp(prefix="sched-eval-", dir=str(state.root))
-			rc, _, err = run(["git", "worktree", "add", "--detach", tmp, rev], cwd=clone, timeout=600)
+			rc, _, err = run([*GIT, "worktree", "add", "--detach", tmp, rev], cwd=clone, timeout=600)
 			if rc != 0:
 				raise RuntimeError("git worktree add: " + err.strip()[-200:])
 			tree, report["rev"] = Path(tmp), rev[:12]
-		rc, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+		rc, out, _ = run([*GIT, "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
 		hosts = a.hosts or sorted(Path(x).name for x in out.split())
 		issues.ensure_labels()
 		current = {}
@@ -492,8 +518,8 @@ def cmd_buildflags(a, root, state, issues):
 		report["errors"].append(str(e))
 	finally:
 		if tmp:
-			run(["git", "worktree", "remove", "--force", tmp], cwd=state.root / "clone")
-			run(["git", "worktree", "prune"], cwd=state.root / "clone")
+			run([*GIT, "worktree", "remove", "--force", tmp], cwd=state.root / "clone")
+			run([*GIT, "worktree", "prune"], cwd=state.root / "clone")
 	# actionable = still reproducing, issue open, no worker yet (state-free, so any machine can pick it up)
 	report["actionable"] = [] if a.detect_only else [f["key"] for f in report["findings"]
 		if f.get("issue") and f["issue"]["state"] == "OPEN" and f.get("kind") in ("rebuild-warning", "eval-failure")
@@ -556,8 +582,8 @@ def cmd_unswitched(a, root, state, issues):
 	host = (a.hosts or [os.uname().nodename])[0]
 	report = {"schedule": "unswitched", "ranAt": now(), "host": host, "errors": [], "changed": False}
 	clone = ensure_clone(state, a.url)
-	head = run(["git", "rev-parse", "origin/master"], cwd=clone)[1].strip()
-	_, out, _ = run(["git", "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
+	head = run([*GIT, "rev-parse", "origin/master"], cwd=clone)[1].strip()
+	_, out, _ = run([*GIT, "ls-tree", "-d", "--name-only", "origin/master", "modules/hosts/"], cwd=clone)
 	all_hosts = sorted(Path(x).name for x in out.split())
 	if host not in all_hosts:
 		report["errors"].append(f"unknown host {host!r}; pass --host (known: {', '.join(all_hosts)})")
@@ -581,19 +607,19 @@ def cmd_unswitched(a, root, state, issues):
 		status = "dirty"
 		message = f"{host}'s running generation was built from a dirty tree ({rev[:12]}-dirty), so I can't tell exactly what is unswitched."
 	if status == "ok" or status == "dirty":
-		if run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=clone)[0] != 0:
+		if run([*GIT, "cat-file", "-e", f"{rev}^{{commit}}"], cwd=clone)[0] != 0:
 			status = "unknown-revision"
 			message = f"{host}'s running generation was built from {rev[:12]}, which is not on origin/master or not pushed (an emergency or branch build?). Can't compare."
-		elif run(["git", "merge-base", "--is-ancestor", rev, "origin/master"], cwd=clone)[0] != 0:
+		elif run([*GIT, "merge-base", "--is-ancestor", rev, "origin/master"], cwd=clone)[0] != 0:
 			status = "not-on-master" if status == "ok" else status
 			if status == "not-on-master":
 				message = f"{host}'s running generation ({rev[:12]}) is not an ancestor of origin/master (a branch or test build?). Can't compare."
 	if status in ("ok", "dirty"):
 		rules = scope_rules(clone)
-		_, log, _ = run(["git", "log", "--first-parent", "--format=%H%x1f%s", f"{rev}..origin/master"], cwd=clone, timeout=60)
+		_, log, _ = run([*GIT, "log", "--first-parent", "--format=%H%x1f%s", f"{rev}..origin/master"], cwd=clone, timeout=60)
 		for line in log.splitlines():
 			sha_, _, subj = line.partition("\x1f")
-			_, files, _ = run(["git", "diff-tree", "-r", "-m", "--first-parent", "--no-commit-id", "--name-only", sha_], cwd=clone)
+			_, files, _ = run([*GIT, "diff-tree", "-r", "-m", "--first-parent", "--no-commit-id", "--name-only", sha_], cwd=clone)
 			touched, may = set(), False
 			for f in files.split("\n"):
 				if f:
@@ -683,7 +709,7 @@ def main():
 	ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 	ap.add_argument("command", choices=["upstream", "buildflags", "unswitched", "mark-launched", "health"])
 	ap.add_argument("args", nargs="*", help="mark-launched KEY THREAD_ID | health SCHEDULE MESSAGE...")
-	ap.add_argument("--repo", default="cqjro/nixos", help="GitHub repo holding the issues")
+	ap.add_argument("--repo", default=DEFAULT_REPO, help="GitHub repo holding the issues (override needs the gate file)")
 	ap.add_argument("--max-new", type=int, default=3, help="max new issues per run (eval failures are exempt)")
 	ap.add_argument("--dry-run", action="store_true", help="no issue writes, no state writes")
 	ap.add_argument("--tree-path", help="buildflags: evaluate this directory instead of a fresh origin/master worktree (debugging)")
@@ -694,8 +720,13 @@ def main():
 	ap.add_argument("--remote-url", dest="url", help="git URL of the config repo (default: origin of the checkout this script lives in)")
 	ap.add_argument("--detect-only", action="store_true", help="file/update issues but report no actionable work (for hosts that must not launch workers)")
 	ap.add_argument("--skip-nix", action="store_true", help="upstream: skip probes that run `nix build --dry-run` (slow, downloads nixpkgs)")
-	ap.add_argument("--state-dir", default=os.environ.get("NIXOS_SCHEDULE_STATE"))
+	ap.add_argument("--state-dir", help="state/clone directory (override needs the gate file)")
 	a = ap.parse_args()
+	wanted = [n for n, v in (("--state-dir", a.state_dir), ("--tree-path", a.tree_path), ("--remote-url", a.url),
+		("--repo", a.repo if a.repo != DEFAULT_REPO else None)) if v]
+	if wanted and not overrides_allowed():
+		print(json.dumps({"ok": False, "error": f"{', '.join(wanted)} refused: these options are disabled unless the human creates ~/.config/nixos-schedules/allow-overrides (see docs/agents/security.md)"}))
+		return 2
 	a.url = origin_url(a.url)
 	root = None  # nothing below may touch the checkout the human switches from
 	state = State(state_root(a.state_dir))

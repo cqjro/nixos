@@ -114,7 +114,8 @@ the main checkout only**.
 | | |
 | --- | --- |
 | Why this and not "exclude `gh`/`git`/`nix shell` more widely" | Those are already excluded as plain commands; the failure was the script's own children (the `nix shell` shebang and the nix daemon). Excluding the script is one entry; widening `nix shell` would let any code run unsandboxed |
-| What an excluded script can do | Everything cairo can: it holds the `gh` token (Issues write), the nix daemon and the network. Its safety is the script's safety and the checkout it runs from |
+| What an excluded script can do | Everything cairo can: it holds the `gh` token (Issues write), the nix daemon and the network. Its safety is the script's safety, the checkout it runs from **and its argument surface**: the pattern ends in `*`, so the agent chooses every argument |
+| Argument surface (tier-2 finding, fixed) | The first version accepted `--state-dir`, `--tree-path`, `--remote-url`, `--repo` and `$NIXOS_SCHEDULE_STATE`/`$XDG_STATE_HOME`. A sandboxed agent could plant a clone with a hostile `.git/config` (fsmonitor, hooks, ssh command) in its worktree and point `--state-dir` at it, so the script's unsandboxed `git` would run attacker config with the gh token; `--tree-path` made it `nix eval` agent-controlled flake code; `--remote-url`/`--repo` retargeted the network. Now: those four options are **refused** unless the human creates `~/.config/nixos-schedules/allow-overrides` (owned by the user, not group/world-writable; the guard blocks the Edit/Write tools there and the sandbox hides `~/.config`); the env overrides and `$HOME` are ignored (state is under the passwd home); the origin URL is a constant (the script no longer reads `~/.nixos/.git/config`, which the sandbox lets agents write); every `git` call runs with `core.fsmonitor=false`, `core.hooksPath=/dev/null`; the clone must be owned by the user. **Invariant:** no argument or variable may choose a path, URL, repo or command the script trusts; changing its argument parsing is a tier-2 item |
 | Why only `~/.nixos/...` | `~/.nixos` changes by merged PR plus the owner's switch (it is not an agent working directory), and `claude-guard` blocks the Edit/Write tools on `~/.nixos/docs/schedules/bin/`. A worktree copy (`docs/schedules/bin/schedule-precheck`, relative) is code an agent can edit and run in the same turn, so it stays sandboxed and fails; workers do not call it (only the dispatcher's `mark-launched`/`health`, from the absolute path) |
 | Precedent and difference | `./rebuild.sh *` is excluded by relative path, so a worktree's edited `rebuild.sh` runs unsandboxed too (accepted risk below: the edit is in the diff you review). The schedule script is stricter: absolute path, guard-protected |
 | REDRUM | **Inherits the entry, inert there** (the policy fragment is shared by both hosts). `/home/cairo/.nixos` on REDRUM is the human's checkout, and the `t3code` agent cannot read `/home/cairo` (home dirs are 0700; *untested on REDRUM*), so the pattern matches nothing runnable. No entry for `t3code`'s own checkout was added on purpose: `t3code` owns it, so an absolute path there would be agent-editable. Revisit with the packaged variant (script on `PATH` from the store, `gh`/`git`/`nix` as runtime inputs; docs/schedules/unswitched-changes.md option A), which an agent cannot edit and which needs one bare-name entry for both hosts |
@@ -134,7 +135,8 @@ tripwire on the command text, not a boundary:
     including `nix eval --expr` strings;
   - writes to Claude settings, hooks or `.mcp.json` (Bash or Edit);
   - Edit/Write of `~/.nixos/docs/schedules/bin/*` (the main checkout's schedule
-    script runs unsandboxed; worktree paths are unaffected);
+    script runs unsandboxed; worktree paths are unaffected) and of
+    `~/.config/nixos-schedules/*` (the human-only gate for its override options);
   - `hooks:` in skill/agent frontmatter;
   - `curl|wget … | sh`;
   - force pushes;
@@ -426,9 +428,10 @@ you record which steps prompted.**
 | 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (REDRUM, or GOD-KILLER if it has the import) | `0` (store copies hidden), no prompt | same |
 | 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
 | 25 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision ""` (plain command, absolute path; needs the script in `~/.nixos`, i.e. after the owner's switch/fast-forward) | no prompt; prints a JSON report (`status` `no-revision`), no `Unix domain socket` error | runs |
-| 26 | Edit tool on `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` (append a comment) | blocked by the guard ("human-only"), no prompt | blocked |
+| 26 | Edit tool on `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck`, and on `~/.config/nixos-schedules/allow-overrides` | blocked by the guard ("human-only"), no prompt | blocked |
 | 27 | `docs/schedules/bin/schedule-precheck unswitched --dry-run` from a worktree (relative path) | **prompt** (no allow rule matches); if approved it runs **sandboxed** and fails (`cannot create Unix domain socket` / no `gh` login): the worktree copy is deliberately not excluded | prompt is refused as an ask rule would be, i.e. does not run unsandboxed |
 | 28 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision "" ; echo $?` (chained) | not covered by the exclusion: prompts, or runs sandboxed and fails; it must **not** run unsandboxed. If it does, narrow the exclusion before relying on it | same |
+| 29 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --state-dir $TMPDIR/x` | no prompt; the script exits 2 with `--state-dir refused: …` and does nothing else (same for `--tree-path`, `--remote-url`, `--repo evil/x`) | same |
 
 In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
 rule …)": with no card to approve, that counts as blocked.
@@ -441,5 +444,5 @@ placeholders exist only in the sandbox view.
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. Last full run: 2026-11-04, Claude Code 2.1.308, Accept edits and
-Full access, all 24 steps as above (T3 version not recorded); steps 25-28 were added with the schedule policy and have not been run yet. If a step disagrees, update this table and the policy in the same
+Full access, all 24 steps as above (T3 version not recorded); steps 25-29 were added with the schedule policy and have not been run yet. If a step disagrees, update this table and the policy in the same
 change.
