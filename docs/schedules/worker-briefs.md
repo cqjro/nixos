@@ -13,11 +13,20 @@ Common to both workers:
   unmerged local commits that must not leak into a fix branch.
 - **Branch prefix:** `auto/<slug>` (docs/agents/workflow.md, "Lifecycle of a change":
   branches opened from a scheduled finding), based on `origin/master`.
-- **Tooling:** the workers rely on the workflow thread's `./rebuild.sh check|eval|build`
-  (worktree-safe) and the `ship-pr` skill, so they work once that PR is merged.
+- **Tooling:** the workers use `./rebuild.sh check|eval|build` (worktree-safe) and
+  the `ship-pr` skill.
+- **Sandbox rules** (docs/agents/security.md, gotchas): only a *plain* command runs
+  outside the sandbox where it needs to (`gh`, `git push/fetch`, `nix eval/build`,
+  `./rebuild.sh`). A chained, piped or `; echo $?` command is sandboxed and `gh`/`nix`
+  fail in it. So: one command per call, `gh pr create --body-file <file>` (file under
+  `$TMPDIR`, not a heredoc pipe), stage by path (`git add <file>`), never `git add
+  --all` (sandbox placeholder files show as untracked), and no `git checkout -b` (the
+  worktree and branch already exist). Workers never call `docs/schedules/bin/schedule-precheck`:
+  the worktree copy is sandboxed by design and the dispatcher does the bookkeeping.
 - **Runtime mode:** never `full-access`. Inherit the dispatcher's mode (a launched
-  thread cannot exceed its caller). Thread 4 decides whether that is
-  `approval-required` or `auto-accept-edits`.
+  thread cannot exceed its caller): Accept edits for TODO-style worktree work,
+  Supervised if the change touches policy, secrets or networking
+  (docs/agents/security.md, mode table).
 - **Model:** `{"instanceId":"claudeAgent","model":"claude-sonnet-5-5","options":{"effort":"medium"}}`.
   The `options` shape `{"effort": "low"}` was accepted by `t3_thread_launch` on
   2026-11-02 (Haiku 5.5, low); the thread reports it back as `[{id: "effort", value: "low"}]`.

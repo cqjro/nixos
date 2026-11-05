@@ -74,6 +74,14 @@
 				"nix-instantiate *"
 				"nixos-rebuild *"
 				"./rebuild.sh *"
+				# scheduled checks (docs/schedules/README.md): the script runs gh,
+				# git and nix itself, so it cannot be sandboxed. The ABSOLUTE path
+				# of the main checkout only: ~/.nixos changes by merged PR plus the
+				# owner's switch, and claude-guard blocks edits to that file. A
+				# worktree copy (relative path) is code the agent can edit and stays
+				# sandboxed. Unlike ./rebuild.sh above, it holds a write-capable gh
+				# token's reach (issues, labels), so do not widen this pattern.
+				"/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *"
 				# gh and git's network commands need the token in ~/.config/gh
 				"gh *"
 				"git push *"
@@ -128,6 +136,9 @@
 					"Bash(./rebuild.sh eval *)"
 					"Bash(./rebuild.sh build *)"
 					"Bash(./rebuild.sh generations*)"
+					# scheduled checks: probes upstream, evaluates origin/master in a
+					# private clone, files issues; plain command, absolute path
+					"Bash(/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *)"
 					"Bash(bash -n *)"
 					"Bash(nixos-rebuild build *)"
 					"Bash(nixos-rebuild list-generations *)"

@@ -84,6 +84,7 @@ They are excluded because they cannot work inside it:
 | --- | --- |
 | `nix eval/build/flake/log/path-info/why-depends/search/store/derivation`, `nix-store`, `nix-instantiate`, `nixos-rebuild`, `./rebuild.sh` | nix daemon socket is `AF_UNIX`, blocked by seccomp (`cannot create Unix domain socket`). Flake eval also fails on the masked `.gitmodules` |
 | `gh`, `git push/fetch/pull/ls-remote` | need the token in `~/.config/gh` (hidden; also `Read`-denied) |
+| `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` (absolute path only) | the scheduled-thread script runs `gh`, `git` and `nix` itself (and its `nix shell` shebang), so every call inside it hit the sandbox (`cannot create Unix domain socket`, no `~/.config/gh`). See "Scheduled checks run unsandboxed" below |
 | `systemctl`, `journalctl`, `loginctl`, `resolvectl`, `tailscale status` | D-Bus/unix sockets, `/run` |
 | `ss`, `ip addr/route/link show` | sandbox has its own network namespace |
 | read-only `hyprctl` subcommands, `nvidia-smi`, `vulkaninfo`, `glxinfo`, `eglinfo`, `wayland-info`, `mpv`, `waydroid`, `adb` | GPU/display probes need `/dev/dri`, Wayland and Hyprland sockets |
@@ -100,6 +101,26 @@ in a bypass test before strict was set and was refused after. The list does
 not cover WebFetch (separate `WebFetch(domain:…)` rules), MCP servers or
 excluded commands.
 
+### Scheduled checks run unsandboxed
+
+Found 2026-11-04: the "Unswitched changes" scheduled thread ran
+`/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` sandboxed and failed
+with `cannot create Unix domain socket: Operation not permitted`, and its
+`health` fallback failed the same way. The script is a wrapper around `gh`,
+`git` and `nix` (docs/schedules/README.md), and none of those work in the
+sandbox, so it is an excluded command, allow-listed for the **absolute path of
+the main checkout only**.
+
+| | |
+| --- | --- |
+| Why this and not "exclude `gh`/`git`/`nix shell` more widely" | Those are already excluded as plain commands; the failure was the script's own children (the `nix shell` shebang and the nix daemon). Excluding the script is one entry; widening `nix shell` would let any code run unsandboxed |
+| What an excluded script can do | Everything cairo can: it holds the `gh` token (Issues write), the nix daemon and the network. Its safety is the script's safety and the checkout it runs from |
+| Why only `~/.nixos/...` | `~/.nixos` changes by merged PR plus the owner's switch (it is not an agent working directory), and `claude-guard` blocks the Edit/Write tools on `~/.nixos/docs/schedules/bin/`. A worktree copy (`docs/schedules/bin/schedule-precheck`, relative) is code an agent can edit and run in the same turn, so it stays sandboxed and fails; workers do not call it (only the dispatcher's `mark-launched`/`health`, from the absolute path) |
+| Precedent and difference | `./rebuild.sh *` is excluded by relative path, so a worktree's edited `rebuild.sh` runs unsandboxed too (accepted risk below: the edit is in the diff you review). The schedule script is stricter: absolute path, guard-protected |
+| REDRUM | No entry. `t3code` owns its own checkout, so an absolute path there would be agent-editable. Revisit with the packaged variant (script on `PATH` from the store, `gh`/`git`/`nix` as runtime inputs; docs/schedules/unswitched-changes.md option A), which an agent cannot edit and which needs one bare-name entry for both hosts |
+| Plain commands only | Exclusion applies to the plain command. `cd … && …`, pipes and `; echo $?` run sandboxed and fail. The scheduled prompts therefore call the absolute path with nothing chained |
+| Evasions | The guard is a text tripwire: `..` components in an Edit path evade its regex, and a Full access Edit can still write anywhere not denied. The real protection is that the owner reviews merges and diffs of `docs/schedules/bin/` like `rebuild.sh` and `flake.nix` (they are on the tier-2 list for that reason) |
+
 ### 2–4. Rules and the guard
 
 `claude-guard` runs before every `Bash|Edit|Write|MultiEdit|NotebookEdit` call
@@ -111,6 +132,8 @@ tripwire on the command text, not a boundary:
     `.credentials.json`, `token.json`, `.env`, …) in any Bash command,
     including `nix eval --expr` strings;
   - writes to Claude settings, hooks or `.mcp.json` (Bash or Edit);
+  - Edit/Write of `~/.nixos/docs/schedules/bin/*` (the main checkout's schedule
+    script runs unsandboxed; worktree paths are unaffected);
   - `hooks:` in skill/agent frontmatter;
   - `curl|wget … | sh`;
   - force pushes;
@@ -153,6 +176,7 @@ Allow, ask and deny summary (full lists are in the Nix file):
     the read-only nix commands;
   - `git add/commit/fetch/ls-remote` (commits on master prompt via the guard);
   - `gh pr/issue create` and the gh read commands;
+  - the main checkout's `docs/schedules/bin/schedule-precheck` (absolute path, excluded from the sandbox);
   - read-only `systemctl`/`journalctl`/network/GPU diagnostics;
   - mcp-nixos;
   - WebFetch to GitHub, Claude docs, nixos.org and t2linux.
@@ -400,6 +424,9 @@ you record which steps prompted.**
 | 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it; approving runs a harmless dry-activate and shows the GUI sudo password prompt) | **blocked** by the guard |
 | 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (REDRUM, or GOD-KILLER if it has the import) | `0` (store copies hidden), no prompt | same |
 | 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
+| 25 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision ""` (plain command, absolute path; needs the script in `~/.nixos`, i.e. after the owner's switch/fast-forward) | no prompt; prints a JSON report (`status` `no-revision`), no `Unix domain socket` error | runs |
+| 26 | Edit tool on `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` (append a comment) | blocked by the guard ("human-only"), no prompt | blocked |
+| 27 | `docs/schedules/bin/schedule-precheck unswitched --dry-run` from a worktree (relative path) | runs **sandboxed** and fails (`cannot create Unix domain socket` / no `gh` login): the worktree copy is deliberately not excluded | same |
 
 In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
 rule …)": with no card to approve, that counts as blocked.
@@ -412,5 +439,5 @@ placeholders exist only in the sandbox view.
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. Last full run: 2026-11-04, Claude Code 2.1.308, Accept edits and
-Full access, all 24 steps as above (T3 version not recorded). If a step disagrees, update this table and the policy in the same
+Full access, all 24 steps as above (T3 version not recorded); steps 25-27 were added with the schedule policy and have not been run yet. If a step disagrees, update this table and the policy in the same
 change.

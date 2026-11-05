@@ -14,7 +14,7 @@ result in the PR description's **Review** section.
 **Lockout surface** (triggers tier 2): `modules/essentials/{networking,ssh,users,keyring}.nix`,
 `modules/server/{tailscale,cloudflared,t3code}.nix`, any `hardware.nix`,
 `machine.nix` or `T2-PIN.md`, `flake.nix` inputs (`nixpkgs*`, `nixos-hardware`,
-`home-manager`), `rebuild.sh`, and any diff line mentioning `boot.`,
+`home-manager`), `rebuild.sh`, `docs/schedules/bin/*` (runs unsandboxed), and any diff line mentioning `boot.`,
 `fileSystems`, `networking.`, `firewall`, `services.openssh`, `users.users`,
 `security.sudo`, `kernelPackages` or `system.stateVersion`. The `ship-pr` skill
 greps for these.

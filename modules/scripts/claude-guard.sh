@@ -183,6 +183,12 @@ check_edit() {
 	if grep -Eq -- '(^|/)\.claude/settings[^/]*\.json$|^/etc/claude-code/|(^|/)\.claude/hooks/|(^|/)\.claude\.json$|(^|/)\.mcp\.json$' <<<"$path"; then
 		block "edits to Claude Code settings, hooks or MCP config ($path) are human-only; change modules/home-manager/ai-tools/claude-code.nix instead."
 	fi
+	# the main checkout's schedule script runs unsandboxed (sandbox.excludedCommands),
+	# so it may only change by merged PR + the owner's switch, never by an agent
+	# editing ~/.nixos directly (worktree paths have a branch dir after .nixos/)
+	if grep -Eq -- '(^|/)\.nixos/docs/schedules/bin/' <<<"$path"; then
+		block "edits to ~/.nixos/docs/schedules/bin ($path) are human-only: that script runs outside the sandbox. Change it in a worktree and merge a PR."
+	fi
 	# skill/subagent frontmatter hooks run outside the sandbox in later sessions
 	if grep -Eq -- '/\.claude/(skills|agents|commands)/' <<<"$path" &&
 		grep -Eq -- '^[[:space:]]*hooks[[:space:]]*:' <<<"$content"; then
@@ -253,6 +259,10 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect block Write '/home/cairo/.nixos/.claude/skills/x/SKILL.md' $'---\nname: x\nhooks:\n  PreToolUse: []\n---'
 	expect pass Write '/home/cairo/.nixos/.claude/skills/x/SKILL.md' $'---\nname: x\n---\nRun the build.'
 	expect pass Edit '/home/cairo/.nixos/modules/home-manager/ai-tools/claude-code.nix'
+	expect block Edit '/home/cairo/.nixos/docs/schedules/bin/schedule-precheck'
+	expect block Write '/home/cairo/.nixos/docs/schedules/bin/new-helper'
+	expect pass Edit '/home/cairo/.t3/worktrees/.nixos/workflow-x/docs/schedules/bin/schedule-precheck'
+	expect pass Edit '/home/cairo/.nixos/docs/schedules/README.md'
 	expect block Bash 'cat "/home/cairo/" + ".ssh/id_x"'
 	expect block Bash 'rm -rf /home/cairo/.nixos/.git'
 	expect block Bash 'mv ../.git /tmp/'

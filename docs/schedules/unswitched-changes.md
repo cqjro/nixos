@@ -25,9 +25,17 @@ line of JSON. B is fully written below so you can choose.
 
 Option B is live on GOD-KILLER: task `scheduled-task:f3b5c8c4-303e-4897-b7ed-a115076def3e`,
 every 6 h, bound to the Haiku-low thread `mcp:b584aa8a-e6e4-4699-b3fb-ffe3acef9cfb`
-("Unswitched changes"), created 2026-11-02. Until this branch is merged and switched into
-`~/.nixos`, each run replies "unswitched: script not installed yet" (step 0 of the prompt).
-Disable it with `update_scheduled_task enabled=false` if those idle turns bother you.
+("Unswitched changes"), created 2026-11-02. Its prompt already uses the absolute path as one
+plain command, so it needs no prompt change; what it lacked was the sandbox exclusion:
+the run of 2026-11-04T23:50Z found the script and then failed with `cannot create Unix
+domain socket: Operation not permitted` (and `health` failed the same way). The
+`workflow/schedule-sandbox` PR adds the exclusion and allow rule (docs/agents/security.md,
+"Scheduled checks run unsandboxed"); it takes effect after the owner merges it and switches
+GOD-KILLER.
+
+ntfy delivery is on hold (a separate TODO item), so until it is set up the notice exists
+only as the reply in the "Unswitched changes" thread (`agent-notify send info` has no desktop
+popup and no topic to post to). The check itself does not depend on it.
 
 ## What a run does
 

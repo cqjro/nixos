@@ -101,10 +101,21 @@ schedule-precheck health SCHEDULE MESSAGE…
   self-authored repo, which is also why only merged `master` is evaluated, never a PR branch.
   The shebang borrows `python3` from the flake registry's `nixpkgs` (unpinned, needs the
   registry or network); the packaged unit in `unswitched-changes.md` option A avoids that.
-- **Safety of running it.** One allow rule (`Bash(docs/schedules/bin/schedule-precheck *)`)
-  covers every `gh` and `nix` call inside it, so an unattended run needs no
-  `gh issue *` rules. That is only as safe as the script itself, which the agent
-  can edit like `rebuild.sh`; review diffs to it.
+- **Sandbox and permissions.** The script cannot run in the agent sandbox (it runs `gh`,
+  `git` and `nix`, whose sockets and `~/.config/gh` the sandbox hides). Found 2026-11-04
+  when the live "Unswitched changes" task failed with `cannot create Unix domain socket`.
+  `modules/home-manager/ai-tools/claude-code.nix` now excludes and allow-lists the
+  **absolute path** `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *` (and
+  `claude-guard` blocks Edit/Write on it), so one allow rule covers every `gh` and `nix`
+  call inside it and an unattended run needs no `gh issue *` rules. Rules for prompts:
+  - **one plain command**, absolute path: exclusion applies to plain commands only, so
+    `cd … && …`, a pipe or `; echo $?` runs sandboxed and fails;
+  - **never the relative path from a worktree**: that copy is code the agent can edit and
+    run in the same turn, so it is deliberately not excluded (smoke test step 27).
+  The script is only as safe as its checkout: `~/.nixos` changes by merged PR plus your
+  switch, and `docs/schedules/bin/*` is on the tier-2 review list for that reason. Full
+  reasoning, REDRUM and the packaged alternative: docs/agents/security.md, "Scheduled
+  checks run unsandboxed".
 
 ### Verified vs untested
 
@@ -140,21 +151,22 @@ The issue-based design needs the `gh` token on the machine that runs the schedul
 them (`worker-launched`) and creates labels. Probes of other repositories (nixpkgs,
 nixos-hardware, QIDIStudio, nixdatifier, xodus-nexus, learnharness) only read public data.
 
-Status on 2026-11-04: the GOD-KILLER token **lacks it** (`gh issue create` and plain
-`gh issue list` fail with "Resource not accessible by personal access token"). Without it the
-script degrades instead of failing: probes and evaluation still run, nothing is filed,
-the report carries a `warnings` entry saying so, new findings are reported with
-`issueSkipped: true`, and no worker is ever `actionable` (a worker needs an issue to point
-at). The `unswitched` check does not use issues and is unaffected. Testing this degraded mode
-against the real repo **created the six labels** (`scheduled`, `upstream-fix`,
-`rebuild-warning`, `eval-failure`, `worker-launched`, `schedule-health`) in `cqjro/nixos`,
-because the current token may create labels; no issue was created. The labels are what the
-script would create anyway.
+**Granted 2026-11-04:** the GOD-KILLER token has Issues read and write on `cqjro/nixos`, and
+the REDRUM `t3code` token (only `cqjro/nixos`, Contents + Pull requests + Issues, expires
+2027-02-02) is installed. The issue-based design is therefore the decision; the paragraph
+below is kept only as the road not taken. Not re-tested with the new permission yet: the
+first real run is the Rollout smoke test.
 
-**Decision for the owner (open):** add the permission (recommended: one setting, no code
-change, and `Fixes #N` closes issues on merge), or use PR comments instead.
+Before the grant, the script degraded instead of failing, and still does if a token ever
+lacks the permission: probes and evaluation still run, nothing is filed, the report carries
+a `warnings` entry saying so, new findings are reported with `issueSkipped: true`, and no
+worker is `actionable` (a worker needs an issue to point at). The `unswitched` check does
+not use issues. Testing that degraded mode against the real repo **created the six labels**
+(`scheduled`, `upstream-fix`, `rebuild-warning`, `eval-failure`, `worker-launched`,
+`schedule-health`) in `cqjro/nixos`; no issue was created. They are what the script would
+create anyway.
 
-*If the owner chooses PR comments instead*, these files change and nothing else:
+*Had the owner chosen PR comments instead*, these files would have changed and nothing else:
 `docs/schedules/bin/schedule-precheck` (the `Issues` class and `LABELS`, `cmd_mark_launched`,
 `cmd_health`: `gh issue *` becomes `gh pr list/comment` against one standing draft PR on a
 dedicated branch such as `auto/schedule-findings`, with the same `<!-- sched-key -->` marker
@@ -279,23 +291,26 @@ are why the design is worth having:
 
 ## Rollout
 
-1. Merge the workflow/docs PR first (workers use `./rebuild.sh check|build` and the
-   `ship-pr` skill), then this one (the prompts call `docs/schedules/bin/schedule-precheck`,
-   which must exist in the checkout the scheduled runs use).
-2. Approve (or edit) the prompts in `upstream-check.md` and `build-flags.md`.
-3. Thread 4 allows `Bash(docs/schedules/bin/schedule-precheck *)`, so an unattended
-   run does not stall on a prompt (see Handoffs).
-4. Smoke test: `update_scheduled_task` the two existing tasks, then
-   `run_scheduled_task_now` once each with `--dry-run` appended to the script call
-   (edit the prompt temporarily), and read the thread.
+1. (Done) the workflow, firmware, security, secrets, notifications and schedules PRs are
+   merged and both hosts switched. The script exists in `~/.nixos`.
+2. Merge the sandbox-policy PR (`workflow/schedule-sandbox`: exclusion + allow rule +
+   guard rule + these prompts) and **switch GOD-KILLER** (`./rebuild.sh switch` fast-forwards
+   `master` itself; nothing pulls automatically).
+3. Approve the prompts in `upstream-check.md` and `build-flags.md` and update the two
+   existing tasks (`update_scheduled_task`, ids in each file).
+4. Smoke test, in this order, reading each thread: `run_scheduled_task_now` once per task
+   with `--dry-run` appended to the script call in the prompt (edit it temporarily), then
+   smoke-test steps 25-27 in docs/agents/security.md.
 5. Remove `--dry-run`, run once for real, and watch the issues appear.
 6. When the REDRUM prerequisites exist, create the `--detect-only` copies on
-   REDRUM's server and keep the GOD-KILLER tasks as they are: they launch the
-   workers for whatever REDRUM filed.
+   REDRUM's server (and see the REDRUM note in docs/agents/security.md: it needs the
+   packaged script, not an absolute path) and keep the GOD-KILLER tasks as they are: they
+   launch the workers for whatever REDRUM filed.
 
-The currently-live "Build Flags" task fires today at 17:00Z with its old prompt
-and will edit the root checkout if the tree is clean. If you would rather it did
-not, `update_scheduled_task enabled=false` before then.
+The live "Build Flags" task still has its original prompt, which builds and **edits the
+clean `~/.nixos` checkout**. That dirties the tree you switch from (`switch` then refuses
+or commits it). Pause it (`update_scheduled_task enabled=false`) until step 3 replaces its
+prompt; next run Sunday 2026-11-08 12:00 local.
 
 ## Handoffs to other threads
 
@@ -323,10 +338,10 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 
 **Thread 4 (permissions):**
 
-- Allow `Bash(docs/schedules/bin/schedule-precheck *)` (or its packaged name; it also covers the
-  `unswitched` check) in
-  both the user and the REDRUM managed policy. Without it an unattended run
-  stalls on a card. No `gh issue *` allow is needed.
+- Done in `workflow/schedule-sandbox`: the absolute-path exclusion and allow rule for
+  `schedule-precheck` (covers the `unswitched` check too), plus the guard rule. Still open:
+  REDRUM, which has no entry (docs/agents/security.md, "Scheduled checks run unsandboxed").
+  No `gh issue *` allow is needed.
 - Scheduled and worker threads must not run `full-access`. Decide whether workers
   launch `approval-required` (they then wait for you on each build) or
   `auto-accept-edits`.
