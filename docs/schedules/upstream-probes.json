@@ -103,6 +103,18 @@
 				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/le", "ref": "nixos-unstable", "pattern": "^learnharness" },
 				{ "type": "path-exists", "repo": "amosblomqvist/learnharness", "path": "flake.nix" }
 			]
+		},
+		{
+			"id": "row-9",
+			"registryRow": 9,
+			"slug": "t3code-hyprland-capture-helper",
+			"title": "t3code native Hyprland capture helper (t3-hyprland-snap-shot)",
+			"action": "auto-pr",
+			"fixWhen": "any",
+			"probes": [
+				{ "type": "file", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code/unwrapped.nix", "ref": "nixos-unstable", "mustContain": ["hyprland-snap-shot"] },
+				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code", "ref": "nixos-unstable", "pattern": "snap-shot" }
+			]
 		}
 	],
 	"ignore": []

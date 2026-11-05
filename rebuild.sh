@@ -230,10 +230,14 @@ cmd_check() {
     base=$(git merge-base HEAD origin/master 2>/dev/null || git rev-parse HEAD)
     git diff --cached --check "$base" || fail=1
 
-    echo "== upstream registry rows (README.md vs docs/agents/upstream-registry.md)"
+    echo "== upstream registry rows (README.md, docs/agents/upstream-registry.md, docs/schedules/upstream-probes.json)"
     registry_rows() { sed -n '/^##\{0,1\} Pending upstream fixes/,/^## [^P]/p' "$1" | grep -oE '^\| [0-9]+ \|' | tr -dc '0-9\n' | sort -n | tr '\n' ' '; }
     if [ "$(registry_rows README.md)" != "$(registry_rows docs/agents/upstream-registry.md)" ]; then
         echo "FAIL: rows differ: README [$(registry_rows README.md)] vs registry [$(registry_rows docs/agents/upstream-registry.md)]"; fail=1
+    fi
+    probe_rows=$(grep -oE '"registryRow": *[0-9]+' docs/schedules/upstream-probes.json | tr -dc '0-9\n' | sort -n | tr '\n' ' ')
+    if [ "$probe_rows" != "$(registry_rows docs/agents/upstream-registry.md)" ]; then
+        echo "FAIL: rows differ: probes [$probe_rows] vs registry [$(registry_rows docs/agents/upstream-registry.md)] (add/remove the row in docs/schedules/upstream-probes.json)"; fail=1
     fi
 
     changed=$(git diff --cached --name-only "$base")
