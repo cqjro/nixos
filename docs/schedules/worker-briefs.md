@@ -18,8 +18,10 @@ Common to both workers:
 - **Sandbox rules** (docs/agents/security.md, gotchas): only a *plain* command runs
   outside the sandbox where it needs to (`gh`, `git push/fetch`, `nix eval/build`,
   `./rebuild.sh`). A chained, piped or `; echo $?` command is sandboxed and `gh`/`nix`
-  fail in it. So: one command per call, `gh pr create --body-file <file>` (file under
-  `$TMPDIR`, not a heredoc pipe), stage by path (`git add <file>`), never `git add
+  fail in it. So: one command per call, `gh pr create --body-file <file>` and
+  `gh issue comment <n> --body-file <file>` (file under `$TMPDIR`, not a heredoc pipe; an
+  inline multi-line `--body` runs sandboxed and fails with "run `gh auth login`", which
+  stopped the first row 7 worker from posting its evidence), stage by path (`git add <file>`), never `git add
   --all` (sandbox placeholder files show as untracked), and no `git checkout -b` (the
   worktree and branch already exist). Workers never call `docs/schedules/bin/schedule-precheck`:
   the worktree copy is sandboxed by design and the dispatcher does the bookkeeping.
