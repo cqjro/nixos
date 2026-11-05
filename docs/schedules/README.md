@@ -81,6 +81,13 @@ schedule-precheck health SCHEDULE MESSAGE…
   is one finding. Evaluating `origin/master` instead of the checkout means a
   half-edited tree can never produce a false report, and only merged work is
   judged. `ignore` entries in the probe file silence known noise with a reason.
+- **The script and `upstream-probes.json` come from the switched checkout, not from
+  `origin/master`.** Only the registry rows (and the `unswitched`/`buildflags` trees) are read
+  from the fresh clone. So a merged change to either file reaches the schedule only after the
+  human fast-forwards `~/.nixos` (`git pull --ff-only`; a switch is not needed). Row 9 was
+  merged without a probe entry, the fix merged, and the next run still stopped on the
+  mismatch until `~/.nixos` was pulled. A health issue the human has closed is never
+  reopened, so a repeat failure is then reported only in the run's reply.
 - **`unswitched`** answers "has this host switched to everything merged on master?"
   See [`unswitched-changes.md`](./unswitched-changes.md).
 - **Nothing here writes to `~/.nixos`.** The human's switch checkout is never fetched,

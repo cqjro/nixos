@@ -31,10 +31,10 @@ repeated as proposals.
         below). The GitHub email settings are done and the GOD-KILLER token has
         Issues read and write (six labels from a test run still exist in the
         repo; delete them if unwanted)
-  - [ ] **schedules:** approve the two prompts (`docs/schedules/upstream-check.md`,
-        `build-flags.md`) and update the two existing scheduled tasks; decide the
-        old "Build Flags" task (it still edits the checkout); REDRUM bootstrap via
-        `unswitched-changes.md`
+  - [ ] **schedules:** the three tasks are live (Unswitched and Upstream run, with
+        Upstream workers enabled). Still to do: enable the paused "Build Flags" task
+        (its first run files about four issues and launches one worker); REDRUM
+        bootstrap via `unswitched-changes.md`
   - [ ] Optional: Claude re-login (secrets 4.4)
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
