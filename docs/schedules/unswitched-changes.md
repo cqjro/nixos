@@ -25,9 +25,17 @@ line of JSON. B is fully written below so you can choose.
 
 Option B is live on GOD-KILLER: task `scheduled-task:f3b5c8c4-303e-4897-b7ed-a115076def3e`,
 every 6 h, bound to the Haiku-low thread `mcp:b584aa8a-e6e4-4699-b3fb-ffe3acef9cfb`
-("Unswitched changes"), created 2026-11-02. Until this branch is merged and switched into
-`~/.nixos`, each run replies "unswitched: script not installed yet" (step 0 of the prompt).
-Disable it with `update_scheduled_task enabled=false` if those idle turns bother you.
+("Unswitched changes"), created 2026-11-02. Its prompt already uses the absolute path as one
+plain command, so it needs no prompt change; what it lacked was the sandbox exclusion:
+the run of 2026-11-04T23:50Z found the script and then failed with `cannot create Unix
+domain socket: Operation not permitted` (and `health` failed the same way). The
+`workflow/schedule-sandbox` PR adds the exclusion and allow rule (docs/agents/security.md,
+"Scheduled checks run unsandboxed"); it takes effect after the owner merges it and switches
+GOD-KILLER.
+
+ntfy delivery is on hold (a separate TODO item), so until it is set up the notice exists
+only as the reply in the "Unswitched changes" thread (`agent-notify send info` has no desktop
+popup and no topic to post to). The check itself does not depend on it.
 
 ## What a run does
 
@@ -119,7 +127,7 @@ flake.modules.nixos."unswitched-check" = { config, inputs, pkgs, ... }: {
 Running the script from `${inputs.self}` (the flake source in the store) means no checkout
 has to exist or be current, and removes the Python-via-`nix shell` shebang need; the script
 then is the version of the generation, and the git data still comes from the private clone
-(the script falls back to `https://github.com/cqjro/nixos.git` when it is not inside a git
+(the script always uses the built-in `https://github.com/cqjro/nixos.git`, never a
 checkout). Credentials: the private fetch needs the user's `gh` git credential helper
 (`gh` is on `path`; `cairo` has it from home-manager, but `t3code` only has it inside the
 `t3code` service's environment, `GIT_CONFIG_*` in `modules/server/t3code.nix`, which this
@@ -169,8 +177,8 @@ never edit files, never pull, fetch or switch in ~/.nixos, never use sudo.
 ```
 
 REDRUM copy: same JSON, created from a thread on REDRUM's T3 server, with `<CHECKOUT>`
-replaced by the path where `t3code` can read the script and `--remote-url
-https://github.com/cqjro/nixos.git` added to the command.
+replaced by the path where `t3code` can read the script (the repo URL is built in; the
+`--remote-url` option is refused unless a human enables overrides).
 
 ## REDRUM: human steps (T3 on GOD-KILLER cannot reach REDRUM's server)
 
