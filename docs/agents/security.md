@@ -430,7 +430,7 @@ you record which steps prompted.**
 | 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
 | 25 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision ""` (plain command, absolute path; needs the script in `~/.nixos`, i.e. after the owner's switch/fast-forward) | no prompt; prints a JSON report (`status` `no-revision`), no `Unix domain socket` error | runs |
 | 26 | Edit tool on `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck`, and on `~/.config/nixos-schedules/allow-overrides` | blocked by the guard ("human-only"), no prompt | blocked |
-| 27 | `docs/schedules/bin/schedule-precheck unswitched --dry-run` from a worktree (relative path) | **prompt** (no allow rule matches); if approved it runs **sandboxed** and fails (`cannot create Unix domain socket` / no `gh` login): the worktree copy is deliberately not excluded | prompt is refused as an ask rule would be, i.e. does not run unsandboxed |
+| 27 | `docs/schedules/bin/schedule-precheck unswitched --dry-run` from a worktree (relative path) | no prompt (`autoAllowBashIfSandboxed` approves a sandboxed command); it runs **sandboxed** and fails (`cannot create Unix domain socket` / no `gh` login): the worktree copy is deliberately not excluded | not run in Full access (unverified); expected the same, since nothing asks |
 | 28 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision "" ; echo $?` (chained) | blocked by the guard (not one plain command); it must **not** run unsandboxed. If it somehow does, narrow the exclusion before relying on it | same |
 | 29 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --state-dir /tmp/x` (a literal path: an unquoted `$TMPDIR` would be stopped by the guard first) | no prompt; the script exits 2 with `--state-dir refused: …` and does nothing else (same for `--tree-path`, `--remote-url`, `--repo evil/x`) | same |
 | 30 | `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.sshCommand GIT_CONFIG_VALUE_0=id /home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run` | blocked by the guard (not one plain command); **must not** reach the script. If the guard is bypassed and it runs unsandboxed, the script's rebuilt environment still drops the variables, but `nix shell` in the shebang would see them: then add `env -i` to the shebang | same |
@@ -448,5 +448,8 @@ placeholders exist only in the sandbox view.
 
 Record the date, Claude Code version (`claude --version`) and T3 version with
 each run. Last full run: 2026-11-04, Claude Code 2.1.308, Accept edits and
-Full access, all 24 steps as above (T3 version not recorded); steps 25-32 were added with the schedule policy and have not been run yet. If a step disagrees, update this table and the policy in the same
+Full access, all 24 steps as above (T3 version not recorded). Steps 25-32 (added
+with the schedule policy): run 2026-11-04 in Accept edits only, Claude Code 2.1.308, `~/.nixos`
+switched at `670a156`; all matched except 27 (corrected above), no approval cards
+on any step; Full access not run. If a step disagrees, update this table and the policy in the same
 change.
