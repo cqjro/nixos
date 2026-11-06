@@ -734,7 +734,8 @@ If steps 1, 2 or 6 differ from `docs/agents/security.md`, report it to the
    and correct "Agent safety essentials" on four points: one managed policy from
    `claude-code.nix` covers both hosts; Full access no longer bypasses everything
    because ask rules are refused there; branch commits and `gh pr create` are
-   allowed; Accept edits is the default for TODO threads.
+   allowed; Auto is the default for TODO threads since 2026-11-05 (see
+   `docs/agents/security.md`, recommendations).
 4. **Secrets and notifications hooks.** `allowManagedHooksOnly = true` is set, so
    home-manager `programs.claude-code.settings.hooks` silently never runs. The
    agent-security branch defines the mechanism: a NixOS fragment sets

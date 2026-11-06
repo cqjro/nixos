@@ -19,7 +19,7 @@ depends on that is marked *(after switch)* and is covered by the smoke test.
 | 1 | **OS sandbox** for Bash (bubblewrap + seccomp + proxy) | kernel namespaces | yes (strict: no unsandboxed retry) |
 | 2 | **Deny rules** (managed) | Claude Code | yes (tested: Bash and Write) |
 | 3 | **claude-guard** PreToolUse hook (managed, root-owned) | Claude Code + script | yes (tested). Turns `ask` into block there |
-| 4 | **Ask rules** (managed) | Claude Code → T3 approval card | **no**: T3 Full access approves prompts itself |
+| 4 | **Ask rules** (managed) | Claude Code → T3 approval card (Supervised, Accept edits); in Auto a classifier answers and no card appears | **refused, not approved**: with no card to show, Full access fails closed (smoke steps 13-15 and 22; a Full access worker's `git push`, 2026-11-05) |
 | 5 | Allow rules | skip prompts | n/a (bypass ignores them) |
 
 Everything lives in **one root-owned file**, `/etc/claude-code/managed-settings.json`,
@@ -274,7 +274,7 @@ working directories.
 | --- | --- | --- | --- | --- | --- |
 | Supervised | prompt | run | run | prompt | prompt |
 | Accept edits | auto in working dirs (+ `mkdir/rm/mv/cp/sed`) | run | run | prompt | prompt |
-| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; fails closed when the classifier is unavailable) | classifier (extra model calls) |
+| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; separately, when the classifier returned no verdict the command was refused, not run) | classifier (extra model calls) |
 | Full access | auto **anywhere not denied** | run | run | **blocked by guard** | **run** |
 
 Recommendation per task type:
@@ -373,7 +373,8 @@ follows:
 - **merge-pr.**
   - `gh pr view/checks` need no prompt.
   - `gh pr update-branch`, `git merge origin/master`, the push and
-    `gh pr merge` prompt.
+    `gh pr merge` prompt in Supervised and Accept edits; in Auto the classifier
+    answers them with no card (observed 2026-11-05).
   - In Full access all four are refused, so merges always need a Supervised,
     Accept edits or Auto thread.
 - **start-todo.** `git ls-remote` is allowed. `t3_thread_launch` and the other

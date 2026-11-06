@@ -180,8 +180,8 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
   with `gh pr create` and `.github/pull_request_template.md`, then T3's
   `link_pull_request`. Squash-merge with `gh pr merge <N> --squash
   --delete-branch` only when the human asks — in Supervised or Accept edits
-  approving the card is the approval; in Auto the human's explicit message
-  ("merge N") is. A scheduled worker never merges.
+  approving the card is the approval; in Auto it is the human's explicit message
+  ("merge N"). A scheduled worker never merges.
 - **Generations.** Only merged `master` is switched (`switch` refuses other
   branches). Each generation records its commit via
   `system.configurationRevision` (`modules/essentials/config-revision.nix`) and
@@ -246,13 +246,11 @@ hosts (`flake.modules.nixos."claude-code-policy"` in
 smoke test in [`docs/agents/security.md`](docs/agents/security.md). Pushes,
 pairing and T3 on REDRUM: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md).
 
-- TODO/worktree threads and scheduled workers run **Auto** (the default since
+- TODO/worktree threads and scheduled workers run **Auto** (default since
   2026-11-05); policy, secrets or networking work runs **Supervised**. In Auto a
-  classifier answers the `ask` rules, so a push or merge goes through without a
-  card when the human asked for it; that is a model judgment, not a lock. The hard
-  protection for `master` is GitHub branch protection (set after the repo is
-  public). Full access still keeps `deny` rules, the sandbox and the guard, but
-  every `ask` rule is refused there instead of prompting, so avoid it.
+  classifier, not a person, answers `ask` rules (a model judgment, not a lock;
+  `master` relies on branch protection). Full access refuses every `ask` rule, so
+  avoid it. Details: [security.md](docs/agents/security.md#t3-runtime-modes).
 - Secrets (`~/.ssh`, `~/.config/gh`, `~/.t3/userdata/secrets`, `*.env`,
   `token.json`, `client_secret.json`) are never read, printed or committed;
   the T2 firmware is never committed, read, printed or attached (`docs/firmware.md`).

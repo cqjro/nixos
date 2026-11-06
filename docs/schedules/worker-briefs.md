@@ -26,10 +26,11 @@ Common to both workers:
   worktree and branch already exist). Workers never call `docs/schedules/bin/schedule-precheck`:
   the worktree copy is sandboxed by design and the dispatcher does the bookkeeping.
 - **Runtime mode:** set `"runtimeMode": "auto"` explicitly in every launch. Never
-  `full-access`: a launched thread inherits its caller's mode, and a dispatcher run from
-  a Full access thread launched a Full access worker whose `git push` was refused (Full
-  access has no approval card, so asks fail closed). A thread cannot exceed its caller,
-  so a dispatcher in Auto or Accept edits cannot launch anything broader. Use Supervised
+  `full-access`: a launched thread inherits its caller's mode unless told otherwise, and a
+  dispatcher run from a Full access thread launched a Full access worker whose `git push`
+  was refused (Full access has no approval card, so asks fail closed). T3 rejects a launch
+  or message broader than its caller (`runtime_mode_escalation_denied`, observed); whether
+  an Accept edits dispatcher may launch an `auto` worker is untested. Use Supervised
   if the change touches policy, secrets or networking (docs/agents/security.md, mode
   table). In Auto the classifier answers the push; the worker still never merges.
 - **Model:** `{"instanceId":"claudeAgent","model":"claude-sonnet-5-5","options":{"effort":"medium"}}`.
