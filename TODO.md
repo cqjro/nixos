@@ -38,9 +38,11 @@ repeated as proposals.
   - [ ] Optional: Claude re-login (secrets 4.4)
   - [ ] **Interaction limit:** right after the flip, set Settings → Moderation
         options → Interaction limits → "Limit to repository collaborators" on
-        `cqjro/nixos` (or account-wide at github.com/settings/interaction-limits).
+        `cqjro/nixos` (or account-wide under your account Settings → Moderation
+        options → Interaction limits; the repo page only appears once it is public).
         It lasts at most six months: renew it every time it lapses (reminder at
-        month 5). The worker briefs' owner-only comment filter covers the gap
+        month 5). The worker briefs' owner-only comment filter covers worker reads
+        during a gap; strangers can still comment, and you still see it
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the

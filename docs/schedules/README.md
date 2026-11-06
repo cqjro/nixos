@@ -88,7 +88,7 @@ schedule-precheck health SCHEDULE MESSAGE…
   merged without a probe entry, the fix merged, and the next run still stopped on the
   mismatch until `~/.nixos` was pulled. A health issue the human has closed is never
   reopened, so a repeat failure is then reported only in the run's reply.
-- **The repo is public, so issue and PR text is untrusted input.** The script only loads
+- **Once the repo is public, issue and PR text is untrusted input.** The script only loads
   issues that carry the `scheduled` label (strangers cannot add labels), writes the issue
   body itself from structured probe data, and never puts issue text in a worker's
   `message`. The remaining path is comments: a stranger can comment on an open scheduled
