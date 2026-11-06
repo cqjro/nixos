@@ -327,8 +327,9 @@ Read the matching entry before touching that area.
 - **`stylix.enableReleaseChecks = false`** in every host `home.nix`.
 - **REDRUM does not import `essentials/users.nix`** — mirror user changes in
   `hosts/REDRUM/machine.nix`; do not import the shared module there.
-- **pnpm `packageManager` pins** and **non-reproducible pnpm FOD hashes** in
-  `actual-budget-tweaks.nix` / `reactflux.nix`.
+- **pnpm `packageManager` pins** and **pnpm FOD hashes** in
+  `actual-budget-tweaks.nix` / `reactflux.nix` (both reproducible since
+  2026-11-06; a hash changes only with the source rev, lockfile or pnpm).
 - **`rebuild.sh` output is in `.log/` when piped; `gh` and `git push` must be
   plain commands** (chained or piped, they run sandboxed and fail to
   authenticate); sandbox `/dev/null` placeholders in `git status` (use

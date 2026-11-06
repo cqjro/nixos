@@ -67,19 +67,15 @@ checking the upstream issue, then rebuild REDRUM without the pin.
 4. `modules/server/actual-budget-tweaks.nix`: `pkgs =
    inputs.nixpkgs-redrum.legacyPackages.${system}` must become
    `inputs.nixpkgs.legacyPackages.${system}` (the input no longer exists). The
-   sidecar's `abtSidecarPnpmDeps` FOD hash will drift with the build toolchain —
-   rebuild once and copy the "got" hash, as with the reactflux FOD below.
-5. `modules/server/reactflux.nix`: the pinned nixpkgs ships
-   `pkgs.pnpm == 11.21.0`, which matches the project's `packageManager`
-   pin — so pnpm never self-downloads a second version. Stock nixpkgs ships
-   a different pnpm, so after unpinning, strip the `packageManager` field
-   from `package.json` in BOTH the `pnpmDeps` FOD and the `reactflux`
-   build (copy the node one-liner from
-   `modules/server/actual-budget-tweaks.nix`) and re-fetch the FOD
-   `outputHash` (build with the wrong hash once, copy the "got" hash).
-   Without this, the next deps rebuild fails in the sandbox with
-   `Failed to switch pnpm to v… ENOENT` — the same failure that broke
-   abt-sidecar's FOD on 2026-10-20.
+   sidecar's `pnpmDeps` FOD hash changes with the toolchain — rebuild once with
+   a fake hash and copy the "got" hash (it is reproducible, so one round is
+   enough). Keep the `packageManager` strip in both of its derivations.
+5. `modules/server/reactflux.nix`: it builds through nixpkgs'
+   `fetchPnpmDeps`/`pnpmConfigHook`, which ignore a `packageManager` pin that
+   differs from `pkgs.pnpm`, so nothing needs stripping. After unpinning,
+   the pnpm version (and so the hash) may change: build with a fake `hash`
+   once and copy the "got" value. If stock nixpkgs' `fetchPnpmDeps` no longer
+   accepts `fetcherVersion = 4`, move to the version it names.
 6. `rm modules/hosts/REDRUM/T2-PIN.md`
 7. `nix flake lock --update-input nixpkgs-redrum` (or let it drop), then
    rebuild REDRUM to confirm it builds on current nixpkgs.
