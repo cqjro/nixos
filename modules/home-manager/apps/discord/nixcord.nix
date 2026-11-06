@@ -14,7 +14,9 @@
 			vesktop = {
 				enable = true;
 				settings = {
-					discordBranch = "canary";
+					# Canary left Vesktop on a blank white window with the managed
+					# settings linked in (2026-11-05); stable renders normally.
+					discordBranch = "stable";
 					staticTitle = false;
 					splashTheming = true;
 					# splashColor = "rgb(186, 194, 222)";
