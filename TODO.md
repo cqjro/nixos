@@ -18,39 +18,27 @@ repeated as proposals.
 
 ## System
 
-- [ ] **Finish the repo move** — `cqjro/nixos` is rewritten, pushed and private;
-      PRs #1 to #8 are merged; GOD-KILLER (generation 233) and REDRUM (generation
-      37) are switched on the new repo and the 24-step smoke test passed in
-      Accept edits and Full access. These owner-only steps are left — **2/10**
-      (detail in [`docs/firmware.md`](docs/firmware.md); 6.5 is the public
-      switch). Delete this item when all are done
-  - [ ] **Public switch (6.5):** change visibility to Public (cannot be undone).
-        Cloudflare Access for the browser-only apps is on hold; it can be added
-        before or after going public (the exposure is only the hostnames, see the
-        "Hostnames" sub-item of "Secrets: finish before the new repo goes public"
-        below). The GitHub email settings are done and the GOD-KILLER token has
-        Issues read and write (six labels from a test run still exist in the
-        repo; delete them if unwanted)
-  - [ ] **schedules:** the three tasks are live (Unswitched and Upstream run, with
-        Upstream workers enabled). Still to do: enable the paused "Build Flags" task
-        (its first run files about four issues and launches one worker); REDRUM
-        bootstrap via `unswitched-changes.md`
-  - [ ] Optional: Claude re-login (secrets 4.4)
-  - [ ] **Interaction limit:** right after the flip, set Settings → Moderation
-        options → Interaction limits → "Limit to repository collaborators" on
-        `cqjro/nixos` (or account-wide under your account Settings → Moderation
-        options → Interaction limits; the repo page only appears once it is public).
-        It lasts at most six months: renew it every time it lapses (reminder at
-        month 5). The worker briefs never fetch comments (`--json title,body`), which
+- [ ] **Finish the repo move** — `cqjro/nixos` has been **public since
+      2026-11-05** (history verified: no firmware paths, no tripwire strings, only
+      noreply identities, gitleaks clean, trufflehog findings all false
+      positives). `master` is protected by a ruleset (pull request required, no
+      force pushes, no deletion, empty bypass list), and the account-level
+      interaction limit (collaborators only, 6 months) is set. GOD-KILLER and
+      REDRUM are switched on the new repo. These owner-only steps are left —
+      **1/10** (detail in [`docs/firmware.md`](docs/firmware.md)). Delete this
+      item when all are done
+  - [ ] **Interaction limit renewal:** it lapses about **2027-05-05**; renew it
+        (account Settings → Moderation options → Interaction limits) in early
+        April. The worker briefs never fetch comments (`--json title,body`), which
         covers worker reads during a gap; strangers can still comment, and you
         still see it
-  - [ ] **Branch protection on `master`:** right after the flip (it needs a public
-        repo on the free plan), Settings → Branches → add a rule for `master`:
-        require a pull request before merging, block force pushes and deletion.
-        Agents run in Auto, where a classifier (not a person) answers pushes and
-        merges, so this is the hard backstop. It does not stop a PR merge, which
-        only the `gh pr merge` ask rule and your explicit instruction gate
-  - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
+  - [ ] **Confirm secret scanning and push protection** are on (repo Settings →
+        Code security); optionally disable Actions (the repo has no workflows)
+  - [ ] **schedules:** all three tasks are live, with workers launching in `auto`.
+        Still to do: REDRUM bootstrap via `unswitched-changes.md`
+  - [ ] Optional: Claude re-login (secrets 4.4)
+  - [ ] Delete the six test labels from the early test run if unwanted
+  - [ ] **Cleanup now that it is public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
         GOD-KILLER token was made 2026-11-03, 30-90 days; the REDRUM `t3code`
@@ -295,9 +283,9 @@ repeated as proposals.
   - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
         show up in one client
 
-- [ ] **Secrets: finish before the new repo goes public** — the steps left from
-      the secrets audit (`docs/secrets.md` section 4 and the private audit); do them before
-      `cqjro/nixos` is made public (`docs/firmware.md` 6.5) — **4/10**
+- [ ] **Secrets: remaining steps after the repo went public** — the steps left
+      from the secrets audit (`docs/secrets.md` section 4 and the private audit);
+      `cqjro/nixos` became public on 2026-11-05 — **3/10**
   - [ ] REDRUM's `t3code` user needs its own fine-grained token (limited to
         `cqjro/nixos`, Contents + Pull requests) when REDRUM is re-cloned:
         `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
