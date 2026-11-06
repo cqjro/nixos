@@ -12,6 +12,10 @@
 # T3 Code's Full access (`--permission-mode bypassPermissions`) answers every
 # prompt itself, so in that mode each "ask" below, and every `ask` rule in the
 # managed policy (passed as $1, a JSON list of rules), becomes a block.
+# Auto answers `ask` rules with a classifier and no card, so commands that
+# activate a system (rebuild.sh switch|test|dry|revert|deploy, nixos-rebuild
+# switch|boot|test|dry-activate) are refused in every mode except default
+# (Supervised), acceptEdits and plan, where a person sees the card.
 #
 # It only sees the text Claude writes, so it is a tripwire, not a boundary:
 # the OS sandbox (blockReadsOutsideWorkingDirectories hides $HOME from
@@ -62,6 +66,15 @@ secret_re+="|(^|[/[:space:]\"'=])\.env([.[:space:]\"';|&)]|$)"
 # contents must never be read into a session, copied, archived or uploaded
 fw_re='(^|[/[:space:]"'"'"'=])(brcm/|firmware(/|[[:space:]"'"'"']|$)|brcmfmac[^/[:space:]]*|brcmbt[^/[:space:]]*|[^/[:space:]]*\.(clm_blob|txcap_blob|ptb)|firmware\.tar[^/[:space:]]*|brcm-firmware\.gcroot)|/var/lib/firmware-src|-brcm-firmware(-[[:alnum:]]+)?([/[:space:]"'"'"']|$)'
 fw_op_re='(^|[;&|[:space:](])(cat|zcat|zstdcat|unzstd|xzcat|unxz|bzcat|bunzip2|gunzip|lz4cat|bat|nl|tac|head|tail|less|more|xxd|hexdump|od|base64|base32|strings|cp|mv|scp|rsync|tar|zip|7z|gzip|xz|zstd|curl|wget|nc|dd|tee|gh|adb|python3?|perl|node|sha256sum|md5sum)([[:space:]]|$)|git([[:space:]]+[^[:space:]]+)*[[:space:]]+(add|commit|stash|hash-object|show|cat-file|archive)([[:space:]]|$)|nix[[:space:]]+(copy|bundle|nar[[:space:]]+(cat|dump-path)|store[[:space:]]+(cat|dump-path|export))|nix-store[[:space:]]+(--dump|--export)'
+
+# commands that activate a NixOS configuration (docs/agents/security.md)
+# (anchored on the command word, after env assignments and wrappers, so a commit
+# message or echo that merely mentions "rebuild.sh switch" is not stopped; like
+# the rest of the guard this is a tripwire, the managed `ask` rule is the gate)
+act_pre='^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*((sudo|env|time|nohup|exec|command|bash|sh|systemd-run)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*)*'
+activate_re="${act_pre}[^[:space:]]*rebuild\.sh([[:space:]]+[^[:space:]]+)*[[:space:]]+(switch|test|dry|revert|deploy)([[:space:]\"']|\$)"
+activate_re+="|${act_pre}[^[:space:]]*nixos-rebuild([[:space:]]+[^[:space:]]+)*[[:space:]]+(switch|boot|test|dry-activate)([[:space:]\"']|\$)"
+activate_re+="|${act_pre}[^[:space:]]*switch-to-configuration([[:space:]\"']|\$)"
 
 # files that change what Claude Code (or a later session) is allowed to run
 config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settings|\.claude/hooks|\.claude\.json|\.mcp\.json'
@@ -156,6 +169,21 @@ check_bash() {
 				fi
 			done <<<"$rules_list"
 		fi
+
+		# Activating a system (switch/test/dry/revert/deploy, nixos-rebuild
+		# switch|boot|test|dry-activate, switch-to-configuration) is a human
+		# decision. Supervised (default) and Accept edits put the managed `ask`
+		# rule in front of the human as a T3 card; Auto answers it with a
+		# classifier and Full access with T3 itself, so no person sees it. Allow
+		# only the modes that show a card (an unknown mode name fails closed).
+		case $mode in
+			default | acceptEdits | plan) ;;
+			*)
+				if grep -Eq -- "$activate_re" <<<"$seg"; then
+					block "'$seg' activates a system, which needs a human card, and this thread (permission mode '$mode') would answer it without one. Launch a Supervised child thread to run it (t3_thread_launch with runtimeMode \"approval-required\"; the human approves its card), or hand the human the exact command to run in a terminal."
+				fi
+				;;
+		esac
 
 		if grep -Eq -- '^git([[:space:]]+-[Cc][[:space:]]+[^[:space:]]+|[[:space:]]+-[^[:space:]]+)*[[:space:]]+commit([[:space:]]|$)' <<<"$seg"; then
 			branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
@@ -338,6 +366,39 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect block Bash 'git push -u origin todo/foo'
 	expect pass Bash 'git commit -m x'
 	expect pass Bash 'nix eval --impure .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'
+	# Auto answers `ask` rules with a classifier and no card, so system
+	# activation is refused there too (and in any mode we do not recognise)
+	for pmode in auto somethingnew; do
+		expect block Bash './rebuild.sh switch GOD-KILLER'
+		expect block Bash './rebuild.sh switch REDRUM -m msg'
+		expect block Bash './rebuild.sh test REDRUM'
+		expect block Bash './rebuild.sh dry GOD-KILLER'
+		expect block Bash './rebuild.sh revert'
+		expect block Bash 'FOO=1 ./rebuild.sh deploy REDRUM'
+		expect block Bash 'systemd-run --user --wait ./rebuild.sh switch GOD-KILLER'
+		expect block Bash 'cd /x && ./rebuild.sh test GOD-KILLER'
+		expect block Bash 'sudo nixos-rebuild switch --flake .#GOD-KILLER'
+		expect block Bash 'nixos-rebuild test --flake .#REDRUM'
+		expect block Bash 'nixos-rebuild --flake .#REDRUM boot'
+		expect block Bash 'bash -c "./rebuild.sh switch"'
+		expect block Bash "sh -c 'cd x && ./rebuild.sh test'"
+		expect block Bash 'sh -c "nixos-rebuild switch"'
+		expect block Bash '/nix/var/nix/profiles/system/bin/switch-to-configuration test'
+		expect pass Bash './rebuild.sh check GOD-KILLER REDRUM'
+		expect pass Bash './rebuild.sh build REDRUM'
+		expect pass Bash './rebuild.sh eval GOD-KILLER'
+		expect pass Bash './rebuild.sh generations'
+		expect pass Bash 'nixos-rebuild build --flake .#GOD-KILLER'
+		expect pass Bash 'git commit -m "docs: switch GOD-KILLER with rebuild.sh switch from the T3 terminal"'
+		expect pass Bash 'echo "the human runs ./rebuild.sh test REDRUM"'
+		expect pass Bash 'git push -u origin todo/foo'
+	done
+	# Supervised (default) and Accept edits show the card: left to the ask rules
+	for pmode in default acceptEdits; do
+		expect pass Bash './rebuild.sh switch GOD-KILLER'
+		expect pass Bash 'sudo nixos-rebuild test --flake .#REDRUM'
+	done
+	pmode=bypassPermissions
 	rm -f "$rules"
 	expect block Bash 'git status' # unreadable rules fail closed in Full access
 	if [ $fails -eq 0 ]; then echo "claude-guard self-test: all passed"; else echo "claude-guard self-test: $fails failed"; exit 1; fi

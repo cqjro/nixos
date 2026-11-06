@@ -171,7 +171,8 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
   REDRUM may build REDRUM only and runs **eval-only** checks
   (`./rebuild.sh eval GOD-KILLER`) for GOD-KILLER changes. Remote hosts are
   never switched or test-activated by agents (a remote activation needs a
-  terminal for the sudo password).
+  terminal for the sudo password). The REDRUM clone is `t3code`-owned and
+  agent-writable, so it is never the source of a privileged switch.
 - **Test without recording.** `./rebuild.sh test HOST` (local only,
   human-approved) activates a branch build without a generation; `./rebuild.sh
   revert` or a reboot undoes it. On REDRUM prefer `dry` for lockout-surface
@@ -263,7 +264,11 @@ pairing and T3 on REDRUM: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md)
   eval|build`. Human-approved: `switch`, `test`, `dry`, `revert`, `push`,
   `git push`, commits on `master`, `gh pr merge|comment|update-branch`, `gh api`
   and `sudo`. No passwordless sudo for `nixos-rebuild`; never run
-  `tailscale serve`/`set` (the guard blocks it).
+  `tailscale serve`/`set` (the guard blocks it). Activation (`switch`, `test`,
+  `dry`, `revert`, `nixos-rebuild switch|boot|test|dry-activate`) is also refused
+  in Auto and Full access, where no person sees a card: from Auto, launch a
+  Supervised child thread for the step or hand the human the command
+  ([workflow.md](docs/agents/workflow.md#activating-a-system-switch-test-dry-revert)).
 - Hooks only run from the managed policy (`allowManagedHooksOnly`): a new hook
   is a NixOS fragment setting `claude-code-policy.hooks.<Event>`
   ([security.md](docs/agents/security.md#adding-hooks-merge-point)), never

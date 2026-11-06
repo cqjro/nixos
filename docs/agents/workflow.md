@@ -12,20 +12,69 @@ picking the T3 environment in the client.
 
 | Thread runs on | Edit config for | `eval` | `build` | `test` / `dry` | `switch` |
 | --- | --- | --- | --- | --- | --- |
-| GOD-KILLER (home, fast) | any host | any host | GOD-KILLER, REDRUM (LittleNix only once its firmware is imported here) | GOD-KILLER locally (askpass); REDRUM only by the human from a terminal (`--target`) | GOD-KILLER, from merged `master`, human-approved |
+| GOD-KILLER (home, fast) | any host | any host | GOD-KILLER, REDRUM (LittleNix only once its firmware is imported here) | GOD-KILLER locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); REDRUM only by the human from a terminal (`--target`) | GOD-KILLER, from merged `master`, human-approved (same routes) |
 | REDRUM (away, always on) | any host | any host — **eval-only for GOD-KILLER** | REDRUM only (never GOD-KILLER: too slow, and pointless) | human, over SSH | human, over SSH |
 
 - REDRUM agents run as the `t3code` system user and cannot sudo, so every
   activation on REDRUM is the human's (`ssh redrum`, then `./rebuild.sh test|switch REDRUM`).
-- Until REDRUM has its own clone of the repo readable by `t3code` (not yet
-  set up), REDRUM agents are host
-  troubleshooters (see [t3-claude.md](t3-claude.md)) and flake builds stay on
-  GOD-KILLER. Building REDRUM on REDRUM also needs its firmware imported into
-  REDRUM's store once (`nix run .#t2-firmware-import -- REDRUM`, untested there;
-  see `docs/firmware.md`).
+- REDRUM has its own clone of the repo, owned by `t3code` in its home
+  (`/var/lib/t3code`), and a `./rebuild.sh build REDRUM` was tested there. A
+  REDRUM thread is therefore a full repo thread: edit, `check`, `eval`, build
+  REDRUM and commit/push like on GOD-KILLER (GOD-KILLER stays eval-only).
+  Building REDRUM needs its firmware imported into REDRUM's store once
+  (`nix run .#t2-firmware-import -- REDRUM`; see `docs/firmware.md`). That
+  clone is agent-writable, so it must never be the source of a privileged
+  switch: the human switches from their own `master` checkout.
 - A REDRUM build done on GOD-KILLER can be shipped instead of rebuilt:
   `nix copy --to ssh-ng://USER@redrum ./result`, then the switch on REDRUM is a
   cache hit. Run by the human (it uses SSH keys agents cannot reach).
+
+### One project, either machine
+
+The repo is one T3 project (T3 identifies it by its git remote,
+`github.com/cqjro/nixos`) that exists on both servers; pick the machine by
+picking the environment when you start a thread.
+
+- **T3 does not move code between machines.** Each machine has its own
+  clone, and GitHub is the hub. A thread is bound to the server that runs it
+  (its agent process, worktree and filesystem live there), so "switching
+  machine" means pushing the branch and starting or forking a thread on the
+  other environment, not moving a running thread.
+- **A branch lives on one machine at a time.** Hand off by pushing, then
+  `git fetch` and check the branch out on the other machine; do not commit to
+  it in both places.
+- Prefer REDRUM for edits, evals and REDRUM builds when GOD-KILLER is off;
+  prefer GOD-KILLER for anything that builds GOD-KILLER. Both draw on the same
+  Pro quota, so a second machine adds availability, not throughput.
+
+### Activating a system (switch, test, dry, revert)
+
+Agents cannot run these on their own: `sudo` has no passwordless rule
+(deliberately: an agent that can get code merged and switched owns root), and
+`claude-guard` refuses the commands in **Auto** and Full access, where no
+person would see a card ([security.md](security.md#t3-runtime-modes)).
+
+- **From a thread that needs a switch to continue** (Auto, or any mode):
+  launch a **Supervised child thread** for just that step with
+  `t3_thread_launch` (`runtimeMode: "approval-required"`; confirm in the launch
+  result that it really is Supervised). Its `ask` card is the approval. On
+  GOD-KILLER the sudo password is typed in the desktop's GUI askpass dialog, so
+  that route only completes when someone is at the machine. Otherwise hand the
+  human the exact command and wait.
+- **GOD-KILLER from your phone:** open the GOD-KILLER environment's terminal in
+  T3 (tested 2026-11-06: a real tty, `sudo -v` takes the password) and run it
+  from the main checkout. The terminal is a child of the T3 app, so run the
+  switch as `systemd-run --user --wait ./rebuild.sh switch GOD-KILLER` so an app
+  restart cannot interrupt it. Keep terminal scope off phone pairing tokens
+  unless you need it: a token with terminal scope is as powerful as the server's
+  user (revoke it if the phone is lost).
+- **REDRUM:** `ssh redrum` (from the phone too), then `./rebuild.sh switch
+  REDRUM` in the human's checkout. Agents never switch REDRUM and there is no
+  privileged switch service.
+- A REDRUM thread cannot activate GOD-KILLER (`rebuild.sh` refuses a host that
+  is not the local machine, and a remote activation needs a terminal).
+  GOD-KILLER is told about merged changes by the unswitched-changes notifier,
+  and switches when you do; nothing pulls or switches automatically.
 
 ## Checkouts
 
