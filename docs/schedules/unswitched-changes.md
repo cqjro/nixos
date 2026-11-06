@@ -199,12 +199,13 @@ REDRUM's T3 server is a separate environment, so this task (B) must be created f
 thread opened on REDRUM, by you. Either path needs, in order:
 
 1. **The script on REDRUM, readable by `t3code`.** Option A needs nothing (the unit runs it from
-   the store). For B, the repo clone for `t3code` is not set up yet (`docs/firmware.md` 6.9),
+   the store). For B, the repo clone for `t3code` is not set up yet (`docs/firmware.md`, "REDRUM after the move"),
    so wait for it, or run the script from the store path the A unit would use.
 2. **Credentials for the private repo** as `t3code`: the `gh` git credential helper
    (`GIT_CONFIG_*` already set in `t3code.nix`) plus its own fine-grained token limited to
-   `cqjro/nixos`, contents read only (the REDRUM step in `docs/firmware.md` 6.9). The first
-   run clones through it. Not needed once the repo is public.
+   `cqjro/nixos`, contents read only (the REDRUM step in `docs/firmware.md`, "REDRUM after the
+   move"). The repo has been public since 2026-11-05, so the first run can clone it without a
+   token; a token is only needed if REDRUM is to file issues or open PRs.
 3. **Delivery:** `agent-notify` is installed system-wide on REDRUM by the `agent-notifications`
    fragment (already in REDRUM's module list). What is missing is the ntfy topic file
    `/var/lib/t3code/.config/agent-notify/topic` (mode 0600, owner `t3code`; the topic is a
