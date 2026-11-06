@@ -42,8 +42,7 @@ repeated as proposals.
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
         GOD-KILLER token was made 2026-11-03, 30-90 days; the REDRUM `t3code`
-        token expires 2027-02-02); trim `docs/firmware.md` section 6 to a short
-        history note
+        token expires 2027-02-02)
   - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
         stay in the private archive repo; extract them only if you want to
         build or reinstall it
