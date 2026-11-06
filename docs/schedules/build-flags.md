@@ -65,9 +65,11 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
    Mention anything in `ignored` as "known".
 
 5. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
-   - Launch ONE worker for up to the first three keys in `actionable`. Skip if
-     t3_thread_list already shows a thread on a branch starting auto/warnings-, or
-     `gh pr list --search "head:auto/warnings-"` is non-empty.
+   - Launch ONE worker for up to the first three keys in `actionable`. Skip only if
+     t3_thread_list shows a thread on a branch starting auto/warnings- that is still
+     active (status running, waiting, starting, preparing or queued), or
+     `gh pr list --search "head:auto/warnings-"` (open PRs) is non-empty. Threads that
+     are completed or settled, and merged PRs, do not count.
    - Use t3_thread_launch exactly as specified in docs/schedules/worker-briefs.md
      ("Warning and evaluation-failure worker"), with the issue numbers from the report.
      Use the stronger setting in that file if any key is an eval-failure.
