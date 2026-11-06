@@ -42,5 +42,10 @@
 				emoji = config.stylix.fonts.monospace;
 			};
 		};
+
+		# TODO-remove: registry row 11. Nothing in this repo enables rofi (its config is archived), and
+		# Stylix's rofi target still sets the renamed programs.rofi.font, which
+		# warns on every evaluation. Disable the target for every host.
+		home-manager.sharedModules = [ { stylix.targets.rofi.enable = false; } ];
 	};
 }

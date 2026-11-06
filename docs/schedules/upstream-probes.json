@@ -115,6 +115,54 @@
 			"probes": [
 				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#opencode" }
 			]
+		},
+		{
+			"id": "row-11",
+			"registryRow": 11,
+			"slug": "stylix-rofi-font",
+			"title": "Stylix rofi target sets the renamed programs.rofi.font",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "nix-community/stylix",
+					"path": "modules/rofi/hm.nix",
+					"ref": "master",
+					"mustContain": ["programs.rofi.settings.font"]
+				}
+			]
+		},
+		{
+			"id": "row-12",
+			"registryRow": 12,
+			"slug": "stylix-opencode-tui",
+			"title": "Stylix opencode target writes the ignored programs.opencode.tui",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "nix-community/stylix",
+					"path": "modules/opencode/hm.nix",
+					"ref": "master",
+					"mustContain": ["cli"]
+				}
+			]
+		},
+		{
+			"id": "row-13",
+			"registryRow": 13,
+			"slug": "tether-avahi-publish",
+			"title": "tether module sets obsolete services.avahi.publish options",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "zackb/tether",
+					"path": "nix/module.nix",
+					"ref": "master",
+					"mustContain": ["disable-publishing"]
+				}
+			]
 		}
 	],
 	"ignore": []

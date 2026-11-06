@@ -3,6 +3,20 @@
 	flake.modules.nixos.tether = { ... }: {
 		imports = [ inputs.tether.nixosModules.default ];
 
+		# TODO-remove: registry row 13. What tether's wifi.enable would do, in the
+		# current avahi option names (publish-addresses is what the obsolete
+		# publish.userServices maps to). wifi.enable stays off below: tether's
+		# module sets the obsolete services.avahi.publish.{enable,userServices},
+		# which warn on every eval.
+		services.avahi = {
+			enable = true;
+			settings.publish = {
+				disable-publishing = false;
+				disable-user-service-publishing = false;
+				publish-addresses = true;
+			};
+		};
+
 		# bluetoothd defaults the adapter class to A/V Hands-Free (0x000408).
 		# The tether-btclass@ unit (from the module above) re-applies it with
 		# btmgmt after every bluetooth restart, but bluetoothd recomputes the
@@ -12,11 +26,9 @@
 		programs.tether = {
 			enable = true;
 
-			# clipboard sync + file transfer via the ios app (avahi + tcp/5134)
-			wifi = {
-				enable = true;
-				openFirewall = true;
-			};
+			# clipboard sync + file transfer via the ios app (avahi + tcp/5134);
+			# avahi itself is configured above
+			wifi.openFirewall = true;
 
 			# messages (MAP), contacts (PBAP), notification mirroring (ANCS)
 			bluetooth = {
