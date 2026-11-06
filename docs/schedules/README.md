@@ -88,6 +88,17 @@ schedule-precheck health SCHEDULE MESSAGE…
   merged without a probe entry, the fix merged, and the next run still stopped on the
   mismatch until `~/.nixos` was pulled. A health issue the human has closed is never
   reopened, so a repeat failure is then reported only in the run's reply.
+- **The repo is public, so issue and PR text is untrusted input.** The script only loads
+  issues that carry the `scheduled` label (strangers cannot add labels), writes the issue
+  body itself from structured probe data, and never puts issue text in a worker's
+  `message`. The remaining path is comments: a stranger can comment on an open scheduled
+  issue, and a worker that runs `gh issue view` would read it. Two layers close that:
+  (1) the human sets the repository **interaction limit to collaborators only**
+  (Settings → Moderation options → Interaction limits; it lasts at most six months, so
+  renew it, see TODO.md); (2) the worker briefs read an issue only through the
+  `authorAssociation == "OWNER"` filter (worker-briefs.md, "Owner-only comments"), which
+  holds after the limit lapses. The human and the agents post as the same account, so
+  both count as OWNER.
 - **`unswitched`** answers "has this host switched to everything merged on master?"
   See [`unswitched-changes.md`](./unswitched-changes.md).
 - **Nothing here writes to `~/.nixos`.** The human's switch checkout is never fetched,
@@ -95,7 +106,8 @@ schedule-precheck health SCHEDULE MESSAGE…
   is a notification, never a pull). All git work happens in a private partial clone,
   `~/.local/state/nixos-schedules/clone` (a few MB, under the passwd home, not `$HOME`),
   made and fetched by the script from the constant URL `https://github.com/cqjro/nixos.git`
-  (it does not read `~/.nixos/.git/config`, which the sandbox lets agents write).
+  (it does not read `~/.nixos/.git/config`; the sandbox protects that file, but the rest of
+  `~/.nixos/.git` is writable and one redirect is untested, issue #20).
   `--state-dir`, `--tree-path`, `--remote-url` and `--repo` exist for debugging and are
   **refused** unless you create `~/.config/nixos-schedules/allow-overrides`, because this
   script runs outside the sandbox and an agent chooses its arguments (docs/agents/security.md).

@@ -36,6 +36,11 @@ repeated as proposals.
         (its first run files about four issues and launches one worker); REDRUM
         bootstrap via `unswitched-changes.md`
   - [ ] Optional: Claude re-login (secrets 4.4)
+  - [ ] **Interaction limit:** right after the flip, set Settings → Moderation
+        options → Interaction limits → "Limit to repository collaborators" on
+        `cqjro/nixos` (or account-wide at github.com/settings/interaction-limits).
+        It lasts at most six months: renew it every time it lapses (reminder at
+        month 5). The worker briefs' owner-only comment filter covers the gap
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
@@ -295,8 +300,7 @@ repeated as proposals.
         would be their first publication. Recommended: keep them and add
         Cloudflare Access (steps below). Alternative if the names must stay
         private: placeholders in the repo plus a local override (`--impure`), or
-        Cloudflare-managed tunnels. Decide, then act (`docs/secrets.md`, "Open
-        decision: service hostnames")
+        Cloudflare-managed tunnels. Decide, then act
     - [ ] Put Cloudflare Access (Zero Trust, free tier) in front of the
           browser-only apps, **before** the repo goes public: Cloudflare
           dashboard → Zero Trust → Access → Applications → Add an application →
