@@ -476,8 +476,11 @@ on any step; Full access not run. Step 33 (added with the Auto refusal): run
 switch|test|dry`, `sudo nixos-rebuild switch` and `bash -c "./rebuild.sh switch …"`
 were each refused by `claude-guard` with the Supervised-child-thread message, while
 `./rebuild.sh check GOD-KILLER` and a commit whose message mentions `rebuild.sh
-switch` ran normally. Step 34 (the card in a Supervised thread) is not run yet.
-The launch schema for `t3_thread_launch` lists `approval-required` as a
-`runtimeMode`; that a child launched with it is actually Supervised is not yet
-confirmed. If a step disagrees, update this table and the policy in the same
-change.
+switch` ran normally. Step 34 (added with the Auto refusal): run 2026-11-06 in a
+thread launched with `t3_thread_launch` `runtimeMode: "approval-required"` from an
+Auto thread, in the main checkout; `./rebuild.sh dry GOD-KILLER` showed a T3
+approval card (the human denied it: "User declined tool execution", and
+`claude-guard` did not block it), while `./rebuild.sh check GOD-KILLER` ran with no
+prompt and the checkout stayed clean. So the launch value gives a genuinely
+Supervised child, and an Auto thread may launch one. If a step disagrees, update
+this table and the policy in the same change.
