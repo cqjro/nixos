@@ -95,10 +95,9 @@ schedule-precheck health SCHEDULE MESSAGE…
   issue, and a worker that runs `gh issue view` would read it. Two layers close that:
   (1) the human sets the repository **interaction limit to collaborators only**
   (Settings → Moderation options → Interaction limits; it lasts at most six months, so
-  renew it, see TODO.md); (2) the worker briefs read an issue only through the
-  `authorAssociation == "OWNER"` filter (worker-briefs.md, "Owner-only comments"), which
-  holds after the limit lapses. The human and the agents post as the same account, so
-  both count as OWNER.
+  renew it, see TODO.md); (2) the worker briefs read an issue only as
+  `gh issue view <n> --json title,body`, which never fetches comments (worker-briefs.md,
+  "No comments"), and that holds after the limit lapses.
 - **`unswitched`** answers "has this host switched to everything merged on master?"
   See [`unswitched-changes.md`](./unswitched-changes.md).
 - **Nothing here writes to `~/.nixos`.** The human's switch checkout is never fetched,
