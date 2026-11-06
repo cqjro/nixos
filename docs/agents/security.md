@@ -19,7 +19,7 @@ depends on that is marked *(after switch)* and is covered by the smoke test.
 | 1 | **OS sandbox** for Bash (bubblewrap + seccomp + proxy) | kernel namespaces | yes (strict: no unsandboxed retry) |
 | 2 | **Deny rules** (managed) | Claude Code | yes (tested: Bash and Write) |
 | 3 | **claude-guard** PreToolUse hook (managed, root-owned) | Claude Code + script | yes (tested). Turns `ask` into block there |
-| 4 | **Ask rules** (managed) | Claude Code → T3 approval card | **no**: T3 Full access approves prompts itself |
+| 4 | **Ask rules** (managed) | Claude Code → T3 approval card (Supervised, Accept edits); in Auto a classifier answers and no card appears | **refused, not approved**: with no card to show, Full access fails closed (smoke steps 13-15 and 22; a Full access worker's `git push`, 2026-11-05) |
 | 5 | Allow rules | skip prompts | n/a (bypass ignores them) |
 
 Everything lives in **one root-owned file**, `/etc/claude-code/managed-settings.json`,
@@ -274,16 +274,16 @@ working directories.
 | --- | --- | --- | --- | --- | --- |
 | Supervised | prompt | run | run | prompt | prompt |
 | Accept edits | auto in working dirs (+ `mkdir/rm/mv/cp/sed`) | run | run | prompt | prompt |
-| Auto | auto in working dirs | run | run | prompt | classifier (extra model calls) |
+| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; separately, when the classifier returned no verdict the command was refused, not run) | classifier (extra model calls) |
 | Full access | auto **anywhere not denied** | run | run | **blocked by guard** | **run** |
 
 Recommendation per task type:
 
 | Task | Mode | Why |
 | --- | --- | --- |
-| TODO item in its own worktree (`todo/<slug>`): edit, build, commit, open PR | **Accept edits** | Edits and builds need no prompts. You approve only the push, which is the review point |
+| TODO item in its own worktree (`todo/<slug>`): edit, build, commit, open PR | **Auto** (default since 2026-11-05; Accept edits if you want to see the push card) | Edits and builds need no prompts and the classifier answers the push. In Auto a person is no longer the gate on a push or merge: the classifier is, and it is a model judgment. The hard protection for `master` is GitHub branch protection (require a PR, no force pushes), to be set after the repo is public |
 | Policy, secrets, host networking/SSH/boot, or first run after a policy change | **Supervised** | See every edit before it lands |
-| Scheduled or triage threads (read, file issues) | **Accept edits** (or Supervised) | Reads, gh issue/PR creation and builds are allow-listed. Pushes still stop for you |
+| Scheduled or triage threads (read, file issues) and the workers they launch | **Auto** (never Full access: a worker launched from a Full access dispatcher inherits it and its push is refused, so the launch sets `runtimeMode: "auto"`) | Reads, gh issue/PR creation and builds are allow-listed; the classifier answers the push. Merges stay a deliberate human instruction |
 | Troubleshooting on REDRUM (status, logs) | **Accept edits** | `systemctl`/`journalctl` are allow-listed; restarts prompt |
 | Open-ended investigation with many novel commands | **Auto** | The classifier handles one-off commands. Costs extra model calls on a Pro quota *(cost not measured)* |
 | Anything | not **Full access** | Asks become blocks (no pushes possible), and the Edit tool may write anywhere not on the deny list. It is not faster than Accept edits under this policy |
@@ -373,7 +373,8 @@ follows:
 - **merge-pr.**
   - `gh pr view/checks` need no prompt.
   - `gh pr update-branch`, `git merge origin/master`, the push and
-    `gh pr merge` prompt.
+    `gh pr merge` prompt in Supervised and Accept edits; in Auto the classifier
+    answers them with no card (observed 2026-11-05).
   - In Full access all four are refused, so merges always need a Supervised,
     Accept edits or Auto thread.
 - **start-todo.** `git ls-remote` is allowed. `t3_thread_launch` and the other

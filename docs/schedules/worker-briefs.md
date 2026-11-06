@@ -25,10 +25,14 @@ Common to both workers:
   --all` (sandbox placeholder files show as untracked), and no `git checkout -b` (the
   worktree and branch already exist). Workers never call `docs/schedules/bin/schedule-precheck`:
   the worktree copy is sandboxed by design and the dispatcher does the bookkeeping.
-- **Runtime mode:** never `full-access`. Inherit the dispatcher's mode (a launched
-  thread cannot exceed its caller): Accept edits for TODO-style worktree work,
-  Supervised if the change touches policy, secrets or networking
-  (docs/agents/security.md, mode table).
+- **Runtime mode:** set `"runtimeMode": "auto"` explicitly in every launch. Never
+  `full-access`: a launched thread inherits its caller's mode unless told otherwise, and a
+  dispatcher run from a Full access thread launched a Full access worker whose `git push`
+  was refused (Full access has no approval card, so asks fail closed). T3 rejects a launch
+  or message broader than its caller (`runtime_mode_escalation_denied`, observed); whether
+  an Accept edits dispatcher may launch an `auto` worker is untested. Use Supervised
+  if the change touches policy, secrets or networking (docs/agents/security.md, mode
+  table). In Auto the classifier answers the push; the worker still never merges.
 - **Model:** `{"instanceId":"claudeAgent","model":"claude-sonnet-5-5","options":{"effort":"medium"}}`.
   The `options` shape `{"effort": "low"}` was accepted by `t3_thread_launch` on
   2026-11-02 (Haiku 5.5, low); the thread reports it back as `[{id: "effort", value: "low"}]`.
@@ -79,6 +83,7 @@ Launched for a registry row with a fix signal and `action: auto-pr`.
 		"model": "claude-sonnet-5-5",
 		"options": { "effort": "medium" }
 	},
+	"runtimeMode": "auto",
 	"message": "<brief below, with <N>, <row-id>, <slug>, <issue> filled in>"
 }
 ```
@@ -155,6 +160,7 @@ One worker takes up to three issues in one PR; they usually share files.
 		"model": "claude-sonnet-5-5",
 		"options": { "effort": "medium" }
 	},
+	"runtimeMode": "auto",
 	"message": "<brief below, with the issue numbers filled in>"
 }
 ```

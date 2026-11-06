@@ -44,6 +44,12 @@ repeated as proposals.
         month 5). The worker briefs never fetch comments (`--json title,body`), which
         covers worker reads during a gap; strangers can still comment, and you
         still see it
+  - [ ] **Branch protection on `master`:** right after the flip (it needs a public
+        repo on the free plan), Settings → Branches → add a rule for `master`:
+        require a pull request before merging, block force pushes and deletion.
+        Agents run in Auto, where a classifier (not a person) answers pushes and
+        merges, so this is the hard backstop. It does not stop a PR merge, which
+        only the `gh pr merge` ask rule and your explicit instruction gate
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
@@ -300,12 +306,13 @@ repeated as proposals.
   - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
         are locally managed (`hostname → port` ingress rules), and they are
         **not** in certificate logs today (only the wildcard is), so a public repo
-        would be their first publication. Recommended: keep them and add
-        Cloudflare Access (steps below). Alternative if the names must stay
-        private: placeholders in the repo plus a local override (`--impure`), or
-        Cloudflare-managed tunnels. Decide, then act
-    - [ ] Put Cloudflare Access (Zero Trust, free tier) in front of the
-          browser-only apps, **before** the repo goes public: Cloudflare
+        is their first publication. **Decided 2026-11-05: keep them in the repo.**
+        Every service has its own login, so Cloudflare Access (below) is optional
+        hardening, not a condition of the flip. Alternative if the names ever must
+        stay private: placeholders in the repo plus a local override (`--impure`),
+        or Cloudflare-managed tunnels
+    - [ ] Optional: put Cloudflare Access (Zero Trust, free tier) in front of the
+          browser-only apps (not required before the flip): Cloudflare
           dashboard → Zero Trust → Access → Applications → Add an application →
           Self-hosted → hostname (`home.cqjro.ca` Glance, `status.cqjro.ca`
           Beszel, then Homepage) → Allow policy for your email, one-time PIN.

@@ -367,11 +367,12 @@ worker briefs, Haiku low for scheduled checks, and the registry at
   `schedule-precheck` (covers the `unswitched` check too), plus the guard rule. Still open:
   REDRUM, where the shared entry is inert and no `t3code` entry exists (docs/agents/security.md, "Scheduled checks run unsandboxed").
   No `gh issue *` allow is needed.
-- Scheduled and worker threads must not run `full-access`. Decide whether workers
-  launch `approval-required` (they then wait for you on each build) or
-  `auto-accept-edits`.
-- `gh pr create` and `git push` stay `ask`; the worker's PR step will wait for you
-  by design.
+- Scheduled and worker threads must not run `full-access` (its asks are refused, so a
+  worker cannot push). Decided 2026-11-05: workers launch in `auto`
+  (`"runtimeMode": "auto"` in worker-briefs.md). `git push` stays an `ask` rule, but in
+  Auto the classifier answers it, so no card appears; `gh pr create` is allow-listed. A
+  worker never merges: `gh pr merge` stays an `ask` rule and needs the human's explicit
+  instruction, and the hard protection for `master` is GitHub branch protection (TODO.md).
 
 **Thread 5 (secrets):** a fine-grained token for `gh` on REDRUM scoped to
 `cqjro/nixos` with `issues: write`, `pull_requests: write`, `contents: write`.
