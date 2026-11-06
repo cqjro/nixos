@@ -13,13 +13,13 @@
 # Usage: bind this to a key in hyprland.conf, e.g.:
 #   bindd = SUPER, K, Show keybind cheat sheet, exec, ~/.nixos/modules/scripts/keybind-cheatsheet.sh
 #
-# Requires: jq, and one of rofi / wofi / fuzzel / walker (edit LAUNCHER below).
+# Requires: jq, and one of wofi / fuzzel / walker (edit LAUNCHER below).
 
 set -euo pipefail
 
 XREMAP_NIX="${1:-${XREMAP_NIX:-$HOME/.nixos/modules/home-manager/keyboard/xremap.nix}}"
 PARSE_SCRIPT="${2:-${PARSE_SCRIPT:-$HOME/.nixos/modules/scripts/parse_xremap.py}}"
-LAUNCHER="${LAUNCHER:-walker}"   # rofi | wofi | fuzzel | walker
+LAUNCHER="${LAUNCHER:-walker}"   # wofi | fuzzel | walker
 
 # --- 1. Hyprland binds ---
 # 3rd column is "HYPRCTL:<dispatcher> <arg>" so we can replay the exact
@@ -69,10 +69,6 @@ menu_text=$(printf "%s\n" "${menu_lines[@]}")
 # --- 4. Show the picker, capture the selection ---
 selection=""
 case "$LAUNCHER" in
-  rofi)
-    selection=$(printf "%s\n" "$menu_text" | rofi -dmenu -i -p "Keybinds" -no-custom \
-      -theme-str 'window {width: 900px;} listview {lines: 20; fixed-height: true;} element {orientation: horizontal;} element-text {horizontal-align: 0; expand: true; text-transform: none;}')
-    ;;
   wofi)
     selection=$(printf "%s\n" "$menu_text" | wofi --dmenu -i -p "Keybinds" --width 700 --lines 20)
     ;;
