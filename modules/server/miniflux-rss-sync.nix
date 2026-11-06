@@ -23,8 +23,9 @@ in
 				Also delete from Miniflux (with the feed's entries) feeds that were
 				dropped from `rss-sources.feeds`. Only feeds the unit itself pushed
 				or saw in both places are ever deleted, so feeds added from a phone
-				are safe. Off by default: removing a line from the list then never
-				destroys read/starred state.
+				are safe, and a run refuses to prune more than 5 feeds (or anything
+				at all when the list is empty). Off by default: removing a line from
+				the list then never destroys read/starred state.
 			'';
 		};
 

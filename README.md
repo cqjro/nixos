@@ -221,14 +221,15 @@ matches the rest of the config out of the box.
     It runs on the REDRUM switch that changes the list (and at boot), as the
     `miniflux` user over loopback, authenticating with the `ADMIN_USERNAME` /
     `ADMIN_PASSWORD` already in `/var/lib/miniflux/admin.env` — no extra secret.
-    It only adds: a feed you deleted in Miniflux is not re-added (the unit keeps
+    By default it only adds: a feed you deleted in Miniflux is not re-added (the unit keeps
     `/var/lib/miniflux/rss-sync-snapshot.json`, the URLs it already pushed), and
     a feed that fails to subscribe is retried on the next run. Check it with
     `systemctl status miniflux-rss-sync` / `journalctl -u miniflux-rss-sync`;
     rerun with `sudo systemctl restart miniflux-rss-sync`. Setting
     `miniflux-rss-sync.prune = true` also deletes feeds you drop from the list
-    (and their entries); it is off by default and never touches feeds added
-    from a phone. If you change the admin password in the Miniflux UI, update
+    (and their entries); it is off by default, never touches feeds added from a
+    phone, and refuses to prune more than 5 feeds (or anything when the list is
+    empty) in one run. If you change the admin password in the Miniflux UI, update
     `admin.env` too or the unit logs `401`.
   - **Miniflux → list (manual)** — `rss-sync` on GOD-KILLER
     (`modules/scripts/rss-sync.py`, `home-manager/terminal/rss-sync.nix`) is for

@@ -36,7 +36,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-MAX_REMOVALS = 5  # --apply-removals refuses to drop more than this at once
+MAX_REMOVALS = 5  # --apply-removals and apply --prune refuse to drop more than this at once
 
 config_dir = Path(os.environ.get("NIXOS_CONFIG_DIR", Path.home() / ".nixos"))
 MASTER = Path(os.environ.get("RSS_SYNC_MASTER", config_dir / "modules/system/rss-feeds.json"))
@@ -233,6 +233,16 @@ def cmd_apply(args):
 	A feed that fails to subscribe is not recorded, so the next run retries it."""
 	failed = cmd_push(args)
 	if args.prune:
+		# Nobody confirms an unattended prune, so apply the same guards as
+		# `pull --apply-removals`: a mangled or empty list must not wipe Miniflux.
+		p = plan()
+		if not p["master"]:
+			print("master list is empty; refusing to prune")
+			return failed or 1
+		if len(p["to_prune"]) > MAX_REMOVALS:
+			print(f"{len(p['to_prune'])} prunes exceeds the cap of {MAX_REMOVALS}; "
+				"run `rss-sync prune --yes` by hand if that is intended")
+			return failed or 1
 		args.yes = True
 		cmd_prune(args)
 	return failed
