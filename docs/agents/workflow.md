@@ -32,9 +32,9 @@ picking the T3 environment in the client.
   needed because locally built paths are unsigned; it works because `cairo` is a
   trusted Nix user on REDRUM (`modules/hosts/REDRUM/machine.nix`). Run by the
   human (it uses SSH keys agents cannot reach). Use it when REDRUM cannot
-  rebuild a fixed-output derivation itself, as with `reactflux-pnpm-deps`
-  (2026-11-06: its hash differs per host, see gotchas.md); the `dry`/`switch` on
-  REDRUM then never builds it.
+  rebuild a fixed-output derivation itself (this is how generation 38 was
+  switched on 2026-11-06, before the pnpm FODs were made reproducible, see
+  gotchas.md); the `dry`/`switch` on REDRUM then never builds it.
 
 ### One project, either machine
 

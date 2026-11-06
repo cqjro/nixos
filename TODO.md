@@ -179,18 +179,6 @@ repeated as proposals.
 
 ## Server (REDRUM)
 
-- [ ] **Make the `reactflux` pnpm deps FOD reproducible** — REDRUM computes a
-      different `outputHash` than GOD-KILLER for `reactflux-pnpm-deps` (seen
-      2026-11-06: `2TyYVO…` against the committed `3loMT2…`), so REDRUM cannot
-      rebuild it itself and a REDRUM switch needs a GOD-KILLER build shipped
-      with `nix copy --no-check-sigs` (docs/agents/workflow.md). Unlike the ABT
-      sidecar (fixed in #44 by stripping `checkedAt` and the metadata cache), this
-      project uses pnpm 11, whose store index is a SQLite file
-      (`store/v11/index.db`), plus `cache/lockfile-verified.jsonl`; try nixpkgs'
-      `fetchPnpmDeps` or a normalised dump — **5/10**
-  - [ ] Verify with two independent fetches (same hash) and `./rebuild.sh build
-        REDRUM`, then drop the ship-from-GOD-KILLER workaround note
-
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for
       current photo handling) — **6/10** (follow the REDRUM recipe; the real
       work is the ML/`external_media` and large-storage decisions, plus

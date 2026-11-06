@@ -96,10 +96,11 @@ and a one-line pointer in the AGENTS.md index.
   download of a pnpm binary. This broke the abt-sidecar deps FOD on
   2026-10-20; the fix (strip `packageManager` with the node one-liner before
   the first pnpm command, re-fetch the FOD hash) is in
-  `modules/server/actual-budget-tweaks.nix`. `modules/server/reactflux.nix` is
-  currently safe only because its pin (`pnpm@11.21.0`) equals the pinned
-  nixpkgs' `pkgs.pnpm` — when bumping either pnpm project, or when the T2 pin
-  is lifted (T2-PIN.md step 3), apply the same strip and re-fetch the hash.
+  `modules/server/actual-budget-tweaks.nix`. `modules/server/reactflux.nix`
+  goes through nixpkgs' `fetchPnpmDeps`/`pnpmConfigHook`, which set
+  `pnpm_config_pm_on_fail=ignore`, so a pin that differs from `pkgs.pnpm` no
+  longer self-downloads there; the ABT derivation still needs the strip when
+  bumping it or when the T2 pin is lifted (T2-PIN.md step 3).
 - **Server pnpm FOD hashes are not reproducible** — a separate, related trap:
   a hand-rolled `pnpmDeps` fixed-output derivation keeps per-file `checkedAt`
   timestamps in the store's index files and the registry metadata cache (live
@@ -107,15 +108,17 @@ and a one-line pointer in the AGENTS.md index.
   across the GOD-KILLER/REDRUM pins (2026-11-06: three fetches of one
   derivation gave `4qTSmVb…`, `W7+saec…` and `ZoJaD+u…`). Symptom is `error:
   hash mismatch in fixed-output derivation` on an otherwise-unchanged tree, and
-  pasting the `got:` value never converges. **`actual-budget-tweaks.nix` is
-  fixed** (2026-11-06): the metadata cache is kept out of `$out` and the
-  timestamps, `tmp` and `projects` are stripped (what nixpkgs' pnpm fetcher
-  does), verified by fetching twice and by a full `build REDRUM`; it needs a new
-  hash only when the source rev or lockfile changes. **`reactflux.nix` still has
-  the old shape** and will hit the same error whenever its derivation changes:
-  apply the same normalisation there rather than pasting hashes. Durable
-  alternative: `fetchPnpmDeps` when the pinned nixpkgs ships one that works with
-  these lockfiles.
+  pasting the `got:` value never converges. **Both server FODs are fixed**
+  (2026-11-06), each verified by fetching twice (same hash) and by a full
+  `build REDRUM`; a new hash is needed only when the source rev, the lockfile
+  or the pnpm version changes (build with a fake hash once, copy `got:`).
+  `actual-budget-tweaks.nix` keeps a hand-rolled FOD with the metadata cache
+  kept out of `$out` and the timestamps, `tmp` and `projects` stripped.
+  `reactflux.nix` uses nixpkgs' `fetchPnpmDeps` (`fetcherVersion = 4`, the
+  pnpm 11 SQLite index dumped to SQL text) with `pnpmConfigHook` in the build.
+  Prefer `fetchPnpmDeps` for a new pnpm project. If a hash mismatch still
+  appears on REDRUM only, build on GOD-KILLER and ship the result
+  ([workflow.md](workflow.md#machines-and-what-each-may-do)).
 
 - **Waydroid software rendering on proprietary NVIDIA is not viable** — Waydroid
   1.6.3's GPU probe hard-blocks the proprietary `nvidia` driver (`unsupported =

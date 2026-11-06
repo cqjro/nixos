@@ -23,98 +23,54 @@ let
 	reactfluxVersion = builtins.substring 0 8 reactfluxRev;
 
 	# The project is pnpm-based (packageManager: pnpm@11.21.0) and built with
-	# node 22 (engines >= 22.22.0), mirroring the upstream Dockerfile.
-	# NOTE: this pin currently equals pkgs.pnpm from the pinned nixpkgs
-	# (11.21.0), so pnpm's manage-package-manager-versions never triggers a
-	# self-download of a second pnpm. That coincidence is the only reason the
-	# derivations below are safe — when they broke on a mismatch, see the
-	# abt-sidecar postmortem in modules/server/actual-budget-tweaks.nix
-	# ("Failed to switch pnpm to vX … ENOENT"). If the T2 pin is lifted
-	# (T2-PIN.md) or either version drifts, strip packageManager from
-	# package.json in BOTH derivations below (node one-liner as in
-	# actual-budget-tweaks.nix) and re-fetch the FOD outputHash, or the next
-	# deps rebuild dies in the sandbox.
+	# node 22 (engines >= 22.22.0), mirroring the upstream Dockerfile. The
+	# nixpkgs pnpm helpers below set `pnpm_config_pm_on_fail=ignore`, so a
+	# packageManager pin that differs from pkgs.pnpm no longer makes pnpm try to
+	# download a second pnpm inside the sandbox (the abt-sidecar failure, see
+	# modules/server/actual-budget-tweaks.nix).
 	nodejs = pkgs.nodejs_22;
 	pnpm = pkgs.pnpm.override { nodejs-slim = pkgs.nodejs-slim_22; };
 
-	# pnpm deps are downloaded once as a fixed-output derivation (FOD) whose
-	# output IS the pnpm content-addressed store PLUS the pnpm metadata cache
-	# (needed for `--offline` resolution in the build below). Network is allowed
-	# inside a FOD build, so this is the single place the npm registry is
-	# touched. The build below then installs --offline against both, exactly like
-	# the Docker image only fetches deps once at build time.
-	#
-	# FIXME: `outputHash` is NOT reproducible across machines/dates. The build
-	# is shared between GOD-KILLER and REDRUM (different pin/nixpkgs), and pnpm
-	# re-resolves floating dep ranges from the live registry on every fetch, so
-	# the store+cache output drifts and the hash mismatches (observed
-	# 2026-10-20: Nr0e0+PW… -> 3loMT2kp…). Same failure mode as the ABT FOD in
-	# modules/server/actual-budget-tweaks.nix — both broke in one session.
-	# TODO: make this stable — ideally replace this hand-rolled FOD with a
-	# lockfile-frozen fetch (e.g. `fetchPnpmDeps` / `pnpm.fetchDeps`) once the
-	# pinned nixpkgs ships one that works with this project's lockfile, so the
-	# hash stops drifting and cross-host builds stop failing.
-	pnpmDeps = pkgs.stdenv.mkDerivation {
-		pname = "reactflux-pnpm-deps";
+	# pnpm deps are downloaded once as a fixed-output derivation (FOD). This uses
+	# nixpkgs' own fetcher (fetcherVersion 4 = pnpm 11) instead of the hand-rolled
+	# FOD this file had: that one hashed differently on every fetch (REDRUM and
+	# GOD-KILLER disagreed, 2026-11-06) because pnpm 11 keeps per-file `checkedAt`
+	# timestamps in a SQLite index (`store/v11/index.db`) plus a registry metadata
+	# cache. The fetcher strips the timestamps, dumps the index to SQL text and
+	# packs a reproducible tarball; `pnpmConfigHook` below rebuilds the database
+	# and installs offline. A new hash is needed only when the source rev, the
+	# lockfile or the pnpm version change.
+	pnpmDeps = pkgs.fetchPnpmDeps {
+		pname = "reactflux";
 		version = reactfluxVersion;
 		src = reactfluxSrc;
-		nativeBuildInputs = [ nodejs pnpm pkgs.cacert ];
-		# node doesn't inherit the nix CA bundle; without this pnpm can't verify
-		# registry.npmjs.org inside the sandbox (UNABLE_TO_GET_ISSUER_CERT_LOCALLY).
-		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-		outputHashMode = "recursive";
-		outputHashAlgo = "sha256";
-		outputHash = "sha256-3loMT2kpj/gZi/GipJXxQy19v+RV+qGifOZ6SfezcKI=";
-		phases = [ "installPhase" ];
-		installPhase = ''
-			runHook preInstall
-			export HOME="$TMPDIR"
-			mkdir -p "$HOME/.cache/pnpm" "$out"
-			cp -r "$src" ./reactflux
-			chmod -R u+w ./reactflux
-			# Mirror upstream Docker: install without pnpm-workspace.yaml so
-			# `minimumReleaseAge`/`allowBuilds` never trigger registry checks.
-			rm -f ./reactflux/pnpm-workspace.yaml
-			cd ./reactflux
-			# Safe while pkgs.pnpm (11.21.0) == packageManager pin; on any
-			# drift strip packageManager first (see note at `pnpm` above).
-			pnpm config set store-dir "$out/store"
-			pnpm config set cache-dir "$out/cache"
-			pnpm install --frozen-lockfile --ignore-scripts
-			runHook postInstall
+		inherit pnpm;
+		fetcherVersion = 4;
+		# Mirror upstream Docker: install without pnpm-workspace.yaml so
+		# `minimumReleaseAge`/`allowBuilds` never trigger registry checks.
+		postPatch = ''
+			rm -f pnpm-workspace.yaml
 		'';
+		hash = "sha256-4dG37WfdVPFy/DESAlQA8uvtO5j+o22KgUpQBzKECYk=";
 	};
 
 	reactflux = pkgs.stdenv.mkDerivation {
 		pname = "reactflux";
 		version = reactfluxVersion;
 		src = reactfluxSrc;
-		nativeBuildInputs = [ nodejs pnpm pkgs.cacert ];
-		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-		NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-		# Single phase (like the FOD above): pnpm needs a stable writable cwd,
-		# and mixing buildPhase/installPhase caused stdenv to reset the working
-		# dir between them, losing the build output location.
-		phases = [ "installPhase" ];
-		installPhase = ''
-			runHook preInstall
-			export HOME="$TMPDIR"
-			mkdir -p "$HOME/.cache/pnpm"
-			cp -r "$src" ./reactflux
-			chmod -R u+w ./reactflux
-			rm -f ./reactflux/pnpm-workspace.yaml
-			cd ./reactflux
-			# pnpm needs a *writable* store+metadata cache (it keeps a sqlite
-			# index inside the store), so copy the immutable FOD output into the
-			# build dir and re-point both store-dir and cache-dir at the copies.
-			cp -r "${pnpmDeps}" "$TMPDIR/pnpm"
-			chmod -R u+w "$TMPDIR/pnpm"
-			pnpm config set store-dir "$TMPDIR/pnpm/store"
-			pnpm config set cache-dir "$TMPDIR/pnpm/cache"
-			pnpm install --frozen-lockfile --offline --ignore-scripts
+		inherit pnpmDeps;
+		nativeBuildInputs = [ nodejs pnpm pkgs.pnpmConfigHook ];
+		postPatch = ''
+			rm -f pnpm-workspace.yaml
+		'';
+		buildPhase = ''
+			runHook preBuild
 			# prebuild (version-info.js) + vite build; VITE_BASE_PATH defaults to "/"
 			pnpm run build
+			runHook postBuild
+		'';
+		installPhase = ''
+			runHook preInstall
 			mkdir -p "$out"
 			cp -r ./build/. "$out"/
 			runHook postInstall
