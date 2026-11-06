@@ -163,9 +163,9 @@ and every `t3_thread_launch` call below.
 | Labels | `scheduled` (all), plus `upstream-fix`, `rebuild-warning`, `eval-failure`, `worker-launched`, `schedule-health`. The script creates missing labels. |
 | Updated in place | A changed probe on an open issue becomes a comment, once per fingerprint. A finding that stops reproducing is closed with a comment. |
 | Never reopened | A closed issue is a human's final answer: the schedule reports it as `suppressed` and does nothing. Reopen it yourself to make it live again. |
-| Cap on new issues | `--max-new 3` per run. Eval failures are exempt (they are rare and important). Warnings over the cap go to one `rebuild-warning:digest` issue, and are promoted to their own issue on later runs, three at a time. |
+| Cap on new issues | Every finding gets its own issue up to a runaway ceiling (owner's rule, 2026-11-05; it was `--max-new 3`, which parked five warnings in a digest). `--max-new` is now only that guard: default 40, clamped to 0-100 because a caller chooses the argument. Eval failures are exempt. Anything over the ceiling goes to one `rebuild-warning:digest` issue and is promoted to its own issue on later runs; if you see that digest, something is wrong (a parser bug or a mass breakage). An issue can still be skipped when GitHub writes fail or the issue was closed by a human (a closed issue is a final answer). Dedupe lists the latest 300 `scheduled` issues (`issues.load --limit 300`); if the repo ever passes that, older keys stop being seen and could be refiled, so raise the limit then. |
 | One worker per run | The dispatcher launches at most one worker; it handles up to three of the listed issues in one PR. The `worker-launched` label stops the next run launching a duplicate. |
-| First run | The first `buildflags` run files a backlog (seven distinct warnings today across the three hosts: three issues plus a digest). Run it with `--dry-run` first if you want to see it. |
+| First run | The first `buildflags` run files a backlog. The real first run (2026-11-05) found eight distinct warnings and, under the old cap of 3, filed three issues plus a digest (#25); with the cap gone each would have had its own issue. Run it with `--dry-run` first if you want to see it. |
 
 ## GitHub permissions
 

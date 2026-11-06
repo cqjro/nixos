@@ -755,7 +755,7 @@ def main():
 	ap.add_argument("command", choices=["upstream", "buildflags", "unswitched", "mark-launched", "health"])
 	ap.add_argument("args", nargs="*", help="mark-launched KEY THREAD_ID | health SCHEDULE MESSAGE...")
 	ap.add_argument("--repo", default=DEFAULT_REPO, help="GitHub repo holding the issues (override needs the gate file)")
-	ap.add_argument("--max-new", type=lambda v: max(0, min(5, int(v))), default=3, help="max new issues per run (eval failures are exempt)")
+	ap.add_argument("--max-new", type=lambda v: max(0, min(100, int(v))), default=40, help="safety ceiling on new issues per run, a runaway guard and not a throttle (eval failures are exempt)")
 	ap.add_argument("--dry-run", action="store_true", help="no issue writes, no state writes")
 	ap.add_argument("--tree-path", help="buildflags: evaluate this directory instead of a fresh origin/master worktree (debugging)")
 	ap.add_argument("--host", dest="hosts", action="append", help="buildflags: limit to a host (repeatable); unswitched: the host to check (default: this machine's hostname)")
