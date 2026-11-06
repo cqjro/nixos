@@ -274,16 +274,16 @@ working directories.
 | --- | --- | --- | --- | --- | --- |
 | Supervised | prompt | run | run | prompt | prompt |
 | Accept edits | auto in working dirs (+ `mkdir/rm/mv/cp/sed`) | run | run | prompt | prompt |
-| Auto | auto in working dirs | run | run | prompt | classifier (extra model calls) |
+| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; fails closed when the classifier is unavailable) | classifier (extra model calls) |
 | Full access | auto **anywhere not denied** | run | run | **blocked by guard** | **run** |
 
 Recommendation per task type:
 
 | Task | Mode | Why |
 | --- | --- | --- |
-| TODO item in its own worktree (`todo/<slug>`): edit, build, commit, open PR | **Accept edits** | Edits and builds need no prompts. You approve only the push, which is the review point |
+| TODO item in its own worktree (`todo/<slug>`): edit, build, commit, open PR | **Auto** (default since 2026-11-05; Accept edits if you want to see the push card) | Edits and builds need no prompts and the classifier answers the push. In Auto a person is no longer the gate on a push or merge: the classifier is, and it is a model judgment. The hard protection for `master` is GitHub branch protection (require a PR, no force pushes), to be set after the repo is public |
 | Policy, secrets, host networking/SSH/boot, or first run after a policy change | **Supervised** | See every edit before it lands |
-| Scheduled or triage threads (read, file issues) | **Accept edits** (or Supervised) | Reads, gh issue/PR creation and builds are allow-listed. Pushes still stop for you |
+| Scheduled or triage threads (read, file issues) and the workers they launch | **Auto** (never Full access: a worker launched from a Full access dispatcher inherits it and its push is refused, so the launch sets `runtimeMode: "auto"`) | Reads, gh issue/PR creation and builds are allow-listed; the classifier answers the push. Merges stay a deliberate human instruction |
 | Troubleshooting on REDRUM (status, logs) | **Accept edits** | `systemctl`/`journalctl` are allow-listed; restarts prompt |
 | Open-ended investigation with many novel commands | **Auto** | The classifier handles one-off commands. Costs extra model calls on a Pro quota *(cost not measured)* |
 | Anything | not **Full access** | Asks become blocks (no pushes possible), and the Edit tool may write anywhere not on the deny list. It is not faster than Accept edits under this policy |
