@@ -9,6 +9,8 @@
 		programs.nixcord = {
 			enable = true;
 			discord.enable = true;
+			# Discord runs unmodded on purpose; Vesktop is the modded client.
+			discord.silenceNoModClientWarning = true;
 			vesktop = {
 				enable = true;
 				settings = {

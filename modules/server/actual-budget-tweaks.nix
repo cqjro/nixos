@@ -35,7 +35,7 @@ let
 	# mid-build (manage-package-manager-versions), which fails inside the
 	# sandbox and would be a hidden network dependency on a second pnpm.
 	nodejs = pkgs.nodejs_22;
-		pnpm = pkgs.pnpm_10.override { inherit nodejs; };
+		pnpm = pkgs.pnpm_10.override { nodejs-slim = pkgs.nodejs-slim_22; };
 
 	# pnpm deps are downloaded once as a fixed-output derivation (FOD) whose
 	# output IS the pnpm content-addressed store PLUS the pnpm metadata cache

@@ -35,7 +35,7 @@ let
 	# actual-budget-tweaks.nix) and re-fetch the FOD outputHash, or the next
 	# deps rebuild dies in the sandbox.
 	nodejs = pkgs.nodejs_22;
-	pnpm = pkgs.pnpm.override { inherit nodejs; };
+	pnpm = pkgs.pnpm.override { nodejs-slim = pkgs.nodejs-slim_22; };
 
 	# pnpm deps are downloaded once as a fixed-output derivation (FOD) whose
 	# output IS the pnpm content-addressed store PLUS the pnpm metadata cache
