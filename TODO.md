@@ -280,7 +280,10 @@ repeated as proposals.
         (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`; README →
         "T3 Code on REDRUM")
   - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
-        show up in one client
+        show up in one client (2026-11-06: REDRUM has its own `t3code`-owned
+        clone and a tested build; GOD-KILLER's T3 terminal gives a real tty with
+        working `sudo -v`; still to confirm: the shared project view and a phone
+        token with terminal scope)
 
 - [ ] **Secrets: remaining steps after the repo went public** — the steps left
       from the secrets audit (`docs/secrets.md` section 4 and the private audit);

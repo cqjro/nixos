@@ -167,6 +167,21 @@ tripwire on the command text, not a boundary:
   cannot be read, Bash is refused (fail closed). Tested: `git push`,
   `sudo -n true` and `gh pr merge` were all refused under
   `--permission-mode bypassPermissions --allow-dangerously-skip-permissions`.
+- **Auto (and any mode the guard does not recognise): system activation is
+  refused.** In Auto the classifier answers `ask` rules and no card appears, so
+  a person never sees the activation. The guard therefore blocks, in every mode
+  except `default` (Supervised), `acceptEdits` and `plan`, a command whose
+  command word is `rebuild.sh switch|test|dry|revert|deploy`,
+  `nixos-rebuild switch|boot|test|dry-activate` or `switch-to-configuration`
+  (after env assignments and wrappers such as `sudo`, `env`, `bash`,
+  `systemd-run`, so a commit message that merely mentions them is not stopped).
+  The message tells the agent to launch a Supervised child thread for the step
+  (`t3_thread_launch`, `runtimeMode: "approval-required"`) or to hand the human
+  the command. Like the rest of the guard it is a tripwire (`xargs`, `eval` or a
+  script that runs the command evade it); the gate that holds is that `sudo`
+  needs a password and the sandbox cannot use it. The allow-list shape means an
+  unexpected mode name fails closed. **Unverified:** the exact string the hook
+  receives for Auto (Claude Code uses `auto`); smoke step 33 confirms it.
 
 Run `claude-guard --self-test` (installed system-wide) after editing the
 script; `bash modules/scripts/claude-guard.sh --self-test` works before a switch.
@@ -274,7 +289,7 @@ working directories.
 | --- | --- | --- | --- | --- | --- |
 | Supervised | prompt | run | run | prompt | prompt |
 | Accept edits | auto in working dirs (+ `mkdir/rm/mv/cp/sed`) | run | run | prompt | prompt |
-| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; separately, when the classifier returned no verdict the command was refused, not run) | classifier (extra model calls) |
+| Auto | auto in working dirs | run | run | classifier decides, no card (observed 2026-11-05: `git push`, `gh pr merge` and `gh issue comment` ran without a card after the human asked; separately, when the classifier returned no verdict the command was refused, not run). **System activation (`rebuild.sh switch\|test\|dry\|revert\|deploy`, `nixos-rebuild switch\|boot\|test\|dry-activate`) is blocked by the guard**: launch a Supervised child thread instead | classifier (extra model calls) |
 | Full access | auto **anywhere not denied** | run | run | **blocked by guard** | **run** |
 
 Recommendation per task type:
@@ -285,6 +300,7 @@ Recommendation per task type:
 | Policy, secrets, host networking/SSH/boot, or first run after a policy change | **Supervised** | See every edit before it lands |
 | Scheduled or triage threads (read, file issues) and the workers they launch | **Auto** (never Full access: a worker launched from a Full access dispatcher inherits it and its push is refused, so the launch sets `runtimeMode: "auto"`) | Reads, gh issue/PR creation and builds are allow-listed; the classifier answers the push. Merges stay a deliberate human instruction |
 | Troubleshooting on REDRUM (status, logs) | **Accept edits** | `systemctl`/`journalctl` are allow-listed; restarts prompt |
+| A `switch`/`test`/`dry` that a thread needs to continue | A **Supervised child thread** for that one step (`t3_thread_launch`, `runtimeMode: "approval-required"`), or the human in a terminal | The guard refuses activation in Auto and Full access. The child's card is the human's approval; on GOD-KILLER the sudo password then goes through the desktop askpass, so it only completes at the machine. From a phone, the human runs the switch in the T3 terminal or over SSH to REDRUM ([workflow.md](workflow.md#activating-a-system-switch-test-dry-revert)) |
 | Open-ended investigation with many novel commands | **Auto** | The classifier handles one-off commands. Costs extra model calls on a Pro quota *(cost not measured)* |
 | Anything | not **Full access** | Asks become blocks (no pushes possible), and the Edit tool may write anywhere not on the deny list. It is not faster than Accept edits under this policy |
 
@@ -438,6 +454,8 @@ you record which steps prompted.**
 | 30 | `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.sshCommand GIT_CONFIG_VALUE_0=id /home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run` | blocked by the guard (not one plain command); **must not** reach the script. If the guard is bypassed and it runs unsandboxed, the script's rebuilt environment still drops the variables, but `nix shell` in the shebang would see them: then add `env -i` to the shebang | same |
 | 31 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --host "$(id)"`, and the same with backticks, `&& id`, `\| cat`, `> /tmp/x` and a newline | each blocked by the guard, no prompt | same |
 | 32 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck mark-launched "bad key" t` and `... health evil msg` | exit 0 with `{"ok": false, "error": "usage: …"}`; nothing is filed | same |
+| 33 | In an **Auto** thread: `./rebuild.sh switch GOD-KILLER` (then `./rebuild.sh test REDRUM` and `sudo nixos-rebuild switch`) | each **blocked by the guard** with the "Supervised child thread" message, no card, nothing activated. If one runs or prompts, the hook does not report `auto` as the mode string: read the hook input and fix the `case $mode` list | not applicable (steps 13, 14, 22) |
+| 34 | In a **Supervised** thread: `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it, or approve a harmless dry-activate with the askpass dialog). Also check `./rebuild.sh check GOD-KILLER` and `git commit -m "mentions rebuild.sh switch"` still run with no prompt in Auto | not applicable |
 
 In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
 rule …)": with no card to approve, that counts as blocked.

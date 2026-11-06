@@ -45,10 +45,19 @@ may do.
   `claude-code-policy` fragment GOD-KILLER imports, so there is nothing to keep
   in step. Its logins (`sudo -u t3code -H claude` / `gh auth login`) are manual
   one-offs stored in `/var/lib/t3code`. The T2 firmware comes from a
-  world-readable store path, so `t3code` needs no extra access to it. What still
-  keeps REDRUM agents to host troubleshooting is the missing `t3code`-readable
-  checkout of the repo; until it exists, flake builds stay on GOD-KILLER (see
-  [workflow.md](workflow.md)).
+  world-readable store path, so `t3code` needs no extra access to it. REDRUM has
+  its own clone of the repo, owned by `t3code` in `/var/lib/t3code`, and a
+  REDRUM build was tested there, so REDRUM threads are full repo threads (see
+  [workflow.md](workflow.md#one-project-either-machine)). The clone is
+  agent-writable: never point a privileged switch at it; the human switches
+  from their own checkout.
+  - **Phone tokens and the terminal.** The T3 terminal on GOD-KILLER gives a
+    real tty (tested 2026-11-06: `tty && sudo -v` works), so the human can run
+    `systemd-run --user --wait ./rebuild.sh switch GOD-KILLER` from the phone
+    and type the sudo password there (the systemd-run wrapper keeps an app
+    restart from interrupting the switch). That needs a token with terminal
+    scope, which is as powerful as `cairo`: mint it only when needed and revoke
+    it if the phone is lost.
   Operational facts (full detail in the README's "T3 Code on REDRUM"):
   - Client and server versions must match ("This client requires a newer
     server"). REDRUM's pinned nixpkgs ships an older t3code, so `t3code.nix`

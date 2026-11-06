@@ -817,6 +817,28 @@ then show up in the same client. Pairing scopes include `terminal:operate` and
 `filesystem:write` by default, so keep phone tokens narrow and revoke devices
 from the connections list.
 
+#### Working on either machine
+
+The repo is one project on both servers: REDRUM has its own clone (owned by
+`t3code` in `/var/lib/t3code`) and REDRUM builds were tested from it, so a
+thread started on the REDRUM environment can edit, check, evaluate and build
+REDRUM like one on GOD-KILLER (GOD-KILLER is eval-only there). T3 does not move
+code between machines: GitHub is the hub, a thread stays on the server that runs
+it, and a branch lives on one machine at a time (push, then fetch on the other).
+
+Agents never switch a host by themselves. `claude-guard` refuses
+`rebuild.sh switch|test|dry|revert|deploy` and `nixos-rebuild
+switch|boot|test|dry-activate` in Auto and Full access; an agent that needs one
+launches a Supervised child thread (its approval card is yours) or hands you the
+command. From your phone:
+
+- **GOD-KILLER:** open the GOD-KILLER environment's terminal in T3 (a real tty,
+  so `sudo` asks for the password right there) and run `systemd-run --user --wait
+  ./rebuild.sh switch GOD-KILLER` from `~/.nixos` (the wrapper keeps an app
+  restart from interrupting it). A token with terminal scope is as powerful as
+  your user: mint it only when needed and revoke it if the phone is lost.
+- **REDRUM:** `ssh redrum`, then `./rebuild.sh switch REDRUM`.
+
 #### Reaching GOD-KILLER from other devices
 
 Nothing exposes the desktop backend by default, so a phone gets
