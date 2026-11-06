@@ -297,11 +297,15 @@ What was decided and done:
   branches.
 - The firmware moved out of the repo: pinned by hash in each host's `machine.nix`
   and found through the Nix store (sections 3 and 4).
-- **Rollout:** the PR chain (#1 to #9) was merged, GOD-KILLER (generation 233) and
-  REDRUM (generation 37) switched on the new repo, and the 24-step smoke test
-  passed in Accept edits and Full access.
+- **Rollout (owner-run, as recorded in the TODO tracker at the time):** the PR
+  chain (#1 to #9) was merged, GOD-KILLER (generation 233) and REDRUM (generation
+  37) switched on the new repo, and the 24-step security smoke test of
+  `docs/agents/security.md` passed in Accept edits and Full access. The generation
+  to commit mapping is `./rebuild.sh generations`.
 
-How it was checked before and after the flip (2026-11-05, on fresh clones):
+How it was checked before and after the flip (owner-run scans on fresh clones on
+2026-11-05, plus an unauthenticated clone by the firmware thread; the output was
+pasted into that thread, not stored in the repo):
 firmware paths and blob extensions in history 0 and 0; the secrets thread's
 tripwire string 0; `secrets-audit` in no path; every author and committer address
 a GitHub noreply address; gitleaks "no leaks found"; trufflehog 5 unverified
