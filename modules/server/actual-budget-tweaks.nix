@@ -38,31 +38,25 @@ let
 		pnpm = pkgs.pnpm_10.override { nodejs-slim = pkgs.nodejs-slim_22; };
 
 	# pnpm deps are downloaded once as a fixed-output derivation (FOD) whose
-	# output IS the pnpm content-addressed store PLUS the pnpm metadata cache
-	# (needed for `--offline` resolution in the build below). Network is allowed
-	# inside a FOD build, so this is the single place the npm registry is
-	# touched — same pattern as modules/server/reactflux.nix.
+	# output is the pnpm content-addressed store, normalised so that it hashes
+	# the same on every fetch. Network is allowed inside a FOD build, so this is
+	# the single place the npm registry is touched (see modules/server/
+	# reactflux.nix for the same pattern, not yet normalised).
 	#
-	# FIXME: `outputHash` is NOT reproducible across machines/dates. The build
-	# is shared between GOD-KILLER and REDRUM (different pin/nixpkgs), and pnpm
-	# re-resolves floating dep ranges from the live registry on every fetch, so
-	# the store+cache output drifts and the hash mismatches (observed
-	# 2026-10-20: 39f6xLM… -> ItG9GaX…; again 2026-11-06 after the nodejs-slim
-	# override changed the derivation: REDRUM computed W7+saec…, GOD-KILLER
-	# 4qTSmVb… for the same derivation, so the two hosts disagree).
-	# Two consequences: (1) the first build
-	# after any registry drift fails with "hash mismatch" and the hash must be
-	# re-fetched (build once, copy the "got" value); (2) building on the other
-	# host can fail even when the source is unchanged, because the pinned
-	# `pkgs`/`pnpm` differ. TODO: make this stable — ideally replace this
-	# hand-rolled FOD with a lockfile-frozen fetch (e.g. `fetchPnpmDeps` /
-	# `pnpm.fetchDeps` once the pinned nixpkgs on both hosts ships one that
-	# works with this project's lockfile), so the hash stops drifting.
+	# Why it needs normalising (found 2026-11-06, when three fetches of the same
+	# derivation gave three hashes: REDRUM W7+saec… then ZoJaD+u…, GOD-KILLER
+	# 4qTSmVb…): the store's index files carry a `checkedAt` timestamp per file
+	# (555 files here), and the registry metadata cache holds live dist-tags and
+	# etags. Neither is needed for `--frozen-lockfile --offline`, so the
+	# metadata cache is kept out of $out, and the timestamps, the temp dir and
+	# the project symlinks are dropped from the store, which is what nixpkgs'
+	# own pnpm fetcher does. A new hash is needed only when the source rev or
+	# the lockfile change.
 	pnpmDeps = pkgs.stdenv.mkDerivation {
 		pname = "abt-sidecar-pnpm-deps";
 		version = abtVersion;
 		src = abtSrc;
-		nativeBuildInputs = [ nodejs pnpm pkgs.cacert ];
+		nativeBuildInputs = [ nodejs pnpm pkgs.cacert pkgs.jq ];
 		# node doesn't inherit the nix CA bundle; without this pnpm can't verify
 		# registry.npmjs.org inside the sandbox (UNABLE_TO_GET_ISSUER_CERT_LOCALLY).
 		SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
@@ -71,7 +65,7 @@ let
 		COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
 		outputHashMode = "recursive";
 		outputHashAlgo = "sha256";
-		outputHash = "sha256-4qTSmVbS+1oh1PHhJ5JHAx9qsJySnQ5zshw7fI1HNDc=";
+		outputHash = "sha256-5T7i1jXwtiy10CyoZMT2A0S2OKhOINTsDZkKWJGNwDU=";
 		phases = [ "installPhase" ];
 		installPhase = ''
 			runHook preInstall
@@ -90,10 +84,18 @@ let
 			# binary. Same strip as the real build below.
 			node -e "const p=require('./package.json');delete p.packageManager;require('fs').writeFileSync('./package.json',JSON.stringify(p,null,'\t')+'\n');"
 			pnpm config set store-dir "$out/store"
-			pnpm config set cache-dir "$out/cache"
+			# registry metadata cache: scratch only, not part of the output
+			pnpm config set cache-dir "$TMPDIR/pnpm-cache"
 			# --ignore-scripts skips `wxt prepare` (postinstall); the real build
 			# below regenerates what it needs locally.
 			pnpm install --frozen-lockfile --ignore-scripts
+			# normalise: drop what varies between fetches (see the comment above)
+			rm -rf "$out"/store/*/tmp "$out"/store/*/projects
+			find "$out/store" -type f -path '*/index/*' -name '*.json' -print0 |
+				while IFS= read -r -d "" f; do
+					jq -S -c 'walk(if type == "object" then del(.checkedAt) else . end)' "$f" > "$f.tmp"
+					mv "$f.tmp" "$f"
+				done
 			runHook postInstall
 		'';
 	};
@@ -137,6 +139,7 @@ let
 			rm -rf "$TMPDIR/pnpm"
 			cp -r "${pnpmDeps}" "$TMPDIR/pnpm"
 			chmod -R u+w "$TMPDIR/pnpm"
+			mkdir -p "$TMPDIR/pnpm/cache"
 			pnpm config set store-dir "$TMPDIR/pnpm/store"
 			pnpm config set cache-dir "$TMPDIR/pnpm/cache"
 			pnpm config set verify-store-integrity false

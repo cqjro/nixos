@@ -101,16 +101,21 @@ and a one-line pointer in the AGENTS.md index.
   nixpkgs' `pkgs.pnpm` — when bumping either pnpm project, or when the T2 pin
   is lifted (T2-PIN.md step 3), apply the same strip and re-fetch the hash.
 - **Server pnpm FOD hashes are not reproducible** — a separate, related trap:
-  both `pnpmDeps` fixed-output derivations (`actual-budget-tweaks.nix`,
-  `reactflux.nix`) re-resolve **floating dep ranges** from the live npm registry
-  on every fetch, so their store+metadata-cache output — and therefore
-  `outputHash` — drifts over time and across the GOD-KILLER/REDRUM pins. Symptom
-  is `error: hash mismatch in fixed-output derivation` on an otherwise-unchanged
-  tree (observed 2026-10-20 on both FODs in one session). Immediate fix: build
-  once, copy the `got:` value into `outputHash`, rebuild. Both sites carry a
-  `FIXME:` block. Durable fix: replace the hand-rolled FODs with a
-  lockfile-frozen fetch (`fetchPnpmDeps` / `pnpm.fetchDeps`) when the pinned
-  nixpkgs ships one that works with these lockfiles.
+  a hand-rolled `pnpmDeps` fixed-output derivation keeps per-file `checkedAt`
+  timestamps in the store's index files and the registry metadata cache (live
+  dist-tags, etags), so its `outputHash` differs on **every fetch**, not just
+  across the GOD-KILLER/REDRUM pins (2026-11-06: three fetches of one
+  derivation gave `4qTSmVb…`, `W7+saec…` and `ZoJaD+u…`). Symptom is `error:
+  hash mismatch in fixed-output derivation` on an otherwise-unchanged tree, and
+  pasting the `got:` value never converges. **`actual-budget-tweaks.nix` is
+  fixed** (2026-11-06): the metadata cache is kept out of `$out` and the
+  timestamps, `tmp` and `projects` are stripped (what nixpkgs' pnpm fetcher
+  does), verified by fetching twice and by a full `build REDRUM`; it needs a new
+  hash only when the source rev or lockfile changes. **`reactflux.nix` still has
+  the old shape** and will hit the same error whenever its derivation changes:
+  apply the same normalisation there rather than pasting hashes. Durable
+  alternative: `fetchPnpmDeps` when the pinned nixpkgs ships one that works with
+  these lockfiles.
 
 - **Waydroid software rendering on proprietary NVIDIA is not viable** — Waydroid
   1.6.3's GPU probe hard-blocks the proprietary `nvidia` driver (`unsupported =
