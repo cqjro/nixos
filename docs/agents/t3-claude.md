@@ -53,11 +53,13 @@ may do.
   from their own checkout.
   - **Phone tokens and the terminal.** The T3 terminal on GOD-KILLER gives a
     real tty (tested 2026-11-06: `tty && sudo -v` works), so the human can run
-    `systemd-run --user --wait ./rebuild.sh switch GOD-KILLER` from the phone
-    and type the sudo password there (the systemd-run wrapper keeps an app
-    restart from interrupting the switch). That needs a token with terminal
-    scope, which is as powerful as `cairo`: mint it only when needed and revoke
-    it if the phone is lost.
+    `cd ~/.nixos && ./rebuild.sh switch GOD-KILLER` from the phone as a plain
+    command and type the sudo password there (a full GOD-KILLER switch worked
+    this way). Do not wrap it in `systemd-run --user --wait` without `--pty` and
+    `--working-directory`: the command then has no tty (so `rebuild.sh` falls
+    back to the desktop's GUI password dialog), no visible output and runs in
+    `$HOME`. That needs a token with terminal scope, which is as powerful as
+    `cairo`: mint it only when needed and revoke it if the phone is lost.
   Operational facts (full detail in the README's "T3 Code on REDRUM"):
   - Client and server versions must match ("This client requires a newer
     server"). REDRUM's pinned nixpkgs ships an older t3code, so `t3code.nix`

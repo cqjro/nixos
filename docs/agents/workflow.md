@@ -26,8 +26,15 @@ picking the T3 environment in the client.
   clone is agent-writable, so it must never be the source of a privileged
   switch: the human switches from their own `master` checkout.
 - A REDRUM build done on GOD-KILLER can be shipped instead of rebuilt:
-  `nix copy --to ssh-ng://USER@redrum ./result`, then the switch on REDRUM is a
-  cache hit. Run by the human (it uses SSH keys agents cannot reach).
+  `nix copy --no-check-sigs --to ssh-ng://redrum <toplevel path>` (run on
+  GOD-KILLER from a clean `master` build, so the path matches what REDRUM
+  computes), then the switch on REDRUM is a cache hit. `--no-check-sigs` is
+  needed because locally built paths are unsigned; it works because `cairo` is a
+  trusted Nix user on REDRUM (`modules/hosts/REDRUM/machine.nix`). Run by the
+  human (it uses SSH keys agents cannot reach). Use it when REDRUM cannot
+  rebuild a fixed-output derivation itself, as with `reactflux-pnpm-deps`
+  (2026-11-06: its hash differs per host, see gotchas.md); the `dry`/`switch` on
+  REDRUM then never builds it.
 
 ### One project, either machine
 
@@ -63,11 +70,13 @@ person would see a card ([security.md](security.md#t3-runtime-modes)).
   human the exact command and wait.
 - **GOD-KILLER from your phone:** open the GOD-KILLER environment's terminal in
   T3 (tested 2026-11-06: a real tty, `sudo -v` takes the password) and run it
-  from the main checkout. The terminal is a child of the T3 app, so run the
-  switch as `systemd-run --user --wait ./rebuild.sh switch GOD-KILLER` so an app
-  restart cannot interrupt it. Keep terminal scope off phone pairing tokens
-  unless you need it: a token with terminal scope is as powerful as the server's
-  user (revoke it if the phone is lost).
+  from the main checkout as a plain command: `cd ~/.nixos && ./rebuild.sh
+  switch GOD-KILLER` (worked on 2026-11-06). Do not wrap it in `systemd-run
+  --user --wait` without `--pty` and `--working-directory`: it then has no tty
+  (so `rebuild.sh` falls back to the GUI password dialog), no visible output
+  and runs in `$HOME`. Keep terminal scope off phone pairing tokens unless you
+  need it: a token with terminal scope is as powerful as the server's user
+  (revoke it if the phone is lost).
 - **REDRUM:** `ssh redrum` (from the phone too), then `./rebuild.sh switch
   REDRUM` in the human's checkout. Agents never switch REDRUM and there is no
   privileged switch service.

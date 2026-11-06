@@ -180,8 +180,8 @@ tripwire on the command text, not a boundary:
   the command. Like the rest of the guard it is a tripwire (`xargs`, `eval` or a
   script that runs the command evade it); the gate that holds is that `sudo`
   needs a password and the sandbox cannot use it. The allow-list shape means an
-  unexpected mode name fails closed. **Unverified:** the exact string the hook
-  receives for Auto (Claude Code uses `auto`); smoke step 33 confirms it.
+  unexpected mode name fails closed. Confirmed 2026-11-06 (smoke step 33): the
+  hook receives `auto` in an Auto thread.
 
 Run `claude-guard --self-test` (installed system-wide) after editing the
 script; `bash modules/scripts/claude-guard.sh --self-test` works before a switch.
@@ -471,5 +471,13 @@ each run. Last full run: 2026-11-04, Claude Code 2.1.308, Accept edits and
 Full access, all 24 steps as above (T3 version not recorded). Steps 25-32 (added
 with the schedule policy): run 2026-11-04 in Accept edits only, Claude Code 2.1.308, `~/.nixos`
 switched at `670a156`; all matched except 27 (corrected above), no approval cards
-on any step; Full access not run. If a step disagrees, update this table and the policy in the same
+on any step; Full access not run. Step 33 (added with the Auto refusal): run
+2026-11-06 in an Auto thread on GOD-KILLER switched at `d782e32`; `rebuild.sh
+switch|test|dry`, `sudo nixos-rebuild switch` and `bash -c "./rebuild.sh switch …"`
+were each refused by `claude-guard` with the Supervised-child-thread message, while
+`./rebuild.sh check GOD-KILLER` and a commit whose message mentions `rebuild.sh
+switch` ran normally. Step 34 (the card in a Supervised thread) is not run yet.
+The launch schema for `t3_thread_launch` lists `approval-required` as a
+`runtimeMode`; that a child launched with it is actually Supervised is not yet
+confirmed. If a step disagrees, update this table and the policy in the same
 change.
