@@ -215,30 +215,43 @@ matches the rest of the config out of the box.
   at `/etc/rss-sources.opml` — import that file into any reader (FreshRSS, Yarr,
   NetNewsWire, …) to bulk-subscribe. `category` becomes the folder/category in
   readers that have one (Miniflux's "Nuclear" holds the nuclear-industry feeds).
-  - **Miniflux sync** — `rss-sync` (GOD-KILLER; `modules/scripts/rss-sync.py`,
-    wired by `home-manager/terminal/rss-sync.nix`) keeps the list and Miniflux
-    in step in both directions. It compares three things — the master list,
-    Miniflux, and `rss-feeds.synced.json` (the URLs both sides agreed on at the
-    last sync) — which is what tells "deleted in Miniflux" from "never pushed".
-    Every command is a dry run until given its apply flag:
+  - **Miniflux sync (list → Miniflux, automatic)** — the REDRUM unit
+    `miniflux-rss-sync` (`modules/server/miniflux-rss-sync.nix`) subscribes
+    Miniflux to every feed in the list, creating categories such as "Nuclear".
+    It runs on the REDRUM switch that changes the list (and at boot), as the
+    `miniflux` user over loopback, authenticating with the `ADMIN_USERNAME` /
+    `ADMIN_PASSWORD` already in `/var/lib/miniflux/admin.env` — no extra secret.
+    It only adds: a feed you deleted in Miniflux is not re-added (the unit keeps
+    `/var/lib/miniflux/rss-sync-snapshot.json`, the URLs it already pushed), and
+    a feed that fails to subscribe is retried on the next run. Check it with
+    `systemctl status miniflux-rss-sync` / `journalctl -u miniflux-rss-sync`;
+    rerun with `sudo systemctl restart miniflux-rss-sync`. Setting
+    `miniflux-rss-sync.prune = true` also deletes feeds you drop from the list
+    (and their entries); it is off by default and never touches feeds added
+    from a phone. If you change the admin password in the Miniflux UI, update
+    `admin.env` too or the unit logs `401`.
+  - **Miniflux → list (manual)** — `rss-sync` on GOD-KILLER
+    (`modules/scripts/rss-sync.py`, `home-manager/terminal/rss-sync.nix`) is for
+    the reverse direction, and every command is a dry run until given its flag:
 
     | Command | Effect |
     | --- | --- |
-    | `rss-sync` / `rss-sync status` | show what each command below would do |
-    | `rss-sync push` | subscribe Miniflux to feeds in the list that it lacks (creating categories as needed) |
+    | `rss-sync` / `rss-sync status` | what is new or removed on each side |
     | `rss-sync pull --write` | add feeds you subscribed to in Miniflux/on your phone to the list |
     | `rss-sync pull --write --apply-removals` | also drop feeds you deleted in Miniflux from the list (refuses more than 5 at once, or if Miniflux is empty) |
-    | `rss-sync prune --yes` | delete from Miniflux the feeds you removed from the list (also deletes their entries) |
 
-    Only feeds recorded in the snapshot are ever deleted from Miniflux, so a
-    feed added on a phone is never lost before `pull` has seen it. `pull` only
-    edits the JSON; commit it and rebuild so Glance/`nom`/the OPML pick it up.
-    One-time setup: create an API token in Miniflux (Settings → API Keys) and
-    save it with `mkdir -p ~/.config/rss-sync && install -m 600 /dev/stdin
-    ~/.config/rss-sync/api-token` (paste, Ctrl-D), or export `MINIFLUX_TOKEN`.
-    `MINIFLUX_URL` defaults to `https://feed.cqjro.ca`. A feed whose URL
-    Miniflux rewrites after a permanent redirect shows up as one deletion plus
-    one addition; `pull --write --apply-removals` resolves it.
+    `pull` only edits the JSON (and `rss-feeds.synced.json`, its own snapshot of
+    URLs both sides agreed on); commit it and rebuild so Glance/`nom`/the OPML
+    pick it up. It needs an API token for `https://feed.cqjro.ca` (override with
+    `MINIFLUX_URL`): create one in Miniflux (Settings → API Keys), then run
+    `mkdir -p ~/.config/rss-sync`, `read -rs v; printf '%s' "$v" | install -m 600
+    /dev/stdin ~/.config/rss-sync/api-token; unset v` (or export
+    `MINIFLUX_TOKEN`). `push` and `prune --yes` also exist but are the unit's
+    job; running them by hand on GOD-KILLER uses a different snapshot than the
+    unit. A feed whose URL Miniflux rewrites after a permanent redirect shows up
+    as one deletion plus one addition; `pull --write --apply-removals` resolves
+    it. With `prune` off, a feed removed from the list but still in Miniflux is
+    offered back by `pull`; delete it in Miniflux (or enable `prune`) to stop that.
 
 - **Nixdatifier** — NixOS generations, package diffs, flake-update checks and
   store tools from the desktop: the tray app's icon lives in noctalia's bar
