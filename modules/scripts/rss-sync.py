@@ -6,8 +6,10 @@ Snapshot    : modules/system/rss-feeds.synced.json  (feed URLs both sides agreed
               at the last sync; this is what tells "deleted in Miniflux" apart from
               "never pushed yet")
 
-Commands (every one is a dry run unless given its apply flag):
+Commands (every one is a dry run unless given its apply flag, except apply):
   status                 show what each command would do
+  apply [--prune]        what the REDRUM `miniflux-rss-sync` unit runs on every switch:
+                         push, then (with --prune) prune --yes
   push                   create feeds that are in the master list but not in Miniflux
   pull [--write]         add Miniflux-only feeds to the master list
        [--apply-removals]  also drop feeds that were deleted in Miniflux
@@ -16,24 +18,30 @@ Commands (every one is a dry run unless given its apply flag):
 Only feeds listed in the snapshot are ever deleted from Miniflux, so a feed added on
 a phone is never lost before `pull` has seen it.
 
-Config: MINIFLUX_URL (default https://feed.cqjro.ca); the API token comes from
-MINIFLUX_TOKEN or ~/.config/rss-sync/api-token (Settings -> API Keys in Miniflux).
+Config: MINIFLUX_URL (default https://feed.cqjro.ca). Auth, first match wins: an API
+token from MINIFLUX_TOKEN or the per-user token file (Settings -> API Keys in
+Miniflux), else HTTP basic auth from ADMIN_USERNAME/ADMIN_PASSWORD (the miniflux
+admin.env the unit loads). RSS_SYNC_MASTER / RSS_SYNC_SNAPSHOT override the file
+paths; RSS_SYNC_WAIT=<seconds> waits for Miniflux's /healthcheck before starting.
 """
 
 import argparse
+import base64
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
-MAX_REMOVALS = 5  # --apply-removals refuses to drop more than this at once
+MAX_REMOVALS = 5  # --apply-removals and apply --prune refuse to drop more than this at once
 
 config_dir = Path(os.environ.get("NIXOS_CONFIG_DIR", Path.home() / ".nixos"))
-MASTER = config_dir / "modules/system/rss-feeds.json"
-SNAPSHOT = config_dir / "modules/system/rss-feeds.synced.json"
+MASTER = Path(os.environ.get("RSS_SYNC_MASTER", config_dir / "modules/system/rss-feeds.json"))
+SNAPSHOT = Path(os.environ.get("RSS_SYNC_SNAPSHOT", config_dir / "modules/system/rss-feeds.synced.json"))
+TOKEN_FILE = Path.home() / ".config/rss-sync/api-token"
 BASE_URL = os.environ.get("MINIFLUX_URL", "https://feed.cqjro.ca").rstrip("/")
 
 
@@ -87,21 +95,39 @@ def save_snapshot(urls):
 
 # ---- Miniflux API ----------------------------------------------------------
 
-def token():
+def auth_header():
 	t = os.environ.get("MINIFLUX_TOKEN")
 	if not t:
-		path = Path.home() / ".config/rss-sync/api-token"
 		try:
-			t = path.read_text().strip()
+			t = TOKEN_FILE.read_text().strip()
 		except OSError:
-			die(f"no API token: set MINIFLUX_TOKEN or put it in {path}")
-	return t
+			pass
+	if t:
+		return "X-Auth-Token", t
+	user, pw = os.environ.get("ADMIN_USERNAME"), os.environ.get("ADMIN_PASSWORD")
+	if user and pw:
+		return "Authorization", "Basic " + base64.b64encode(f"{user}:{pw}".encode()).decode()
+	die(f"no credentials: set MINIFLUX_TOKEN, put a token in {TOKEN_FILE}, "
+		"or provide ADMIN_USERNAME/ADMIN_PASSWORD")
+
+
+def wait_ready():
+	"""Poll /healthcheck for up to RSS_SYNC_WAIT seconds (the unit starts alongside Miniflux)."""
+	deadline = time.monotonic() + float(os.environ.get("RSS_SYNC_WAIT", "0"))
+	while True:
+		try:
+			with urllib.request.urlopen(BASE_URL + "/healthcheck", timeout=5):
+				return
+		except OSError:  # URLError is an OSError
+			if time.monotonic() >= deadline:
+				return  # let the first real request report the failure
+			time.sleep(2)
 
 
 def api(method, path, body=None):
 	data = json.dumps(body).encode() if body is not None else None
 	req = urllib.request.Request(BASE_URL + path, data=data, method=method)
-	req.add_header("X-Auth-Token", token())
+	req.add_header(*auth_header())
 	req.add_header("Content-Type", "application/json")
 	# Cloudflare rejects urllib's default User-Agent (error 1010).
 	req.add_header("User-Agent", "rss-sync/1.0")
@@ -122,6 +148,7 @@ def api(method, path, body=None):
 
 def miniflux_state():
 	"""Return (feeds keyed by normalised URL, categories by id, default category id)."""
+	wait_ready()
 	cats = {c["id"]: c["title"] for c in api("GET", "/v1/categories")}
 	if not cats:
 		die("Miniflux returned no categories; refusing to continue")
@@ -175,7 +202,7 @@ def cmd_push(args):
 	if not p["to_push"]:
 		print("nothing to push")
 		save_snapshot(tidy(p["snap"], set(p["m_by"]), set(p["feeds"])))
-		return
+		return 0
 	cat_ids = {title: cid for cid, title in p["cats"].items()}
 	pushed = set()
 	failed = 0
@@ -198,8 +225,27 @@ def cmd_push(args):
 		pushed.add(u)
 		print(f"pushed {f['title']}")
 	save_snapshot(tidy(p["snap"], set(p["m_by"]), set(p["feeds"]) | pushed))
-	if failed:
-		sys.exit(1)
+	return failed
+
+
+def cmd_apply(args):
+	"""Unattended sync for the REDRUM unit: push new feeds, optionally prune dropped ones.
+	A feed that fails to subscribe is not recorded, so the next run retries it."""
+	failed = cmd_push(args)
+	if args.prune:
+		# Nobody confirms an unattended prune, so apply the same guards as
+		# `pull --apply-removals`: a mangled or empty list must not wipe Miniflux.
+		p = plan()
+		if not p["master"]:
+			print("master list is empty; refusing to prune")
+			return failed or 1
+		if len(p["to_prune"]) > MAX_REMOVALS:
+			print(f"{len(p['to_prune'])} prunes exceeds the cap of {MAX_REMOVALS}; "
+				"run `rss-sync prune --yes` by hand if that is intended")
+			return failed or 1
+		args.yes = True
+		cmd_prune(args)
+	return failed
 
 
 def cmd_pull(args):
@@ -276,8 +322,12 @@ def main():
 	pl.add_argument("--apply-removals", action="store_true")
 	pr = sub.add_parser("prune")
 	pr.add_argument("--yes", action="store_true")
+	pa = sub.add_parser("apply")
+	pa.add_argument("--prune", action="store_true")
 	args = ap.parse_args()
-	{"push": cmd_push, "pull": cmd_pull, "prune": cmd_prune}.get(args.cmd, cmd_status)(args)
+	cmd = {"push": cmd_push, "pull": cmd_pull, "prune": cmd_prune, "apply": cmd_apply}.get(args.cmd, cmd_status)
+	if cmd(args):
+		sys.exit(1)
 
 
 if __name__ == "__main__":

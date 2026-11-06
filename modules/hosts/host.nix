@@ -124,6 +124,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.homepage
 				inputs.self.modules.nixos.cloudflared
 				inputs.self.modules.nixos.miniflux
+				inputs.self.modules.nixos."miniflux-rss-sync"
 				inputs.self.modules.nixos.reactflux
 				inputs.self.modules.nixos.t3code
 				inputs.self.modules.nixos.claude-code-policy
