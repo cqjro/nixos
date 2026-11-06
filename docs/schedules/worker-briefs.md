@@ -191,8 +191,17 @@ or switch any host. Never close an issue yourself.
 2. Find the cause. For a renamed/removed option or package, use the nixos MCP tools
    (load schemas with ToolSearch: select:mcp__plugin_hm_nixos__nix,mcp__plugin_hm_nixos__nix_versions)
    and the LOCKED sources (`flake-inputs`), not memory. If the warning comes from an
-   input (not from this repo's modules), or only a lock bump would silence it, do not
-   work around it: comment with the finding, and move on.
+   input's module (not from this repo's modules), look for a configuration-level fix in
+   THIS repo before giving up: read that module in the locked sources and find an option
+   that disables or reconfigures the offending part (for example a
+   `stylix.targets.<name>.enable = false`, or an option the input exposes that stops it
+   defining the obsolete option). Changing this repo's modules for that is allowed. Never
+   bump `flake.lock`, change or add a flake input, or patch an input's source. If the
+   only fix is a bump or an upstream change, comment with the finding and move on. If a
+   configuration-level fix removes a feature (theming of an app, a service), make it only
+   when you can state exactly what is lost, and put that trade-off at the top of the PR
+   body so the owner decides at review. (A first version of this brief stopped at "it
+   comes from an input"; the owner wants configuration issues fixed.)
 3. Fix only what is small and clearly right (renamed option, moved attribute,
    deprecated alias), in the existing style: tab indentation, double-quoted strings,
    Stylix colours only. Anything larger: describe the proposed change on the issue
