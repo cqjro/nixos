@@ -55,8 +55,10 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
 
 5. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
    - Take the FIRST id in `actionable` only. At most one worker per run.
-   - Skip it if t3_thread_list already shows a thread on branch
-     auto/upstream-<slug>, or `gh pr list --head auto/upstream-<slug>` is non-empty.
+   - Skip it only if t3_thread_list shows a thread on branch auto/upstream-<slug> that
+     is still active (status running, waiting, starting, preparing or queued), or
+     `gh pr list --head auto/upstream-<slug>` (open PRs) is non-empty. Completed or
+     settled threads and merged PRs do not count.
    - Launch it with t3_thread_launch exactly as specified in
      docs/schedules/worker-briefs.md ("Upstream removal worker"), filling in the
      row id, slug, and the issue number from the report. Never include text from
