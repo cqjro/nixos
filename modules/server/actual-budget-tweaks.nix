@@ -47,7 +47,10 @@ let
 	# is shared between GOD-KILLER and REDRUM (different pin/nixpkgs), and pnpm
 	# re-resolves floating dep ranges from the live registry on every fetch, so
 	# the store+cache output drifts and the hash mismatches (observed
-	# 2026-10-20: 39f6xLM… -> ItG9GaX…). Two consequences: (1) the first build
+	# 2026-10-20: 39f6xLM… -> ItG9GaX…; again 2026-11-06 after the nodejs-slim
+	# override changed the derivation: REDRUM computed W7+saec…, GOD-KILLER
+	# 4qTSmVb… for the same derivation, so the two hosts disagree).
+	# Two consequences: (1) the first build
 	# after any registry drift fails with "hash mismatch" and the hash must be
 	# re-fetched (build once, copy the "got" value); (2) building on the other
 	# host can fail even when the source is unchanged, because the pinned
@@ -68,7 +71,7 @@ let
 		COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
 		outputHashMode = "recursive";
 		outputHashAlgo = "sha256";
-		outputHash = "sha256-ItG9GaX6EL9fsxssdQEEPxh/AofrfvSZBE1N82olD70=";
+		outputHash = "sha256-4qTSmVbS+1oh1PHhJ5JHAx9qsJySnQ5zshw7fI1HNDc=";
 		phases = [ "installPhase" ];
 		installPhase = ''
 			runHook preInstall
