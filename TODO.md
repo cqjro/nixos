@@ -41,8 +41,9 @@ repeated as proposals.
         `cqjro/nixos` (or account-wide under your account Settings → Moderation
         options → Interaction limits; the repo page only appears once it is public).
         It lasts at most six months: renew it every time it lapses (reminder at
-        month 5). The worker briefs' owner-only comment filter covers worker reads
-        during a gap; strangers can still comment, and you still see it
+        month 5). The worker briefs never fetch comments (`--json title,body`), which
+        covers worker reads during a gap; strangers can still comment, and you
+        still see it
   - [ ] **After going public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
