@@ -833,10 +833,13 @@ launches a Supervised child thread (its approval card is yours) or hands you the
 command. From your phone:
 
 - **GOD-KILLER:** open the GOD-KILLER environment's terminal in T3 (a real tty,
-  so `sudo` asks for the password right there) and run `systemd-run --user --wait
-  ./rebuild.sh switch GOD-KILLER` from `~/.nixos` (the wrapper keeps an app
-  restart from interrupting it). A token with terminal scope is as powerful as
-  your user: mint it only when needed and revoke it if the phone is lost.
+  so `sudo` asks for the password right there) and run `cd ~/.nixos &&
+  ./rebuild.sh switch GOD-KILLER` as a plain command (tested 2026-11-06). A
+  `systemd-run --user --wait` wrapper without `--pty` and `--working-directory`
+  gives the command no tty (so it falls back to the desktop's GUI password
+  dialog), no output and the wrong directory. A token with terminal scope is as
+  powerful as your user: mint it only when needed and revoke it if the phone is
+  lost.
 - **REDRUM:** `ssh redrum`, then `./rebuild.sh switch REDRUM`.
 
 #### Reaching GOD-KILLER from other devices
