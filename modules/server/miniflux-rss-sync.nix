@@ -45,17 +45,17 @@ in
 				# Miniflux UI being re-added on every switch.
 				RSS_SYNC_SNAPSHOT = "${workDir}/rss-sync-snapshot.json";
 				RSS_SYNC_WAIT = "120"; # seconds to wait for Miniflux to answer /healthcheck
+				# A Miniflux API key (Settings -> API Keys) created by hand, outside the
+				# store (README: "Create app secrets"). Unlike the admin password it does
+				# not change when you rotate your login. A missing file is a log line
+				# (the "-" on ExecStart below), not a failed switch.
+				RSS_SYNC_TOKEN_FILE = "${workDir}/api-token";
 			};
 			serviceConfig = {
 				Type = "oneshot";
 				RemainAfterExit = true;
 				User = appUser;
 				Group = appUser;
-				# ADMIN_USERNAME / ADMIN_PASSWORD from the miniflux admin.env (see the
-				# miniflux module): the script uses them for HTTP basic auth, so no
-				# extra secret is needed. Optional so a missing file is a log line,
-				# not a failed switch.
-				EnvironmentFile = "-${workDir}/admin.env";
 				# Subscribing fetches each feed synchronously, so allow time. The
 				# leading "-" keeps a failing feed (the unit exits 1 and retries it
 				# at the next run) from marking the switch as failed.

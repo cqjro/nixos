@@ -18,15 +18,14 @@ Commands (every one is a dry run unless given its apply flag, except apply):
 Only feeds listed in the snapshot are ever deleted from Miniflux, so a feed added on
 a phone is never lost before `pull` has seen it.
 
-Config: MINIFLUX_URL (default https://feed.cqjro.ca). Auth, first match wins: an API
-token from MINIFLUX_TOKEN or the per-user token file (Settings -> API Keys in
-Miniflux), else HTTP basic auth from ADMIN_USERNAME/ADMIN_PASSWORD (the miniflux
-admin.env the unit loads). RSS_SYNC_MASTER / RSS_SYNC_SNAPSHOT override the file
+Config: MINIFLUX_URL (default https://feed.cqjro.ca). Auth is a Miniflux API key
+(Settings -> API Keys), from MINIFLUX_TOKEN or else the file named by
+RSS_SYNC_TOKEN_FILE (default ~/.config/rss-sync/api-token; the REDRUM unit points it
+at /var/lib/miniflux/api-token). RSS_SYNC_MASTER / RSS_SYNC_SNAPSHOT override the file
 paths; RSS_SYNC_WAIT=<seconds> waits for Miniflux's /healthcheck before starting.
 """
 
 import argparse
-import base64
 import json
 import os
 import sys
@@ -41,7 +40,7 @@ MAX_REMOVALS = 5  # --apply-removals and apply --prune refuse to drop more than 
 config_dir = Path(os.environ.get("NIXOS_CONFIG_DIR", Path.home() / ".nixos"))
 MASTER = Path(os.environ.get("RSS_SYNC_MASTER", config_dir / "modules/system/rss-feeds.json"))
 SNAPSHOT = Path(os.environ.get("RSS_SYNC_SNAPSHOT", config_dir / "modules/system/rss-feeds.synced.json"))
-TOKEN_FILE = Path.home() / ".config/rss-sync/api-token"
+TOKEN_FILE = Path(os.environ.get("RSS_SYNC_TOKEN_FILE", Path.home() / ".config/rss-sync/api-token"))
 BASE_URL = os.environ.get("MINIFLUX_URL", "https://feed.cqjro.ca").rstrip("/")
 
 
@@ -104,11 +103,8 @@ def auth_header():
 			pass
 	if t:
 		return "X-Auth-Token", t
-	user, pw = os.environ.get("ADMIN_USERNAME"), os.environ.get("ADMIN_PASSWORD")
-	if user and pw:
-		return "Authorization", "Basic " + base64.b64encode(f"{user}:{pw}".encode()).decode()
-	die(f"no credentials: set MINIFLUX_TOKEN, put a token in {TOKEN_FILE}, "
-		"or provide ADMIN_USERNAME/ADMIN_PASSWORD")
+	die(f"no API key: set MINIFLUX_TOKEN or put one in {TOKEN_FILE} "
+		"(create it in Miniflux under Settings -> API Keys)")
 
 
 def wait_ready():
@@ -326,7 +322,12 @@ def main():
 	pa.add_argument("--prune", action="store_true")
 	args = ap.parse_args()
 	cmd = {"push": cmd_push, "pull": cmd_pull, "prune": cmd_prune, "apply": cmd_apply}.get(args.cmd, cmd_status)
-	if cmd(args):
+	try:
+		failed = cmd(args)
+	except RuntimeError as e:  # an API call outside the per-feed handling (bad key, server error)
+		hint = " (is the API key valid?)" if "HTTP 401" in str(e) else ""
+		die(f"{e}{hint}")
+	if failed:
 		sys.exit(1)
 
 

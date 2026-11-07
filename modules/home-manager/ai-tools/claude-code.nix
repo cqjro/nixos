@@ -311,6 +311,7 @@
 					"Read(//etc/ssh/ssh_host_*)"
 					"Read(//var/lib/cloudflared/**)"
 					"Read(//var/lib/**/*.env)"
+					"Read(//var/lib/miniflux/api-token)"
 					"Read(//**/.env)"
 					"Read(//**/token.json)"
 					"Read(//**/client_secret.json)"
