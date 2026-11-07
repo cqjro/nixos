@@ -143,7 +143,8 @@ not let an agent read or touch that directory).
 
 | Credential | Where | Rotate by |
 | --- | --- | --- |
-| Miniflux admin password | `/var/lib/miniflux/admin.env` | Change in the web UI (Settings → Users) and update `admin.env`; Miniflux only reads it when the admin is first created, but the `miniflux-rss-sync` unit also loads it for HTTP basic auth, so a stale file makes that unit log `401` |
+| Miniflux admin password | `/var/lib/miniflux/admin.env` | Change in the web UI (Settings → Users); Miniflux only reads the file when the admin is first created, so it may go stale harmlessly (nothing else uses it) |
+| Miniflux API key for the `miniflux-rss-sync` unit (REDRUM) | `/var/lib/miniflux/api-token` | Settings → API Keys: create new, replace the file (README step 6), `systemctl restart miniflux-rss-sync`, delete the old key |
 | Miniflux API token (manual `rss-sync pull` on GOD-KILLER) | `~/.config/rss-sync/api-token` | Settings → API Keys: create new, replace the file, delete the old key |
 | Linkwarden `NEXTAUTH_SECRET` | `/var/lib/linkwarden/nextauth-secret` | `openssl rand -base64 32` into the file, restart the unit (everyone is logged out) |
 | Linkwarden `POSTGRES_PASSWORD` | `/var/lib/linkwarden/postgres-password` | `ALTER USER … PASSWORD …` in Postgres, update the file, restart |

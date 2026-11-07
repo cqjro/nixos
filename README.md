@@ -219,8 +219,10 @@ matches the rest of the config out of the box.
     `miniflux-rss-sync` (`modules/server/miniflux-rss-sync.nix`) subscribes
     Miniflux to every feed in the list, creating categories such as "Nuclear".
     It runs on the REDRUM switch that changes the list (and at boot), as the
-    `miniflux` user over loopback, authenticating with the `ADMIN_USERNAME` /
-    `ADMIN_PASSWORD` already in `/var/lib/miniflux/admin.env` — no extra secret.
+    `miniflux` user over loopback, authenticating with a Miniflux API key kept
+    in `/var/lib/miniflux/api-token` (create it once, see "Create app secrets";
+    the unit logs `no API key` / `401` until it exists and is valid, and the
+    switch still succeeds).
     By default it only adds: a feed you deleted in Miniflux is not re-added (the unit keeps
     `/var/lib/miniflux/rss-sync-snapshot.json`, the URLs it already pushed), and
     a feed that fails to subscribe is retried on the next run. Check it with
@@ -229,8 +231,8 @@ matches the rest of the config out of the box.
     `miniflux-rss-sync.prune = true` also deletes feeds you drop from the list
     (and their entries); it is off by default, never touches feeds added from a
     phone, and refuses to prune more than 5 feeds (or anything when the list is
-    empty) in one run. If you change the admin password in the Miniflux UI, update
-    `admin.env` too or the unit logs `401`.
+    empty) in one run. Rotating your Miniflux login does not affect it; only
+    revoking the API key does.
   - **Miniflux → list (manual)** — `rss-sync` on GOD-KILLER
     (`modules/scripts/rss-sync.py`, `home-manager/terminal/rss-sync.nix`) is for
     the reverse direction, and every command is a dry run until given its flag:
@@ -245,9 +247,10 @@ matches the rest of the config out of the box.
     URLs both sides agreed on); commit it and rebuild so Glance/`nom`/the OPML
     pick it up. It needs an API token for `https://feed.cqjro.ca` (override with
     `MINIFLUX_URL`): create one in Miniflux (Settings → API Keys), then run
-    `mkdir -p ~/.config/rss-sync`, `read -rs v; printf '%s' "$v" | install -m 600
-    /dev/stdin ~/.config/rss-sync/api-token; unset v` (or export
-    `MINIFLUX_TOKEN`). `push` and `prune --yes` also exist but are the unit's
+    `mkdir -p ~/.config/rss-sync` and, one line at a time, `printf 'API key: ';
+    read -rs v; echo; printf '%s' "$v" | install -m 600 /dev/stdin
+    ~/.config/rss-sync/api-token; unset v` (or export `MINIFLUX_TOKEN`).
+    `push` and `prune --yes` also exist but are the unit's
     job; running them by hand on GOD-KILLER uses a different snapshot than the
     unit. A feed whose URL Miniflux rewrites after a permanent redirect shows up
     as one deletion plus one addition; `pull --write --apply-removals` resolves
@@ -764,6 +767,17 @@ ssh <server> systemctl restart cloudflared-tunnel-*.service
 - ReactFlux → `https://flux.cqjro.ca` (add the server as `https://feed.cqjro.ca`
   and paste the Miniflux API token from above; it stores config in your browser).
 
+The feed-sync unit (`miniflux-rss-sync`) needs its own Miniflux API key (Settings
+→ API Keys, description e.g. "rss-sync REDRUM"), stored where only the
+`miniflux` user reads it. Run these one line at a time:
+
+```bash
+printf 'Miniflux API key: '; read -rs K; echo
+printf '%s' "$K" | sudo install -m 600 -o miniflux -g miniflux /dev/stdin /var/lib/miniflux/api-token
+unset K
+sudo systemctl restart miniflux-rss-sync
+```
+
 ### T3 Code on REDRUM
 
 Agents can run on either machine because **each machine runs its own T3 server**
@@ -921,6 +935,7 @@ across rebuilds.
 | `/var/lib/beszel/agent.env` | `beszel-agent:beszel-agent` | 0600 | beszel-agent (EnvironmentFile) |
 | `/var/lib/glance/glance.env` | `glance:glance` | 0600 | glance (EnvironmentFile) |
 | `/var/lib/miniflux/admin.env` | `miniflux:miniflux` | 0600 | miniflux (EnvironmentFile) |
+| `/var/lib/miniflux/api-token` | `miniflux:miniflux` | 0600 | miniflux-rss-sync (`RSS_SYNC_TOKEN_FILE`) |
 | `/var/lib/t3code` | `t3code:t3code` | 0700 | t3code (incl. `.claude/` login and `.config/gh/hosts.yml` token) |
 
 Admin access is via `sudo` (`cairo` is in `wheel`) — keep the service dirs at

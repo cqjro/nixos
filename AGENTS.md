@@ -128,9 +128,9 @@ Other conventions:
   source, and one script, `modules/scripts/rss-sync.py`, syncs it with Miniflux
   in both directions. List → Miniflux is automatic: the REDRUM unit
   `miniflux-rss-sync` (`modules/server/miniflux-rss-sync.nix`) runs `apply` on
-  the switch that changes the list, authenticating with the `admin.env`
-  credentials (nothing new to store) and keeping its own snapshot at
-  `/var/lib/miniflux/rss-sync-snapshot.json`; pruning is opt-in
+  the switch that changes the list, authenticating with an API key the human
+  keeps in `/var/lib/miniflux/api-token` (`Read`-denied; never read it) and
+  keeping its own snapshot at `/var/lib/miniflux/rss-sync-snapshot.json`; pruning is opt-in
   (`miniflux-rss-sync.prune`). Miniflux → list is the manual `rss-sync pull`
   on GOD-KILLER, with its own snapshot `rss-feeds.synced.json`: hand-edit the
   master list freely, but do not hand-edit or delete either snapshot (without
