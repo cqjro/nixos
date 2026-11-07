@@ -50,6 +50,17 @@ picking the environment when you start a thread.
 - **A branch lives on one machine at a time.** Hand off by pushing, then
   `git fetch` and check the branch out on the other machine; do not commit to
   it in both places.
+- **Verified 2026-11-07** (master `0949eb1`, then a throwaway branch each way):
+  both servers list the repo as a project with the same
+  `repositoryIdentity.canonicalKey` (`github.com/cqjro/nixos`; REDRUM's root is
+  `/var/lib/t3code/nixos`); `check` and `build REDRUM` pass on both machines
+  and yield the **identical** REDRUM toplevel from the same commit and
+  `flake.lock`; `eval GOD-KILLER` passes on REDRUM (no RAM/disk problem); a
+  branch pushed with `./rebuild.sh push` on either machine is fetched and
+  built/checked on the other (`git fetch origin`, `git switch --detach
+  origin/<branch>`) with the same toplevel path. Auto threads on both machines
+  push over HTTPS without a card. A docs-only commit still changes the toplevel
+  (the `git-<sha>` label), so compare paths only for the same commit.
 - Prefer REDRUM for edits, evals and REDRUM builds when GOD-KILLER is off;
   prefer GOD-KILLER for anything that builds GOD-KILLER. Both draw on the same
   Pro quota, so a second machine adds availability, not throughput.

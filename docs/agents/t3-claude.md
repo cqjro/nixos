@@ -80,6 +80,27 @@ may do.
   - The desktop app stores saved connections in the system keyring; "Desktop
     secure storage is unavailable" = locked keyring (see the Xodus gotcha:
     `keyring` fragments, password login required).
+- **Driving REDRUM from a GOD-KILLER thread (verified 2026-11-07).**
+  - **Link.** Settings → Labs → Linked environments on GOD-KILLER, then
+    `t3_environment_links` lists REDRUM with its `environmentId`. Pass it to
+    `t3_project_list` / `t3_thread_launch` (use the project id from *that*
+    environment's list). `t3_environment_link`, `t3_project_create` and
+    `t3_project_clone` need a full-access thread or the UI (`capability_denied`
+    from Auto), so link and register in the UI instead.
+  - **`gh` login on REDRUM.** The unit's git credential helper is `gh`, so the
+    token must be in `gh`'s own store; the human supplies it without it
+    touching a command line: `sudo -u t3code -H sh -c 'cd ~ && read -rs v &&
+    printf "%s" "$v" | gh auth login --hostname github.com --git-protocol https
+    --insecure-storage --with-token; unset v'`, then `sudo systemctl restart
+    t3code`. Pushes from an Auto REDRUM thread then work.
+  - **Harmless noise.** `rebuild.sh push` on REDRUM prints `unknown command
+    "store" for "gh"` plus the usage list before the push output: git sends
+    `store` to the credential helper and `gh` does not implement it. The push
+    still succeeds.
+  - **Threads.** Launch with `workspaceStrategy` worktree off `master`
+    (`startFromOrigin: true`) so the clone's root stays clean; Auto is enough
+    for `check`, `eval`, `build` and `push`. A launched thread's worktree stays
+    until the thread is archived.
 - **How T3 launches Claude.** Via `systemd-run` with
   `--permission-mode <mode> --permission-prompt-tool stdio --add-dir <worktree>
   --add-dir ~/.t3/userdata/attachments --allowedTools "mcp__t3-code__*"`
