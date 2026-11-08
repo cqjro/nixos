@@ -1,5 +1,11 @@
 { ... }:
 {
+	# TODO-remove: DWSIM is not in nixpkgs, so this module repackages the
+	# upstream .deb by hand. When `pkgs.dwsim` lands, rewrite the module around it
+	# and drop the .deb derivation, the version/hash options and dwsim-update.sh.
+	# Tracked in the "Pending upstream fixes" registry
+	# (docs/agents/upstream-registry.md row 14 / README).
+	#
 	# DWSIM: open-source chemical process simulator (GPL-3). It is not in
 	# nixpkgs, and upstream ships Linux only as a .deb / tarball with its own
 	# .NET runtime bundled (a self-contained net10.0 app, no wine, no Mono).

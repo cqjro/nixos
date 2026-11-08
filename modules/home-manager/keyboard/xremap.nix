@@ -4,9 +4,23 @@
 		imports = [
 			inputs.xremap-flake.homeManagerModules.default
 		];
+		# The module already sets Restart=always; add a short back-off and lift
+		# systemd's default start limit (5 starts / 10s) so a flapping device
+		# (KVM off/on) can never leave the unit permanently "failed".
+		systemd.user.services.xremap = {
+			Unit.StartLimitIntervalSec = 0;
+			Service.RestartSec = 2;
+		};
+
+		# xremap only grabs the keyboards present when it starts. Without --watch
+		# a KVM switch / USB re-enumeration leaves it running (so systemd sees no
+		# failure and Restart= never fires) but attached to nothing, and every
+		# keybind is dead until the next restart. --watch re-grabs
+		# keyboards as they reappear.
 		services.xremap = {
 			enable = true;
 			withHypr = true;
+			watch = true;
 			config = {
 				modmap = [
 				{
