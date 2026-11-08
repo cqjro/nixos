@@ -308,6 +308,7 @@
 					"Read(~/.gnupg/**)"
 					"Read(~/.config/gh/**)"
 					"Read(~/.config/rss-sync/**)"
+					"Read(~/.config/agent-notify/**)"
 					"Read(~/.config/nix/nix.conf)"
 					"Read(~/.git-credentials)"
 					"Read(~/.netrc)"

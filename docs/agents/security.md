@@ -216,7 +216,10 @@ Allow, ask and deny summary (full lists are in the Nix file):
   - `gh auth token|status <args>|refresh|login|logout|switch`,
     `git credential*`, `*hosts.yml*`;
   - `Read` of the secret paths (`Read` denies also cover cat/head/sed in Bash
-    and feed the sandbox `denyRead`);
+    and feed the sandbox `denyRead`), including `~/.config/rss-sync/**` and
+    `~/.config/agent-notify/**` (the ntfy topic is the credential; the
+    `agent-notify` hook runs outside the agent's tool permissions, so it still
+    reads it);
   - `Edit` of keys, all Claude settings/hooks/`.mcp.json`, `/etc/claude-code`,
     `~/.t3/userdata`, shell rc files, `~/.config/{git,systemd,autostart,hypr}`
     and `~/.local/bin` (persistence that would run later outside the sandbox).
