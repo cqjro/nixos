@@ -65,7 +65,6 @@
 							libxrandr
 							libxkbcommon
 						])} \
-						--set DOTNET_BUNDLE_EXTRACT_BASE_DIR "\$HOME/.cache/dwsim" \
 						--set DOTNET_gcServer 0
 					substituteInPlace $out/share/applications/dwsim.desktop \
 						--replace-fail "Exec=dwsim" "Exec=$out/bin/dwsim"

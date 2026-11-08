@@ -3,6 +3,7 @@
 # the `version` and `hash` to put into the module defaults (or into
 # dwsim.version / dwsim.hash for a pinned host). Read-only: edits nothing.
 # Usage: dwsim-update.sh [VERSION]   (default: the latest release)
+# Needs curl, jq and nix on PATH (all present on GOD-KILLER).
 set -euo pipefail
 
 repo=DanWBR/dwsim10
