@@ -65,7 +65,6 @@ repeated as proposals.
   - [ ] Create the topic file on GOD-KILLER, subscribe the phone app, copy the
         topic to REDRUM for `t3code`, and run test 6.2 (hooks under T3, Supervised
         thread, then REDRUM); quiet hours if wanted
-  - [ ] Add `Read(~/.config/agent-notify/**)` to the deny list in `claude-code.nix`
   - *Note:* only Supervised threads prompt at all (Full access has nothing to
     approve), so approval pushes depend on the modes you actually run
 

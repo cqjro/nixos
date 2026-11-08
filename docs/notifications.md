@@ -171,8 +171,7 @@ sudo install -m 600 -o t3code -g t3code ~/.config/agent-notify/topic /var/lib/t3
 Optional: `echo 22:00-07:00 > ~/.config/agent-notify/quiet-hours`; for a
 self-hosted server `echo https://redrum.<tailnet>.ts.net:8443 >
 ~/.config/agent-notify/server` and, with auth, a `token` file. The agents' Read
-deny rules do not yet cover `~/.config/agent-notify/` (thread 4/5 handoff:
-add `Read(~/.config/agent-notify/**)`).
+deny rules cover `~/.config/agent-notify/**` (`claude-code.nix`).
 
 ### How it is wired (managed policy)
 
@@ -201,8 +200,7 @@ only** (LittleNix has no `claude-code-policy`, so the option would not exist).
   `claude-guard` first.
 * Verify the merge without switching:
   `nix eval .#nixosConfigurations.<HOST>.config.claude-code-policy.hooks --apply 'h: builtins.mapAttrs (_: builtins.length) h'`.
-* Follow-up for the agent-security owner (their file): add
-  `Read(~/.config/agent-notify/**)` to the deny list in `claude-code.nix`.
+* `Read(~/.config/agent-notify/**)` is on the deny list in `claude-code.nix`.
   The hook itself runs outside the agent's tool permissions, so it still reads
   the file.
 
@@ -288,8 +286,8 @@ per event type (or keep both, accepting duplicates).
   agent workflow section pointing here; list ntfy under the REDRUM port table
   only if the optional module is adopted (port 8089); mention
   `agent-notifications` among the `ai-tools` fragments.
-* **Agent-security owner:** add `Read(~/.config/agent-notify/**)` to the deny list
-  (see above). Hooks run outside the sandbox, so the hook still reaches ntfy and
+* **Agent-security owner:** `Read(~/.config/agent-notify/**)` is on the deny list
+  (done). Hooks run outside the sandbox, so the hook still reaches ntfy and
   writes `~/.local/state/agent-notify`.
 * **Thread 5 (secrets):** the ntfy topic/token are secrets of the
   "unguessable URL" kind; adopt whatever file-credential mechanism you choose.
