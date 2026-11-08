@@ -83,6 +83,11 @@
 				# and labels, so do not widen this pattern. The policy is shared with
 				# REDRUM, where /home/cairo is not readable by t3code (inert there).
 				"/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *"
+				# REDRUM: the same script packaged by the `schedule-precheck` NixOS
+				# fragment into the system profile. The path is a root-owned symlink
+				# into the store, so (unlike t3code's own checkout) no agent can edit
+				# what it runs, and the shared policy needs no bare name on PATH.
+				"/run/current-system/sw/bin/schedule-precheck *"
 				# gh and git's network commands need the token in ~/.config/gh
 				"gh *"
 				"git push *"
@@ -140,6 +145,7 @@
 					# scheduled checks: probes upstream, evaluates origin/master in a
 					# private clone, files issues; plain command, absolute path
 					"Bash(/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *)"
+					"Bash(/run/current-system/sw/bin/schedule-precheck *)"
 					"Bash(bash -n *)"
 					"Bash(nixos-rebuild build *)"
 					"Bash(nixos-rebuild list-generations *)"
