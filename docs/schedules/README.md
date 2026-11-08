@@ -211,7 +211,7 @@ REDRUM's server.
 | Schedule | Now | Target | Why |
 | --- | --- | --- | --- |
 | Upstream Issues Check | GOD-KILLER, weekly (kept, disabled) | REDRUM, daily 06:30, launches workers (after the REDRUM switch) | Only needs `gh` and a read-only checkout; REDRUM is always on, GOD-KILLER often is not. |
-| Build Flags | GOD-KILLER | REDRUM, `--detect-only` | Nix evaluation does not depend on the machine, so REDRUM can evaluate all three hosts (REDRUM 7 s, GOD-KILLER 15 s). It is eval only, never a GOD-KILLER build. |
+| Build Flags | GOD-KILLER, weekly (to be disabled) | REDRUM, weekly Sunday 12:00, launches workers (after the REDRUM switch) | Nix evaluation does not depend on the machine, so REDRUM can evaluate all three hosts (REDRUM 7 s, GOD-KILLER 15 s). It is eval only, never a GOD-KILLER build. |
 | Unswitched changes | none | every machine (own copy per T3 server, or a timer) | It must run on the host it is about; see `unswitched-changes.md`. |
 | Worker launches | GOD-KILLER | GOD-KILLER | Workers need builds for GOD-KILLER modules, which REDRUM must not do. The same prompts run on GOD-KILLER without `--detect-only` and pick up whatever REDRUM filed, because `actionable` is computed from live issue state, not local state. |
 
