@@ -30,6 +30,7 @@
 						bat
 						btop
 						opencode
+						dwsim
 						nom
 						rss-sync
 						terminal-packages

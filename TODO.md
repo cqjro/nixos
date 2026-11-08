@@ -133,29 +133,6 @@ repeated as proposals.
       (workspaces are force-set via `containersForce`/`spacesForce`/`pinsForce`
       at `zen-browser.nix:230-232`; drop the force flags and trim the lists)
 
-- [ ] **DWSIM** — check whether DWSIM can be downloaded on NixOS declaratively
-      yet — **2/10** (research only; check nixpkgs/NUR and wine/AppImage viability)
-      - **Finding (2026-11-07): not in nixpkgs, but declaratively installable
-        by hand-packaging.** No `dwsim` attribute in nixpkgs unstable or stable
-        (mcp-nixos search), and no flake found that packages it (flake search
-        was unavailable, so only nixpkgs is confirmed). Upstream (GPL-3, free)
-        ships the 10.2.15 Linux desktop only as a `.deb` (amd64/arm64) from the
-        `DanWBR/dwsim10` GitHub releases (open-source core edition) or
-        `DanWBR/dwsim-patreon` (free to download, Patreon extras need
-        membership). No AppImage, Flatpak or Snap. Described as self-contained
-        .NET (the older 9.0.5 needed .NET 8 and IPOPT, no Mono), so no wine.
-        The original `DanWBR/dwsim` repo was archived 2026-08-11; development
-        moved to `dwsim10`. Unverified: the exact `.deb` contents, the bundled
-        native libs and the Linux build's maturity.
-      - **Sketch, ~4/10:** a module with `fetchurl` of the pinned `.deb` + hash,
-        `dpkg`/`autoPatchelfHook` (+ `makeWrapper`, `icu`, `openssl`, `gtk`
-        libs as the unpack shows), installed as a home-manager package or
-        `flake.modules.homeManager."dwsim"`. Unfree-style (binary
-        redistribution), no cache, and the build needs no source compile.
-      - Re-check: `search dwsim` in mcp-nixos, or
-        `gh search prs --repo NixOS/nixpkgs dwsim`; a nixpkgs package would
-        replace the sketch. Awaiting the human's call: package it, or wait.
-
 - [ ] **CAD flow sheets** — check whether CADCraft or other open-source CAD
       software can adequately create flow sheets on Linux yet — **2/10**
       (research/evaluation only)
