@@ -85,6 +85,7 @@ They are excluded because they cannot work inside it:
 | `nix eval/build/flake/log/path-info/why-depends/search/store/derivation`, `nix-store`, `nix-instantiate`, `nixos-rebuild`, `./rebuild.sh` | nix daemon socket is `AF_UNIX`, blocked by seccomp (`cannot create Unix domain socket`). Flake eval also fails on the masked `.gitmodules` |
 | `gh`, `git push/fetch/pull/ls-remote` | need the token in `~/.config/gh` (hidden; also `Read`-denied) |
 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` and `/run/current-system/sw/bin/schedule-precheck` (absolute paths only; the second is REDRUM's packaged copy) | the scheduled-thread script runs `gh`, `git` and `nix` itself (and its `nix shell` shebang), so every call inside it hit the sandbox (`cannot create Unix domain socket`, no `~/.config/gh`). See "Scheduled checks run unsandboxed" below |
+| `/run/current-system/sw/bin/theme-shots` (absolute path only; GOD-KILLER, packaged by `modules/theme/theme-shots.nix`; inert on REDRUM) | before/after screenshots of the generated Zen CSS: it needs the nix daemon socket (`nix eval`) and the four sites, which `strictAllowlist` would refuse. See "theme-shots runs unsandboxed" below |
 | `systemctl`, `journalctl`, `loginctl`, `resolvectl`, `tailscale status` | D-Bus/unix sockets, `/run` |
 | `ss`, `ip addr/route/link show` | sandbox has its own network namespace |
 | read-only `hyprctl` subcommands, `nvidia-smi`, `vulkaninfo`, `glxinfo`, `eglinfo`, `wayland-info`, `mpv`, `waydroid`, `adb` | GPU/display probes need `/dev/dri`, Wayland and Hyprland sockets |
@@ -124,6 +125,28 @@ the main checkout only**.
 | Guard scope | The new guard rule covers the **Edit/Write tools** only. A Bash write to `~/.nixos/docs/schedules/bin/` is stopped by the sandbox's write allowlist (`~/.nixos` is not writable, only its `.git`), not by the guard, so in Full access a Bash write is not guarded |
 | Evasions | The guard is a text tripwire: `..` components in an Edit path evade its regex, and a Full access Edit can still write anywhere not denied. The real protection is that the owner reviews merges and diffs of `docs/schedules/bin/` like `rebuild.sh` and `flake.nix` (they are on the tier-2 list for that reason) |
 
+### theme-shots runs unsandboxed
+
+`theme-shots` ([theme-shots.md](theme-shots.md)) renders the Zen `userContent.css` of
+a worktree's flake on google, youtube, reddit and instagram in a throwaway headless
+Firefox, so a thread can see which per-site rules are broken. Added 2026-11-08, same
+shape as `schedule-precheck` on REDRUM: a packaged script at a root-owned absolute path,
+excluded from the sandbox and allow-listed for that path only.
+
+| | |
+| --- | --- |
+| Why it must be excluded | `nix eval` needs the nix daemon socket (blocked in the sandbox), and Firefox must reach the sites, which `network.strictAllowlist` refuses. Neither works through `dangerouslyDisableSandbox` (off). |
+| The path | `/run/current-system/sw/bin/theme-shots` (a symlink into the store, from `modules/theme/theme-shots.nix`, GOD-KILLER only). Not a worktree or `~/.nixos` path: those are agent-editable or owner-switched files, and an unswitched branch has no copy at all, so **the PR that adds it must be merged and switched before any thread can use it**. On REDRUM the policy entry is inert (nothing installs the script). |
+| What an excluded script can do | Everything cairo can, with the network. Its safety is the script's safety **and its argument surface**: the pattern ends in `*`, so the agent chooses every argument |
+| Argument surface (invariant: nothing the caller supplies may choose a URL, command, Firefox flag or path the script trusts) | Exactly three arguments. `SITE` is one of five words. `WORKTREE` is absolute, `[A-Za-z0-9._/+@-]` only, resolves (`realpath -e`) to a directory under `~/.t3/worktrees/<project>/<name>` that holds `flake.nix` and `.git` and is owned by the user. `OUTDIR` is relative to the worktree or absolute, resolves (`realpath -m`, so symlinks count) inside `<worktree>/.log/`; the script then `mkdir -p`s it, **`cd`s into it and re-checks `pwd -P`**, so every write uses a fixed file name in a directory it already holds open (a symlink swapped in after the first check is caught; a rename-into-place never follows a symlink at the destination). URLs, Firefox flags and prefs, the PAC list and the profile are the script's. There are no options, and no `--url`. |
+| Environment | Every child gets a rebuilt environment (`env -i`: fixed `PATH` of the script's own `runtimeInputs`, passwd home, no `GIT_*`/`NIX_*`/`LD_*`/proxy/`MOZ_*` from the caller). Firefox gets its own empty `HOME`/`XDG_*`/`TMPDIR` under a private `mktemp -d` and a fresh profile per shot. `claude-guard` blocks any Bash command that names the absolute path unless it is one plain command (the same rule as `schedule-precheck`; self-tests in `claude-guard.sh`), so no `VAR=` prefix, `timeout`, chain, pipe, redirect or substitution rides the exclusion |
+| What agent-controlled input reaches | One thing: **the worktree's flake**, evaluated by the owner's `nix`. That is no wider than the already-excluded `nix eval *`, and tighter: the evaluation is **pure** (no `--impure`, `--no-accept-flake-config` so a flake's `nixConfig` is ignored), so it cannot `readFile` outside the flake. The result, CSS text, is injected into Firefox as a user stylesheet. Hostile CSS could ask Firefox to fetch `url(...)`/`@import`: see the next row |
+| Network reach (an excluded command is not limited by `network.allowedDomains`) | The script limits **Firefox** itself: a PAC file sends only `google.com gstatic.com googleapis.com googleusercontent.com youtube.com ytimg.com ggpht.com googlevideo.com reddit.com redditstatic.com redditmedia.com redd.it instagram.com cdninstagram.com fbcdn.net facebook.com facebook.net` (and subdomains) direct, everything else, including localhost and the LAN, to a dead proxy (`network.proxy.failover_direct=false`, `no_proxies_on=""`, `allow_hijacking_localhost=true`; DoH off). Tested 2026-11-08 in the sandbox against local servers: a blackholed `127.0.0.1` receives **no connection**, an allowed one loads, and **without `allow_hijacking_localhost` Firefox ignores the PAC for localhost** (the pref is load-bearing). `curl` (for the interstitial preflight) and `nix eval` (flake inputs, the nix daemon's fetchers) are not PAC-confined: `curl` only ever requests the fixed URLs; `nix eval` is as free as `nix eval *` already is. Telemetry, updates and safe browsing are off in the profile. |
+| What it does not protect | The PAC is a policy for web content, not a boundary against a compromised Firefox: a browser exploit served by one of the four sites would run as the owner (no sandbox: Firefox's own content sandbox is the only fence). The sites are fixed and logged-out, no extension or credential is in the profile, and the HOME is empty, but treat it as owner code execution if Firefox itself is compromised. A concurrent sandboxed process racing the output-dir check could redirect the writes to a directory of its choosing, but only with fixed names (`<site>-<page>-<phase>.png`, `userContent.css`, `report.txt`) and public content |
+| `zen-shots` | Human-only, **not** excluded or allow-listed, and `Bash(zen-shots*)` / `Bash(/run/current-system/sw/bin/zen-shots*)` are **deny rules**: it drives the real, logged-in Zen and screenshots the desktop, which an agent must never trigger. It runs in the human's own shell, so the deny does not affect it |
+| Plain commands only | Like every excluded command: `cd … && theme-shots …`, a pipe, `; echo $?`, a `timeout` prefix run sandboxed, fail (`mktemp: Read-only file system` at `/tmp`, the nix socket), and are blocked by the guard when they name the path. The Bash tool's own `timeout` parameter is fine |
+| Review | `modules/scripts/theme-shots.sh`, `modules/theme/theme-shots.nix` and the policy/guard entries are tier-2 items: changing the argument parsing, the PAC list, the child environment or the output-dir checks changes what runs unsandboxed |
+
 ### 2–4. Rules and the guard
 
 `claude-guard` runs before every `Bash|Edit|Write|MultiEdit|NotebookEdit` call
@@ -139,6 +162,8 @@ tripwire on the command text, not a boundary:
     script runs unsandboxed; worktree paths are unaffected) and of
     `~/.config/nixos-schedules/*` (the human-only gate for its override options);
   - `hooks:` in skill/agent frontmatter;
+  - any command naming an excluded script's absolute path (`schedule-precheck`,
+    `theme-shots`) that is not one plain command;
   - `curl|wget … | sh`;
   - force pushes;
   - git options that execute programs (`core.hooksPath`, `fsmonitor`,
@@ -196,6 +221,7 @@ Allow, ask and deny summary (full lists are in the Nix file):
   - `git add/commit/fetch/ls-remote` (commits on master prompt via the guard);
   - `gh pr/issue create` and the gh read commands;
   - the main checkout's `docs/schedules/bin/schedule-precheck` (absolute path, excluded from the sandbox) and, on REDRUM, `/run/current-system/sw/bin/schedule-precheck`;
+  - `/run/current-system/sw/bin/theme-shots` (absolute path, excluded from the sandbox; GOD-KILLER);
   - read-only `systemctl`/`journalctl`/network/GPU diagnostics;
   - mcp-nixos;
   - WebFetch to GitHub, Claude docs, nixos.org and t2linux.
@@ -215,6 +241,7 @@ Allow, ask and deny summary (full lists are in the Nix file):
 - **Deny:**
   - `gh auth token|status <args>|refresh|login|logout|switch`,
     `git credential*`, `*hosts.yml*`;
+  - `zen-shots` (the human-only screenshot script for the real, logged-in Zen);
   - `Read` of the secret paths (`Read` denies also cover cat/head/sed in Bash
     and feed the sandbox `denyRead`), including `~/.config/rss-sync/**` and
     `~/.config/agent-notify/**` (the ntfy topic is the credential; the
@@ -459,6 +486,19 @@ you record which steps prompted.**
 | 32 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck mark-launched "bad key" t` and `... health evil msg` | exit 0 with `{"ok": false, "error": "usage: …"}`; nothing is filed | same |
 | 33 | In an **Auto** thread: `./rebuild.sh switch GOD-KILLER` (then `./rebuild.sh test REDRUM` and `sudo nixos-rebuild switch`) | each **blocked by the guard** with the "Supervised child thread" message, no card, nothing activated. If one runs or prompts, the hook does not report `auto` as the mode string: read the hook input and fix the `case $mode` list | not applicable (steps 13, 14, 22) |
 | 34 | In a **Supervised** thread: `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it, or approve a harmless dry-activate with the askpass dialog). Also check `./rebuild.sh check GOD-KILLER` and `git commit -m "mentions rebuild.sh switch"` still run with no prompt in Auto | not applicable |
+| 35 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree>` (a plain command, absolute worktree path; needs the switch of the PR that adds it; one site takes about a minute) | no prompt; prints `evaluating userContent …`, then per shot `ok` or `REJECTED (…)`; writes `.log/theme-shots/google-search-{before,after}.png`, `userContent.css`, `report.txt`; **no** `Unix domain socket` or `strictAllowlist` error | runs |
+| 36 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree> /tmp/x`, `… .log`, `… ../x`, `… ".log/a;id"` (quoted, so the guard lets it through to the script) and with a worktree such as `/etc` or `relative/dir`; also `theme-shots bogus <worktree>` | each exits 2 with the reason (`output dir must be inside …/.log/`, `worktree must be under …`, `unknown site`), nothing written | same |
+| 37 | in the worktree: `mkdir -p .log && ln -sfn /tmp .log/evil`, then `theme-shots google <worktree> .log/evil/x` (remove the link after) | exits 2 (`output dir must be inside …/.log/`); nothing is written under `/tmp` | same |
+| 38 | `theme-shots google <worktree> ; id`, `… "$(id)"`, ``… `id` ``, `… > /tmp/x`, `… \| cat`, `timeout 60 /run/current-system/sw/bin/theme-shots …` and `FOO=1 /run/current-system/sw/bin/theme-shots …` (each naming the absolute path) | each **blocked by the guard**, no prompt; none may run unsandboxed | same |
+| 39 | `zen-shots` and `/run/current-system/sw/bin/zen-shots` | denied by the managed `Bash(zen-shots*)` deny rule, no prompt | denied |
+
+Steps 35-39 (added with theme-shots, 2026-11-08) are **not yet run**: the script only
+exists after the switch of the PR that adds it. Run them in a fresh Supervised thread
+after that switch and record the result here. Before the switch only the parts that
+need no excluded command were exercised, in the sandbox, with a local test server
+(arguments, symlink refusal, profile and CSS injection, PAC, rejection paths; see
+[theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot)), plus `claude-guard
+--self-test` for step 38.
 
 In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
 rule …)": with no card to approve, that counts as blocked.

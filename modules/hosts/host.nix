@@ -38,6 +38,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.keyring
 				inputs.self.modules.nixos.claude-code-policy
+				inputs.self.modules.nixos."theme-shots"
 				inputs.self.modules.nixos."secret-guard"
 				inputs.self.modules.nixos."agent-notifications"
 				{ agent-notifications.desktop = true; }

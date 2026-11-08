@@ -1,4 +1,7 @@
 *.log
+# rebuild.sh output, theme-shots / zen-shots screenshots (the latter show a logged-in
+# account: never commit)
+.log/
 
 result
 result-*
