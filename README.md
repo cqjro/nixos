@@ -68,7 +68,7 @@ modules/
 │   └── REDRUM/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
 │   ├── ai-tools/      #   claude-code (permissions), mcp-servers (mcp-nixos), t3code, github-cli
-│   ├── apps/          #   3d-printing, calibre, millennium, mpv, nemo, nixdatifier, spicetify, xodus-nexus, zen-browser, ...
+│   ├── apps/          #   3d-printing, calibre, dwsim, millennium, mpv, nemo, nixdatifier, spicetify, xodus-nexus, zen-browser, ...
 │   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
@@ -273,6 +273,11 @@ matches the rest of the config out of the box.
   `GOD-KILLER` via `modules/home-manager/apps/xodus-nexus.nix`. The launcher
   downloads its Xodus backend and Nexus runtime on first run (see
   [Xbox Game Pass (Xodus Nexus)](#xbox-game-pass-xodus-nexus)).
+- **DWSIM** — [DWSIM](https://dwsim.org), an open-source chemical process
+  simulator, repackaged from the official `.deb` release (not in nixpkgs) by
+  `modules/home-manager/apps/dwsim.nix` on `GOD-KILLER`. The version and hash
+  are the `dwsim.version` / `dwsim.hash` options; `modules/scripts/dwsim-update.sh`
+  prints the latest pair.
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
   (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
   (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for

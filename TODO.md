@@ -132,9 +132,6 @@ repeated as proposals.
       (workspaces are force-set via `containersForce`/`spacesForce`/`pinsForce`
       at `zen-browser.nix:230-232`; drop the force flags and trim the lists)
 
-- [ ] **DWSIM** — check whether DWSIM can be downloaded on NixOS declaratively
-      yet — **2/10** (research only; check nixpkgs/NUR and wine/AppImage viability)
-
 - [ ] **CAD flow sheets** — check whether CADCraft or other open-source CAD
       software can adequately create flow sheets on Linux yet — **2/10**
       (research/evaluation only)
