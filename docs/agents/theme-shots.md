@@ -26,7 +26,9 @@ instagram login.
 - `SITE`: `google`, `youtube`, `reddit`, `instagram` or `all`. Nothing else is
   accepted; there is no way to pass a URL.
 - `WORKTREE`: the **absolute** path of your worktree
-  (`/home/cairo/.t3/worktrees/.nixos/<name>`); `pwd` gives it.
+  (`/home/cairo/.t3/worktrees/.nixos/<name>`, exactly that depth); `pwd` gives it.
+  The command must be run **from inside that worktree** (your usual cwd): it refuses
+  another thread's worktree.
 - `OUTDIR`: optional, must end up inside `<WORKTREE>/.log/` (default
   `.log/theme-shots`; a relative path is relative to the worktree). `.log/` is
   gitignored.
@@ -41,7 +43,8 @@ files.
 What it does, in order:
 
 1. `nix eval --raw git+file://<worktree>#nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.zen-browser.profiles.default.userContent`
-   (pure: no `--impure`), so it renders **your branch's** CSS, not the switched one.
+   (no `--impure`, flake `nixConfig` ignored), so it renders **your branch's** CSS, not
+   the switched one. Pure mode is not a read confinement (security.md).
 2. For every page of the site, twice (`before`, `after`): a fresh throwaway Firefox
    profile and an empty HOME, `user.js` with
    `toolkit.legacyUserProfileCustomizations.stylesheets`, `ui.systemUsesDarkTheme=1`,
@@ -97,9 +100,12 @@ last lines are printed), `4` at least one shot failed or was rejected.
 
 The full reasoning is in [security.md](security.md#theme-shots-runs-unsandboxed). In
 short, an agent chooses three arguments and the script runs as the owner with the
-owner's network, so it accepts only: five site words; a worktree under
-`~/.t3/worktrees/` owned by the owner; an output dir that resolves inside that
-worktree's `.log/` (checked, then re-checked on the directory it `chdir`s into).
+owner's network, so it accepts only: five site words; exactly one
+`~/.t3/worktrees/<project>/<name>` owned by the owner that the caller is standing
+in; an output dir that resolves inside that worktree's `.log/` (checked, then re-checked
+against the kernel's view of the directory it `cd -P`s into). Pure evaluation of the
+worktree's flake is **not** a confinement: the flake can read what the owner can,
+as `nix eval *` already allows.
 URLs, Firefox flags and prefs come from the script. Changing any of that, the PAC
 list or the child environment is a tier-2 review item.
 

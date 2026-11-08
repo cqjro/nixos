@@ -18,17 +18,23 @@
 # So nothing the caller supplies may choose a URL, a command, a Firefox flag or a
 # path the script trusts:
 #   - the URLs come from a fixed list in the Nix store (theme-shots-urls.txt);
-#   - SITE is one of five words; WORKTREE must be a real directory under
-#     ~/.t3/worktrees owned by the user; OUTDIR must resolve (after symlinks) inside
-#     <WORKTREE>/.log/, and the script chdirs into it and re-checks, so every write
-#     uses a fixed file name in a directory it holds open;
+#   - SITE is one of five words; WORKTREE must resolve to exactly
+#     ~/.t3/worktrees/<project>/<name>, owned by the user, and the CALLER'S cwd must be
+#     inside it (an agent's cwd is its own worktree, never another thread's); OUTDIR
+#     must resolve (after symlinks) inside <WORKTREE>/.log/, and the script chdirs
+#     into it with cd -P and re-checks the kernel's view of the cwd, so every write
+#     uses a fixed file name in a directory it holds open (a swap between the checks
+#     can still make mkdir create empty directories elsewhere, never write files);
 #   - every child process gets a rebuilt environment (fixed PATH, passwd home, no
 #     GIT_*/NIX_*/LD_*/PYTHON*/proxy/MOZ_* from the caller); Firefox gets its own
 #     empty HOME, a fresh profile and a PAC file that sends everything except the
 #     four sites' own hosts to a dead proxy (so generated CSS cannot reach
-#     localhost, the LAN or any other host);
-#   - the nix evaluation is pure (no --impure, --no-accept-flake-config), so the
-#     worktree's flake cannot read files outside itself.
+#     localhost, the LAN or other hosts over http(s); not file:, and the allowed
+#     suffixes include hostable ones such as googleapis.com);
+#   - the nix evaluation is pure (no --impure, --no-accept-flake-config). That is NOT
+#     a read confinement: a flake can declare path:/git+file: inputs, IFD or hashed
+#     fetches and read them as the owner, exactly as the already-excluded
+#     `nix eval *` can. Do not rely on it as a boundary.
 # Changing the argument parsing, the PAC list or the child environment is a tier-2
 # review item.
 
@@ -73,19 +79,34 @@ user=$(id -un)
 home=$(getent passwd "$uid" | cut -d: -f6)
 [[ $home == /?* ]] || die "cannot determine the passwd home"
 
+# the caller's real directory (kernel view, not a $PWD string)
+caller=$(readlink -f /proc/self/cwd)
+
 wt=$(realpath -e -- "$wt_arg") || die "no such worktree: $wt_arg"
-[[ $wt == "$home"/.t3/worktrees/?*/?* ]] || die "worktree must be under $home/.t3/worktrees/<project>/<name>"
+# re-check the RESOLVED path: a symlink may point at a directory whose real name has
+# characters that would change the flake reference below (?, #, &)
+[[ $wt =~ $safe_re ]] || die "resolved worktree path has characters outside [A-Za-z0-9._/+@-]"
+[[ $wt == "$home"/.t3/worktrees/?*/?* && ${wt#"$home"/.t3/worktrees/} != */*/* ]] ||
+	die "worktree must be exactly $home/.t3/worktrees/<project>/<name>"
 [[ -f $wt/flake.nix && -e $wt/.git ]] || die "$wt is not a flake worktree (flake.nix and .git needed)"
 [[ $(stat -c %u -- "$wt") == "$uid" ]] || die "$wt is not owned by $user"
+# only the worktree you are working in: another thread's worktree is not yours to evaluate or write to
+[[ $caller == "$wt" || $caller == "$wt"/* ]] || die "run it from inside the worktree (cwd is $caller)"
 
 if [[ $out_arg == /* ]]; then out=$out_arg; else out=$wt/$out_arg; fi
 out=$(realpath -m -- "$out")
+[[ $out =~ $safe_re ]] || die "resolved output dir has characters outside [A-Za-z0-9._/+@-]"
 [[ $out == "$wt"/.log/?* ]] || die "output dir must be inside $wt/.log/"
-mkdir -p -- "$out"
-cd -- "$out"
-# re-check on the directory we actually hold open (a symlink swapped in after the
-# check above would show up here)
-[[ $(pwd -P) == "$wt"/.log/?* ]] || die "output dir left $wt/.log/ (symlink?)"
+
+# create and enter the directory from the worktree root, checking the KERNEL's view of
+# the directory we hold (readlink on /proc/self/cwd, not a path string that could be
+# re-resolved after a symlink swap)
+cd -P -- "$wt"
+[[ $(readlink -f /proc/self/cwd) == "$wt" ]] || die "worktree changed under us"
+[[ ! -L .log ]] || die ".log is a symlink"
+mkdir -p -- "${out#"$wt"/}"
+cd -P -- "${out#"$wt"/}"
+[[ $(readlink -f /proc/self/cwd) == "$out" ]] || die "output dir left $wt/.log/ (symlink swapped?)"
 
 work=$(mktemp -d /tmp/theme-shots.XXXXXX)
 cleanup() {
@@ -163,7 +184,7 @@ shoot() { # $1 = url, $2 = css (0|1), $3 = png path
 	env -i "PATH=$PATH" "HOME=$iso" "USER=$user" "LANG=C.UTF-8" "TMPDIR=$iso/tmp" \
 		"XDG_CONFIG_HOME=$iso/config" "XDG_CACHE_HOME=$iso/cache" "XDG_DATA_HOME=$iso/data" \
 		"FONTCONFIG_FILE=/etc/fonts/fonts.conf" "MOZ_HEADLESS=1" \
-		timeout 120 firefox --headless --no-remote --profile "$iso/profile" \
+		timeout --kill-after=10 120 firefox --headless --no-remote --profile "$iso/profile" \
 		--window-size 1400,1000 --screenshot "$3" "$1" >"$iso/firefox.log" 2>&1 </dev/null
 }
 
@@ -177,7 +198,7 @@ while IFS='|' read -r -u 3 s page url; do
 	[[ $site == all || $site == "$s" ]] || continue
 
 	# cheap interstitial check: where does a plain GET end up?
-	res=$(clean curl -sS -L --max-redirs 5 --max-time 25 -A "$UA" -o /dev/null \
+	res=$(clean curl -sS -L --proto =https --proto-redir =https --max-redirs 5 --max-time 25 -A "$UA" -o /dev/null \
 		-w '%{http_code} %{url_effective}' "$url" 2>/dev/null </dev/null) || res="000 -"
 	code=${res%% *}
 	final=${res#* }
