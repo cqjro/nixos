@@ -210,16 +210,15 @@ REDRUM's server.
 
 | Schedule | Now | Target | Why |
 | --- | --- | --- | --- |
-| Upstream Issues Check | GOD-KILLER | REDRUM, `--detect-only` | Only needs `gh` and a read-only checkout; REDRUM is always on, GOD-KILLER often is not. |
+| Upstream Issues Check | GOD-KILLER, weekly (kept, disabled) | REDRUM, daily 06:30, launches workers (after the REDRUM switch) | Only needs `gh` and a read-only checkout; REDRUM is always on, GOD-KILLER often is not. |
 | Build Flags | GOD-KILLER | REDRUM, `--detect-only` | Nix evaluation does not depend on the machine, so REDRUM can evaluate all three hosts (REDRUM 7 s, GOD-KILLER 15 s). It is eval only, never a GOD-KILLER build. |
 | Unswitched changes | none | every machine (own copy per T3 server, or a timer) | It must run on the host it is about; see `unswitched-changes.md`. |
 | Worker launches | GOD-KILLER | GOD-KILLER | Workers need builds for GOD-KILLER modules, which REDRUM must not do. The same prompts run on GOD-KILLER without `--detect-only` and pick up whatever REDRUM filed, because `actionable` is computed from live issue state, not local state. |
 
-REDRUM prerequisites before moving detection there (none exist yet): a repo
-checkout readable by the `t3code` user (thread 4 / REDRUM docs), `gh` login for
-that user with a fine-grained token limited to `cqjro/nixos` (issues + PRs,
-thread 5), and `nix` flakes enabled (the firmware module is merged, so evaluation no longer needs
-the absolute `/home/cairo` path). Until then, keep both on GOD-KILLER.
+REDRUM prerequisites: the packaged script (`modules/server/schedule-precheck.nix`, run as
+`/run/current-system/sw/bin/schedule-precheck`, policy entry in `claude-code.nix`; needs a
+REDRUM switch), the `t3code` `gh` login with Issues access on `cqjro/nixos`, and flakes
+enabled (they are). The repo is public, so the private clone needs no token.
 
 A missed run (GOD-KILLER off at Saturday noon): whether T3's scheduler catches
 up on boot is **unknown and untested**. Observe it: leave GOD-KILLER off over
