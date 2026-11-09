@@ -1,0 +1,15 @@
+# site|page|url
+#
+# The FIXED page list for theme-shots (agents, headless Zen, logged out). The script
+# reads this one file from the Nix store, so a caller can never supply a URL. One line
+# per shot; "|" separates the fields and may not appear in a URL. Keep every page
+# logged-out and public.
+#
+# reddit/post is an archived thread (archived threads keep their URL); it is
+# unverified until the first real run.
+google|search|https://www.google.com/search?q=nixos&hl=en
+youtube|home|https://www.youtube.com/
+youtube|watch|https://www.youtube.com/watch?v=dQw4w9WgXcQ
+reddit|home|https://www.reddit.com/
+reddit|post|https://www.reddit.com/r/IAmA/comments/z1c9z/i_am_barack_obama_president_of_the_united_states/
+instagram|login|https://www.instagram.com/accounts/login/

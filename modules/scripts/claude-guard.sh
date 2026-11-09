@@ -82,15 +82,17 @@ config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settin
 check_bash() {
 	local cmd=$1 cwd=$2
 
-	# the main checkout's schedule script (GOD-KILLER) and the packaged one in the
-	# system profile (REDRUM) run unsandboxed (sandbox.excludedCommands), so
-	# their absolute paths may only appear as the command word of ONE plain command:
-	# no substitution, chaining, pipe or redirect may ride the exclusion. Quoted
-	# arguments may not contain $, a backtick, a backslash or a double quote.
-	local precheck_re='(/home/[^/[:space:]]+/\.nixos/docs/schedules/bin|/run/current-system/sw/bin)/schedule-precheck'
-	local plain_re='^(/home/[^/[:space:]]+/\.nixos/docs/schedules/bin|/run/current-system/sw/bin)/schedule-precheck( +[A-Za-z0-9._:/=@,+-]+| +"[^"$`\\]*")* *$'
+	# the main checkout's schedule script (GOD-KILLER), the packaged one in the
+	# system profile (REDRUM) and the packaged theme-shots (GOD-KILLER) run
+	# unsandboxed (sandbox.excludedCommands), so their absolute paths may only
+	# appear as the command word of ONE plain command: no substitution, chaining,
+	# pipe or redirect may ride the exclusion. Quoted arguments may not contain $,
+	# a backtick, a backslash or a double quote.
+	local excl_re='/home/[^/[:space:]]+/\.nixos/docs/schedules/bin/schedule-precheck|/run/current-system/sw/bin/(schedule-precheck|theme-shots)'
+	local precheck_re="($excl_re)"
+	local plain_re="^($excl_re)( +[A-Za-z0-9._:/=@,+-]+| +\"[^\"\$\`\\\\]*\")* *\$"
 	if [[ $cmd =~ $precheck_re ]] && ! [[ $cmd =~ $plain_re ]]; then
-		block "the schedule script must be one plain command: the absolute path, then plain words or double-quoted text without \$, backticks or backslashes (no cd, pipes, ;, &&, redirects or substitutions)."
+		block "the schedule/theme-shots script must be one plain command: the absolute path, then plain words or double-quoted text without \$, backticks or backslashes (no cd, pipes, ;, &&, redirects or substitutions)."
 	fi
 
 	if grep -Eq -- "$secret_re" <<<"$cmd"; then
@@ -320,6 +322,17 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect block Bash '/run/current-system/sw/bin/schedule-precheck upstream | cat'
 	expect block Bash '/run/current-system/sw/bin/schedule-precheck upstream `id`'
 	expect block Bash 'FOO=1 /run/current-system/sw/bin/schedule-precheck upstream'
+	expect pass Bash '/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/workflow-x'
+	expect pass Bash '/run/current-system/sw/bin/theme-shots all /home/cairo/.t3/worktrees/.nixos/workflow-x .log/theme-shots'
+	expect block Bash '/run/current-system/sw/bin/theme-shots google /x ; id'
+	expect block Bash 'cd /x && /run/current-system/sw/bin/theme-shots google /x'
+	expect block Bash '/run/current-system/sw/bin/theme-shots google /x | cat'
+	expect block Bash '/run/current-system/sw/bin/theme-shots google /x > /tmp/x'
+	expect block Bash '/run/current-system/sw/bin/theme-shots google "$(id)"'
+	expect block Bash '/run/current-system/sw/bin/theme-shots google `id`'
+	expect block Bash $'/run/current-system/sw/bin/theme-shots google /x\nid'
+	expect block Bash 'timeout 60 /run/current-system/sw/bin/theme-shots google /x'
+	expect block Bash 'FOO=1 /run/current-system/sw/bin/theme-shots google /x'
 	expect pass Bash 'git add docs/schedules/bin/schedule-precheck'
 	expect block Edit '/home/cairo/.nixos/docs/schedules/bin/schedule-precheck'
 	expect block Write '/home/cairo/.nixos/docs/schedules/bin/new-helper'

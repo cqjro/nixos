@@ -28,6 +28,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
+| [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) | styling a site in `modules/theme/webstyling/*.nix` (the Zen per-site CSS): `theme-shots` (logged-out before/after screenshots), its limits, and what to do for logged-in pages (the human attaches manual screenshots) |
 | [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
@@ -336,9 +337,9 @@ Read the matching entry before touching that area.
 - **pnpm `packageManager` pins** and **pnpm FOD hashes** in
   `actual-budget-tweaks.nix` / `reactflux.nix` (both reproducible since
   2026-11-06; a hash changes only with the source rev, lockfile or pnpm).
-- **`rebuild.sh` output is in `.log/` when piped; `gh` and `git push` must be
-  plain commands** (chained or piped, they run sandboxed and fail to
-  authenticate); sandbox `/dev/null` placeholders in `git status` (use
+- **`rebuild.sh` output is in `.log/` when piped; `gh`, `git push` and
+  `theme-shots` must be plain commands** (chained or piped, they run sandboxed
+  and fail to authenticate); sandbox `/dev/null` placeholders in `git status` (use
   `--no-track`, stage by path); `gh auth status` needs `[allow-secret-pattern]`
   to paste.
 

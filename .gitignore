@@ -1,4 +1,7 @@
 *.log
+# rebuild.sh output and theme-shots screenshots (theme-shots refuses to run unless this
+# line is present)
+.log/
 
 result
 result-*

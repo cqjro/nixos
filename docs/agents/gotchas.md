@@ -130,7 +130,8 @@ and a one-line pointer in the AGENTS.md index.
   to the screen only when stdout is a terminal. Piped (`| tail`) or in an agent
   shell, the output goes to `.log/nixos-<action>.log` (e.g.
   `nixos-dry-activate.log`) and the screen shows only the header line; read that
-  file instead. Likewise `gh`, `git push` and `./rebuild.sh` leave the sandbox
+  file instead. Likewise `gh`, `git push`, `./rebuild.sh` and the absolute-path
+  `/run/current-system/sw/bin/theme-shots` leave the sandbox
   only as plain commands (`sandbox.excludedCommands`): chained with `&&`/`;`,
   piped or with a long inline `--body`, they run sandboxed and `gh` fails with
   "run gh auth login". Use `--body-file` for PR bodies.

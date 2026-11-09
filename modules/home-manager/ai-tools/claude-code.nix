@@ -88,6 +88,16 @@
 				# into the store, so (unlike t3code's own checkout) no agent can edit
 				# what it runs, and the shared policy needs no bare name on PATH.
 				"/run/current-system/sw/bin/schedule-precheck *"
+				# theme-shots (modules/theme/theme-shots.nix, GOD-KILLER only; inert on
+				# REDRUM, where nothing installs it): renders the generated Zen CSS on
+				# four fixed sites in a throwaway, logged-out headless profile of the
+				# installed Zen. It needs the nix daemon socket (nix eval) and the
+				# sites, which strictAllowlist would refuse. Absolute path into the
+				# root-owned system profile, so no agent can edit what it runs.
+				# Excluded commands are not limited by network.allowedDomains: the
+				# script confines Firefox itself (PAC allowlist), see
+				# docs/agents/security.md, "theme-shots runs unsandboxed". Do not widen.
+				"/run/current-system/sw/bin/theme-shots *"
 				# gh and git's network commands need the token in ~/.config/gh
 				"gh *"
 				"git push *"
@@ -146,6 +156,9 @@
 					# private clone, files issues; plain command, absolute path
 					"Bash(/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *)"
 					"Bash(/run/current-system/sw/bin/schedule-precheck *)"
+					# before/after screenshots of the generated Zen CSS; plain command,
+					# absolute path (docs/agents/theme-shots.md)
+					"Bash(/run/current-system/sw/bin/theme-shots *)"
 					"Bash(bash -n *)"
 					"Bash(nixos-rebuild build *)"
 					"Bash(nixos-rebuild list-generations *)"
