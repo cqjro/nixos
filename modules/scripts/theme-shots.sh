@@ -53,7 +53,7 @@ ATTR='nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.ze
 ZEN=zen-twilight
 # flake prefs taken over into the throwaway profile (rendering only: colour scheme,
 # fonts, Zen view, the userChrome/userContent switch). Anything else is dropped and listed.
-PREF_RE='^(ui\.|layout\.|font\.|reader\.|zen\.view\.|toolkit\.legacyUserProfileCustomizations\.)'
+PREF_RE='\A(ui\.|layout\.|font\.|reader\.|zen\.view\.|toolkit\.legacyUserProfileCustomizations\.stylesheets\z)'
 UA='Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
 # Firefox's PNG encoder is weak (a blank 1400x1000 page is still ~27 KB), but gzip sees
 # through it: blank 583 bytes, a flat page with two text lines 5.5 KB, a busy page 185 KB
@@ -170,14 +170,14 @@ grep -q '@-moz-document' "$work/userContent.css" || die "evaluated userContent h
 # prefs = the flake's real Zen settings, rendering prefs only (see PREF_RE); plain values
 jq -r --arg re "$PREF_RE" '
 	.settings | to_entries[]
-	| select((.key | test($re)) and (.key | test("^[A-Za-z0-9._-]+$"))
+	| select((.key | test($re)) and (.key | test("\\A[A-Za-z0-9._-]+\\z"))
 		and ((.value | type) == "boolean" or (.value | type) == "number"
 			or ((.value | type) == "string" and (.value | length) < 200 and (.value | test("[\\n\\r]") | not))))
 	| "user_pref(\(.key | @json), \(.value | @json));"' "$work/eval.json" >"$work/prefs.js" ||
 	die "cannot read the flake's Zen settings"
 jq -r --arg re "$PREF_RE" '
 	.settings | to_entries[]
-	| select(((.key | test($re)) and (.key | test("^[A-Za-z0-9._-]+$"))
+	| select(((.key | test($re)) and (.key | test("\\A[A-Za-z0-9._-]+\\z"))
 		and ((.value | type) == "boolean" or (.value | type) == "number"
 			or ((.value | type) == "string" and (.value | length) < 200 and (.value | test("[\\n\\r]") | not)))) | not)
 	| .key' "$work/eval.json" >"$work/dropped-prefs.txt"

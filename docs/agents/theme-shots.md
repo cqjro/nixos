@@ -26,7 +26,9 @@ search results, youtube home and a watch page, reddit home and a post, instagram
   thread's worktree.
 - `OUTDIR`: optional, `.log/theme-shots` (the default) or below. The worktree's
   `.gitignore` must ignore `.log/`, or the run is refused: screenshots of live pages
-  must never be committable.
+  must not be committable by accident. This is a guard against slips, not a boundary: the
+  agent controls its own `.gitignore`, and nothing here stops `git add -f`; the hard
+  guarantee is your review of the PR.
 
 Call it as **one plain command with the absolute path**: no `cd … &&`, no pipe, no
 redirect, no `timeout`/`VAR=` prefix (the exclusion only matches the plain command and
@@ -43,7 +45,7 @@ What it does, in order:
    read confinement (security.md).
 2. Builds `user.js` from the flake's real Zen `settings`, **rendering prefs only**
    (`ui.*`, `layout.*`, `font.*`, `reader.*`, `zen.view.*`,
-   `toolkit.legacyUserProfileCustomizations.*`; plain values), so the dark-scheme
+   only `toolkit.legacyUserProfileCustomizations.stylesheets`; plain values), so the dark-scheme
    overrides and the stylesheet switch are the real ones, not a copy. Every other
    pref is dropped and listed in `report.txt`. The script's own fixed block (proxy,
    telemetry, updates) is written last and wins. If the flake does not set
@@ -74,7 +76,9 @@ failed or was rejected.
   Dark Reader, Stylus, Return YouTube Dislike), so layout, ads and recolouring can
   differ from the real browser: the page is the unblocked site with only `userContent.css`
   applied. Zen's own policies (it is the installed build) try to install the three
-  `ExtensionSettings` add-ons; the network confinement below blocks that, which is fine.
+  `ExtensionSettings` add-ons in every fresh profile; "none of the real extensions" holds
+  only because the network confinement below blocks addons.mozilla.org (a failed install
+  attempt may show in the profile's Zen log, which is deleted with it).
 - **Captures at the load event.** A page that renders its content late (YouTube home
   is a JS app) can come out as a skeleton. If an `after` shot is missing content
   that the `before` shot has too, that is the capture, not the CSS.
