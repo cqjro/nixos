@@ -90,10 +90,10 @@
 				"/run/current-system/sw/bin/schedule-precheck *"
 				# theme-shots (modules/theme/theme-shots.nix, GOD-KILLER only; inert on
 				# REDRUM, where nothing installs it): renders the generated Zen CSS on
-				# four fixed sites in a throwaway headless Firefox. It needs the nix
-				# daemon socket (nix eval) and the sites, which strictAllowlist would
-				# refuse. Absolute path into the root-owned system profile, so no agent
-				# can edit what it runs.
+				# four fixed sites in a throwaway, logged-out headless profile of the
+				# installed Zen. It needs the nix daemon socket (nix eval) and the
+				# sites, which strictAllowlist would refuse. Absolute path into the
+				# root-owned system profile, so no agent can edit what it runs.
 				# Excluded commands are not limited by network.allowedDomains: the
 				# script confines Firefox itself (PAC allowlist), see
 				# docs/agents/security.md, "theme-shots runs unsandboxed". Do not widen.
@@ -313,11 +313,6 @@
 					"Bash(gh auth switch*)"
 					"Bash(git credential*)"
 					"Bash(*hosts.yml*)"
-
-					# human-only: drives the real, logged-in Zen and screenshots your
-					# desktop (modules/scripts/zen-shots.sh)
-					"Bash(zen-shots*)"
-					"Bash(/run/current-system/sw/bin/zen-shots*)"
 
 					# credentials and secrets. Read rules cover Read/Grep/Glob, the
 					# Bash file commands Claude recognises (cat, head, sed, ...), and

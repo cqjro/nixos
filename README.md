@@ -73,7 +73,7 @@ modules/
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
 │   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
-├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet, theme-shots / zen-shots)
+├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet, theme-shots)
 ├── server/            # REDRUM services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, youtube
 ├── system/            # System-level config: games, minecraft, waydroid, ios-sideloading, tether, flatpak, rss-sources, vpn...
 └── theme/             # Everything color-related
@@ -137,10 +137,10 @@ targets:
   `theme/webstyling/*.nix` which restyles *every* page — YouTube, Reddit,
   Google, GitHub, Wikipedia, Instagram, Brave, Claude, and nixpkgs — from the
   `@-moz-document` block in the browser's `userContent.css`. Those rules target
-  classes the sites rotate, so two screenshot tools show what they do today:
-  `theme-shots` (agents; headless Firefox, logged out, before/after the branch's
-  generated CSS) and `zen-shots` (you; your real, logged-in Zen via `grim`). Both read
-  one fixed URL list; see [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md).
+  classes the sites rotate, so `theme-shots` (agents; a throwaway, logged-out headless
+  profile of the installed Zen, before/after the branch's generated CSS, on a fixed URL
+  list) shows what they do today. Logged-in pages are covered by screenshots you take
+  and attach by hand; see [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md).
 - **Discord** — a two-hundred-line `quickCss` (via nixcord) remaps every Discord
   CSS variable to the base16 palette: flat `base00` background, `base01`/`base02`
   elevation, `base03` borders, `base05` text, `base0D` brand blue. Applied to
@@ -442,12 +442,11 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
 - `modules/scripts/pip-move.sh` — move the floating picture-in-picture window
   around (`Super+Alt+HJKL`).
 - `modules/scripts/parse_xremap.py` — parse the xremap config for reading/grepping.
-- `modules/scripts/theme-shots.sh`, `modules/scripts/zen-shots.sh` and
-  `modules/scripts/theme-shots-urls.txt` — before/after screenshots of the Zen per-site
-  CSS. `theme-shots` is for agents (an excluded, allow-listed command at
-  `/run/current-system/sw/bin/theme-shots`, packaged by `modules/theme/theme-shots.nix`);
-  `zen-shots` is **human only** and screenshots your real Zen. Details, limits and the
-  trust assumptions: [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) and
+- `modules/scripts/theme-shots.sh` and `modules/scripts/theme-shots-urls.txt` —
+  logged-out before/after screenshots of the Zen per-site CSS for agents (an excluded,
+  allow-listed command at `/run/current-system/sw/bin/theme-shots`, packaged by
+  `modules/theme/theme-shots.nix`). Details, limits and the trust assumptions:
+  [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) and
   `docs/agents/security.md`.
 - `modules/scripts/abt-browser-shim.js` — the Actual Budget Tweaks browser shim
   (upstream shim + the Stylix theme seed); stamped with the palette at build

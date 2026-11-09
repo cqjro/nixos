@@ -1,9 +1,9 @@
 # site|page|url
 #
-# The FIXED page list for theme-shots (agents, headless Firefox) and zen-shots
-# (the human, real Zen). Both read this one file from the Nix store, so a caller
-# can never supply a URL. One line per shot; "|" separates the fields and may not
-# appear in a URL. Keep every page logged-out and public.
+# The FIXED page list for theme-shots (agents, headless Zen, logged out). The script
+# reads this one file from the Nix store, so a caller can never supply a URL. One line
+# per shot; "|" separates the fields and may not appear in a URL. Keep every page
+# logged-out and public.
 #
 # reddit/post is an archived thread (archived threads keep their URL); it is
 # unverified until the first real run.

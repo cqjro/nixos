@@ -1,6 +1,6 @@
 *.log
-# rebuild.sh output, theme-shots / zen-shots screenshots (the latter show a logged-in
-# account: never commit)
+# rebuild.sh output and theme-shots screenshots (theme-shots refuses to run unless this
+# line is present)
 .log/
 
 result

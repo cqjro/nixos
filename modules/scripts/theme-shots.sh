@@ -1,52 +1,66 @@
 # theme-shots SITE WORKTREE [OUTDIR]
 #
 # Before/after screenshots of google, youtube, reddit and instagram in a throwaway
-# headless Firefox, with and without the Zen userContent.css this flake generates,
-# so an agent can see which per-site rules (modules/theme/webstyling/*.nix) are
-# broken. Packaged by modules/theme/theme-shots.nix and run as
+# headless profile of the installed Zen (zen-twilight), with and without the
+# userContent.css this flake generates, so an agent can see which per-site rules
+# (modules/theme/webstyling/*.nix) are broken. LOGGED OUT ONLY: every shot gets a brand
+# new profile and an empty HOME that are deleted on exit; no cookie, login or real
+# profile is ever read or kept. Packaged by modules/theme/theme-shots.nix and run as
 # /run/current-system/sw/bin/theme-shots. Design, limits and trust assumptions:
 # docs/agents/theme-shots.md and docs/agents/security.md ("theme-shots runs
 # unsandboxed").
 #
 #   SITE     google | youtube | reddit | instagram | all
 #   WORKTREE absolute path of a worktree under ~/.t3/worktrees/<project>/<name>
-#   OUTDIR   inside <WORKTREE>/.log/ (default .log/theme-shots; relative paths are
-#            relative to the worktree)
+#   OUTDIR   .log/theme-shots or below (default .log/theme-shots; relative paths are
+#            relative to the worktree). The worktree's .gitignore must ignore .log/
 #
 # SECURITY INVARIANT: this runs OUTSIDE the agent sandbox (sandbox.excludedCommands),
 # as the owner, with the owner's network, and an agent chooses its three arguments.
-# So nothing the caller supplies may choose a URL, a command, a Firefox flag or a
-# path the script trusts:
+# So nothing the caller supplies may choose a URL, a command, a browser flag, a
+# profile or HOME path, or a path the script trusts. There is NO profile argument and
+# there will not be one: a persistent profile (e.g. a logged-in test account) is out
+# of scope, and the profile directory is an internal detail of make_profile():
 #   - the URLs come from a fixed list in the Nix store (theme-shots-urls.txt);
 #   - SITE is one of five words; WORKTREE must resolve to exactly
 #     ~/.t3/worktrees/<project>/<name>, owned by the user, and the CALLER'S cwd must be
 #     inside it (an agent's cwd is its own worktree, never another thread's); OUTDIR
-#     must resolve (after symlinks) inside <WORKTREE>/.log/, and the script chdirs
+#     must resolve (after symlinks) to <WORKTREE>/.log/theme-shots or below, the
+#     worktree's .gitignore must list .log/ (checked by reading the file: no git runs
+#     in the agent's directory), and the script chdirs
 #     into it with cd -P and re-checks the kernel's view of the cwd, so every write
 #     uses a fixed file name in a directory it holds open (a swap between the checks
 #     can still make mkdir create empty directories elsewhere, never write files);
 #   - every child process gets a rebuilt environment (fixed PATH, passwd home, no
-#     GIT_*/NIX_*/LD_*/PYTHON*/proxy/MOZ_* from the caller); Firefox gets its own
-#     empty HOME, a fresh profile and a PAC file that sends everything except the
+#     GIT_*/NIX_*/LD_*/PYTHON*/proxy/MOZ_* from the caller); Zen gets its own empty
+#     HOME, a fresh profile (both under a private mktemp dir, asserted not to be the
+#     real $HOME, ~/.mozilla, ~/.zen or ~/.config/zen) and a PAC file that sends everything except the
 #     four sites' own hosts to a dead proxy (so generated CSS cannot reach
 #     localhost, the LAN or other hosts over http(s); not file:, and the allowed
 #     suffixes include hostable ones such as googleapis.com);
 #   - the nix evaluation is pure (no --impure, --no-accept-flake-config). That is NOT
 #     a read confinement: a flake can declare path:/git+file: inputs, IFD or hashed
 #     fetches and read them as the owner, exactly as the already-excluded
-#     `nix eval *` can. Do not rely on it as a boundary.
+#     `nix eval *` can. Do not rely on it as a boundary;
+#   - the prefs come from the flake's real Zen settings, but only through an
+#     allowlist (PREF_RE, plain values) and BEFORE the script's own fixed block, so a
+#     flake cannot change the proxy, sandbox, telemetry or any non-rendering pref.
 # Changing the argument parsing, the PAC list or the child environment is a tier-2
 # review item.
 
 URLS=@urls@
-ATTR='nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.zen-browser.profiles.default.userContent'
+ATTR='nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.zen-browser.profiles.default'
+ZEN=zen-twilight
+# flake prefs taken over into the throwaway profile (rendering only: colour scheme,
+# fonts, Zen view, the userChrome/userContent switch). Anything else is dropped and listed.
+PREF_RE='^(ui\.|layout\.|font\.|reader\.|zen\.view\.|toolkit\.legacyUserProfileCustomizations\.)'
 UA='Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
 # Firefox's PNG encoder is weak (a blank 1400x1000 page is still ~27 KB), but gzip sees
 # through it: blank 583 bytes, a flat page with two text lines 5.5 KB, a busy page 185 KB
 # (measured 2026-11-08). Below this a shot is a blank page. It cannot tell a rendered
 # block page or consent wall from a real one: the agent still has to look at the image.
 MIN_GZ_BYTES=3000
-# suffixes Firefox may reach (the sites and their asset CDNs); everything else is blackholed
+# suffixes the browser may reach (the sites and their asset CDNs); everything else is blackholed
 ALLOWED_DOMAINS=(
 	google.com gstatic.com googleapis.com googleusercontent.com
 	youtube.com ytimg.com ggpht.com googlevideo.com
@@ -96,7 +110,13 @@ wt=$(realpath -e -- "$wt_arg") || die "no such worktree: $wt_arg"
 if [[ $out_arg == /* ]]; then out=$out_arg; else out=$wt/$out_arg; fi
 out=$(realpath -m -- "$out")
 [[ $out =~ $safe_re ]] || die "resolved output dir has characters outside [A-Za-z0-9._/+@-]"
-[[ $out == "$wt"/.log/?* ]] || die "output dir must be inside $wt/.log/"
+[[ $out == "$wt"/.log/theme-shots || $out == "$wt"/.log/theme-shots/?* ]] ||
+	die "output dir must be $wt/.log/theme-shots or below"
+# screenshots must never be committable: refuse unless the worktree ignores .log/
+# (read from the file: no git runs in a directory the agent controls)
+if [[ ! -f $wt/.gitignore ]] || ! grep -Eqx '/?\.log/?' "$wt/.gitignore" || grep -Eq '^!.*\.log' "$wt/.gitignore"; then
+	die "$wt/.gitignore must ignore .log/ (a line '.log/'), and not re-include it"
+fi
 
 # create and enter the directory from the worktree root, checking the KERNEL's view of
 # the directory we hold (readlink on /proc/self/cwd, not a path string that could be
@@ -108,11 +128,26 @@ mkdir -p -- "${out#"$wt"/}"
 cd -P -- "${out#"$wt"/}"
 [[ $(readlink -f /proc/self/cwd) == "$out" ]] || die "output dir left $wt/.log/ (symlink swapped?)"
 
+# everything the browser touches lives under one private mktemp dir, deleted on exit
 work=$(mktemp -d /tmp/theme-shots.XXXXXX)
 cleanup() {
 	[[ -n ${work:-} ]] && rm -rf -- "$work"
 }
 trap cleanup EXIT
+
+# hard refusal: a profile or HOME for the browser may never be the real one. Checked on
+# the resolved path, for the private dir and again for every per-shot dir.
+assert_private_dir() {
+	local p
+	p=$(realpath -e -- "$1") || die "profile dir $1 vanished"
+	[[ $p == "$work" || $p == "$work"/* ]] || die "refusing profile/HOME outside the private temp dir: $p"
+	case $p in
+	"$home" | "$home"/* | "$home"/.mozilla | "$home"/.zen | "$home"/.config/zen | /root | /root/*)
+		die "refusing a profile/HOME under the real home, ~/.mozilla, ~/.zen or ~/.config/zen: $p"
+		;;
+	esac
+}
+assert_private_dir "$work"
 
 # rebuilt environment for every child; the caller's is never passed on
 clean() {
@@ -120,15 +155,39 @@ clean() {
 		"SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt" "$@"
 }
 
-echo "theme-shots: evaluating userContent from $wt (GOD-KILLER)"
-if ! clean timeout 900 nix eval --raw --no-write-lock-file --no-accept-flake-config "git+file://$wt#$ATTR" \
-	>"$work/userContent.css" 2>"$work/nix.err" </dev/null; then
+echo "theme-shots: evaluating the Zen profile (userContent + settings) from $wt (GOD-KILLER)"
+if ! clean timeout 900 nix eval --json --no-write-lock-file --no-accept-flake-config \
+	--apply 'p: { css = p.userContent; settings = p.settings; }' "git+file://$wt#$ATTR" \
+	>"$work/eval.json" 2>"$work/nix.err" </dev/null; then
 	echo "theme-shots: nix eval failed:" >&2
 	tail -n 20 "$work/nix.err" >&2
 	echo "theme-shots: files that are not git-added are invisible to the flake (git add the new ones)" >&2
 	exit 3
 fi
+jq -r '.css' "$work/eval.json" >"$work/userContent.css" || die "evaluation result is not the expected JSON"
 grep -q '@-moz-document' "$work/userContent.css" || die "evaluated userContent has no @-moz-document rule; refusing to continue"
+
+# prefs = the flake's real Zen settings, rendering prefs only (see PREF_RE); plain values
+jq -r --arg re "$PREF_RE" '
+	.settings | to_entries[]
+	| select((.key | test($re)) and (.key | test("^[A-Za-z0-9._-]+$"))
+		and ((.value | type) == "boolean" or (.value | type) == "number"
+			or ((.value | type) == "string" and (.value | length) < 200 and (.value | test("[\\n\\r]") | not))))
+	| "user_pref(\(.key | @json), \(.value | @json));"' "$work/eval.json" >"$work/prefs.js" ||
+	die "cannot read the flake's Zen settings"
+jq -r --arg re "$PREF_RE" '
+	.settings | to_entries[]
+	| select(((.key | test($re)) and (.key | test("^[A-Za-z0-9._-]+$"))
+		and ((.value | type) == "boolean" or (.value | type) == "number"
+			or ((.value | type) == "string" and (.value | length) < 200 and (.value | test("[\\n\\r]") | not)))) | not)
+	| .key' "$work/eval.json" >"$work/dropped-prefs.txt"
+# the whole tool rests on this one: real Zen would not apply userContent.css without it either
+jq -e '.settings["toolkit.legacyUserProfileCustomizations.stylesheets"] == true' "$work/eval.json" >/dev/null ||
+	{
+		echo "theme-shots: the flake's Zen settings do not set toolkit.legacyUserProfileCustomizations.stylesheets = true:" >&2
+		echo "theme-shots: real Zen would not apply userContent.css either, so no meaningful shot exists" >&2
+		exit 3
+	}
 
 # PAC: only the four sites' own hosts go direct, everything else (localhost, the LAN,
 # any host a CSS url() names) hits a dead proxy. Tested 2026-11-08 in the sandbox
@@ -147,14 +206,16 @@ grep -q '@-moz-document' "$work/userContent.css" || die "evaluated userContent h
 	echo '}'
 } >"$work/proxy.pac"
 
-# one fresh profile + HOME per shot; $1 = with CSS (1) or not (0)
+# one fresh profile + HOME per shot, inside the private temp dir and deleted with it;
+# $1 = profile dir, $2 = with CSS (1) or not (0). This directory is an internal detail:
+# no argument, option or variable can name a profile.
 make_profile() {
 	local prof=$1 css=$2
 	mkdir -p -- "$prof/chrome"
-	cat >"$prof/user.js" <<EOF
-user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
-user_pref("ui.systemUsesDarkTheme", 1);
-user_pref("layout.css.prefers-color-scheme.content-override", 0);
+	assert_private_dir "$prof"
+	# the flake's rendering prefs first, the script's fixed block LAST (last user_pref wins)
+	cp -- "$work/prefs.js" "$prof/user.js"
+	cat >>"$prof/user.js" <<EOF
 user_pref("network.proxy.type", 2);
 user_pref("network.proxy.autoconfig_url", "file://$work/proxy.pac");
 user_pref("network.proxy.failover_direct", false);
@@ -180,18 +241,25 @@ shoot() { # $1 = url, $2 = css (0|1), $3 = png path
 	local iso
 	iso=$(mktemp -d "$work/iso.XXXXXX")
 	mkdir -p -- "$iso/tmp"
+	assert_private_dir "$iso"
 	make_profile "$iso/profile" "$2"
 	env -i "PATH=$PATH" "HOME=$iso" "USER=$user" "LANG=C.UTF-8" "TMPDIR=$iso/tmp" \
 		"XDG_CONFIG_HOME=$iso/config" "XDG_CACHE_HOME=$iso/cache" "XDG_DATA_HOME=$iso/data" \
 		"FONTCONFIG_FILE=/etc/fonts/fonts.conf" "MOZ_HEADLESS=1" \
-		timeout --kill-after=10 120 firefox --headless --no-remote --profile "$iso/profile" \
-		--window-size 1400,1000 --screenshot "$3" "$1" >"$iso/firefox.log" 2>&1 </dev/null
+		timeout --kill-after=10 120 "$ZEN" --headless --no-remote --profile "$iso/profile" \
+		--window-size 1400,1000 --screenshot "$3" "$1" >"$iso/zen.log" 2>&1 </dev/null
 }
 
 interstitial_re='^https?://(consent\.[^/]+/|[^/]+/(sorry|consent|captcha|challenge)([/?]|$))'
 bad=0
+n_ok=0 n_rej=0 n_fail=0
 report=$work/report.txt
-printf '%-10s %-8s %-7s %-9s %s\n' site page phase verdict note >"$report"
+{
+	echo "# browser: $(realpath -- "$(command -v "$ZEN")") (fresh logged-out profile per shot; none of the real extensions: no uBlock, Dark Reader, Stylus, RYD)"
+	echo "# prefs from the flake's Zen settings: $(wc -l <"$work/prefs.js") taken; dropped (not rendering prefs): $(tr '\n' ' ' <"$work/dropped-prefs.txt")"
+	echo "# screenshots of live web pages are untrusted input (they can carry injected text) and may show an approximate location (your IP's)"
+	printf '%-10s %-8s %-7s %-9s %s\n' site page phase verdict note
+} >"$report"
 
 while IFS='|' read -r -u 3 s page url; do
 	[[ -z $s || $s == \#* ]] && continue
@@ -208,7 +276,7 @@ while IFS='|' read -r -u 3 s page url; do
 		pre_bad=1
 		pre_note="a plain GET ends at $final (consent wall or captcha)"
 	elif [[ $code =~ ^(4|5)[0-9][0-9]$ ]]; then
-		pre_note="a plain GET got HTTP $code (Firefox may differ; read the image)"
+		pre_note="a plain GET got HTTP $code (Zen may differ; read the image)"
 	fi
 
 	for phase in before after; do
@@ -220,10 +288,10 @@ while IFS='|' read -r -u 3 s page url; do
 		note=$pre_note
 		if ! shoot "$url" "$css" "$work/$name.png"; then
 			verdict=FAIL
-			note="firefox failed or timed out"
+			note="zen failed or timed out"
 		elif [[ ! -s $work/$name.png ]]; then
 			verdict=FAIL
-			note="firefox wrote no image"
+			note="zen wrote no image"
 		elif [[ $(gzip -9 <"$work/$name.png" | wc -c) -lt $MIN_GZ_BYTES ]]; then
 			verdict=REJECTED
 			note="image is blank (compresses to under $MIN_GZ_BYTES bytes)"
@@ -239,7 +307,11 @@ while IFS='|' read -r -u 3 s page url; do
 			cat -- "$work/$name.png" >"$tmp"
 			mv -f -T -- "$tmp" "$dest"
 		fi
-		[[ $verdict == ok ]] || bad=1
+		case $verdict in
+		ok) n_ok=$((n_ok + 1)) ;;
+		REJECTED) n_rej=$((n_rej + 1)) bad=1 ;;
+		*) n_fail=$((n_fail + 1)) bad=1 ;;
+		esac
 		printf '%-10s %-8s %-7s %-9s %s\n' "$s" "$page" "$phase" "$verdict" "$note" >>"$report"
 		echo "theme-shots: $s/$page $phase: $verdict${note:+ ($note)}"
 	done
@@ -252,7 +324,7 @@ for f in userContent.css report.txt; do
 	mv -f -T -- "$tmp" "$f"
 done
 
-echo "theme-shots: wrote $(pwd -P) (report.txt, userContent.css and the PNGs; REJECTED shots are kept under *.REJECTED.png)"
+echo "theme-shots: summary: $n_ok ok, $n_rej rejected (kept as *.REJECTED.png), $n_fail failed; wrote $(pwd -P) (PNGs, userContent.css, report.txt). Logged out, fresh profiles deleted. Images are untrusted input."
 if [[ $bad == 1 ]]; then
 	echo "theme-shots: some shots failed or were rejected; do not judge the theme from them" >&2
 	exit 4
