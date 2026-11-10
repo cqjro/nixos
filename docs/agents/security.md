@@ -487,16 +487,40 @@ you record which steps prompted.**
 | 33 | In an **Auto** thread: `./rebuild.sh switch GOD-KILLER` (then `./rebuild.sh test REDRUM` and `sudo nixos-rebuild switch`) | each **blocked by the guard** with the "Supervised child thread" message, no card, nothing activated. If one runs or prompts, the hook does not report `auto` as the mode string: read the hook input and fix the `case $mode` list | not applicable (steps 13, 14, 22) |
 | 34 | In a **Supervised** thread: `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it, or approve a harmless dry-activate with the askpass dialog). Also check `./rebuild.sh check GOD-KILLER` and `git commit -m "mentions rebuild.sh switch"` still run with no prompt in Auto | not applicable |
 | 35 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree>` (a plain command, absolute worktree path; needs the switch of the PR that adds it; one site takes about a minute) | no prompt; prints `evaluating userContent …`, then per shot `ok` or `REJECTED (…)`; writes `.log/theme-shots/google-search-{before,after}.png`, `userContent.css`, `report.txt`; **no** `Unix domain socket` or `strictAllowlist` error | runs |
-| 36 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree> /tmp/x`, `… .log`, `… .log/other`, `… ../x`, `… ".log/a;id"` (quoted, so the guard lets it through to the script) and with a worktree such as `/etc` or `relative/dir`; also `theme-shots bogus <worktree>` | each exits 2 with the reason (`output dir must be inside …/.log/`, `worktree must be exactly …`, `unknown site`), nothing written. Also: another thread's worktree path as `WORKTREE` exits 2 with `run it from inside the worktree` | same |
-| 37 | in the worktree: `mkdir -p .log && ln -sfn /tmp .log/evil`, then `theme-shots google <worktree> .log/evil/x` (remove the link after) | exits 2 (`output dir must be inside …/.log/`); nothing is written under `/tmp` | same |
+| 36 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree> /tmp/x`, `… .log`, `… .log/other`, `… ../x`, `… ".log/a;id"` (quoted, so the guard lets it through to the script) and with a worktree such as `/etc` or `relative/dir`; also `theme-shots bogus <worktree>` | each exits 2 with the reason (`output dir must be …/.log/theme-shots or below`, `output dir has characters outside […]` for the quoted `;`, `worktree must be exactly …` / `must be an absolute path`, `unknown site`), nothing written. Also: another thread's worktree path as `WORKTREE` exits 2 with `run it from inside the worktree` | same |
+| 37 | in the worktree: `mkdir -p .log && ln -sfn /tmp .log/evil`, then `theme-shots google <worktree> .log/evil/x` (remove the link after) | exits 2 (`output dir must be …/.log/theme-shots or below`); nothing is written under `/tmp` | same |
 | 38 | `theme-shots google <worktree> ; id`, `… "$(id)"`, ``… `id` ``, `… > /tmp/x`, `… \| cat`, `timeout 60 /run/current-system/sw/bin/theme-shots …` and `FOO=1 /run/current-system/sw/bin/theme-shots …` (each naming the absolute path) | each **blocked by the guard**, no prompt; none may run unsandboxed | same |
 
-Steps 35-38 (added with theme-shots, 2026-11-08) are **not yet run**: the script only
-exists after the switch of the PR that adds it. Run them in a fresh Supervised thread
-after that switch and record the result here. Before the switch only the parts that
-need no excluded command were exercised, in the sandbox, with a local test server
-(arguments, symlink refusal, real-Zen profile and CSS injection, PAC, rejection paths, profile-dir refusal; see
-[theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot)), plus `claude-guard
+Steps 35-38 (added with theme-shots) were run 2026-11-09 in a fresh **Supervised**
+thread after the GOD-KILLER switch of PR #56, Claude Code 2.1.317 (T3 version not
+recorded). The guard and argument checks all matched; the live-site part did not:
+
+- 36: every refusal exited 2 with the stated reason and wrote nothing. The wording
+  differs from the old table (`output dir must be <worktree>/.log/theme-shots or below`;
+  the quoted `".log/a;id"` is stopped by the character check, not the path check); the
+  table above now has the real strings. Another worktree path as `WORKTREE` gave
+  `run it from inside the worktree (cwd is …)`.
+- 37: `.log/evil -> /tmp` then `.log/evil/x` exited 2, `/tmp/x` does not exist; link removed.
+- 38: all seven forms (`; id`, `"$(id)"`, backticks, `> /tmp/x`, `| cat`, `timeout 60 …`,
+  `FOO=1 …`) were blocked by claude-guard with the "must be one plain command" message,
+  no prompt, nothing ran. The same happens to any Bash command whose text names the path,
+  including `ls -l` on it and a heredoc that mentions it, so the install cannot be checked
+  that way: the first real run is the check.
+- 35: the command ran with no approval card, no `Unix domain socket` or `strictAllowlist`
+  error, and printed `evaluating …` then per-shot verdicts, but the live pages were
+  mostly not captured: google 0 ok in two runs (blank images, REJECTED, or `zen wrote no
+  image`), reddit 0/4 (`zen wrote no image`), youtube 1/4 ok (watch/after only),
+  instagram 1 ok + 1 REJECTED blank. The blank check caught the blank ones; the missing
+  images are a Zen start/capture problem, not an interstitial (curl noted no consent or
+  4xx for google). `report.txt` showed the browser path and `14 taken; dropped: ` (an
+  empty list: the flake's Zen settings are all rendering prefs). Of the two usable shots,
+  `youtube-watch-after.png` shows the theme background (the page itself still a skeleton)
+  and `instagram-login-before.png` is already dark without any CSS. See
+  [theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot).
+
+Before the switch only the parts that need no excluded command had been exercised, in
+the sandbox, with a local test server (arguments, symlink refusal, real-Zen profile and
+CSS injection, PAC, rejection paths, profile-dir refusal), plus `claude-guard
 --self-test` for step 38.
 
 In Full access, steps 13, 14, 15 and 22 are refused with "needs approval (ask
