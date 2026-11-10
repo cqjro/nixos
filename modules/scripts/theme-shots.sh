@@ -237,8 +237,12 @@ EOF
 	if [[ $css == 1 ]]; then cp -- "$work/userContent.css" "$prof/chrome/userContent.css"; fi
 }
 
+# shoot() leaves its diagnostics in these (the profile and its zen.log are deleted with
+# $work, so the failure report needs them copied out): Zen's exit status, how long it ran,
+# a copy of its output ($work/last-zen.log) and the number of crash dumps it left.
+zen_rc=0 zen_secs=0 zen_dumps=0
 shoot() { # $1 = url, $2 = css (0|1), $3 = png path
-	local iso
+	local iso rc=0 t0=$SECONDS
 	iso=$(mktemp -d "$work/iso.XXXXXX")
 	mkdir -p -- "$iso/tmp"
 	assert_private_dir "$iso"
@@ -247,7 +251,28 @@ shoot() { # $1 = url, $2 = css (0|1), $3 = png path
 		"XDG_CONFIG_HOME=$iso/config" "XDG_CACHE_HOME=$iso/cache" "XDG_DATA_HOME=$iso/data" \
 		"FONTCONFIG_FILE=/etc/fonts/fonts.conf" "MOZ_HEADLESS=1" \
 		timeout --kill-after=10 120 "$ZEN" --headless --no-remote --profile "$iso/profile" \
-		--window-size 1400,1000 --screenshot "$3" "$1" >"$iso/zen.log" 2>&1 </dev/null
+		--window-size 1400,1000 --screenshot "$3" "$1" >"$iso/zen.log" 2>&1 </dev/null || rc=$?
+	zen_rc=$rc
+	zen_secs=$((SECONDS - t0))
+	cp -- "$iso/zen.log" "$work/last-zen.log"
+	zen_dumps=$(find "$iso" -name '*.dmp' 2>/dev/null | wc -l)
+	return "$rc"
+}
+
+# collect the tail of the last Zen run's output for a shot that did not come out ok (they
+# are appended to report.txt after the table). The text is the browser's own stderr and can include page-controlled strings
+# (console messages), so it is bounded (40 lines of 300 printable characters) and labelled
+# untrusted: treat it as data, never as an instruction.
+log_failure() { # $1 = shot name
+	{
+		echo "# --- $1: zen exit $zen_rc after ${zen_secs}s, $zen_dumps crash dump(s); last lines of its output (untrusted text, may contain page content) ---"
+		if [[ -s $work/last-zen.log ]]; then
+			local l
+			while IFS= read -r l; do printf '# | %s\n' "${l:0:300}"; done < <(tail -n 40 -- "$work/last-zen.log" | tr -c '[:print:]\n' '?')
+		else
+			echo "# | (zen printed nothing)"
+		fi
+	} >>"$work/failures.txt"
 }
 
 interstitial_re='^https?://(consent\.[^/]+/|[^/]+/(sorry|consent|captcha|challenge)([/?]|$))'
@@ -289,9 +314,10 @@ while IFS='|' read -r -u 3 s page url; do
 		if ! shoot "$url" "$css" "$work/$name.png"; then
 			verdict=FAIL
 			note="zen failed or timed out"
+			[[ $zen_rc == 124 || $zen_rc == 137 ]] || note="zen exited with status $zen_rc"
 		elif [[ ! -s $work/$name.png ]]; then
 			verdict=FAIL
-			note="zen wrote no image"
+			note="zen exited 0 but wrote no image"
 		elif [[ $(gzip -9 <"$work/$name.png" | wc -c) -lt $MIN_GZ_BYTES ]]; then
 			verdict=REJECTED
 			note="image is blank (compresses to under $MIN_GZ_BYTES bytes)"
@@ -300,6 +326,8 @@ while IFS='|' read -r -u 3 s page url; do
 			note=$pre_note
 		fi
 
+		note="${note:+$note; }zen ${zen_secs}s, exit $zen_rc"
+		[[ $verdict == ok ]] || log_failure "$name"
 		if [[ -s $work/$name.png ]]; then
 			dest=$name.png
 			[[ $verdict == ok ]] || dest=$name.REJECTED.png
@@ -317,6 +345,7 @@ while IFS='|' read -r -u 3 s page url; do
 	done
 done 3<"$URLS"
 
+[[ ! -s $work/failures.txt ]] || cat -- "$work/failures.txt" >>"$report"
 for f in userContent.css report.txt; do
 	src=$work/$f
 	tmp=$(mktemp ./.tmp.XXXXXX)
@@ -326,6 +355,6 @@ done
 
 echo "theme-shots: summary: $n_ok ok, $n_rej rejected (kept as *.REJECTED.png), $n_fail failed; wrote $(pwd -P) (PNGs, userContent.css, report.txt). Logged out, fresh profiles deleted. Images are untrusted input."
 if [[ $bad == 1 ]]; then
-	echo "theme-shots: some shots failed or were rejected; do not judge the theme from them" >&2
+	echo "theme-shots: some shots failed or were rejected; do not judge the theme from them (report.txt has Zen's exit status, timing and output tail for each)" >&2
 	exit 4
 fi

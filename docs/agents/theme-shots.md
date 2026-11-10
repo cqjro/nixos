@@ -110,9 +110,12 @@ failed or was rejected.
 - **Live runs are unreliable (first real run, 2026-11-09).** Against the real sites most
   shots produced no usable image: Zen exited without writing a PNG (`FAIL: zen wrote no
   image`) or wrote a blank page (`REJECTED`): google and reddit every time, youtube and
-  instagram intermittently. The profile is deleted with its `zen.log`, so the cause is not
-  recorded yet (candidates: Zen start-up under the PAC, a document load the PAC kills,
-  the screenshot racing the load). A missing shot does not mean the CSS broke; a
+  instagram intermittently. That run deleted the profile with its `zen.log`, so the cause
+  was not recorded (candidates: Zen start-up under the PAC, a document load the PAC kills,
+  the screenshot racing the load). Since then every shot's `report.txt` note carries Zen's
+  exit status and run time, and a shot that is not `ok` gets a trailing block with the last
+  40 lines of Zen's output and its crash-dump count (untrusted text: it may contain page
+  content). Read that block first when a shot fails. A missing shot does not mean the CSS broke; a
   successful shot is real. The reddit post URL is still unverified. Verified earlier in
   the sandbox with the real Zen (1.24t) against local servers: argument validation and
   symlink refusal; the profile with the flake's real prefs and `userContent.css`
