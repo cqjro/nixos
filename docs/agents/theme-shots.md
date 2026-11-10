@@ -79,9 +79,19 @@ failed or was rejected.
   `ExtensionSettings` add-ons in every fresh profile; "none of the real extensions" holds
   only because the network confinement below blocks addons.mozilla.org (a failed install
   attempt may show in the profile's Zen log, which is deleted with it).
-- **Captures at the load event.** A page that renders its content late (YouTube home
-  is a JS app) can come out as a skeleton. If an `after` shot is missing content
-  that the `before` shot has too, that is the capture, not the CSS.
+- **The capture is early and racy (Zen's own `--screenshot`).** Zen's headless code
+  (`HeadlessShell.sys.mjs`, read from the installed build) screenshots as soon as the
+  top-level document **commits** (the first non-transient location change), not at the
+  load event, and has no delay option. A page that renders after that (Instagram login,
+  YouTube home, Google, Reddit are JS apps) comes out as an empty page in the site's own
+  background colour (or, with the CSS, the theme's), a skeleton, or whatever happened to
+  have painted: the same page flips between `ok` and blank from run to run (observed:
+  Instagram login `ok` and blank in either phase, with the CSS emptied too). If the
+  capture throws (a redirect that swaps the content process makes the screenshot actor or
+  `drawSnapshot` fail), Zen only `dump`s `Failure taking screenshot: …`, quits with
+  status 0 and writes no file, which is the script's `zen exited 0 but wrote no image`.
+  So a blank or missing shot says nothing about the CSS, and a blank `after` next to a
+  fine `before` is not evidence either; compare only shots that both rendered.
 - **Interstitials.** Consent walls, "unusual traffic" pages and bot blocks (Reddit and
   Google are the usual ones) are served by the site, not by this tool. Detection is
   cheap and incomplete, and a shot that fails it is **not written under its normal
@@ -110,9 +120,12 @@ failed or was rejected.
 - **Live runs are unreliable (first real run, 2026-11-09).** Against the real sites most
   shots produced no usable image: Zen exited without writing a PNG (`FAIL: zen wrote no
   image`) or wrote a blank page (`REJECTED`): google and reddit every time, youtube and
-  instagram intermittently. That run deleted the profile with its `zen.log`, so the cause
-  was not recorded (candidates: Zen start-up under the PAC, a document load the PAC kills,
-  the screenshot racing the load). Since then every shot's `report.txt` note carries Zen's
+  instagram intermittently (four repeat runs, same pattern; a bisect with the Instagram
+  rules, then the whole `about:` block, removed from the generated CSS changed nothing, so
+  the CSS is not the cause). Cause of the blanks: the early capture above. Cause of the
+  google and reddit "no image": not proven (the old run deleted `zen.log`); the likely
+  culprit is the swallowed screenshot exception on a redirecting load, which the next run's
+  `Failure taking screenshot:` line would confirm. Since then every shot's `report.txt` note carries Zen's
   exit status and run time, and a shot that is not `ok` gets a trailing block with the last
   40 lines of Zen's output and its crash-dump count (untrusted text: it may contain page
   content). Read that block first when a shot fails. A missing shot does not mean the CSS broke; a
