@@ -538,9 +538,28 @@ Verified in the sandbox with the real code (the functions extracted into a harne
 geckodriver 0.37.1, Zen 1.24t, a local file and a local `socat` server): one shot end to
 end (1400x1000 viewport with the window rect 1594x1016, `user.js` restored by geckodriver
 and the PAC prefs intact in `prefs.js` after quit), a 127.0.0.1 page not reachable
-(0 server hits, `proxyConnectFailure` in 2 s), no process left behind. Not verified:
-the live sites under WebDriver and the `EXIT`-trap kill path; both need the GOD-KILLER
-switch of this change (step 39).
+(0 server hits, `proxyConnectFailure` in 2 s), no process left behind.
+
+Third round, 2026-11-09, **Supervised** thread, GOD-KILLER switched with PR #58 (the
+WebDriver capture), one site per command:
+
+- Live sites under WebDriver (was "not verified"): all ran. instagram 2/2 ok (twice),
+  reddit 4/4 ok, youtube 4/4 ok, each shot 8-11 s, every image fully drawn (no blank, no
+  skeleton), so the 6 s settle fixed the early-capture race. google 2/2 reported `ok`, but
+  the image is Google's "unusual traffic" page with a reCAPTCHA, which the `REJECTED` check
+  did not catch (curl was not redirected, the image is not blank). No shot failed, so no
+  `capture failed: …` line appeared and no PAC-blocked host (`proxyConnectFailure`) was
+  seen: nothing to add to `ALLOWED_DOMAINS`. Details and the Instagram theme finding in
+  [theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot).
+- Step 39, **inconclusive**: `pgrep -af 'geckodriver|zen'` in a separate command listed
+  only its own shell, but the Bash sandbox runs in a **private PID namespace**
+  (`ps -e` there shows 5 processes, PID 1 is the sandbox wrapper), and `theme-shots` runs
+  outside it, so a leftover `geckodriver` or Zen on the host would not show. The human
+  must run that `pgrep` in a normal terminal after a run (the `EXIT`-trap path, which needs
+  a run killed mid-shot, is likewise unverified).
+- Loopback: from the same sandbox `ip addr` shows only `lo` (a private network
+  namespace), consistent with the tier-2 observation above; the "listen outside, connect
+  from inside" confirmation is still the human's.
 
 Before the switch only the parts that need no excluded command had been exercised, in
 the sandbox, with a local test server (arguments, symlink refusal, real-Zen profile and
