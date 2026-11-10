@@ -243,6 +243,7 @@ EOF
 zen_rc=0 zen_secs=0 zen_dumps=0
 shoot() { # $1 = url, $2 = css (0|1), $3 = png path
 	local iso rc=0 t0=$SECONDS
+	rm -f -- "$work/last-zen.log" # never show the previous shot's output for this one
 	iso=$(mktemp -d "$work/iso.XXXXXX")
 	mkdir -p -- "$iso/tmp"
 	assert_private_dir "$iso"
@@ -268,7 +269,8 @@ log_failure() { # $1 = shot name
 		echo "# --- $1: zen exit $zen_rc after ${zen_secs}s, $zen_dumps crash dump(s); last lines of its output (untrusted text, may contain page content) ---"
 		if [[ -s $work/last-zen.log ]]; then
 			local l
-			while IFS= read -r l; do printf '# | %s\n' "${l:0:300}"; done < <(tail -n 40 -- "$work/last-zen.log" | tr -c '[:print:]\n' '?')
+			# at most 16 KiB are read, and a last line without a newline is kept
+			while IFS= read -r l || [[ -n $l ]]; do printf '# | %s\n' "${l:0:300}"; done < <(tail -c 16384 -- "$work/last-zen.log" | tail -n 40 | tr -c '[:print:]\n' '?')
 		else
 			echo "# | (zen printed nothing)"
 		fi
