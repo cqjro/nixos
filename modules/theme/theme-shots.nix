@@ -16,12 +16,23 @@
 		# the bare wrapper and would render differently (tracking protection, ...)
 		zen = config.home-manager.users.cairo.programs.zen-browser.finalPackage;
 
+		# geckodriver only accepts a binary whose --version reads "Mozilla Firefox N" and Zen
+		# says "Mozilla Zen 1.24t": this stub answers --version as Firefox (159.0 is Zen
+		# 1.24t's Gecko milestone; only "a modern Firefox" matters to geckodriver) and
+		# otherwise runs the installed Zen unchanged with the arguments geckodriver passes.
+		# Not an upstream-registry row on purpose: geckodriver is Firefox-only by design, so
+		# there is no bug or fix to wait for (tier-1 asked for a row; declined, see the PR)
+		zenDriver = pkgs.writeShellScript "zen-for-geckodriver" ''
+			if [ "''${1:-}" = --version ]; then echo "Mozilla Firefox 159.0"; exit 0; fi
+			exec ${zen}/bin/zen-twilight "$@"
+		'';
+
 		theme-shots = pkgs.writeShellApplication {
 			name = "theme-shots";
 			# the whole PATH: the script rebuilds the environment of every child
 			inheritPath = false;
-			runtimeInputs = [ pkgs.coreutils pkgs.gnugrep pkgs.gzip pkgs.jq pkgs.getent pkgs.curl zen pkgs.git config.nix.package ];
-			text = builtins.replaceStrings [ "@urls@" ] [ "${urls}" ] (builtins.readFile ../scripts/theme-shots.sh);
+			runtimeInputs = [ pkgs.coreutils pkgs.gnugrep pkgs.gzip pkgs.jq pkgs.getent pkgs.curl pkgs.geckodriver zen pkgs.git config.nix.package ];
+			text = builtins.replaceStrings [ "@urls@" "@zen_driver@" ] [ "${urls}" "${zenDriver}" ] (builtins.readFile ../scripts/theme-shots.sh);
 		};
 	in {
 		environment.systemPackages = [ theme-shots ];
