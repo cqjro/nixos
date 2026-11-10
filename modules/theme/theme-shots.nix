@@ -19,7 +19,9 @@
 		# geckodriver only accepts a binary whose --version reads "Mozilla Firefox N" and Zen
 		# says "Mozilla Zen 1.24t": this stub answers --version as Firefox (159.0 is Zen
 		# 1.24t's Gecko milestone; only "a modern Firefox" matters to geckodriver) and
-		# otherwise runs the installed Zen unchanged with the arguments geckodriver passes
+		# otherwise runs the installed Zen unchanged with the arguments geckodriver passes.
+		# Not an upstream-registry row on purpose: geckodriver is Firefox-only by design, so
+		# there is no bug or fix to wait for (tier-1 asked for a row; declined, see the PR)
 		zenDriver = pkgs.writeShellScript "zen-for-geckodriver" ''
 			if [ "''${1:-}" = --version ]; then echo "Mozilla Firefox 159.0"; exit 0; fi
 			exec ${zen}/bin/zen-twilight "$@"

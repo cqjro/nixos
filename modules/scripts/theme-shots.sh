@@ -149,6 +149,7 @@ cleanup() {
 	if [[ -n $gd_pid ]]; then
 		kill -TERM "$gd_pid" 2>/dev/null || true
 		wait "$gd_pid" 2>/dev/null || true
+		kill -KILL -- "-$gd_pid" 2>/dev/null || true
 	fi
 	if [[ -n ${work:-} ]]; then rm -rf -- "$work"; fi
 }
@@ -265,7 +266,7 @@ wd() { # $1 = method, $2 = path, $3 = optional JSON body; response body -> $wd_o
 	local code body=()
 	if [[ -n ${3:-} ]]; then body=(-d "$3"); fi
 	: >"$wd_out"
-	code=$(clean curl -sS --noproxy '*' --max-time "$wd_t" -X "$1" -H 'Content-Type: application/json' \
+	code=$(clean curl -q -sS --noproxy '*' --max-time "$wd_t" -X "$1" -H 'Content-Type: application/json' \
 		"${body[@]}" -o "$wd_out" -w '%{http_code}' "http://127.0.0.1:$wd_port$2" 2>/dev/null </dev/null) || return 1
 	[[ $code == 2?? ]]
 }
@@ -278,6 +279,7 @@ stop_driver() {
 	if [[ -n $gd_pid ]]; then
 		kill -TERM "$gd_pid" 2>/dev/null || true # timeout forwards it to the whole group (geckodriver, Zen)
 		wait "$gd_pid" 2>/dev/null || true
+		kill -KILL -- "-$gd_pid" 2>/dev/null || true # timeout exits with geckodriver: finish any Zen it left
 		gd_pid=""
 	fi
 }
@@ -286,11 +288,11 @@ stop_driver() {
 drive() { # $1 = url, $2 = iso dir, $3 = png path
 	local caps
 	wd_port="" wd_sid=""
-	for _ in $(seq 1 50); do
+	for _ in $(seq 1 200); do
 		kill -0 "$gd_pid" 2>/dev/null || { shot_err="geckodriver exited at startup"; return 1; }
 		wd_port=$(grep -oE 'Listening on 127\.0\.0\.1:[0-9]+' "$2/gd.log" | head -n 1 | grep -oE '[0-9]+$') || wd_port=""
 		[[ -n $wd_port ]] && break
-		sleep 0.2
+		sleep 0.05
 	done
 	[[ -n $wd_port ]] || { shot_err="geckodriver did not report its port"; return 1; }
 	caps=$(jq -n --arg bin "$zen_bin" --arg prof "$2/profile" '{capabilities: {alwaysMatch: {
@@ -382,7 +384,7 @@ while IFS='|' read -r -u 3 s page url; do
 	[[ $site == all || $site == "$s" ]] || continue
 
 	# cheap interstitial check: where does a plain GET end up?
-	res=$(clean curl -sS -L --proto =https --proto-redir =https --max-redirs 5 --max-time 25 -A "$UA" -o /dev/null \
+	res=$(clean curl -q -sS -L --proto =https --proto-redir =https --max-redirs 5 --max-time 25 -A "$UA" -o /dev/null \
 		-w '%{http_code} %{url_effective}' "$url" 2>/dev/null </dev/null) || res="000 -"
 	code=${res%% *}
 	final=${res#* }
