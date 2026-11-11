@@ -9,8 +9,10 @@ login.
 
 `theme-shots` is installed system-wide by `modules/theme/theme-shots.nix` (GOD-KILLER
 only), so it exists after a **GOD-KILLER switch** of the PR that adds it. It reads a
-fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: google
-search results, youtube home and a watch page, reddit home and a post, instagram login.
+fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: google (the
+search results page plus four pages that are not search results), youtube home and a
+watch page, reddit home and a post, instagram login, and three wikipedia pages (see
+"New pages: verified live" below).
 
 ## Run it
 
@@ -18,7 +20,7 @@ search results, youtube home and a watch page, reddit home and a post, instagram
 /run/current-system/sw/bin/theme-shots SITE WORKTREE [OUTDIR]
 ```
 
-- `SITE`: `google`, `youtube`, `reddit`, `instagram` or `all`. Nothing else is
+- `SITE`: `google`, `youtube`, `reddit`, `instagram`, `wikipedia` or `all`. Nothing else is
   accepted; there is no way to pass a URL, a profile or a browser flag.
 - `WORKTREE`: the **absolute** path of your worktree
   (`/home/cairo/.t3/worktrees/.nixos/<name>`, exactly that depth); `pwd` gives it.
@@ -32,9 +34,9 @@ search results, youtube home and a watch page, reddit home and a post, instagram
 
 Call it as **one plain command with the absolute path**: no `cd … &&`, no pipe, no
 redirect, no `timeout`/`VAR=` prefix (the exclusion only matches the plain command and
-the guard blocks anything else naming the path). Each shot takes ~10 to 30 s, so `all`
-(12 shots) can run several minutes: run one site at a time, or pass a longer `timeout`
-to the Bash tool. New files must be `git add`ed first: the flake only sees tracked
+the guard blocks anything else naming the path). Each shot takes ~8 to 30 s (8-11 s measured
+2026-11-09), so `all` (26 shots: 13 pages, before and after) can take several minutes: run
+one site at a time, or pass a longer `timeout` to the Bash tool. New files must be `git add`ed first: the flake only sees tracked
 files.
 
 What it does, in order:
@@ -92,7 +94,7 @@ failed or was rejected.
   (a tier-2 item, then a switch) if a site needs longer. A failed shot now says why in
   `report.txt` (`capture failed: load: …`, `screenshot: …`).
   **Live result of the 6 s settle (2026-11-09, GOD-KILLER switched with it):** all 14
-  shots over the four sites (instagram twice) reported `ok` in 8-11 s each, and every one
+  shots over the four sites then in the list (instagram twice) reported `ok` in 8-11 s each, and every one
   was a fully drawn page (youtube home and watch with thumbnails, reddit home and post,
   instagram login with the illustration). No blank, no skeleton, and the Instagram login
   came out the same in both runs (it flipped to blank in two identical `--screenshot`
@@ -110,7 +112,11 @@ failed or was rejected.
     query string;
   - a blank image (its PNG gzips to under 3000 bytes).
 
-  Not detected: a block or consent page that renders as ordinary text. Always look at
+  Not detected: a redirect to a Google sign-in page (`accounts.google.com`, not a block URL),
+  which `google/preferences` or `google/advanced` might do (drop such a page if the first
+  run shows it),
+  a Wikimedia throttle or block (same URL, ordinary text), a reCAPTCHA frame inside an
+  otherwise normal page, a block or consent page that renders as ordinary text. Always look at
   the image. A curl HTTP 4xx/5xx is only a note in `report.txt` (Zen may be let in
   where curl is not), not a rejection.
 
@@ -131,11 +137,11 @@ failed or was rejected.
   normally come back `REJECTED`, which is the tool telling you so, not a fault. Look at a
   google `ok` anyway (a block that renders in place under `/search` would not be seen).
   The block page prints the machine's public IP and a timestamp: do not copy them.
-- **Network confinement.** The profile gets a PAC file that sends only the four sites and
+- **Network confinement.** The profile gets a PAC file that sends only the five sites and
   their asset CDNs (`google.com gstatic.com googleapis.com googleusercontent.com
   youtube.com ytimg.com ggpht.com googlevideo.com reddit.com redditstatic.com
   redditmedia.com redd.it instagram.com cdninstagram.com fbcdn.net facebook.com
-  facebook.net`) direct and everything else to a dead proxy. A site that starts
+  facebook.net wikipedia.org wikimedia.org`) direct and everything else to a dead proxy. A site that starts
   using another host loses that asset (the page still loads: blocked subresources fail
   at once). If the *document* itself redirects to an unlisted host the shot fails at once with
   `capture failed: load: unknown error: Reached error page: about:neterror?e=proxyConnectFailure`; add the host to `ALLOWED_DOMAINS` in
@@ -156,6 +162,73 @@ failed or was rejected.
   unusual-traffic page, so neither failed for a network, PAC or load reason (no
   `proxyConnectFailure`, no timeout, no host to add to `ALLOWED_DOMAINS`). A missing shot
   does not mean the CSS broke; a successful shot is real, but look at it.
+- **New pages: verified live (added 2026-11-10 with PR #62; first live run 2026-11-11,
+  GOD-KILLER switched with it).** The branch that added them could not run the tool, so
+  they were first tested against local servers (see "Verified in the sandbox"). The first
+  real run: `theme-shots wikipedia` 6/6 `ok` (8-9 s each) and `theme-shots google` 8 `ok`,
+  2 `REJECTED` (`search`, `the browser ended at https://www.google.com/sorry/index`, as
+  before). Every new page rendered fully, in both phases, with no host to add to
+  `ALLOWED_DOMAINS` (no `proxyConnectFailure`, the `wikipedia.org`/`wikimedia.org` suffixes
+  were enough). **Google's block does not extend to the four non-search pages**, so Google
+  CSS can now be checked on them. What the `after` shots show is in the next two bullets
+  (theme bugs, reported, not fixed here), then the page notes:
+  - **`wikipedia`** (a new site word; the CSS is `modules/theme/webstyling/wikipedia-web-styling.nix`,
+    keyed on `domain("wikipedia.org")`): `main` (`en.wikipedia.org/wiki/Main_Page`),
+    `article` (`Rust_(programming_language)`: infobox top right, wikitables, code blocks, a
+    navbox) and `help-table` (`Help:Table`: wikitables and `<pre>` code near the top). The
+    capture is the **1400x1000 viewport at the top of the page**, so the article's navbox
+    (at the very bottom) and most of its tables are *not* in the shot; `help-table` is
+    there to cover tables and code. A full-page capture would be a WebDriver change (tier 2),
+    not done here; for the navbox the human attaches a manual screenshot. No diff or history
+    page was added: a diff needs a revision id that could not be checked, and a history page
+    changes by the hour. `wikipedia.org` and `wikimedia.org` (images on
+    `upload.wikimedia.org`) were added to the PAC as **suffixes**, as asked, not narrowed to
+    the exact hosts; if the first run shows a blocked asset or a
+    `proxyConnectFailure` on the document, name the host in the report and add it.
+  - **`google` pages that are not search results**: `home` (`www.google.com/?hl=en`),
+    `preferences`, `advanced` (`/advanced_search`) and `help` (`support.google.com/websearch`),
+    all under `google.com` so the `domain("google.com")` rule applies. They are chosen to be
+    unlikely to hit `/sorry`, which is a guess: Google may well block them too (a home page
+    from a datacentre-like or flagged IP is the usual trigger), in which case they come back
+    `REJECTED` like `search` and the Google CSS still cannot be checked; say so. In some
+    regions `www.google.com` redirects to `consent.google.com`, which the rejection also
+    catches (the host is a PAC-allowed `google.com` subdomain, so it loads and is then
+    rejected rather than failing). The existing `search` URL is unchanged.
+- **Wikipedia theme: what the first live `after` shots show (2026-11-11; theme bugs,
+  reported, not fixed).** The article (`Rust_(programming_language)`) and `Help:Table` are
+  themed correctly: dark page, readable links, a dark infobox, the TOC and the
+  help navbox's body. Wrong or weak, in `before` vs `after`:
+  - **`main`: the portal boxes keep their hard-coded light backgrounds.** "From today's
+    featured article" (green), "Help us improve this article!" (blue), "In the news" and the
+    "Welcome to Wikipedia" box stay pastel/white, while the body text turns light grey:
+    grey on pale, barely readable. Probably backgrounds the
+    Codex-variable block in `wikipedia-web-styling.nix` does not reach (not checked: the
+    cause was not isolated).
+  - **The wordmark is invisible.** The "Wikipedia" text logo and its tagline are dark on the
+    now-dark header (probably an image or SVG that the colour variables do not touch; not checked).
+  - **`help-table`: the navbox title bar ("Wikitext") stays light blue** (probably a hard-coded
+    background), against dark text/links everywhere else on that box.
+  - The navbox at the very bottom of the article is still not in the viewport shot.
+  - The `before` shot of `main` carried a Wikimedia donation banner that the `after` shot
+    did not: it is a rotating, time- and region-dependent banner, not a CSS effect, so do
+    not read it as one.
+- **Google theme: what the first live `after` shots show (2026-11-11; theme bugs, reported,
+  not fixed).** The dark base reaches all four pages (`home`, `preferences`, `advanced`,
+  `help`), and `advanced` is the cleanest (form fields and selects dark, links blue). Wrong
+  or weak:
+  - **The `Sign in` button is blue-on-blue** on all four (text nearly invisible).
+  - **`home`: the footer strip (country, `Advertising` / `Business` / `Privacy` / `Terms` /
+    `Settings`) is a white block** and the `Google Search` / `I'm Feeling Lucky` buttons
+    stay white (the latter may be intended).
+  - **`preferences`: the left navigation rail and the setting cards stay white/pale blue**
+    with dark text, while the section headings ("Activity", "Content", "More options") are
+    dark-on-dark and nearly invisible, and the `Feedback` footer link is dark blue on dark.
+  - **`help` (`support.google.com`): the header and the "How can we help you?" hero are
+    themed, but the "Browse help topics" body below is a white page** with light-grey
+    headings and a pale-blue article list.
+  - `search` is still `REJECTED` (`/sorry`), so Google's results-page CSS remains uncheckable
+    with this tool. Wikipedia and these four pages are the verifiable part.
+
 - **Reddit post URL (checked 2026-11-09).** The archived r/IAmA Obama AMA thread in
   `theme-shots-urls.txt` renders under the logged-out view (post body, an "Archived post"
   notice, related posts), so it stays. Reddit also shows a "Sign in to Reddit with Google"
@@ -174,7 +247,18 @@ failed or was rejected.
 - **Verified in the sandbox** with the real Zen (1.24t) against local servers: argument
   validation and symlink refusal; the profile with the flake's real prefs and
   `userContent.css` injection; the PAC (also under WebDriver); blank-page rejection;
-  refusal of a profile dir under the real home.
+  refusal of a profile dir under the real home. For the wikipedia and extra google pages
+  (2026-11-10, a test copy of the script with the real Zen and geckodriver; only the URL list,
+  a stub `nix`, a 1 s settle and resolver prefs differ): `wikipedia` and `all` are accepted,
+  `Wikipedia`, `wikipedia.org` and `wikipedia|x` are refused (exit 2); the PAC sends
+  `en.wikipedia.org`, `upload.wikimedia.org` and `wikipedia.org` direct (pages load, the
+  injected rule shows) and `en.wikipedia.org.evil.test` and `notwikipedia.org` to the dead
+  proxy (0 server hits); `/sorry` on `www.google.com`, a redirect from `support.google.com`
+  to `/sorry` and `consent.google.com` come back `REJECTED` from the browser's final URL;
+  every URL in the real list is https, has three fields, sits under an allowed suffix and
+  under its site's CSS domain. The real pages were first run on 2026-11-11 (see "New
+  pages").
+
 - **One run's report replaces the last.** `report.txt` and `userContent.css` describe only
   the latest invocation; PNGs from earlier invocations stay in `.log/theme-shots/`, so after
   several single-site runs the directory mixes shots with one report. Delete the directory
@@ -187,7 +271,7 @@ failed or was rejected.
 
 The full reasoning is in [security.md](security.md#theme-shots-runs-unsandboxed). In
 short: this runs an **unsandboxed browser on live pages** as the owner, with an agent
-choosing three arguments. So it accepts only five site words; exactly one
+choosing three arguments. So it accepts only six site words; exactly one
 `~/.t3/worktrees/<project>/<name>` owned by the owner that the caller is standing in; an
 output dir under that worktree's `.log/theme-shots/` (checked, then re-checked against
 the kernel's view of the directory it `cd -P`s into) with `.log/` gitignored. URLs,

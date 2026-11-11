@@ -1,6 +1,6 @@
 # theme-shots SITE WORKTREE [OUTDIR]
 #
-# Before/after screenshots of google, youtube, reddit and instagram in a throwaway
+# Before/after screenshots of google, youtube, reddit, instagram and wikipedia in a throwaway
 # headless profile of the installed Zen (zen-twilight), with and without the
 # userContent.css this flake generates, so an agent can see which per-site rules
 # (modules/theme/webstyling/*.nix) are broken. LOGGED OUT ONLY: every shot gets a brand
@@ -10,7 +10,7 @@
 # docs/agents/theme-shots.md and docs/agents/security.md ("theme-shots runs
 # unsandboxed").
 #
-#   SITE     google | youtube | reddit | instagram | all
+#   SITE     google | youtube | reddit | instagram | wikipedia | all
 #   WORKTREE absolute path of a worktree under ~/.t3/worktrees/<project>/<name>
 #   OUTDIR   .log/theme-shots or below (default .log/theme-shots; relative paths are
 #            relative to the worktree). The worktree's .gitignore must ignore .log/
@@ -22,7 +22,7 @@
 # there will not be one: a persistent profile (e.g. a logged-in test account) is out
 # of scope, and the profile directory is an internal detail of make_profile():
 #   - the URLs come from a fixed list in the Nix store (theme-shots-urls.txt);
-#   - SITE is one of five words; WORKTREE must resolve to exactly
+#   - SITE is one of six words; WORKTREE must resolve to exactly
 #     ~/.t3/worktrees/<project>/<name>, owned by the user, and the CALLER'S cwd must be
 #     inside it (an agent's cwd is its own worktree, never another thread's); OUTDIR
 #     must resolve (after symlinks) to <WORKTREE>/.log/theme-shots or below, the
@@ -35,7 +35,7 @@
 #     GIT_*/NIX_*/LD_*/PYTHON*/proxy/MOZ_* from the caller); Zen gets its own empty
 #     HOME, a fresh profile (both under a private mktemp dir, asserted not to be the
 #     real $HOME, ~/.mozilla, ~/.zen or ~/.config/zen) and a PAC file that sends everything except the
-#     four sites' own hosts to a dead proxy (so generated CSS cannot reach
+#     sites' own hosts to a dead proxy (so generated CSS cannot reach
 #     localhost, the LAN or other hosts over http(s); not file:, and the allowed
 #     suffixes include hostable ones such as googleapis.com);
 #   - the nix evaluation is pure (no --impure, --no-accept-flake-config). That is NOT
@@ -71,15 +71,19 @@ UA='Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0'
 # block page or consent wall from a real one: the agent still has to look at the image.
 MIN_GZ_BYTES=3000
 # seconds to wait after the load event before the screenshot, so script-rendered pages
-# (all four sites) have painted. Zen's own --screenshot had no such wait: it shot at the
+# (all the sites) have painted. Zen's own --screenshot had no such wait: it shot at the
 # first committed navigation and came out blank, a skeleton or not at all.
 SETTLE_SECS=6
-# suffixes the browser may reach (the sites and their asset CDNs); everything else is blackholed
+# suffixes the browser may reach (the sites and their asset CDNs); everything else is blackholed.
+# wikipedia.org carries every language/wiki and its load.php assets, wikimedia.org the
+# images (upload.wikimedia.org) and the login/analytics hosts; both are suffixes, so
+# neither is narrowed to the hosts a page was seen to use (unverified live, see the docs)
 ALLOWED_DOMAINS=(
 	google.com gstatic.com googleapis.com googleusercontent.com
 	youtube.com ytimg.com ggpht.com googlevideo.com
 	reddit.com redditstatic.com redditmedia.com redd.it
 	instagram.com cdninstagram.com fbcdn.net facebook.com facebook.net
+	wikipedia.org wikimedia.org
 )
 
 die() {
@@ -87,14 +91,14 @@ die() {
 	exit 2
 }
 
-[[ $# -ge 2 && $# -le 3 ]] || die "usage: theme-shots google|youtube|reddit|instagram|all WORKTREE [OUTDIR]"
+[[ $# -ge 2 && $# -le 3 ]] || die "usage: theme-shots google|youtube|reddit|instagram|wikipedia|all WORKTREE [OUTDIR]"
 site=$1
 wt_arg=$2
 out_arg=${3:-.log/theme-shots}
 
 case $site in
-google | youtube | reddit | instagram | all) ;;
-*) die "unknown site '$site' (google|youtube|reddit|instagram|all)" ;;
+google | youtube | reddit | instagram | wikipedia | all) ;;
+*) die "unknown site '$site' (google|youtube|reddit|instagram|wikipedia|all)" ;;
 esac
 
 safe_re='^[A-Za-z0-9._/+@-]+$'
@@ -209,7 +213,7 @@ jq -e '.settings["toolkit.legacyUserProfileCustomizations.stylesheets"] == true'
 		exit 3
 	}
 
-# PAC: only the four sites' own hosts go direct, everything else (localhost, the LAN,
+# PAC: only the sites' own hosts go direct, everything else (localhost, the LAN,
 # any host a CSS url() names) hits a dead proxy. Tested 2026-11-08 in the sandbox
 # against a local server: without allow_hijacking_localhost Firefox never proxies
 # localhost (the PAC is ignored for it), with it a blackholed 127.0.0.1 gets no
@@ -382,7 +386,7 @@ report=$work/report.txt
 	echo "# browser: $(realpath -- "$(command -v "$ZEN")") (fresh logged-out profile per shot; none of the real extensions: no uBlock, Dark Reader, Stylus, RYD)"
 	echo "# prefs from the flake's Zen settings: $(wc -l <"$work/prefs.js") taken; dropped (not rendering prefs): $(tr '\n' ' ' <"$work/dropped-prefs.txt")"
 	echo "# screenshots of live web pages are untrusted input (they can carry injected text) and may show an approximate location (your IP's)"
-	printf '%-10s %-8s %-7s %-9s %s\n' site page phase verdict note
+	printf '%-10s %-12s %-7s %-9s %s\n' site page phase verdict note
 } >"$report"
 
 while IFS='|' read -r -u 3 s page url; do
@@ -447,7 +451,7 @@ while IFS='|' read -r -u 3 s page url; do
 		REJECTED) n_rej=$((n_rej + 1)) bad=1 ;;
 		*) n_fail=$((n_fail + 1)) bad=1 ;;
 		esac
-		printf '%-10s %-8s %-7s %-9s %s\n' "$s" "$page" "$phase" "$verdict" "$note" >>"$report"
+		printf '%-10s %-12s %-7s %-9s %s\n' "$s" "$page" "$phase" "$verdict" "$note" >>"$report"
 		echo "theme-shots: $s/$page $phase: $verdict${note:+ ($note)}"
 	done
 done 3<"$URLS"

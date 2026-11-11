@@ -28,7 +28,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
-| [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) | styling a site in `modules/theme/webstyling/*.nix` (the Zen per-site CSS): `theme-shots` (logged-out before/after screenshots), its limits, and what to do for logged-in pages (the human attaches manual screenshots) |
+| [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) | styling a site in `modules/theme/webstyling/*.nix` (the Zen per-site CSS): `theme-shots` (logged-out before/after screenshots of google, youtube, reddit, instagram and wikipedia), its limits, and what to do for logged-in pages (the human attaches manual screenshots) |
 | [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
