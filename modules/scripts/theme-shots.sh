@@ -314,7 +314,7 @@ drive() { # $1 = url, $2 = iso dir, $3 = png path
 	# where the browser ended up (after redirects and script navigation), for the
 	# interstitial check; best effort, text is the page's own, so bounded and printable
 	if wd GET "/session/$wd_sid/url"; then
-		shot_url=$(jq -r '.value // empty' "$wd_out" 2>/dev/null | head -n 1 | head -c 2048 | tr -c '[:print:]' '?') || shot_url=""
+		shot_url=$(jq -r '.value // empty' "$wd_out" 2>/dev/null | head -n 1 | head -c 2048 | tr -c '[:print:]' '?') || true # a SIGPIPE from head -c on a long URL still leaves the truncated text
 	fi
 	wd_t=60
 	wd GET "/session/$wd_sid/screenshot" || { shot_err="screenshot: $(wd_msg)"; return 1; }
