@@ -35,7 +35,7 @@ first run after the switch that adds them.
 Call it as **one plain command with the absolute path**: no `cd … &&`, no pipe, no
 redirect, no `timeout`/`VAR=` prefix (the exclusion only matches the plain command and
 the guard blocks anything else naming the path). **Run one site at a time** (a site is
-7 to 10 pages, about 4 to 7 minutes, see "Run time"); `all` is about 25 minutes, so run it in
+1 to 10 pages, google 9 is about 5 to 6 minutes, UNVERIFIED LIVE, see "Run time"); `all` is about 25 minutes, so run it in
 the background or not at all. Pass the Bash tool a `timeout` of 600000 (its maximum) for a
 site, or run it in the background. New files must be `git add`ed first: the flake only sees
 tracked files.
@@ -160,7 +160,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
   is not a block URL and the `google.com` rule still applies). Dropped: `scholar.google.com`
   (it bot-blocks like `search`).
 - **youtube** (7): `home`, `watch`, `results` (`/results?search_query=nixos`), `channel`
-  (`/`), `videos` (`//videos`), `hashtag` (`/hashtag/nixos`), `history`
+  (`/@YouTube`), `videos` (`/@YouTube/videos`), `hashtag` (`/hashtag/nixos`), `history`
   (`/feed/history`: the signed-out prompt state; it may redirect to a Google sign-in page,
   which would then be a `google.com` page, not `youtube.com`: the manifest's `final_url` shows
   it). Dropped: a playlist and a shorts page (no id that stays up could be checked).
@@ -284,10 +284,11 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
     navbox) and `help-table` (`Help:Table`: wikitables and `<pre>` code near the top). The
     capture is the **1400x1000 viewport at the top of the page**, so the article's navbox
     (at the very bottom) and most of its tables are *not* in the shot; `help-table` is
-    there to cover tables and code. A full-page capture would be a WebDriver change (tier 2),
-    not done here; for the navbox the human attaches a manual screenshot. No diff or history
-    page was added: a diff needs a revision id that could not be checked, and a history page
-    changes by the hour. `wikipedia.org` and `wikimedia.org` (images on
+    there to cover tables and code. The first live run (2026-11-11) had only the viewport shot, so the navbox was out of
+    it; the full-page capture and the `list-table`, `math`, `search`, `history`, `diff`,
+    `source` and `mobile` pages added afterwards (see "The page list", all UNVERIFIED LIVE)
+    are meant to cover that. Until a run shows the full-page shot working on this page, the
+    human attaches a manual screenshot of the navbox. `wikipedia.org` and `wikimedia.org` (images on
     `upload.wikimedia.org`) were added to the PAC as **suffixes**, as asked, not narrowed to
     the exact hosts; if the first run shows a blocked asset or a
     `proxyConnectFailure` on the document, name the host in the report and add it.
@@ -301,7 +302,8 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
     catches (the host is a PAC-allowed `google.com` subdomain, so it loads and is then
     rejected rather than failing). The existing `search` URL is unchanged.
 - **Wikipedia theme: what the first live `after` shots show (2026-11-11; theme bugs,
-  reported, not fixed).** The article (`Rust_(programming_language)`) and `Help:Table` are
+  reported, not fixed).** (File names in this bullet and the next two are those of
+  the first run: `before` = today's `viewport-RAW_no-userContent`, `after` = `viewport-THEMED_with-userContent`.) The article (`Rust_(programming_language)`) and `Help:Table` are
   themed correctly: dark page, readable links, a dark infobox, the TOC and the
   help navbox's body. Wrong or weak, in `before` vs `after`:
   - **`main`: the portal boxes keep their hard-coded light backgrounds.** "From today's
@@ -319,7 +321,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
     did not: it is a rotating, time- and region-dependent banner, not a CSS effect, so do
     not read it as one.
 - **Google theme: what the first live `after` shots show (2026-11-11; theme bugs, reported,
-  not fixed).** The dark base reaches all four pages (`home`, `preferences`, `advanced`,
+  not fixed).** (Old file names, see the Wikipedia bullet above.) The dark base reaches all four pages (`home`, `preferences`, `advanced`,
   `help`), and `advanced` is the cleanest (form fields and selects dark, links blue). Wrong
   or weak:
   - **The `Sign in` button is blue-on-blue** on all four (text nearly invisible).
@@ -340,7 +342,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
   notice, related posts), so it stays. Reddit also shows a "Sign in to Reddit with Google"
   prompt over the top right of both pages (Google One Tap, an `accounts.google.com`
   frame the PAC allows); it is in `before` and `after` alike and hides the header buttons.
-- **Instagram login: a theme bug the tool exposed.** In `after` the top-left logo, the blue
+- **Instagram login: a theme bug the tool exposed** (old names: `before`/`after` = today's `RAW`/`THEMED` viewport shots). In `after` the top-left logo, the blue
   `Log in` fill and the `Log in with Facebook` fill are missing in every run (4/4), while
   `before` has them. Cause, proven by removing one rule at a time and re-shooting: the
   `[class*="x2lah0s"]` selector in the "inputs" rule of
