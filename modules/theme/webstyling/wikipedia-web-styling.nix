@@ -42,14 +42,17 @@
 			accentFillHover = mix (hex "base0D") 75 (hex "base00");
 			# disabled text must still differ from the disabled surface
 			disabledText = mix (hex "base05") 45 (hex "base00");
-			# Wikipedia inverts these images itself in night mode, so we invert only
-			# when it serves the day theme; otherwise they would be inverted twice
-			notNight = "html:not(.skin-theme-clientpref-night):not(.skin-theme-clientpref-os)";
+			# a literal inline background that is not a no-op (none/transparent/inherit/token)
+			# (the exclusions name the background property: night-ready templates put
+			# `color: var(--color-base)` next to a literal background, as the live
+			# Rust infobox title bar did)
+			noOpBg = map (v: ":not([style*=\"background:${v}\"]):not([style*=\"background: ${v}\"]):not([style*=\"background-color:${v}\"]):not([style*=\"background-color: ${v}\"])") [ "var(" "none" "transparent" "inherit" ];
+			literalBg = ":is([style*=\"background\"], [bgcolor])${builtins.concatStringsSep "" noOpBg}";
 			# table cells with a literal inline background (party colours, yes/no
 			# cells, topic-coloured infobox headers). Their lightness cannot be read
 			# from CSS, so every one gets a base00 veil: the hue survives, dimmed, and
 			# base05 text is readable on it (a white cell becomes ~4.7:1)
-			inlineCells = ":is(.wikitable, .infobox, .navbox, .sidebar, .toccolours) :is(tr, th, td):is([style*=\"background\"], [bgcolor]):not([style*=\"var(--\"]):not([style*=\"transparent\"]):not([style*=\"none\"]):not([style*=\"inherit\"])";
+			inlineCells = ":is(.wikitable, .infobox, .navbox, .sidebar, .toccolours) :is(tr, th, td, caption)${literalBg}";
 			veil = tint "base00" 80;
 			# links on base03 header cells need the lighter blue (~4.9:1)
 			headerCells = ":is(.wikitable th, .navbox-title, .navbox-group, .navbox-abovebelow, .infobox-above, .infobox-header, .sidebar-title, .sidebar-heading, .mp-h2)";
@@ -221,6 +224,25 @@ footer,
 	border-color: ${hex "base03"} !important;
 }
 
+/* one type family, as in Vesktop: the title and h2 drop Wikipedia's hard-coded
+   serif stack for the browser's sans-serif (the body's font) */
+h1, h2,
+.firstHeading,
+.mw-first-heading,
+.mw-page-title-main {
+	font-family: sans-serif !important;
+}
+
+/* literal template borders: the site's light greys become the base03 divider,
+   its #36c accent bar (the Help:Table navigation box) the palette blue */
+.mw-parser-output [style*="border"]:is([style*="#a2a9b1" i], [style*="#aaa" i], [style*="#c8ccd1" i], [style*="#ccc" i], [style*="#eaecf0" i]) {
+	border-color: ${hex "base03"} !important;
+}
+
+.mw-parser-output [style*="border-top"]:is([style*="#36c" i], [style*="#3366cc" i]) {
+	border-top-color: ${hex "base0D"} !important;
+}
+
 h1, h2, h3, h4, h5, h6,
 .mw-headline,
 .mw-page-title-main {
@@ -306,11 +328,15 @@ table.metadata,
 	border-color: ${hex "base03"} !important;
 }
 
+/* infobox cells coloured by TemplateStyles classes (the live Rust infobox's
+   title and footer bars stayed #e0e0e0/#eeeeee): flat, unless inline-coloured */
+.infobox :is(th, td, caption):not([style*="background"]):not([bgcolor]) {
+	background-color: transparent !important;
+}
+
 .wikitable > * > tr > th:not([style*="background"]),
 .wikitable > tr > th:not([style*="background"]),
-.infobox-above:not([style*="background"]),
-.infobox-header:not([style*="background"]),
-.infobox-subheader:not([style*="background"]),
+.infobox :is(th, td, caption):is(.infobox-above, .infobox-title, .infobox-header, .infobox-subheader, caption):not([style*="background"]):not([bgcolor]),
 .sidebar-title:not([style*="background"]),
 .sidebar-heading:not([style*="background"]) {
 	background-color: ${hex "base03"} !important;
@@ -432,7 +458,7 @@ figure[typeof~="mw:File/Frame"],
 figcaption,
 .thumbcaption,
 .gallerytext {
-	background-color: ${hex "base00"} !important;
+	background-color: transparent !important;
 	border-color: ${hex "base03"} !important;
 	color: ${muted} !important;
 }
@@ -442,17 +468,17 @@ figcaption,
 	background-color: ${hex "base05"} !important;
 }
 
-/* inverted images and maths: only when Wikipedia serves its day theme */
-${notNight} :is(.skin-invert, .skin-invert-image img),
-${notNight} img.mwe-math-fallback-image-inline,
-${notNight} img.mwe-math-fallback-image-display,
-${notNight} .mw-logo-wordmark,
-${notNight} .mw-logo-tagline {
+/* inverted images and maths. Unconditional: these are the elements Wikipedia's
+   night mode inverts itself, and `filter` replaces rather than stacks, so the
+   same element is never inverted twice in either theme. Nested matches are
+   skipped: the header wordmark/tagline sit inside a .skin-invert container, and
+   filtering both cancelled out (black wordmark on the live shot). */
+:is(.skin-invert, .skin-invert-image img, img.mwe-math-fallback-image-inline, img.mwe-math-fallback-image-display):not(.skin-invert *) {
 	filter: invert(1) hue-rotate(180deg) !important;
 }
 
-${notNight} .skin-invert-image img,
-${notNight} img.skin-invert {
+.skin-invert-image img,
+img.skin-invert {
 	background-color: transparent !important;
 }
 
@@ -681,6 +707,19 @@ del.diffchange {
 .mw-tag-marker {
 	background-color: ${hex "base01"} !important;
 	border-color: ${hex "base03"} !important;
+}
+
+/* main page portal boxes: hard-coded #f9f9f9/#f5fffa/#f5faff on the live shot */
+.mw-parser-output :is([id^="mp-"], .MainPageBG, .mp-bordered, .mp-box):not(h2):not(.mp-h2):not(img) {
+	background-color: ${hex "base01"} !important;
+	border-color: ${hex "base03"} !important;
+	color: ${hex "base05"} !important;
+}
+
+/* any other block with a literal inline background in content: same veil as cells */
+.mw-parser-output :is(div, table, p)${literalBg} {
+	background-image: linear-gradient(${veil}, ${veil}) !important;
+	color: ${hex "base05"} !important;
 }
 
 /* main page section headings */
