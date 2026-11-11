@@ -114,19 +114,23 @@ failed or was rejected.
   the image. A curl HTTP 4xx/5xx is only a note in `report.txt` (Zen may be let in
   where curl is not), not a rejection.
 
-  **Known miss, google (2026-11-09):** under WebDriver `google/search` came back `ok` in
-  both phases but the image is Google's "unusual traffic from your computer network"
-  page with a reCAPTCHA box, not search results. The curl preflight (a different client)
-  was not redirected, the image is not blank, so nothing rejected it (the
-  browser-final-URL check above was added in response; whether Google's page sits at a
-  `/sorry` URL, as it normally does, is confirmed by the first run after the switch:
-  expect `REJECTED`, and if it still says `ok` the page is served in place and the check
-  does not see it). This is Google
-  bot-detecting this setup (headless, automated browser, a residential IP), not a
-  tool error and not a PAC problem. The `after` shot still shows the theme's dark
-  background and text on that page, so the CSS reaches `google.com` pages generally,
-  but **the search-results rules cannot be checked with this tool today**: treat a google
-  `ok` as unproven until you have looked at the image.
+  **Google miss, closed (found 2026-11-09, fixed and confirmed live 2026-11-10):** under
+  WebDriver `google/search` first came back `ok` in both phases, but the image was
+  Google's "unusual traffic from your computer network" page with a reCAPTCHA box, not
+  search results. The curl preflight (a different client) was not redirected and the image
+  is not blank, so nothing rejected it; the browser-final-URL check above was added in
+  response. First run with it (2026-11-10, GOD-KILLER switched with PR #59): both phases
+  `REJECTED`, `the browser ended at https://www.google.com/sorry/index`, 9 s each, kept as
+  `google-search-{before,after}.REJECTED.png`, exit 4. So Google's block page **does** sit
+  at a `/sorry` URL and the check sees it; a google `ok` is therefore no longer
+  the unusual-traffic page. This is Google bot-detecting this setup (headless, automated
+  browser, a residential IP), not a tool error and not a PAC problem, and it was the
+  same on the one run made (not repeated). The `after` shot still shows the theme's dark
+  background and text on that page, so the CSS reaches `google.com` pages generally, but
+  **google's search-results CSS still cannot be checked with this tool**: google will
+  normally come back `REJECTED`, which is the tool telling you so, not a fault. Look at a
+  google `ok` anyway (a block that renders in place under `/search` would not be seen).
+  The block page prints the machine's public IP and a timestamp: do not copy them.
 - **Network confinement.** The profile gets a PAC file that sends only the four sites and
   their asset CDNs (`google.com gstatic.com googleapis.com googleusercontent.com
   youtube.com ytimg.com ggpht.com googlevideo.com reddit.com redditstatic.com

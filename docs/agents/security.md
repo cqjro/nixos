@@ -551,6 +551,19 @@ WebDriver capture), one site per command:
   `capture failed: …` line appeared and no PAC-blocked host (`proxyConnectFailure`) was
   seen: nothing to add to `ALLOWED_DOMAINS`. Details and the Instagram theme finding in
   [theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot).
+- Browser-final-URL check (PR #59), **confirmed live, 2026-11-10**, **Supervised** thread,
+  GOD-KILLER switched with #59, one plain `theme-shots google <worktree>` command: it ran
+  with no approval card, both phases `REJECTED` with `the browser ended at
+  https://www.google.com/sorry/index` (9 s each, query string not in the verdict), kept as
+  `*.REJECTED.png`, exit 4, summary `0 ok, 2 rejected, 0 failed`. Both PNGs are the
+  unusual-traffic reCAPTCHA page (`after` in the theme's dark colours). So the page lives at
+  `/sorry` and the check closes the 2026-11-09 miss. One run only; the page being served in
+  place under `/search` remains possible and would still read `ok`. The untrusted output
+  tail held the `/sorry` URL **with its query string** (opaque tokens) as a JavaScript
+  error line from Zen's console: that is Zen's own log, copied by the existing diagnostics
+  row (the "without its query string" rule applies to the verdict, not to the copied tail);
+  it holds no IP in this run, but the block page image does, so neither goes in a commit.
+  Not tested by this run: that `GET /url` stays bounded when a page controls the URL.
 - Step 39, **passed, from the human's terminal** (2026-11-10, after all the runs above):
   the agent's own `pgrep -af 'geckodriver|zen'` listed only its own shell, which proved
   nothing, because the Bash sandbox runs in a **private PID namespace** (`ps -e` there
