@@ -12,9 +12,9 @@
 # unverified until the first real run.
 #
 # google: search is the results page, which Google bot-blocks (/sorry, always REJECTED
-# so far); the other four are not search results and are meant to avoid that block.
-# UNVERIFIED LIVE until the first run after a switch: google/home, preferences, advanced
-# and help, and all of wikipedia. A page that renders only part of what its note says
+# so far); the other four are not search results and were not blocked on 2026-11-11.
+# Verified live 2026-11-11 (all rendered; google/search is the only REJECTED page): google/home,
+# preferences, advanced and help, and all of wikipedia. A page that renders only part of what its note says
 # (below the 1400x1000 viewport, e.g. the article's navbox) needs a manual screenshot.
 #
 # wikipedia: main is the portal page; article is a long article with an infobox (top

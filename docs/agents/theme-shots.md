@@ -12,7 +12,7 @@ only), so it exists after a **GOD-KILLER switch** of the PR that adds it. It rea
 fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: google (the
 search results page plus four pages that are not search results), youtube home and a
 watch page, reddit home and a post, instagram login, and three wikipedia pages (see
-"New pages: unverified live" below).
+"New pages: verified live" below).
 
 ## Run it
 
@@ -162,13 +162,16 @@ failed or was rejected.
   unusual-traffic page, so neither failed for a network, PAC or load reason (no
   `proxyConnectFailure`, no timeout, no host to add to `ALLOWED_DOMAINS`). A missing shot
   does not mean the CSS broke; a successful shot is real, but look at it.
-- **New pages: UNVERIFIED LIVE until a post-switch smoke run (added 2026-11-10, branch
-  `workflow/theme-shots-more-pages`).** The branch that added them could not run the tool
-  (it exists only after a merge and a GOD-KILLER switch), so nothing below was seen in a
-  real browser; only the script's argument handling, the PAC it generates and the
-  interstitial pattern were exercised against local servers (see "Verified in the
-  sandbox"). Treat the first run after the switch as the test of the pages themselves,
-  and record what it shows here:
+- **New pages: verified live (added 2026-11-10 with PR #62; first live run 2026-11-11,
+  GOD-KILLER switched with it).** The branch that added them could not run the tool, so
+  they were first tested against local servers (see "Verified in the sandbox"). The first
+  real run: `theme-shots wikipedia` 6/6 `ok` (8-9 s each) and `theme-shots google` 8 `ok`,
+  2 `REJECTED` (`search`, `the browser ended at https://www.google.com/sorry/index`, as
+  before). Every new page rendered fully, in both phases, with no host to add to
+  `ALLOWED_DOMAINS` (no `proxyConnectFailure`, the `wikipedia.org`/`wikimedia.org` suffixes
+  were enough). **Google's block does not extend to the four non-search pages**, so Google
+  CSS can now be checked on them. What the `after` shots show is in the next two bullets
+  (theme bugs, reported, not fixed here), then the page notes:
   - **`wikipedia`** (a new site word; the CSS is `modules/theme/webstyling/wikipedia-web-styling.nix`,
     keyed on `domain("wikipedia.org")`): `main` (`en.wikipedia.org/wiki/Main_Page`),
     `article` (`Rust_(programming_language)`: infobox top right, wikitables, code blocks, a
@@ -191,6 +194,40 @@ failed or was rejected.
     regions `www.google.com` redirects to `consent.google.com`, which the rejection also
     catches (the host is a PAC-allowed `google.com` subdomain, so it loads and is then
     rejected rather than failing). The existing `search` URL is unchanged.
+- **Wikipedia theme: what the first live `after` shots show (2026-11-11; theme bugs,
+  reported, not fixed).** The article (`Rust_(programming_language)`) and `Help:Table` are
+  themed correctly: dark page, readable links, a dark infobox, the TOC and the
+  help navbox's body. Wrong or weak, in `before` vs `after`:
+  - **`main`: the portal boxes keep their hard-coded light backgrounds.** "From today's
+    featured article" (green), "Help us improve this article!" (blue), "In the news" and the
+    "Welcome to Wikipedia" box stay pastel/white, while the body text turns light grey:
+    grey on pale, barely readable. Probably backgrounds the
+    Codex-variable block in `wikipedia-web-styling.nix` does not reach (not checked: the
+    cause was not isolated).
+  - **The wordmark is invisible.** The "Wikipedia" text logo and its tagline are dark on the
+    now-dark header (probably an image or SVG that the colour variables do not touch; not checked).
+  - **`help-table`: the navbox title bar ("Wikitext") stays light blue** (probably a hard-coded
+    background), against dark text/links everywhere else on that box.
+  - The navbox at the very bottom of the article is still not in the viewport shot.
+  - The `before` shot of `main` carried a Wikimedia donation banner that the `after` shot
+    did not: it is a rotating, time- and region-dependent banner, not a CSS effect, so do
+    not read it as one.
+- **Google theme: what the first live `after` shots show (2026-11-11; theme bugs, reported,
+  not fixed).** The dark base reaches all four pages (`home`, `preferences`, `advanced`,
+  `help`), and `advanced` is the cleanest (form fields and selects dark, links blue). Wrong
+  or weak:
+  - **The `Sign in` button is blue-on-blue** on all four (text nearly invisible).
+  - **`home`: the footer strip (country, `Advertising` / `Business` / `Privacy` / `Terms` /
+    `Settings`) is a white block** and the `Google Search` / `I'm Feeling Lucky` buttons
+    stay white (the latter may be intended).
+  - **`preferences`: the left navigation rail and the setting cards stay white/pale blue**
+    with dark text, while the section headings ("Activity", "Content", "More options") are
+    dark-on-dark and nearly invisible, and the `Feedback` footer link is dark blue on dark.
+  - **`help` (`support.google.com`): the header and the "How can we help you?" hero are
+    themed, but the "Browse help topics" body below is a white page** with light-grey
+    headings and a pale-blue article list.
+  - `search` is still `REJECTED` (`/sorry`), so Google's results-page CSS remains uncheckable
+    with this tool. Wikipedia and these four pages are the verifiable part.
 
 - **Reddit post URL (checked 2026-11-09).** The archived r/IAmA Obama AMA thread in
   `theme-shots-urls.txt` renders under the logged-out view (post body, an "Archived post"
@@ -219,7 +256,7 @@ failed or was rejected.
   proxy (0 server hits); `/sorry` on `www.google.com`, a redirect from `support.google.com`
   to `/sorry` and `consent.google.com` come back `REJECTED` from the browser's final URL;
   every URL in the real list is https, has three fields, sits under an allowed suffix and
-  under its site's CSS domain. **Not** verified: any real page of the new ones (see "New
+  under its site's CSS domain. The real pages were first run on 2026-11-11 (see "New
   pages").
 
 - **One run's report replaces the last.** `report.txt` and `userContent.css` describe only
