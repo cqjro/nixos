@@ -196,6 +196,16 @@ shreddit-header {
 	border-bottom-color: #${c.base03} !important;
 }
 
+/* empty media slots (video not started, letterbox) are the card colour, not
+	black; the media itself paints over this */
+shreddit-player,
+shreddit-player-2,
+shreddit-aspect-ratio,
+[slot="post-media-container"],
+[slot="post-media-container"] video {
+	background-color: ${card} !important;
+}
+
 /* feed and posts are flat on the page; hairlines separate them */
 shreddit-feed,
 shreddit-post,
