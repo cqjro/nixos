@@ -551,12 +551,17 @@ WebDriver capture), one site per command:
   `capture failed: …` line appeared and no PAC-blocked host (`proxyConnectFailure`) was
   seen: nothing to add to `ALLOWED_DOMAINS`. Details and the Instagram theme finding in
   [theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot).
-- Step 39, **inconclusive**: `pgrep -af 'geckodriver|zen'` in a separate command listed
-  only its own shell, but the Bash sandbox runs in a **private PID namespace**
-  (`ps -e` there shows 5 processes, PID 1 is the sandbox wrapper), and `theme-shots` runs
-  outside it, so a leftover `geckodriver` or Zen on the host would not show. The human
-  must run that `pgrep` in a normal terminal after a run (the `EXIT`-trap path, which needs
-  a run killed mid-shot, is likewise unverified).
+- Step 39, **passed, from the human's terminal** (2026-11-10, after all the runs above):
+  the agent's own `pgrep -af 'geckodriver|zen'` listed only its own shell, which proved
+  nothing, because the Bash sandbox runs in a **private PID namespace** (`ps -e` there
+  shows 5 processes, PID 1 is the sandbox wrapper) and `theme-shots` runs outside it. Run
+  in a normal terminal it showed **no `geckodriver`**, and every `zen` line was the
+  human's own browser: one parent started as `/etc/profiles/per-user/cairo/bin/zen-twilight`
+  (no `--headless`, `--marionette` or `--profile`) plus its `-contentproc` children, all
+  with that parent's `-parentPid`. A leftover shot's Zen would be a separate tree under
+  geckodriver, so none was left. Run this check from a terminal, not the agent shell, and
+  read the parent PIDs, because the pattern also matches a normal Zen. Not verified: the
+  `EXIT`-trap path (it needs a run killed mid-shot).
 - Loopback: from the same sandbox `ip addr` shows only `lo` (a private network
   namespace), consistent with the tier-2 observation above; the "listen outside, connect
   from inside" confirmation is still the human's.
