@@ -310,6 +310,12 @@ drive() { # $1 = url, $2 = iso dir, $3 = png path
 	wd_t=90
 	wd POST "/session/$wd_sid/url" "$(jq -n --arg u "$1" '{url: $u}')" || { shot_err="load: $(wd_msg)"; return 1; }
 	sleep "$SETTLE_SECS"
+	wd_t=30
+	# where the browser ended up (after redirects and script navigation), for the
+	# interstitial check; best effort, text is the page's own, so bounded and printable
+	if wd GET "/session/$wd_sid/url"; then
+		shot_url=$(jq -r '.value // empty' "$wd_out" 2>/dev/null | head -n 1 | head -c 2048 | tr -c '[:print:]' '?') || shot_url=""
+	fi
 	wd_t=60
 	wd GET "/session/$wd_sid/screenshot" || { shot_err="screenshot: $(wd_msg)"; return 1; }
 	jq -r '.value // empty' "$wd_out" | base64 -d >"$3" 2>/dev/null || { shot_err="screenshot was not base64"; return 1; }
@@ -320,10 +326,10 @@ drive() { # $1 = url, $2 = iso dir, $3 = png path
 # $work, so the failure report needs them copied out): the failure reason, how long it
 # took, a copy of geckodriver's output, which includes Zen's ($work/last-zen.log), and
 # the number of crash dumps Zen left.
-shot_err="" shot_secs=0 shot_dumps=0
+shot_err="" shot_secs=0 shot_dumps=0 shot_url=""
 shoot() { # $1 = url, $2 = css (0|1), $3 = png path
 	local iso rc=0 t0=$SECONDS
-	shot_err=""
+	shot_err="" shot_url=""
 	rm -f -- "$work/last-zen.log" # never show the previous shot's output for this one
 	iso=$(mktemp -d "$work/iso.XXXXXX")
 	mkdir -p -- "$iso/tmp"
@@ -415,6 +421,13 @@ while IFS='|' read -r -u 3 s page url; do
 		elif [[ $(gzip -9 <"$work/$name.png" | wc -c) -lt $MIN_GZ_BYTES ]]; then
 			verdict=REJECTED
 			note="image is blank (compresses to under $MIN_GZ_BYTES bytes)"
+		elif [[ $shot_url =~ $interstitial_re ]]; then
+			# the browser's own final URL (the curl preflight is a different client and can
+			# be let through where Zen is blocked, e.g. google's /sorry page); only the
+			# part before any query or fragment is reported, the note cut to 200 characters
+			verdict=REJECTED
+			note="the browser ended at ${shot_url%%[?#]*} (consent wall, captcha or block page)"
+			note=${note:0:200}
 		elif [[ $pre_bad == 1 ]]; then
 			verdict=REJECTED
 			note=$pre_note
