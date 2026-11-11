@@ -34,9 +34,9 @@ watch page, reddit home and a post, instagram login, and three wikipedia pages (
 
 Call it as **one plain command with the absolute path**: no `cd … &&`, no pipe, no
 redirect, no `timeout`/`VAR=` prefix (the exclusion only matches the plain command and
-the guard blocks anything else naming the path). Each shot takes ~10 to 30 s, so `all`
-(26 shots: 13 pages, before and after) can run ten minutes or more: run one site at a time, or pass a longer `timeout`
-to the Bash tool. New files must be `git add`ed first: the flake only sees tracked
+the guard blocks anything else naming the path). Each shot takes ~8 to 30 s (8-11 s measured
+2026-11-09), so `all` (26 shots: 13 pages, before and after) can take several minutes: run
+one site at a time, or pass a longer `timeout` to the Bash tool. New files must be `git add`ed first: the flake only sees tracked
 files.
 
 What it does, in order:
@@ -94,7 +94,7 @@ failed or was rejected.
   (a tier-2 item, then a switch) if a site needs longer. A failed shot now says why in
   `report.txt` (`capture failed: load: …`, `screenshot: …`).
   **Live result of the 6 s settle (2026-11-09, GOD-KILLER switched with it):** all 14
-  shots over the four sites (instagram twice) reported `ok` in 8-11 s each, and every one
+  shots over the four sites then in the list (instagram twice) reported `ok` in 8-11 s each, and every one
   was a fully drawn page (youtube home and watch with thumbnails, reddit home and post,
   instagram login with the illustration). No blank, no skeleton, and the Instagram login
   came out the same in both runs (it flipped to blank in two identical `--screenshot`
@@ -113,6 +113,8 @@ failed or was rejected.
   - a blank image (its PNG gzips to under 3000 bytes).
 
   Not detected: a redirect to a Google sign-in page (`accounts.google.com`, not a block URL),
+  which `google/preferences` or `google/advanced` might do (drop such a page if the first
+  run shows it),
   a Wikimedia throttle or block (same URL, ordinary text), a reCAPTCHA frame inside an
   otherwise normal page, a block or consent page that renders as ordinary text. Always look at
   the image. A curl HTTP 4xx/5xx is only a note in `report.txt` (Zen may be let in
