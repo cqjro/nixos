@@ -87,21 +87,46 @@ failed or was rejected.
   out blank or as a skeleton, and the same Instagram login page flipped between `ok` and
   blank in two identical runs (2026-11-09). It is replaced by WebDriver: the shot waits for
   the load event, then `SETTLE_SECS`. A page that paints later than that (YouTube's
-  skeleton is the likely one) can still be caught half-drawn, and the `REJECTED` check
+  skeleton was the suspect) can still be caught half-drawn, and the `REJECTED` check
   does not see a skeleton: always look at the image. Raise `SETTLE_SECS` in the script
   (a tier-2 item, then a switch) if a site needs longer. A failed shot now says why in
   `report.txt` (`capture failed: load: …`, `screenshot: …`).
+  **Live result of the 6 s settle (2026-11-09, GOD-KILLER switched with it):** all 14
+  shots over the four sites (instagram twice) reported `ok` in 8-11 s each, and every one
+  was a fully drawn page (youtube home and watch with thumbnails, reddit home and post,
+  instagram login with the illustration). No blank, no skeleton, and the Instagram login
+  came out the same in both runs (it flipped to blank in two identical `--screenshot`
+  runs), so the settle fixed the race. Google is the exception below: drawn, but not the
+  page you want.
 - **Interstitials.** Consent walls, "unusual traffic" pages and bot blocks (Reddit and
   Google are the usual ones) are served by the site, not by this tool. Detection is
   cheap and incomplete, and a shot that fails it is **not written under its normal
   name**: it is kept as `<name>.REJECTED.png` and the run exits `4`:
   - a plain `curl` GET of the URL (same fixed list, https only) that ends on a
     `consent.*` host or a `/sorry`, `/consent`, `/captcha` or `/challenge` path;
+  - the **browser's own final URL** (WebDriver `GET /url`, read after the settle wait)
+    matching the same pattern. This is the check that matters: curl is a different client
+    and can be let through where Zen is blocked. The report names the URL without its
+    query string;
   - a blank image (its PNG gzips to under 3000 bytes).
 
   Not detected: a block or consent page that renders as ordinary text. Always look at
   the image. A curl HTTP 4xx/5xx is only a note in `report.txt` (Zen may be let in
   where curl is not), not a rejection.
+
+  **Known miss, google (2026-11-09):** under WebDriver `google/search` came back `ok` in
+  both phases but the image is Google's "unusual traffic from your computer network"
+  page with a reCAPTCHA box, not search results. The curl preflight (a different client)
+  was not redirected, the image is not blank, so nothing rejected it (the
+  browser-final-URL check above was added in response; whether Google's page sits at a
+  `/sorry` URL, as it normally does, is confirmed by the first run after the switch:
+  expect `REJECTED`, and if it still says `ok` the page is served in place and the check
+  does not see it). This is Google
+  bot-detecting this setup (headless, automated browser, a residential IP), not a
+  tool error and not a PAC problem. The `after` shot still shows the theme's dark
+  background and text on that page, so the CSS reaches `google.com` pages generally,
+  but **the search-results rules cannot be checked with this tool today**: treat a google
+  `ok` as unproven until you have looked at the image.
 - **Network confinement.** The profile gets a PAC file that sends only the four sites and
   their asset CDNs (`google.com gstatic.com googleapis.com googleusercontent.com
   youtube.com ytimg.com ggpht.com googlevideo.com reddit.com redditstatic.com
@@ -118,20 +143,34 @@ failed or was rejected.
   a city on a login page). Do not copy such details into commits, PRs or issues.
 - **History: the `--screenshot` runs (2026-11-09) were mostly unusable.** Two rounds of live
   runs: google and reddit never produced an image, youtube and instagram flipped between
-  ok, blank and nothing, with Zen exiting 0 after 0-2 s each time. The blanks are the
-  early capture above. The cause of the google and reddit "no image" was **not proven**:
-  Zen reports a screenshot failure only through `dump()`, which this build hides (a
-  successful shot logs no `Screenshot saved to:` line either unless
-  `browser.dom.window.dump.enabled` is set), so the empty output tails showed nothing.
-  It fits an exception thrown right after the first commit, not a network failure (no
-  timeout, no PAC-blocked document). Under WebDriver the same sites report a real error
-  instead. A missing shot does not mean the CSS broke; a successful shot is real. The
-  reddit post URL is unverified (no shot of it ever rendered; the `curl` preflight saw no
-  4xx), and the archived r/IAmA thread URL may still be a bad guess: if it fails after the
-  switch, replace it in `theme-shots-urls.txt`. Verified with the real Zen (1.24t) in the
-  sandbox against local servers: argument validation and symlink refusal; the profile with
-  the flake's real prefs and `userContent.css` injection; the PAC (also under WebDriver);
-  blank-page rejection; refusal of a profile dir under the real home.
+  ok, blank and nothing, with Zen exiting 0 after 0-2 s each time. The blanks and
+  skeletons are the early capture above (proven: gone under the 6 s settle). The cause of
+  the old google and reddit "no image" was **never proven and now cannot be**: Zen
+  reported a screenshot failure only through `dump()`, which this build hides, so the empty
+  output tails showed nothing, and the old path is gone. What is proven is the
+  WebDriver result: reddit renders fully (4/4) and google renders, but as the
+  unusual-traffic page, so neither failed for a network, PAC or load reason (no
+  `proxyConnectFailure`, no timeout, no host to add to `ALLOWED_DOMAINS`). A missing shot
+  does not mean the CSS broke; a successful shot is real, but look at it.
+- **Reddit post URL (checked 2026-11-09).** The archived r/IAmA Obama AMA thread in
+  `theme-shots-urls.txt` renders under the logged-out view (post body, an "Archived post"
+  notice, related posts), so it stays. Reddit also shows a "Sign in to Reddit with Google"
+  prompt over the top right of both pages (Google One Tap, an `accounts.google.com`
+  frame the PAC allows); it is in `before` and `after` alike and hides the header buttons.
+- **Instagram login: a theme bug the tool exposed.** In `after` the top-left logo, the blue
+  `Log in` fill and the `Log in with Facebook` fill are missing in every run (4/4), while
+  `before` has them. Cause, proven by removing one rule at a time and re-shooting: the
+  `[class*="x2lah0s"]` selector in the "inputs" rule of
+  `modules/theme/webstyling/instagram-web-styling.nix` (`background-color: base01
+  !important`, text and border too). `x2lah0s` is one of Instagram's shared atomic
+  classes, so it also hits the logo and the two buttons and flattens their fill to the
+  page colour. With that selector removed the logo, the blue button and the Facebook
+  button come back (the broad `div[style*="rgb(255, 255, 255)"]` repaint was **not** the
+  cause: disabling it changed nothing). Reported, not fixed here.
+- **Verified in the sandbox** with the real Zen (1.24t) against local servers: argument
+  validation and symlink refusal; the profile with the flake's real prefs and
+  `userContent.css` injection; the PAC (also under WebDriver); blank-page rejection;
+  refusal of a profile dir under the real home.
 - **One run's report replaces the last.** `report.txt` and `userContent.css` describe only
   the latest invocation; PNGs from earlier invocations stay in `.log/theme-shots/`, so after
   several single-site runs the directory mixes shots with one report. Delete the directory
