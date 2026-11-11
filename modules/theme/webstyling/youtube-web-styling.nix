@@ -4,78 +4,143 @@
 	{
 		zenWebStyling.siteStyles."youtube.com" = let
 			c = config.lib.stylix.colors;
+			# base04 equals base02 (~2:1 on base00), too dim to read: blend base05 toward base00
+			muted = "color-mix(in srgb, #${c.base05} 70%, #${c.base00})";
+			# translucent tints of the selection grey for hover / tonal fills
+			tint = pct: "color-mix(in srgb, #${c.base02} ${pct}%, transparent)";
+			# quiet 1px rule colour
+			rule = "color-mix(in srgb, #${c.base03} 80%, transparent)";
 		in ''
+/* YouTube re-declares its colour tokens on every [dark] element (masthead,
+   guide, popups, the app shell), so a :root override is shadowed by the nearest
+   ancestor: declare the palette on all of those scopes. */
 :root,
-html[dark] {
+html[dark],
+[dark],
+[darker-dark-theme],
+ytd-app,
+ytd-masthead,
+ytd-popup-container,
+tp-yt-iron-dropdown {
 	color-scheme: dark !important;
+	scrollbar-color: #${c.base03} transparent !important;
 
-	/* YouTube (current) design tokens: --yt-sys-color-baseline--* */
+	/* current design tokens: --yt-sys-color-baseline--* */
 	--yt-sys-color-baseline--base-background: #${c.base00} !important;
 	--yt-sys-color-baseline--raised-background: #${c.base01} !important;
 	--yt-sys-color-baseline--menu-background: #${c.base01} !important;
-	--yt-sys-color-baseline--tonal-background: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
-	--yt-sys-color-baseline--tonal-rim: color-mix(in srgb, #${c.base03} 55%, transparent) !important;
-	--yt-sys-color-baseline--button-chip-background-hover: color-mix(in srgb, #${c.base02} 40%, transparent) !important;
-	--yt-sys-color-baseline--additive-background: color-mix(in srgb, #${c.base02} 30%, transparent) !important;
-	--yt-sys-color-baseline--mono-tonal-hover: color-mix(in srgb, #${c.base02} 40%, transparent) !important;
-	--yt-sys-color-baseline--suggested-action: color-mix(in srgb, #${c.base0D} 30%, #${c.base01}) !important;
+	--yt-sys-color-baseline--tonal-background: ${tint "45"} !important;
+	--yt-sys-color-baseline--tonal-rim: ${rule} !important;
+	--yt-sys-color-baseline--button-chip-background-hover: ${tint "55"} !important;
+	--yt-sys-color-baseline--additive-background: ${tint "30"} !important;
+	--yt-sys-color-baseline--mono-tonal-hover: ${tint "55"} !important;
+	--yt-sys-color-baseline--suggested-action: color-mix(in srgb, #${c.base0D} 25%, #${c.base01}) !important;
+	--yt-sys-color-baseline--inverted-background: #${c.base05} !important;
 
 	--yt-sys-color-baseline--text-primary: #${c.base05} !important;
 	--yt-sys-color-baseline--text-primary-inverse: #${c.base00} !important;
-	--yt-sys-color-baseline--text-secondary: #${c.base04} !important;
-	--yt-sys-color-baseline--text-secondary-inverse: #${c.base04} !important;
-	--yt-sys-color-baseline--text-disabled: #${c.base03} !important;
+	--yt-sys-color-baseline--text-secondary: ${muted} !important;
+	--yt-sys-color-baseline--text-secondary-inverse: ${muted} !important;
+	--yt-sys-color-baseline--text-disabled: #${c.base04} !important;
 	--yt-sys-color-baseline--text-error: #${c.base08} !important;
 
 	--yt-sys-color-baseline--call-to-action: #${c.base0D} !important;
-	--yt-sys-color-baseline--call-to-action-hover: #${c.base0E} !important;
+	--yt-sys-color-baseline--call-to-action-hover: #${c.base0D} !important;
 	--yt-sys-color-baseline--call-to-action-inverse: #${c.base0D} !important;
 	--yt-sys-color-baseline--overlay-call-to-action: #${c.base0D} !important;
+	--yt-sys-color-baseline--themed-blue: #${c.base0D} !important;
+	--yt-sys-color-baseline--light-blue: #${c.base0D} !important;
+	--yt-sys-color-baseline--dark-blue: #${c.base0D} !important;
+	--yt-sys-color-baseline--themed-green: #${c.base0B} !important;
+	--yt-sys-color-baseline--light-green: #${c.base0B} !important;
 	--yt-sys-color-baseline--wordmark-text: #${c.base05} !important;
 	--yt-sys-color-baseline--red-indicator: #${c.base08} !important;
 	--yt-sys-color-baseline--error-indicator: #${c.base08} !important;
 	--yt-sys-color-baseline--error-text: #${c.base08} !important;
 
-	--yt-sys-color-baseline--outline: color-mix(in srgb, #${c.base03} 55%, transparent) !important;
+	--yt-sys-color-baseline--outline: ${rule} !important;
 	--yt-sys-color-baseline--outline-opaque: #${c.base03} !important;
-	--yt-sys-color-baseline--outline-inverse: color-mix(in srgb, #${c.base03} 55%, transparent) !important;
+	--yt-sys-color-baseline--outline-inverse: ${rule} !important;
 
 	--yt-sys-color-baseline--overlay-background-solid: #${c.base00} !important;
 	--yt-sys-color-baseline--overlay-background-light: color-mix(in srgb, #${c.base01} 60%, transparent) !important;
 	--yt-sys-color-baseline--overlay-background-heavy: #${c.base00} !important;
-	--yt-sys-color-baseline--overlay-text-primary: #${c.base06} !important;
-	--yt-sys-color-baseline--overlay-text-secondary: #${c.base04} !important;
+	--yt-sys-color-baseline--overlay-text-primary: #${c.base05} !important;
+	--yt-sys-color-baseline--overlay-text-secondary: ${muted} !important;
 	--yt-sys-color-baseline--overlay-button-primary: #${c.base05} !important;
 
-	/* legacy --yt-spec-* aliases some surfaces still consume */
+	/* --yt-spec-* tokens most surfaces still consume */
 	--yt-spec-base-background: #${c.base00} !important;
 	--yt-spec-raised-background: #${c.base01} !important;
 	--yt-spec-menu-background: #${c.base01} !important;
+	--yt-spec-inverted-background: #${c.base05} !important;
 	--yt-spec-general-background-a: #${c.base00} !important;
 	--yt-spec-general-background-b: #${c.base01} !important;
-	--yt-spec-general-background-c: #${c.base02} !important;
+	--yt-spec-general-background-c: #${c.base01} !important;
 	--yt-spec-text-primary: #${c.base05} !important;
 	--yt-spec-text-primary-inverse: #${c.base00} !important;
-	--yt-spec-text-secondary: #${c.base04} !important;
-	--yt-spec-text-secondary-inverse: #${c.base04} !important;
+	--yt-spec-text-secondary: ${muted} !important;
+	--yt-spec-text-secondary-inverse: ${muted} !important;
+	--yt-spec-text-disabled: #${c.base04} !important;
 	--yt-spec-text-invert: #${c.base00} !important;
 	--yt-spec-wordmark-text: #${c.base05} !important;
 	--yt-spec-call-to-action: #${c.base0D} !important;
+	--yt-spec-call-to-action-inverse: #${c.base0D} !important;
 	--yt-spec-brand-link-solid: #${c.base0D} !important;
-	--yt-spec-icon-inactive: #${c.base04} !important;
-	--yt-spec-icon-disabled: #${c.base03} !important;
-	--yt-spec-icon-active-other: #${c.base05} !important;
+	--yt-spec-brand-link-text: #${c.base0D} !important;
 	--yt-spec-themed-blue: #${c.base0D} !important;
-	--yt-spec-brand-subscribe-button-background: #${c.base0D} !important;
-	--yt-spec-brand-subscribe-button-text: #${c.base00} !important;
+	--yt-spec-light-blue: #${c.base0D} !important;
+	--yt-spec-dark-blue: #${c.base0D} !important;
+	--yt-spec-themed-green: #${c.base0B} !important;
+	--yt-spec-light-green: #${c.base0B} !important;
+	--yt-spec-error-indicator: #${c.base08} !important;
+	--yt-spec-icon-active-other: #${c.base05} !important;
+	--yt-spec-icon-inactive: ${muted} !important;
+	--yt-spec-icon-disabled: #${c.base04} !important;
+	--yt-spec-brand-icon-active: #${c.base0D} !important;
+	--yt-spec-brand-icon-inactive: ${muted} !important;
 	--yt-spec-brand-button-background: #${c.base0D} !important;
-	--yt-spec-filled-button-text: #${c.base00} !important;
-	--yt-spec-10-percent-layer: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
-	--yt-spec-15-percent-layer: color-mix(in srgb, #${c.base02} 45%, transparent) !important;
-	--yt-spec-30-percent-layer: color-mix(in srgb, #${c.base02} 50%, transparent) !important;
-	--yt-spec-60-percent-layer: color-mix(in srgb, #${c.base03} 50%, transparent) !important;
+	--yt-spec-brand-subscribe-button-background: #${c.base0D} !important;
+	--yt-spec-brand-subscribe-button-text: #${c.base07} !important;
+	--yt-spec-filled-button-text: #${c.base07} !important;
+	--yt-spec-mono-filled-hover: #${c.base05} !important;
+	--yt-spec-mono-tonal-hover: ${tint "55"} !important;
+	--yt-spec-button-chip-background-hover: ${tint "55"} !important;
+	--yt-spec-badge-chip-background: ${tint "45"} !important;
+	--yt-spec-additive-background: ${tint "30"} !important;
+	--yt-spec-touch-response: ${tint "30"} !important;
+	--yt-spec-suggested-action: color-mix(in srgb, #${c.base0D} 25%, #${c.base01}) !important;
+	--yt-spec-outline: ${rule} !important;
+	--yt-spec-10-percent-layer: ${rule} !important;
+	--yt-spec-15-percent-layer: ${rule} !important;
+	--yt-spec-20-percent-layer: ${tint "45"} !important;
+	--yt-spec-30-percent-layer: ${tint "50"} !important;
+	--yt-spec-60-percent-layer: color-mix(in srgb, #${c.base03} 60%, transparent) !important;
 	--yt-spec-tooltip-background: #${c.base01} !important;
 	--yt-spec-tooltip-text: #${c.base05} !important;
+	--yt-spec-snackbar-background: #${c.base01} !important;
+
+	/* legacy greyscales: light end is text, dark end is the surface ladder */
+	--yt-spec-white-1: #${c.base05} !important;
+	--yt-spec-white-2: ${muted} !important;
+	--yt-spec-white-3: ${muted} !important;
+	--yt-spec-grey-1: #${c.base05} !important;
+	--yt-spec-grey-2: ${muted} !important;
+	--yt-spec-grey-3: ${muted} !important;
+	--yt-spec-grey-4: #${c.base04} !important;
+	--yt-spec-grey-5: #${c.base03} !important;
+	--yt-spec-black-1: #${c.base00} !important;
+	--yt-spec-black-2: #${c.base01} !important;
+	--yt-spec-black-3: #${c.base03} !important;
+	--yt-spec-black-4: #${c.base03} !important;
+
+	/* brand red paints the player progress bar, live badges and watched bars */
+	--yt-spec-static-brand-red: #${c.base0D} !important;
+}
+
+::selection {
+	background-color: color-mix(in srgb, #${c.base0D} 35%, transparent) !important;
+	color: #${c.base07} !important;
 }
 
 html,
@@ -91,87 +156,356 @@ ytd-watch-flexy,
 
 #masthead-container,
 ytd-masthead,
-#container.ytd-masthead {
-	background-color: #${c.base00} !important;
-	border-bottom-color: #${c.base03} !important;
+#container.ytd-masthead,
+#background.ytd-masthead {
+	background: #${c.base00} !important;
+	border-bottom-color: ${rule} !important;
 }
 
-/* search bar box (new searchbox component) */
+/* text colour no longer comes from the --yt-spec-* tokens on most components
+   (hashed per-build vars): paint the text of each region directly, leaving
+   links and buttons to the call-to-action token */
+ytd-masthead yt-icon:not(#logo-icon):not([class*="ButtonShapeNextCallToAction"] *),
+ytd-topbar-logo-renderer #logo-icon {
+	color: #${c.base05} !important;
+}
+
+ytd-guide-renderer :is(yt-formatted-string, span, h3, yt-icon, .title):not([class*="ButtonShape"] *):not([class*="button-shape"] *),
+ytd-mini-guide-renderer :is(span, yt-icon, .title) {
+	color: #${c.base05} !important;
+}
+
+#footer.ytd-guide-renderer a,
+#guide-links-primary a,
+#guide-links-secondary a,
+ytd-guide-renderer #copyright,
+ytd-guide-renderer #footer :is(a, span, div) {
+	color: ${muted} !important;
+}
+
+/* video lockups (home grid, watch sidebar): title primary, metadata muted */
+yt-lockup-view-model h3,
+yt-lockup-view-model h3 *,
+[class*="ytLockupMetadataViewModelHeading"],
+[class*="ytLockupMetadataViewModelHeading"] *,
+ytd-compact-video-renderer #video-title,
+ytd-rich-grid-media #video-title {
+	color: #${c.base05} !important;
+}
+
+yt-lockup-view-model [class*="ytContentMetadataViewModel"],
+yt-lockup-view-model [class*="ytContentMetadataViewModel"] span,
+yt-lockup-view-model [class*="content-metadata-view-model"] span,
+ytd-compact-video-renderer #metadata-line span,
+ytd-compact-video-renderer ytd-channel-name #text {
+	color: ${muted} !important;
+}
+
+/* search box, its button and the voice button */
 #container.ytd-searchbox,
+.ytSearchboxComponentInputBox,
 .ytSearchboxComponentInputBoxDark,
 .ytSearchboxComponentInputBoxLight,
 .ytSearchboxComponentInputBoxDark[expanded],
 .ytSearchboxComponentInputBoxLight[expanded] {
 	background-color: #${c.base01} !important;
-	border-color: #${c.base03} !important;
+	border-color: ${rule} !important;
+	box-shadow: none !important;
 }
 
+.ytSearchboxComponentSearchButton,
+.ytSearchboxComponentSearchButtonDark,
+#search-icon-legacy,
+#voice-search-button button,
+#voice-search-button .yt-spec-button-shape-next,
+#voice-search-button [class*="ButtonShapeNext"]:is(a, button) {
+	background-color: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
+	color: #${c.base05} !important;
+	backdrop-filter: none !important;
+}
+
+.ytSearchboxComponentSearchButton *,
+#voice-search-button yt-touch-feedback-shape * {
+	background-color: transparent !important;
+}
+
+.ytSearchboxComponentInput,
 #search-input,
-#search {
+#search-input input,
+input#search {
+	background: transparent !important;
 	color: #${c.base05} !important;
 }
 
-#search-input::placeholder {
-	color: #${c.base04} !important;
+.ytSearchboxComponentInput::placeholder,
+#search-input input::placeholder,
+input#search::placeholder {
+	color: ${muted} !important;
 }
 
+/* search suggestions dropdown */
+.ytSearchboxComponentSuggestionsContainer,
+.ytSearchboxComponentSuggestionsContainerDark,
+.sbdd_b,
+.gstl_50.sbdd_a {
+	background-color: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
+	color: #${c.base05} !important;
+}
+
+.ytSuggestionComponentHighlighted,
+.ytSuggestionComponentSuggestion:hover,
+.sbsb_d {
+	background-color: ${tint "45"} !important;
+}
+
+.ytSuggestionComponentText,
+.ytSuggestionComponentText b {
+	color: #${c.base05} !important;
+}
+
+/* guide (left sidebar) */
 #guide-inner-content,
+#guide-content,
+tp-yt-app-drawer #contentContainer,
+ytd-mini-guide-renderer,
 #chips,
+#chips-wrapper,
 .app-header,
 .app-drawer,
 ytd-guide-renderer {
 	background-color: #${c.base00} !important;
-	border-color: #${c.base03} !important;
+	border-color: ${rule} !important;
 }
 
-/* chip row (uses rotating hashed vars -- target the class shapes directly) */
+ytd-guide-section-renderer,
+ytd-guide-signin-promo-renderer {
+	border-color: ${rule} !important;
+}
+
+tp-yt-paper-item.ytd-guide-entry-renderer,
+#endpoint.ytd-guide-entry-renderer {
+	background-color: transparent !important;
+}
+
+/* one tinted layer only: the link and its paper-item both paint by default */
+ytd-guide-entry-renderer[active] tp-yt-paper-item,
+ytd-mini-guide-entry-renderer[active] {
+	background-color: ${tint "22"} !important;
+	border-radius: 10px !important;
+}
+
+ytd-guide-entry-renderer #endpoint,
+ytd-guide-entry-renderer #endpoint:hover {
+	background-color: transparent !important;
+}
+
+ytd-guide-entry-renderer:not([active]):hover tp-yt-paper-item {
+	background-color: ${tint "15"} !important;
+	border-radius: 10px !important;
+}
+
+/* chip row (rotating hashed vars -- target the class shapes directly) */
+.ytChipShapeChip,
 .ytChipShapeInactive,
-.ytChipBarViewModelChipWrapper {
+yt-chip-cloud-chip-renderer:not([selected]) #chip-container {
 	background-color: #${c.base01} !important;
 	color: #${c.base05} !important;
-	border-color: #${c.base03} !important;
+	border: 1px solid ${rule} !important;
 }
 
 .ytChipShapeActive,
-yt-chip-cloud-chip-renderer[selected] {
+yt-chip-cloud-chip-renderer[selected] #chip-container {
 	background-color: #${c.base0D} !important;
-	color: #${c.base00} !important;
+	color: #${c.base07} !important;
 	border-color: #${c.base0D} !important;
 }
 
-.ytChipShapeInactive:hover,
-.ytChipShapeActive:hover {
-	background-color: #${c.base02} !important;
+.ytChipShapeInactive:hover {
+	background-color: ${tint "55"} !important;
 }
 
-/* playlist sort bar header (background comes from a rotating hashed var) */
-ytd-item-section-renderer[use-chip-bar-view-model-header][page-subtype="playlist"] #header.ytd-item-section-renderer,
-#header.ytd-item-section-renderer {
-	background-color: #${c.base00} !important;
+/* buttons: YouTube ships both the kebab (yt-spec-button-shape-next--x) and
+   the camelCase (ytSpecButtonShapeNextX) class sets, so match both */
+/* outline buttons (sign in, view tickets ...) */
+.yt-spec-button-shape-next--outline,
+.ytSpecButtonShapeNextOutline {
+	border-color: ${rule} !important;
 }
 
-/* account / profile popup menu (background comes from a rotating hashed var) */
-ytd-multi-page-menu-renderer,
-ytd-multi-page-menu-renderer > #menu,
-ytd-account-settings-menu-renderer {
+.yt-spec-button-shape-next--call-to-action:is(.yt-spec-button-shape-next--outline, .yt-spec-button-shape-next--text),
+.ytSpecButtonShapeNextCallToAction:is(.ytSpecButtonShapeNextOutline, .ytSpecButtonShapeNextText),
+:is(.yt-spec-button-shape-next--call-to-action, .ytSpecButtonShapeNextCallToAction) :is(yt-icon, span, div) {
+	color: #${c.base0D} !important;
+}
+
+:is(.yt-spec-button-shape-next--call-to-action, .ytSpecButtonShapeNextCallToAction):is(.yt-spec-button-shape-next--outline, .ytSpecButtonShapeNextOutline):hover {
+	background-color: color-mix(in srgb, #${c.base0D} 15%, transparent) !important;
+}
+
+/* tonal action pills (like / share / save / more / voice) */
+.yt-spec-button-shape-next--tonal,
+.ytSpecButtonShapeNextTonal {
+	background-color: ${tint "30"} !important;
+	color: #${c.base05} !important;
+	backdrop-filter: none !important;
+}
+
+:is(.yt-spec-button-shape-next--tonal, .ytSpecButtonShapeNextTonal):hover {
+	background-color: ${tint "55"} !important;
+}
+
+/* the like | dislike divider */
+:is(.yt-spec-button-shape-next--tonal, .ytSpecButtonShapeNextTonal)::after,
+.ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper ::after {
+	background-color: ${rule} !important;
+}
+
+.ytSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper,
+ytd-segmented-like-dislike-button-renderer #segmented-buttons-wrapper {
+	background: transparent !important;
+}
+
+.yt-spec-button-shape-next__icon,
+.yt-spec-button-shape-next yt-icon,
+yt-icon-button button {
+	color: currentColor !important;
+	fill: currentColor !important;
+}
+
+/* filled mono buttons (subscribe, join): a quiet tonal pill like the other
+   actions, not a solid fill; the accent stays reserved for links */
+.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled,
+.ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled,
+ytd-subscribe-button-renderer :is(.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) {
+	background-color: ${tint "30"} !important;
+	color: #${c.base06} !important;
+	border: 1px solid ${rule} !important;
+	backdrop-filter: none !important;
+}
+
+:is(.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled):hover {
+	background-color: ${tint "55"} !important;
+}
+
+/* call-to-action outline buttons in the masthead / guide promo (sign in) */
+ytd-masthead #buttons ytd-button-renderer :is(a, button, span, div, yt-icon),
+ytd-guide-signin-promo-renderer :is(a, button, span, div, yt-icon) {
+	color: #${c.base0D} !important;
+}
+
+ytd-masthead #buttons ytd-button-renderer :is(a, button)[class*="utline" i],
+ytd-guide-signin-promo-renderer :is(a, button)[class*="utline" i] {
+	border-color: ${rule} !important;
+}
+
+ytd-guide-signin-promo-renderer > :is(div, yt-formatted-string):not(:has(a, button)),
+ytd-guide-signin-promo-renderer #description {
+	color: #${c.base05} !important;
+}
+
+/* brand red (logo, guide product icons) -> the palette red; the white
+   wordmark and play glyph -> the text colour. The selectors match YouTube's
+   own fill attributes by substring (its reds are ff0033 / ff0000 / ff0302) */
+yt-icon :is([fill*="ff00" i], [fill*="ff03" i], [fill="red" i]) {
+	fill: #${c.base08} !important;
+}
+
+/* guide product icons ("More from YouTube"): quiet muted badges with a
+   cut-out glyph instead of brand red; covers solid and gradient fills */
+ytd-guide-entry-renderer yt-icon [fill]:not([fill="none" i], [fill="white" i], [fill*="fff" i], [fill="currentColor" i]) {
+	fill: ${muted} !important;
+}
+
+ytd-guide-entry-renderer yt-icon :is([fill="white" i], [fill*="fff" i]) {
+	fill: #${c.base00} !important;
+}
+
+ytd-topbar-logo-renderer yt-icon :is([fill="white" i], [fill*="fff" i]),
+ytd-topbar-logo-renderer yt-icon path:not([fill]) {
+	fill: #${c.base05} !important;
+}
+
+/* thumbnail badges ("New", duration, "4K") */
+:is(yt-thumbnail-view-model, ytd-thumbnail, yt-lockup-view-model) :is(.badge-shape, .yt-badge-shape, [class*="ytBadgeShape"], [class*="badge-shape-wiz"]) {
+	background-color: color-mix(in srgb, #${c.base00} 82%, transparent) !important;
+	color: #${c.base05} !important;
+}
+
+/* home "try searching" nudge: the bordered inner card is the only surface */
+ytd-feed-nudge-renderer,
+ytd-feed-nudge-renderer :not(#dismissible) {
+	background: transparent !important;
+}
+
+ytd-feed-nudge-renderer #dismissible,
+ytd-background-promo-renderer,
+#dismissible.ytd-background-promo-renderer {
 	background-color: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
 	color: #${c.base05} !important;
 }
 
+ytd-feed-nudge-renderer yt-formatted-string:not(#title, #subtitle) {
+	color: #${c.base05} !important;
+}
+
+ytd-feed-nudge-renderer #subtitle,
+ytd-feed-nudge-renderer #subtitle * {
+	color: ${muted} !important;
+}
+
+/* video titles / lockups */
+/* page headings one step brighter than body text for hierarchy */
 ytd-video-primary-info-renderer h1.title,
+ytd-watch-metadata h1,
+ytd-watch-metadata #title h1 yt-formatted-string,
+ytd-feed-nudge-renderer #title,
+ytd-feed-nudge-renderer #title *,
+ytd-comments-header-renderer #count,
+ytd-comments-header-renderer #count * {
+	color: #${c.base06} !important;
+}
+
 #video-title,
-.yt-lockup-metadata-view-model__title {
+.yt-lockup-metadata-view-model__title,
+.yt-lockup-metadata-view-model-wiz__title,
+.ytLockupMetadataViewModelTitle {
 	color: #${c.base05} !important;
 }
 
-#content-text.ytdcomment-renderer,
-#author-text.ytd-comment-renderer {
+.yt-content-metadata-view-model__metadata-text,
+.yt-content-metadata-view-model-wiz__metadata-text,
+.ytContentMetadataViewModelMetadataText,
+#metadata-line span,
+#owner-sub-count,
+ytd-channel-name #text {
+	color: ${muted} !important;
+}
+
+ytd-watch-metadata ytd-channel-name #text,
+ytd-video-owner-renderer ytd-channel-name a {
 	color: #${c.base05} !important;
 }
 
-/* ambient "cinematics" reflection layer behind the player uses element-scoped
-   --yt-saturated-* tokens -- remove the layer entirely and flatten the watch
-   page surfaces to the page colour */
+/* watched-progress bars under thumbnails */
+ytd-thumbnail-overlay-resume-playback-renderer #progress,
+.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment,
+.ytThumbnailOverlayProgressBarHostWatchedProgressBarSegmentModern {
+	background: #${c.base0D} !important;
+}
+
+/* thumbnail duration / badge pills */
+.yt-badge-shape--thumbnail-default,
+.badge-shape-wiz--thumbnail-default,
+ytd-thumbnail-overlay-time-status-renderer {
+	background-color: color-mix(in srgb, #${c.base00} 80%, transparent) !important;
+	color: #${c.base05} !important;
+}
+
+/* ambient "cinematics" reflection layer behind the player: element-scoped
+   --yt-saturated-* tokens; remove it and flatten the watch surfaces */
 #cinematics-container,
 #cinematics,
 ytd-watch-flexy #cinematics-container {
@@ -180,83 +514,156 @@ ytd-watch-flexy #cinematics-container {
 
 ytd-watch-flexy,
 ytd-watch-flexy #player-container,
-ytd-watch-flexy #player-container-inner,
-#cinematics.ytd-watch-flexy,
-#cinematics {
+ytd-watch-flexy #player-container-inner {
 	background-color: #${c.base00} !important;
 	background-image: none !important;
 }
 
-/* theater mode: solid themed background around the player */
 ytd-watch-flexy[theater] #player-container,
 ytd-watch-flexy[theater] #full-bleed-container {
 	background: #${c.base00} !important;
 }
 
-/* the watch-page metadata / description section sits on that surface */
 #below.ytd-watch-flexy,
 ytd-watch-metadata,
-ytd-video-primary-info-renderer,
-ytd-text-inline-expander {
+ytd-video-primary-info-renderer {
 	background-color: #${c.base00} !important;
 	color: #${c.base05} !important;
 }
 
-/* description box -- one consistent surface, children stay transparent */
+/* description box: one raised surface, children transparent */
+ytd-watch-metadata #description,
 #description.ytd-watch-metadata,
-#description.ytd-watch-metadata > #inline-expander,
+#description-inner,
 #description-inline-expander,
-#inline-expander.ytd-text-inline-expander,
-ytd-text-inline-expander,
 ytd-structured-description-content-renderer {
 	background: #${c.base01} !important;
-	background-color: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
 	border-radius: 12px !important;
 }
 
-#description.ytd-watch-metadata,
-#description.ytd-watch-metadata *,
-#description-inline-expander,
-#description-inline-expander * {
-	color: #${c.base05} !important;
-}
-
-#description.ytd-watch-metadata *,
+ytd-watch-metadata #description *,
 #description-inline-expander *,
-ytd-structured-description-content-renderer,
 ytd-structured-description-content-renderer * {
 	background-color: transparent !important;
 	background-image: none !important;
+	border-color: ${rule} !important;
 }
 
-/* expand / any links inside the description */
-#description.ytd-watch-metadata a,
-#description-inline-expander a,
-ytd-text-inline-expander #expand {
+#description-inner,
+#description-inline-expander,
+ytd-structured-description-content-renderer {
+	border: 0 !important;
+}
+
+/* description text primary; links (hashtags, urls) keep the accent token */
+ytd-watch-metadata #description,
+ytd-watch-metadata #description :is(span, div, yt-formatted-string):not(a, a *) {
+	color: #${c.base05} !important;
+}
+
+ytd-watch-metadata #description #expand,
+ytd-watch-metadata #description #collapse,
+ytd-watch-metadata #description a,
+ytd-watch-metadata #description a * {
 	color: #${c.base0D} !important;
 }
 
-/* action buttons (reply / join / like / share / save / menu -- style the inner
-   pill shape, keep the square wrapper transparent) */
-ytd-button-renderer yt-button-shape,
-ytd-menu-renderer yt-button-shape,
-ytd-segmented-like-dislike-button-renderer yt-button-shape {
-	background-color: transparent !important;
-}
-
-ytd-button-renderer .yt-spec-button-shape-next,
-ytd-menu-renderer .yt-spec-button-shape-next,
-ytd-segmented-like-dislike-button-renderer .yt-spec-button-shape-next {
-	background-color: #${c.base02} !important;
+/* merch / ticket shelves under the description */
+ytd-merch-shelf-renderer,
+ytd-ticket-shelf-renderer {
+	background-color: #${c.base00} !important;
 	color: #${c.base05} !important;
-	border-color: #${c.base03} !important;
-	border-radius: 18px !important;
 }
 
-/* subscribe button */
-ytd-subscribe-button-renderer .yt-spec-button-shape-next--filled {
-	background-color: #${c.base0D} !important;
-	color: #${c.base00} !important;
+ytd-ticket-shelf-renderer *,
+ytd-merch-shelf-renderer * {
+	border-color: ${rule} !important;
+}
+
+/* primary event (a link styled as text) and the event table's plain text */
+ytd-ticket-shelf-renderer :is(#title, #primary-event) :is(span, div, yt-formatted-string, a),
+ytd-ticket-shelf-renderer #rest-events :is(span, div, yt-formatted-string):not(a, a *, [class*="link" i], [class*="link" i] *) {
+	color: #${c.base05} !important;
+}
+
+/* vendor links ("Bandsintown", "View tickets") and VIEW TICKETS keep the accent */
+ytd-ticket-shelf-renderer #primary-event #view-tickets-link,
+ytd-ticket-shelf-renderer #primary-event #view-tickets-link *,
+ytd-ticket-shelf-renderer #rest-events :is(a, [class*="link" i]),
+ytd-ticket-shelf-renderer #rest-events :is(a, [class*="link" i]) * {
+	color: #${c.base0D} !important;
+}
+
+/* the calendar date block (white day cell by default) */
+ytd-ticket-shelf-renderer :is([id*="calendar" i], [class*="calendar" i]) {
+	background-color: #${c.base01} !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	overflow: hidden !important;
+}
+
+ytd-ticket-shelf-renderer :is([id*="calendar" i], [class*="calendar" i]) * {
+	background-color: transparent !important;
+	color: #${c.base05} !important;
+}
+
+/* comments */
+ytd-comments,
+ytd-comments-header-renderer,
+ytd-comment-thread-renderer,
+ytd-comment-view-model {
+	background-color: #${c.base00} !important;
+	color: #${c.base05} !important;
+}
+
+ytd-comments-header-renderer :is(span, yt-formatted-string, yt-icon, #label):not(#count, #count *),
+ytd-comments-header-renderer yt-sort-filter-sub-menu-renderer * {
+	color: #${c.base05} !important;
+}
+
+#content-text.ytd-comment-renderer,
+#content-text.ytd-comment-view-model,
+ytd-comment-view-model #content-text,
+#author-text.ytd-comment-renderer,
+ytd-comment-view-model #author-text {
+	color: #${c.base05} !important;
+}
+
+ytd-comment-simplebox-renderer #placeholder-area,
+#contenteditable-root.yt-formatted-string {
+	color: ${muted} !important;
+	border-color: ${rule} !important;
+}
+
+/* menus, popups, dialogs */
+ytd-multi-page-menu-renderer,
+ytd-multi-page-menu-renderer > #menu,
+ytd-account-settings-menu-renderer,
+ytd-menu-popup-renderer,
+tp-yt-paper-listbox,
+yt-sheet-view-model,
+yt-list-view-model,
+tp-yt-paper-dialog,
+ytd-unified-share-panel-renderer,
+ytd-add-to-playlist-renderer,
+yt-contextual-sheet-layout {
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border: 1px solid ${rule} !important;
+	box-shadow: none !important;
+}
+
+ytd-menu-service-item-renderer:hover,
+tp-yt-paper-item:hover,
+yt-list-item-view-model:hover {
+	background-color: ${tint "45"} !important;
+}
+
+tp-yt-paper-tooltip #tooltip,
+.ytp-tooltip-text {
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
 }
 
 /* channel pages */
@@ -264,41 +671,47 @@ ytd-browse[page-subtype="channels"],
 #channel-header-container,
 ytd-c4-tabbed-header-renderer,
 ytd-channel-header-renderer,
-ytd-tabbed-page-header {
+ytd-tabbed-page-header,
+#header.ytd-item-section-renderer {
 	background-color: #${c.base00} !important;
-	border-color: #${c.base03} !important;
+	border-color: ${rule} !important;
 	color: #${c.base05} !important;
 }
 
 #text-container.ytd-channel-name,
 #title.ytd-channel-header-renderer,
-ytd-channel-name,
 #description.ytd-channel-header-renderer {
 	color: #${c.base05} !important;
 }
 
-/* channel tabs (home / videos / shows / ...) */
+/* channel tabs: underline-style, accent on the active one */
 #tabsContainer.ytd-c4-tabbed-header-renderer,
+yt-tab-group-shape,
 yt-tab-shape,
 .yt-tab-group-shape__tab {
-	background-color: #${c.base02} !important;
-	color: #${c.base05} !important;
-	border-color: #${c.base03} !important;
+	background-color: transparent !important;
+	color: ${muted} !important;
+	border-color: ${rule} !important;
 }
 
-yt-tab-shape[active],
 yt-tab-shape[aria-selected="true"],
-.yt-tab-group-shape__tab--active .yt-tab-group-shape__tab-label {
-	background-color: #${c.base0D} !important;
-	color: #${c.base00} !important;
+.yt-tab-group-shape__tab--active .yt-tab-group-shape__tab-label,
+.yt-tab-shape-wiz__tab--tab-selected {
+	color: #${c.base05} !important;
 }
 
-/* channel community posts (background/border come from rotating hashed vars) */
-ytd-post-renderer[uses-compact-lockup],
+.yt-tab-group-shape__tab-bar,
+.yt-tab-shape-wiz__tab-bar--tab-bar-selected,
+#tabsContainer tp-yt-paper-tabs #selectionBar {
+	background-color: #${c.base0D} !important;
+	border-color: #${c.base0D} !important;
+}
+
+/* community posts */
 ytd-post-renderer,
 ytd-backstage-post-renderer {
-	background-color: #${c.base02} !important;
-	border-color: #${c.base03} !important;
+	background-color: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
 	color: #${c.base05} !important;
 }
 
@@ -309,9 +722,55 @@ ytd-backstage-post-renderer {
 	color: #${c.base05} !important;
 }
 
-/* player control bar background should stay dark */
+/* player: letterbox, control pills, progress */
 .html5-video-player {
-	background-color: #000 !important;
+	background-color: #${c.base00} !important;
+}
+
+.ytp-large-play-button-bg {
+	fill: color-mix(in srgb, #${c.base00} 80%, transparent) !important;
+}
+
+.ytp-play-progress,
+.ytp-swatch-background-color,
+.ytp-scrubber-button,
+.ytp-settings-button.ytp-hd-quality-badge::after {
+	background-color: #${c.base0D} !important;
+}
+
+/* autoplay toggle in the control bar */
+.ytp-autonav-toggle-button {
+	background-color: color-mix(in srgb, #${c.base03} 85%, transparent) !important;
+}
+
+.ytp-autonav-toggle-button[aria-checked="true"] {
+	background-color: color-mix(in srgb, #${c.base0D} 70%, transparent) !important;
+}
+
+.ytp-autonav-toggle-button::after {
+	background-color: #${c.base05} !important;
+}
+
+.ytp-load-progress,
+.ytp-hover-progress {
+	background-color: color-mix(in srgb, #${c.base05} 35%, transparent) !important;
+}
+
+.ytp-popup,
+.ytp-settings-menu,
+.ytp-panel-menu {
+	background-color: color-mix(in srgb, #${c.base01} 92%, transparent) !important;
+	color: #${c.base05} !important;
+}
+
+.ytp-menuitem:hover,
+.ytp-menuitem[aria-checked="true"] {
+	background-color: ${tint "45"} !important;
+}
+
+.ytp-menuitem-toggle-checkbox::after,
+.ytp-menuitem[aria-checked="true"] .ytp-menuitem-toggle-checkbox {
+	background-color: #${c.base0D} !important;
 }
 		'';
 	};
