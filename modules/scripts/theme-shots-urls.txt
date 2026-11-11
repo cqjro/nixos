@@ -3,13 +3,33 @@
 # The FIXED page list for theme-shots (agents, headless Zen, logged out). The script
 # reads this one file from the Nix store, so a caller can never supply a URL. One line
 # per shot; "|" separates the fields and may not appear in a URL. Keep every page
-# logged-out and public.
+# logged-out and public. Every host a page redirects to must be covered by
+# ALLOWED_DOMAINS in theme-shots.sh (the PAC), and every URL of a site must sit under the
+# domain its per-site CSS rule is keyed on (google.com, wikipedia.org, ...), or the
+# shot shows nothing about that rule.
 #
 # reddit/post is an archived thread (archived threads keep their URL); it is
 # unverified until the first real run.
+#
+# google: search is the results page, which Google bot-blocks (/sorry, always REJECTED
+# so far); the other four are not search results and are meant to avoid that block.
+# UNVERIFIED LIVE until the first run after a switch: google/home, preferences, advanced
+# and help, and all of wikipedia. A page that renders only part of what its note says
+# (below the 1400x1000 viewport, e.g. the article's navbox) needs a manual screenshot.
+#
+# wikipedia: main is the portal page; article is a long article with an infobox (top
+# right), wikitables, code blocks and a navbox (the navbox is at the very bottom: not in
+# the viewport shot); help-table is Help:Table, wikitables and <pre> code near the top.
 google|search|https://www.google.com/search?q=nixos&hl=en
+google|home|https://www.google.com/?hl=en
+google|preferences|https://www.google.com/preferences?hl=en
+google|advanced|https://www.google.com/advanced_search?hl=en
+google|help|https://support.google.com/websearch?hl=en
 youtube|home|https://www.youtube.com/
 youtube|watch|https://www.youtube.com/watch?v=dQw4w9WgXcQ
 reddit|home|https://www.reddit.com/
 reddit|post|https://www.reddit.com/r/IAmA/comments/z1c9z/i_am_barack_obama_president_of_the_united_states/
 instagram|login|https://www.instagram.com/accounts/login/
+wikipedia|main|https://en.wikipedia.org/wiki/Main_Page
+wikipedia|article|https://en.wikipedia.org/wiki/Rust_(programming_language)
+wikipedia|help-table|https://en.wikipedia.org/wiki/Help:Table
