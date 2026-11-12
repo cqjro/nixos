@@ -138,8 +138,8 @@ targets:
   Google, GitHub, Wikipedia, Instagram, Brave, Claude, and nixpkgs — from the
   `@-moz-document` block in the browser's `userContent.css`. Those rules target
   classes the sites rotate, so `theme-shots` (agents; a throwaway, logged-out headless
-  profile of the installed Zen, before/after the branch's generated CSS, on a fixed URL
-  list) shows what they do today. Logged-in pages are covered by screenshots you take
+  profile of the installed Zen, RAW and THEMED with the branch's generated CSS, viewport and
+  full-page, on a fixed 35-page URL list) shows what they do today. Logged-in pages are covered by screenshots you take
   and attach by hand; see [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md).
 - **Discord** — a two-hundred-line `quickCss` (via nixcord) remaps every Discord
   CSS variable to the base16 palette: flat `base00` background, `base01`/`base02`
@@ -443,7 +443,7 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
   around (`Super+Alt+HJKL`).
 - `modules/scripts/parse_xremap.py` — parse the xremap config for reading/grepping.
 - `modules/scripts/theme-shots.sh` and `modules/scripts/theme-shots-urls.txt` —
-  logged-out before/after screenshots of the Zen per-site CSS for agents (an excluded,
+  logged-out RAW-vs-THEMED (viewport and full-page) screenshots of the Zen per-site CSS for agents (an excluded,
   allow-listed command at `/run/current-system/sw/bin/theme-shots`, packaged by
   `modules/theme/theme-shots.nix`). Details, limits and the trust assumptions:
   [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) and
