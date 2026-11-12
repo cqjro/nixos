@@ -4,8 +4,9 @@
 	{
 		# Google (www.google.com and every google.com page, incl. the /sorry block page
 		# and the reCAPTCHA anchor frame, which is served from www.google.com/recaptcha).
-		# Seen live (theme-shots, 2026-11-11, top viewport only): the /sorry block page,
-		# home, /preferences, /advanced_search and support.google.com/websearch.
+		# Seen live (theme-shots, 2026-11-11, viewport and full page): the /sorry block
+		# page, home, images, /preferences, /advanced_search, support.google.com,
+		# news.google.com, translate.google.com and the accounts sign-in page.
 		# The search-results rules (snippets, keyword highlights, AI overview, chips,
 		# menus) are UNVERIFIED: /search is bot-blocked to /sorry. They were written
 		# from the previous file, the web-styling-colours candidate and
@@ -23,6 +24,11 @@
 			hover = "color-mix(in srgb, #${c.base05} 8%, #${c.base01})";
 			# selected rail item / container fills: an accent tint of the surface, not a loud fill
 			active = "color-mix(in srgb, #${c.base0D} 22%, #${c.base01})";
+			# Stylix fonts, as the Vesktop theme uses them (text only, never icon fonts)
+			sans = config.stylix.fonts.sansSerif.name;
+			mono = config.stylix.fonts.monospace.name;
+			# one radius for every surface this file draws
+			radius = "8px";
 		in ''
 :root {
 	color-scheme: dark !important;
@@ -156,6 +162,54 @@ hr {
 	height: 0 !important;
 	color: #${c.base03} !important;
 	background: none !important;
+}
+
+/* ---- flat style: fonts, shadows, focus, hover ---------------------------------- */
+/* Stylix font on text elements. Icon fonts (Material Icons / Symbols, Google
+   Symbols) are ligature fonts on their own elements: those are excluded by class
+   and by aria-hidden, so their glyphs keep rendering. */
+:is(body, p, a, span, div, li, dt, dd, h1, h2, h3, h4, h5, h6, td, th, label, input, textarea, select, button, cite, small, time, em, b, strong):not([class*="icon" i], [class*="material" i], [class*="symbol" i], [class*="glyph" i], [aria-hidden="true"], [data-icon]) {
+	font-family: "${sans}", sans-serif !important;
+}
+
+code,
+pre,
+kbd,
+samp {
+	font-family: "${mono}", monospace !important;
+	background-color: #${c.base01} !important;
+	color: #${c.base05} !important;
+	border-radius: 4px !important;
+}
+
+/* no drop shadows anywhere: surfaces are separated by the 1px base03 borders */
+*,
+*::before,
+*::after {
+	box-shadow: none !important;
+	text-shadow: none !important;
+}
+
+/* keyboard focus: one accent ring on controls; text fields are autofocused on
+   most pages and show focus through their own border instead */
+:focus-visible:not(input, textarea, [contenteditable]) {
+	outline: 2px solid #${c.base0D} !important;
+	outline-offset: 2px !important;
+}
+
+:is(input, textarea, [contenteditable]):focus-visible {
+	outline: none !important;
+}
+
+/* hover on buttons and links */
+button:hover,
+[role="button"]:hover,
+[role="tab"]:hover {
+	background-color: ${hover} !important;
+}
+
+a:hover {
+	text-decoration-color: currentColor !important;
 }
 
 /* ---- text highlighting -------------------------------------------------------
@@ -377,7 +431,7 @@ cite,
    colours, not Google's tokens. Inside these two scopes only, every box drops its
    own background (flat page) and takes the light text colour; cards get the one
    surface step back. Never applied to search results. */
-@-moz-document url-prefix("https://www.google.com/preferences"), domain("support.google.com") {
+@-moz-document url-prefix("https://www.google.com/preferences"), domain("support.google.com"), domain("news.google.com"), url-prefix("https://accounts.google.com/v3/signin"), url-prefix("https://accounts.google.com/signin"), url-prefix("https://accounts.google.com/ServiceLogin") {
 	/* every box and its state layer (the selected-rail pill and the accordion
 	   header are drawn by ones these tag names missed); specific rules above and
 	   below still win on specificity */
@@ -385,6 +439,20 @@ cite,
 	*::before,
 	*::after {
 		background-color: transparent !important;
+	}
+
+	/* Google's light-grey outlines (accordions, outlined buttons, fields) become
+	   the quiet border; links and tabs keep transparent borders (forcing a colour
+	   there drew boxes around the help tabs) */
+	div,
+	section,
+	ul,
+	li,
+	button,
+	input,
+	select,
+	textarea {
+		border-color: #${c.base03} !important;
 	}
 
 	div,
@@ -450,6 +518,125 @@ cite,
 	label,
 	td {
 		color: #${c.base05} !important;
+	}
+}
+
+/* news.google.com: no dark mode of its own; after the flattening above, links
+   (headlines, topic tabs) read as bright text with the accent on hover, not a
+   page of blue links; stories get a hover surface, the search field the raised
+   surface */
+@-moz-document domain("news.google.com") {
+	:is(a, a span, [role="link"]) {
+		color: #${c.base06} !important;
+	}
+
+	:is(a, [role="link"]):hover,
+	:is(a, [role="link"]):hover span {
+		color: #${c.base0D} !important;
+	}
+
+	/* sources, bylines and times one step down */
+	time {
+		color: ${muted} !important;
+	}
+
+	article {
+		border-radius: ${radius} !important;
+	}
+
+	article:hover {
+		background-color: ${hover} !important;
+	}
+
+	/* the search field: its form is the raised surface, the input inside is clear */
+	form:has(input[type="text"]) {
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		border-radius: 24px !important;
+	}
+
+	input[type="text"] {
+		background: transparent !important;
+		border: none !important;
+	}
+
+	/* pill links ("See more headlines") keep a quiet outline */
+	a[role="button"] {
+		border: 1px solid #${c.base03} !important;
+		border-radius: 999px !important;
+	}
+
+	hr,
+	[role="separator"] {
+		border-color: #${c.base03} !important;
+	}
+}
+
+/* translate.google.com: the source textarea is clear inside its panel (Google's
+   own surfaces otherwise), quiet outlines on the mode chips */
+@-moz-document domain("translate.google.com") {
+	textarea {
+		background: transparent !important;
+		border: none !important;
+	}
+
+	button,
+	[role="tab"],
+	[role="button"] {
+		border-color: #${c.base03} !important;
+	}
+}
+
+/* accounts.google.com sign-in pages (not its embedded widgets): Google's own
+   grey dark mode is replaced by the palette (flattened above). The text field
+   keeps Google's notched outline (drawn by its own boxes, recoloured to the
+   quiet border) so the floating label stays clear of it; both buttons take the
+   raised surface */
+@-moz-document url-prefix("https://accounts.google.com/v3/signin"), url-prefix("https://accounts.google.com/signin"), url-prefix("https://accounts.google.com/ServiceLogin") {
+	html,
+	body {
+		background-color: #${c.base00} !important;
+	}
+
+	* {
+		border-color: #${c.base03} !important;
+	}
+
+	input[type="email"],
+	input[type="text"],
+	input[type="password"] {
+		background: transparent !important;
+		color: #${c.base06} !important;
+	}
+
+	button {
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		border-radius: 999px !important;
+		color: #${c.base06} !important;
+	}
+
+	button:hover {
+		background-color: ${hover} !important;
+	}
+}
+
+/* Google's embedded "Sign in with Google" button (an accounts.google.com/gsi
+   frame inside other google.com pages): the raised surface, bright label */
+@-moz-document url-prefix("https://accounts.google.com/gsi/") {
+	html,
+	body {
+		background: transparent !important;
+	}
+
+	[role="button"] {
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		color: #${c.base06} !important;
+	}
+
+	[role="button"] * {
+		color: #${c.base06} !important;
 	}
 }
 		'';
