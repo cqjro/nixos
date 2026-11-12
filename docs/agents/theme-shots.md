@@ -9,10 +9,10 @@ login.
 
 `theme-shots` is installed system-wide by `modules/theme/theme-shots.nix` (GOD-KILLER
 only), so it exists after a **GOD-KILLER switch** of the PR that adds it. It reads a
-fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: google (the
-search results page plus four pages that are not search results), youtube home and a
-watch page, reddit home and a post, instagram login, and three wikipedia pages (see
-"New pages: verified live" below).
+fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: 35 pages of
+different types, up to ten per site (listed in "The page list" below). Only the 13 pages of
+the first live run (2026-11-11) are verified live; the rest is **UNVERIFIED LIVE** until the
+first run after the switch that adds them.
 
 ## Run it
 
@@ -34,10 +34,11 @@ watch page, reddit home and a post, instagram login, and three wikipedia pages (
 
 Call it as **one plain command with the absolute path**: no `cd … &&`, no pipe, no
 redirect, no `timeout`/`VAR=` prefix (the exclusion only matches the plain command and
-the guard blocks anything else naming the path). Each shot takes ~8 to 30 s (8-11 s measured
-2026-11-09), so `all` (26 shots: 13 pages, before and after) can take several minutes: run
-one site at a time, or pass a longer `timeout` to the Bash tool. New files must be `git add`ed first: the flake only sees tracked
-files.
+the guard blocks anything else naming the path). **Run one site at a time** (a site is
+1 to 10 pages, google 9 is about 5 to 6 minutes, UNVERIFIED LIVE, see "Run time"); `all` is about 25 minutes, so run it in
+the background or not at all. Pass the Bash tool a `timeout` of 600000 (its maximum) for a
+site, or run it in the background. New files must be `git add`ed first: the flake only sees
+tracked files.
 
 What it does, in order:
 
@@ -53,23 +54,128 @@ What it does, in order:
    telemetry, updates) is written last and wins. If the flake does not set
    `toolkit.legacyUserProfileCustomizations.stylesheets = true` the run stops with
    exit 3: real Zen would not apply `userContent.css` either.
-3. For every page of the site, twice (`before`, `after`): a **brand-new profile and an
-   empty HOME** under a private `mktemp` dir, then **geckodriver** (WebDriver, loopback only,
-   one per shot) starts the installed Zen (`zen-twilight`, headless) on that profile, the
-   script loads the URL, waits for the load event, waits `SETTLE_SECS` (6 s) more for the
-   page's scripts, takes the 1400x1000 viewport screenshot and quits both. The `after`
-   profile also gets `chrome/userContent.css`; the `before` one does not. The temp dir,
-   with every profile, is deleted on exit.
-4. Writes into `OUTDIR`: `<site>-<page>-before.png`, `<site>-<page>-after.png`,
-   `userContent.css` (exactly what was injected) and `report.txt` (header notes, then one
-   line per shot), and prints a one-line summary (counts and the directory).
+3. For every page of the site, twice (state `RAW_no-userContent`, then `THEMED_with-userContent`):
+   a **brand-new profile and an empty HOME** under a private `mktemp` dir, then
+   **geckodriver** (WebDriver, loopback only, one per session) starts the installed Zen
+   (`zen-twilight`, headless) on that profile, the script loads the URL, waits for the load
+   event, waits `SETTLE_SECS` (6 s) more for the page's scripts, reads the browser's final
+   URL and takes the **viewport** shot (the top 1400x1000). Unless the browser ended on a
+   block URL, it then takes the **full-page** shot in the same session (see "Full-page
+   capture"). The `THEMED` profile also gets `chrome/userContent.css`; the `RAW` one does
+   not. The temp dir, with every profile, is deleted on exit.
+4. Writes into `OUTDIR`: `<site>-<page>-<mode>-<state>.png`, `manifest.tsv`, `userContent.css`
+   (exactly what was injected) and `report.txt` (header notes, then one line per image), and
+   prints a one-line summary (counts and the directory).
 
-Read the PNGs with the Read tool and compare `before` and `after`; `userContent.css`
-tells you which rule should have hit.
+**File names say what is depicted.** `<mode>` is `viewport` (only the top 1400x1000 of the
+page) or `full` (the whole page, see below). `<state>` is `RAW_no-userContent` (the site with
+**no CSS of ours**: what the site looks like) or `THEMED_with-userContent` (with the flake's
+generated `userContent.css` injected: what the theme does). Compare the `RAW` and `THEMED`
+image of the same mode; `userContent.css` tells you which rule should have hit. (Earlier
+versions wrote `<site>-<page>-before.png` and `-after.png`, viewport only; a run deletes
+those names for the pages it shoots, but older directories may still hold them: delete the
+directory between runs.) A shot that fails the checks below is kept as
+`<site>-<page>-<mode>-<state>.REJECTED.png` and is not a picture of the theme.
+
+**`manifest.tsv`** has a header and one tab-separated line per image, so a reviewer can
+see what each file is without opening it: `file` (`-` if no file was written), `site`, `page`,
+`final_url` (the browser's final URL without its query string; `-` if unknown), `state`,
+`mode`, `width`, `height`, `bytes` (the written file, 0 if none), `status` (`ok`, `REJECTED`,
+`FAIL` or `skipped`) and `note` (the reason, the curl preflight note, the page height, 'CUT',
+the seconds). A `full` row is `skipped` when the viewport shot failed or the browser ended on
+a block URL.
+
+The summary line counts ok, rejected, failed and skipped images.
 
 Exit codes: `0` all shots fine, `2` bad arguments or a refused path, `3` the nix
 evaluation failed or the flake's settings cannot apply the CSS, `4` at least one shot
 failed or was rejected.
+
+## Full-page capture
+
+The viewport shot only shows the top of a page, so each session also takes a second shot of
+the whole document, next to it (both are kept). **UNVERIFIED LIVE until the first run after
+the switch:** the method was tested only against local servers (below).
+
+1. **Scroll.** Up to `SCROLL_STEPS` (6) steps of one viewport height with a `SCROLL_WAIT`
+   (0.7 s) pause after each, through fixed page scripts (`JS_*` in the script; WebDriver
+   `execute/sync`), so lazy-loaded content appears. It stops early at the bottom when nothing
+   new loaded. An infinite-scroll page (reddit and youtube lists) cannot loop: it ends at the
+   last step, so it is seen to about 7000 px. Then back to the top, a 1 s wait, and the
+   document height is measured. A page that scrolls inside its own container (not the
+   document) is not scrolled and its shot is the viewport only.
+2. **Shoot**, one of two ways, tried in this order (the manifest note says which):
+   - `document shot`: geckodriver's `moz/screenshot/full`, for a page that is at most `CAP_PX`
+     (7000 px) tall. The layout stays at viewport size, so a `100vh` section stays 1000 px
+     and sticky bars do not stretch. Cost: its PNG is **1388 px wide** (the scrollbar column
+     is not drawn) and its height cannot be clamped (Gecko only stops at 32767 px), so it is
+     not used for a taller page.
+   - `tall window`: for a page taller than `CAP_PX` (or if the document shot fails), the
+     window is resized to the document height clamped to `CAP_PX` and the ordinary screenshot
+     is taken: always exactly 1400 px wide and at most 7000 px tall, so a PNG cannot become
+     huge. Cost: **layout distortion**: a `100vh` section stretches to the whole tall window
+     (tested: a `100vh` hero filled all 6050 px and hid everything below it), sticky headers
+     stay at the top only, and a page that grows with the window may be cut earlier than its
+     real end. **A page taller than 7000 px is cut and the note says `CUT at 7000 px` with the
+     real height.** Treat the lower part of a cut shot as approximate, and the viewport shot
+     as the undistorted one.
+3. Whatever else is wrong (a script result that is not two integers, a failed resize) fails
+   only the `full` row (`FAIL`, with the reason); the viewport shot stands. A page can make
+   its answer garbage (tested with a page that overrides `Math.floor` and `scrollHeight`):
+   the full shot then fails cleanly.
+
+The same blank-image and block-URL checks apply to both modes. The full shot is not available
+for a page that is blocked (`skipped`), and it can show things the viewport does not: a
+sticky or lazy element that drew at a different place, a footer that only loads on scroll.
+
+## Run time
+
+Per session (one profile, one state of one page), measured 2026-11-09 with the viewport shot
+only: 8 to 11 s (6 s of it the settle). The full-page capture adds the scroll (up to 6 x
+0.7 s plus the script calls), 1 s, the 3 s settle and the shot: **about 9 to 12 s more, so
+17 to 23 s per session** (estimate; locally, with a 1 s settle, a page took 8 to 11 s per
+session, which fits). A page is two sessions plus the curl preflight: **about 35 to 45 s**, and
+less for a blocked page (no full shot). So, **UNVERIFIED LIVE**: google (9 pages) about
+5 to 6 min, youtube (7) 4 to 5 min, reddit (8) 5 to 6 min, wikipedia (10) 6 to 7.5 min,
+instagram (1) under 1 min, `all` (35 pages) about 22 to 26 min. A site fits one Bash call with
+`timeout` 600000; `all` does not: run a site at a time (the normal way), or `all` in the
+background. There is deliberately **no viewport-only variant** (a word like `youtube-viewport`):
+it would add site words to the argument surface for a saving that is not needed at these
+times; the surface is still `SITE` as one of six words.
+
+## The page list
+
+`modules/scripts/theme-shots-urls.txt`, 35 pages, each a different page type. Every URL is a
+public, logged-out, read-only GET under the domain its CSS rule is keyed on, and every host
+it needs is in the PAC list (no new host was added: none could be proven needed before a run).
+**Verified live (2026-11-11):** google search (the canary, always `REJECTED`), home, preferences,
+advanced, help; youtube home, watch; reddit home, post; instagram login; wikipedia main,
+article, help-table. **Everything else is UNVERIFIED LIVE until the first run after the
+switch**; the wikipedia URLs were each fetched once (not in a browser) to check they exist.
+
+- **google** (9): `search` (blocked, canary), `home`, `images` (`/imghp`), `preferences`,
+  `advanced` (`/advanced_search`), `help` (`support.google.com/websearch`), `news`
+  (`news.google.com`), `translate` (`translate.google.com`), `signin`
+  (`accounts.google.com/ServiceLogin`, may redirect to a `/v3/signin` page, which is fine: it
+  is not a block URL and the `google.com` rule still applies). Dropped: `scholar.google.com`
+  (it bot-blocks like `search`).
+- **youtube** (7): `home`, `watch`, `results` (`/results?search_query=nixos`), `channel`
+  (`/@YouTube`), `videos` (`/@YouTube/videos`), `hashtag` (`/hashtag/nixos`), `history`
+  (`/feed/history`: the signed-out prompt state; it may redirect to a Google sign-in page,
+  which would then be a `google.com` page, not `youtube.com`: the manifest's `final_url` shows
+  it). Dropped: a playlist and a shorts page (no id that stays up could be checked).
+- **reddit** (8): `home`, `post`, `subreddit` (`/r/NixOS/`), `top` (`/r/NixOS/top/?t=all`),
+  `search` (`/search/?q=nixos`), `popular` (`/r/popular/`), `user` (`/user/spez/`), `wiki`
+  (`/wiki/reddiquette/`, a site wiki page). Reddit bot-blocks readily; expect some
+  `REJECTED`.
+- **wikipedia** (10): `main`, `article` (Rust: infobox, code, navbox), `help-table`,
+  `list-table` (`List_of_countries_and_dependencies_by_population`), `math` (`Quadratic_formula`),
+  `search` (`Special:Search?search=nixos`), `history` (`Main_Page&action=history`), `diff` (a
+  fixed revision pair of `Main_Page`, `oldid` 1380800666 to 1380834536, 18 October 2026),
+  `source` (`Main_Page&action=edit`, the view-source page of a protected page), `mobile`
+  (`en.m.wikipedia.org`). Dropped: `Special:RecentChanges` (changes by the second), the
+  `www.wikipedia.org` portal (a small static page).
+- **instagram** (1): `login`, unchanged and out of scope.
 
 ## Limits (read before trusting a shot)
 
@@ -127,7 +233,7 @@ failed or was rejected.
   is not blank, so nothing rejected it; the browser-final-URL check above was added in
   response. First run with it (2026-11-10, GOD-KILLER switched with PR #59): both phases
   `REJECTED`, `the browser ended at https://www.google.com/sorry/index`, 9 s each, kept as
-  `google-search-{before,after}.REJECTED.png`, exit 4. So Google's block page **does** sit
+  `google-search-{before,after}.REJECTED.png` (the names then; now `google-search-viewport-{RAW,THEMED}…`), exit 4. So Google's block page **does** sit
   at a `/sorry` URL and the check sees it; a google `ok` is therefore no longer
   the unusual-traffic page. This is Google bot-detecting this setup (headless, automated
   browser, a residential IP), not a tool error and not a PAC problem, and it was the
@@ -178,10 +284,11 @@ failed or was rejected.
     navbox) and `help-table` (`Help:Table`: wikitables and `<pre>` code near the top). The
     capture is the **1400x1000 viewport at the top of the page**, so the article's navbox
     (at the very bottom) and most of its tables are *not* in the shot; `help-table` is
-    there to cover tables and code. A full-page capture would be a WebDriver change (tier 2),
-    not done here; for the navbox the human attaches a manual screenshot. No diff or history
-    page was added: a diff needs a revision id that could not be checked, and a history page
-    changes by the hour. `wikipedia.org` and `wikimedia.org` (images on
+    there to cover tables and code. The first live run (2026-11-11) had only the viewport shot, so the navbox was out of
+    it; the full-page capture and the `list-table`, `math`, `search`, `history`, `diff`,
+    `source` and `mobile` pages added afterwards (see "The page list", all UNVERIFIED LIVE)
+    are meant to cover that. Until a run shows the full-page shot working on this page, the
+    human attaches a manual screenshot of the navbox. `wikipedia.org` and `wikimedia.org` (images on
     `upload.wikimedia.org`) were added to the PAC as **suffixes**, as asked, not narrowed to
     the exact hosts; if the first run shows a blocked asset or a
     `proxyConnectFailure` on the document, name the host in the report and add it.
@@ -195,7 +302,8 @@ failed or was rejected.
     catches (the host is a PAC-allowed `google.com` subdomain, so it loads and is then
     rejected rather than failing). The existing `search` URL is unchanged.
 - **Wikipedia theme: what the first live `after` shots show (2026-11-11; theme bugs,
-  reported, not fixed).** The article (`Rust_(programming_language)`) and `Help:Table` are
+  reported, not fixed).** (File names in this bullet and the next two are those of
+  the first run: `before` = today's `viewport-RAW_no-userContent`, `after` = `viewport-THEMED_with-userContent`.) The article (`Rust_(programming_language)`) and `Help:Table` are
   themed correctly: dark page, readable links, a dark infobox, the TOC and the
   help navbox's body. Wrong or weak, in `before` vs `after`:
   - **`main`: the portal boxes keep their hard-coded light backgrounds.** "From today's
@@ -213,7 +321,7 @@ failed or was rejected.
     did not: it is a rotating, time- and region-dependent banner, not a CSS effect, so do
     not read it as one.
 - **Google theme: what the first live `after` shots show (2026-11-11; theme bugs, reported,
-  not fixed).** The dark base reaches all four pages (`home`, `preferences`, `advanced`,
+  not fixed).** (Old file names, see the Wikipedia bullet above.) The dark base reaches all four pages (`home`, `preferences`, `advanced`,
   `help`), and `advanced` is the cleanest (form fields and selects dark, links blue). Wrong
   or weak:
   - **The `Sign in` button is blue-on-blue** on all four (text nearly invisible).
@@ -234,7 +342,7 @@ failed or was rejected.
   notice, related posts), so it stays. Reddit also shows a "Sign in to Reddit with Google"
   prompt over the top right of both pages (Google One Tap, an `accounts.google.com`
   frame the PAC allows); it is in `before` and `after` alike and hides the header buttons.
-- **Instagram login: a theme bug the tool exposed.** In `after` the top-left logo, the blue
+- **Instagram login: a theme bug the tool exposed** (old names: `before`/`after` = today's `RAW`/`THEMED` viewport shots). In `after` the top-left logo, the blue
   `Log in` fill and the `Log in with Facebook` fill are missing in every run (4/4), while
   `before` has them. Cause, proven by removing one rule at a time and re-shooting: the
   `[class*="x2lah0s"]` selector in the "inputs" rule of
@@ -247,7 +355,19 @@ failed or was rejected.
 - **Verified in the sandbox** with the real Zen (1.24t) against local servers: argument
   validation and symlink refusal; the profile with the flake's real prefs and
   `userContent.css` injection; the PAC (also under WebDriver); blank-page rejection;
-  refusal of a profile dir under the real home. For the wikipedia and extra google pages
+  refusal of a profile dir under the real home. For the full-page capture and the larger list
+  (2026-11-11, round 2; a test copy of the script with the real Zen and geckodriver, a stub
+  `nix`, a 1 s settle and resolver prefs, against a local server): a page of 1000 px, 4000 px
+  and 12000 px gave full shots of exactly 1400x1000, 1388x4000 (document shot) and 1400x7000
+  (tall window, `CUT at 7000 px`, real height 12000 in the note); a `100vh` page with a sticky
+  header came out undistorted as a document shot (hero 1000 px, all blocks below it) and
+  completely distorted as a tall window (the hero filled all 6050 px), which is why the
+  document shot comes first; an infinite-scroll page stopped after the last step (5400 px, no
+  loop); a lazy page loaded its content (4600 px); a page that overrides `Math.floor` and
+  `scrollHeight` failed only its `full` rows with `scroll: unexpected script result`; a
+  `/sorry` URL, a redirect to it and `consent.google.com` kept the `REJECTED` viewport shot and
+  `skipped` the full one; `manifest.tsv` had the right columns, dimensions and byte counts for
+  all of them. For the wikipedia and extra google pages
   (2026-11-10, a test copy of the script with the real Zen and geckodriver; only the URL list,
   a stub `nix`, a 1 s settle and resolver prefs differ): `wikipedia` and `all` are accepted,
   `Wikipedia`, `wikipedia.org` and `wikipedia|x` are refused (exit 2); the PAC sends
@@ -259,13 +379,13 @@ failed or was rejected.
   under its site's CSS domain. The real pages were first run on 2026-11-11 (see "New
   pages").
 
-- **One run's report replaces the last.** `report.txt` and `userContent.css` describe only
-  the latest invocation; PNGs from earlier invocations stay in `.log/theme-shots/`, so after
+- **One run's report replaces the last.** `report.txt`, `manifest.tsv` and `userContent.css`
+  describe only the latest invocation; PNGs from earlier invocations stay in `.log/theme-shots/`, so after
   several single-site runs the directory mixes shots with one report. Delete the directory
   between runs, or run `all`.
 - **Dark without the CSS.** The flake's `ui.*` prefs make Zen prefer a dark colour scheme,
-  so a site that honours `prefers-color-scheme` (Instagram's login) is dark in `before`
-  too. Compare `before` and `after` for what the CSS changed, not dark versus light.
+  so a site that honours `prefers-color-scheme` (Instagram's login) is dark in the `RAW`
+  shot too. Compare `RAW` and `THEMED` for what the CSS changed, not dark versus light.
 
 ## Trust assumptions (it runs outside the sandbox)
 
@@ -281,8 +401,13 @@ browser flags, the profile and HOME are the script's: a new profile per shot und
 flake can read what the owner can, as `nix eval *` already allows. The WebDriver capture
 opens two unauthenticated loopback ports (geckodriver's and Marionette's) for the seconds
 a shot lives; page content cannot reach them (the PAC), a local process could in theory
-(security.md, "Loopback ports"). Changing any of that, the pref allowlist, the PAC list,
-the WebDriver flow or the child environment is a tier-2 review item.
+(security.md, "Loopback ports"). The full-page capture also runs three **fixed, argument-free
+page scripts** (scroll one viewport, scroll to the top, read the document height) through
+WebDriver `execute/sync`; they contain nothing from the caller or the URL list, run with the
+page's own privileges in the page, and only two bounded integers are parsed from the answer
+(security.md, "Page scripts"). Changing any of that, the pref allowlist, the PAC list, the
+WebDriver flow (including those scripts and the window resize) or the child environment is a
+tier-2 review item.
 
 ## Logged-in areas: manual screenshots
 
