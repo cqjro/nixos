@@ -9,7 +9,10 @@
 			# translucent tints of the selection grey for hover / tonal fills
 			tint = pct: "color-mix(in srgb, #${c.base02} ${pct}%, transparent)";
 			# quiet 1px rule colour
-			rule = "color-mix(in srgb, #${c.base03} 80%, transparent)";
+			rule = "#${c.base03}";
+			# Stylix fonts, as the Vesktop theme uses them
+			sans = config.stylix.fonts.sansSerif.name;
+			mono = config.stylix.fonts.monospace.name;
 		in ''
 /* YouTube re-declares its colour tokens on every [dark] element (masthead,
    guide, popups, the app shell), so a :root override is shadowed by the nearest
@@ -136,6 +139,95 @@ tp-yt-iron-dropdown {
 
 	/* brand red paints the player progress bar, live badges and watched bars */
 	--yt-spec-static-brand-red: #${c.base0D} !important;
+}
+
+/* ---- page-wide base (zero specificity via :where, so every rule below wins) ----
+   Most YouTube text takes its colour from hashed per-build variables the tokens
+   above cannot reach, so set primary text, quiet borders and the Stylix font on
+   text elements directly. The player (#movie_player) keeps its own chrome; icons
+   are SVG (no icon fonts), so the font list stays on text elements only. */
+:where(ytd-app, ytd-popup-container, tp-yt-iron-dropdown) :where(h1, h2, h3, h4, h5, h6, p, span, a, div, label, yt-formatted-string, yt-attributed-string, yt-icon, tp-yt-paper-item, tp-yt-paper-button, button):where(:not(#movie_player, #movie_player *, .yt-core-attributed-string__link, .yt-core-attributed-string__link *)) {
+	color: #${c.base05} !important;
+}
+
+:where(ytd-app, ytd-popup-container, tp-yt-iron-dropdown) :where(h1, h2, h3, h4, h5, h6, p, span, a, div, label, yt-formatted-string, yt-attributed-string, tp-yt-paper-item, tp-yt-paper-button, button, input, textarea):where(:not(#movie_player, #movie_player *)) {
+	font-family: "${sans}", sans-serif !important;
+}
+
+/* the monospace font is wider than YouTube's sans: tighten it a little so
+   labels and titles truncate less */
+:where(ytd-app, ytd-popup-container, tp-yt-iron-dropdown) :where(h1, h2, h3, h4, p, span, a, yt-formatted-string, yt-attributed-string):where(:not(#movie_player, #movie_player *)) {
+	letter-spacing: -0.02em !important;
+}
+
+ytd-guide-entry-renderer .title,
+ytd-guide-entry-renderer yt-formatted-string {
+	font-size: 13px !important;
+}
+
+:where(ytd-app) :where(code, pre, kbd, samp) {
+	font-family: "${mono}", monospace !important;
+}
+
+:where(ytd-app, ytd-popup-container, tp-yt-iron-dropdown) :where(*):where(:not(#movie_player, #movie_player *)) {
+	border-color: ${rule} !important;
+	box-shadow: none !important;
+}
+
+/* page headings one step brighter */
+ytd-app :is(h1, h2),
+ytd-app :is(h1, h2) :is(span, a, yt-formatted-string) {
+	color: #${c.base06} !important;
+}
+
+/* secondary text: views, dates, channel bylines, snippets, header metadata */
+[class*="ContentMetadataViewModel" i] :is(span, a, div),
+[class*="content-metadata-view-model" i] :is(span, a, div),
+#metadata-line,
+#metadata-line *,
+ytd-video-meta-block :is(span, a, yt-formatted-string),
+ytd-video-renderer #channel-info :is(a, yt-formatted-string, span),
+ytd-channel-renderer #metadata :is(span, yt-formatted-string),
+#description-text,
+.metadata-snippet-text,
+.metadata-snippet-text *,
+#subscribers,
+#video-count,
+#owner-sub-count,
+ytd-background-promo-renderer #body,
+ytd-background-promo-renderer #body * {
+	color: ${muted} !important;
+}
+
+/* links that are links (not titles/channel names): accent. YouTube marks them
+   with ytAttributedStringLinkCallToActionColor (camelCase) or the older
+   kebab classes */
+a.ytAttributedStringLinkCallToActionColor,
+a.ytAttributedStringLinkCallToActionColor *,
+ytd-app a[href*="support.google.com"],
+ytd-app a[href*="support.google.com"] *,
+.yt-core-attributed-string__link--call-to-action-color,
+.yt-core-attributed-string__link--call-to-action-color *,
+a.yt-core-attributed-string__link:not(.yt-core-attributed-string--link-inherit-color),
+a.yt-core-attributed-string__link:not(.yt-core-attributed-string--link-inherit-color) *,
+ytd-background-promo-renderer a,
+ytd-background-promo-renderer a *,
+yt-description-preview-view-model a,
+yt-description-preview-view-model a * {
+	color: #${c.base0D} !important;
+}
+
+/* ads mark their whole title/description as call-to-action links: keep them
+   on the body colour, not the accent */
+:is(ytd-ad-slot-renderer, ytd-in-feed-ad-layout-renderer, ytd-search-pyv-renderer, ytd-promoted-sparkles-web-renderer) a[class],
+:is(ytd-ad-slot-renderer, ytd-in-feed-ad-layout-renderer, ytd-search-pyv-renderer, ytd-promoted-sparkles-web-renderer) a[class] * {
+	color: #${c.base05} !important;
+}
+
+/* keyboard focus */
+ytd-app :is(a, button, input, [role="button"], [role="tab"]):not(#guide-button *):focus-visible {
+	outline: 2px solid color-mix(in srgb, #${c.base0D} 70%, transparent) !important;
+	outline-offset: 2px !important;
 }
 
 ::selection {
@@ -265,16 +357,26 @@ input#search::placeholder {
 	color: #${c.base05} !important;
 }
 
-/* guide (left sidebar) */
+/* guide (left sidebar): page colour with a quiet right border, like the
+   Vesktop channel column (a base01 fill was tried: the drawer is fixed, so a
+   full-page capture shows it ending after one viewport) */
 #guide-inner-content,
 #guide-content,
 tp-yt-app-drawer #contentContainer,
 ytd-mini-guide-renderer,
+ytd-guide-renderer {
+	background-color: #${c.base00} !important;
+}
+
+tp-yt-app-drawer #contentContainer,
+ytd-mini-guide-renderer {
+	border-right: 1px solid ${rule} !important;
+}
+
 #chips,
 #chips-wrapper,
 .app-header,
-.app-drawer,
-ytd-guide-renderer {
+.app-drawer {
 	background-color: #${c.base00} !important;
 	border-color: ${rule} !important;
 }
@@ -317,9 +419,18 @@ yt-chip-cloud-chip-renderer:not([selected]) #chip-container {
 
 .ytChipShapeActive,
 yt-chip-cloud-chip-renderer[selected] #chip-container {
-	background-color: #${c.base0D} !important;
-	color: #${c.base07} !important;
-	border-color: #${c.base0D} !important;
+	background-color: color-mix(in srgb, #${c.base0D} 20%, #${c.base01}) !important;
+	color: #${c.base06} !important;
+	border: 1px solid #${c.base0D} !important;
+}
+
+/* only the chip itself draws the outline; its inner label must not repeat it */
+.ytChipShapeActive *,
+yt-chip-cloud-chip-renderer[selected] #chip-container * {
+	background-color: transparent !important;
+	color: #${c.base06} !important;
+	border: 0 !important;
+	outline: 0 !important;
 }
 
 .ytChipShapeInactive:hover {
@@ -374,19 +485,69 @@ yt-icon-button button {
 	fill: currentColor !important;
 }
 
-/* filled mono buttons (subscribe, join): a quiet tonal pill like the other
-   actions, not a solid fill; the accent stays reserved for links */
+/* filled mono buttons (subscribe, join, check it out): the primary action, as an
+   accent outline like Sign in (no solid fill) */
 .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled,
 .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled,
 ytd-subscribe-button-renderer :is(.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) {
-	background-color: ${tint "30"} !important;
-	color: #${c.base06} !important;
-	border: 1px solid ${rule} !important;
+	background-color: transparent !important;
+	color: #${c.base0D} !important;
+	border: 1px solid #${c.base0D} !important;
 	backdrop-filter: none !important;
 }
 
 :is(.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled):hover {
-	background-color: ${tint "55"} !important;
+	background-color: color-mix(in srgb, #${c.base0D} 15%, transparent) !important;
+}
+
+:is(.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled) :is(span, div, yt-icon, yt-formatted-string) {
+	color: #${c.base0D} !important;
+}
+
+/* no gradient fills on any button shape */
+.yt-spec-button-shape-next,
+[class*="ytSpecButtonShapeNext"] {
+	background-image: none !important;
+}
+
+/* "Did you know" meal-bar promo and the expandable summary / chapters bars:
+   raised surface with a quiet border (they otherwise take a neutral or a
+   thumbnail-derived tint) */
+ytd-mealbar-promo-renderer,
+ytd-mealbar-promo-renderer #dismissible,
+ytd-popup-container tp-yt-paper-toast,
+ytd-expandable-metadata-renderer,
+ytd-expandable-metadata-renderer #header,
+ytd-expandable-metadata-renderer #collapsed-title {
+	background: #${c.base01} !important;
+	border: 1px solid ${rule} !important;
+	border-radius: 12px !important;
+}
+
+ytd-expandable-metadata-renderer #header,
+ytd-expandable-metadata-renderer #collapsed-title {
+	border: 0 !important;
+}
+
+ytd-mealbar-promo-renderer *:not(button, a, [class*="ButtonShape"], [class*="ButtonShape"] *, #dismissible) {
+	background-color: transparent !important;
+}
+
+ytd-mealbar-promo-renderer :is(#message-title, h2, h3),
+ytd-mealbar-promo-renderer :is(#message-title, h2, h3) * {
+	color: #${c.base06} !important;
+}
+
+/* empty-state / promo headings (history, signed-out pages) */
+ytd-background-promo-renderer #title,
+ytd-background-promo-renderer #title *,
+ytd-background-promo-renderer [id*="title" i],
+ytd-background-promo-renderer [class*="title" i],
+ytd-browse[page-subtype="history"] #primary :is(h1, h2, h3, #title, [class*="title" i]),
+ytd-browse[page-subtype="history"] #primary :is(h1, h2, h3, #title, [class*="title" i]) *,
+[class*="EmptyStateViewModelTitle" i],
+[class*="EmptyStateViewModelTitle" i] * {
+	color: #${c.base06} !important;
 }
 
 /* call-to-action outline buttons in the masthead / guide promo (sign in) */
@@ -412,14 +573,14 @@ yt-icon :is([fill*="ff00" i], [fill*="ff03" i], [fill="red" i]) {
 	fill: #${c.base08} !important;
 }
 
-/* guide product icons ("More from YouTube"): quiet muted badges with a
-   cut-out glyph instead of brand red; covers solid and gradient fills */
-ytd-guide-entry-renderer yt-icon [fill]:not([fill="none" i], [fill="white" i], [fill*="fff" i], [fill="currentColor" i]) {
-	fill: ${muted} !important;
+/* guide product icons ("More from YouTube"): palette red (rule above) with the
+   glyph in the bright text colour; gradient-filled ones (Labs) also get the red */
+ytd-guide-entry-renderer yt-icon [fill^="url" i] {
+	fill: #${c.base08} !important;
 }
 
 ytd-guide-entry-renderer yt-icon :is([fill="white" i], [fill*="fff" i]) {
-	fill: #${c.base00} !important;
+	fill: #${c.base06} !important;
 }
 
 ytd-topbar-logo-renderer yt-icon :is([fill="white" i], [fill*="fff" i]),
@@ -688,20 +849,52 @@ ytd-tabbed-page-header,
 #tabsContainer.ytd-c4-tabbed-header-renderer,
 yt-tab-group-shape,
 yt-tab-shape,
-.yt-tab-group-shape__tab {
+yt-tab-shape *,
+.yt-tab-group-shape__tab,
+tp-yt-paper-tab,
+tp-yt-paper-tab * {
 	background-color: transparent !important;
 	color: ${muted} !important;
 	border-color: ${rule} !important;
 }
 
-yt-tab-shape[aria-selected="true"],
+yt-tab-shape:is([aria-selected="true"], [class*="elected" i]),
+yt-tab-shape:is([aria-selected="true"], [class*="elected" i]) *,
+[class*="TabShapeTabSelected" i],
+[class*="TabShapeTabSelected" i] *,
 .yt-tab-group-shape__tab--active .yt-tab-group-shape__tab-label,
-.yt-tab-shape-wiz__tab--tab-selected {
+.yt-tab-shape-wiz__tab--tab-selected,
+.yt-tab-shape-wiz__tab--tab-selected *,
+tp-yt-paper-tab.iron-selected,
+tp-yt-paper-tab.iron-selected * {
+	color: #${c.base06} !important;
+}
+
+yt-tab-shape:hover,
+yt-tab-shape:hover *,
+tp-yt-paper-tab:hover * {
 	color: #${c.base05} !important;
 }
 
+/* YouTube's underline is a separate element painted from a hashed variable
+   (measured as YouTube's own near-white, f1f1f1): clear every non-tab element inside the tab and draw the
+   underline as an inset accent line on the selected tab instead */
+yt-tab-group-shape *:not(yt-tab-shape, [class*="ytTabShapeTab"]),
+yt-tab-group-shape *::before,
+yt-tab-group-shape *::after {
+	background-color: transparent !important;
+}
+
+[class*="TabShapeTabSelected" i],
+.yt-tab-shape-wiz__tab--tab-selected {
+	box-shadow: inset 0 -3px 0 #${c.base0D} !important;
+}
+
+/* the active-tab underline (an element with a background, not a border) */
+yt-tab-shape :is([class*="tab-bar--tab-bar-selected" i], [class*="TabBarSelected" i]),
 .yt-tab-group-shape__tab-bar,
 .yt-tab-shape-wiz__tab-bar--tab-bar-selected,
+tp-yt-paper-tabs #selectionBar,
 #tabsContainer tp-yt-paper-tabs #selectionBar {
 	background-color: #${c.base0D} !important;
 	border-color: #${c.base0D} !important;
