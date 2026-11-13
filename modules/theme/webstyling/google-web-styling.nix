@@ -480,9 +480,16 @@ cite,
 		color: #${c.base06} !important;
 	}
 
-	/* icons drawn in a fixed dark colour */
+	/* icons drawn in a fixed dark colour: Google sets their fill in a class rule,
+	   which beats a plain user rule, so !important; only icons inside buttons (the
+	   search magnifier), never the multicolour logos */
 	svg {
 		fill: currentColor;
+	}
+
+	button svg,
+	[role="button"] svg {
+		fill: currentColor !important;
 	}
 
 	/* the hero search field ("Describe your issue") is the input itself (name="q",
@@ -512,6 +519,22 @@ cite,
 	[role="button"],
 	[role="button"] * {
 		color: #${c.base0D} !important;
+	}
+
+	/* the Family Link tile reads like the other rows (accent is for links in text) */
+	a[href*="families.google"],
+	a[href*="families.google"] *,
+	a[href*="familylink"],
+	a[href*="familylink"] * {
+		color: #${c.base05} !important;
+	}
+
+	/* the cookie notice keeps a panel */
+	[role="alert"],
+	[role="status"] {
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		border-radius: ${radius} !important;
 	}
 }
 
@@ -633,6 +656,15 @@ cite,
 	*:has(> * > * > * > button):not(header, [role="banner"], header *, [role="banner"] *, :has(input, article)) * {
 		background-color: #${c.base01} !important;
 		background-image: none !important;
+		border-color: transparent !important;
+	}
+
+	/* the rule above on every element made Google's transparent borders visible:
+	   the card's 9px left edge showed as a grey bar and the apps-grid button got a
+	   ring; both go back to transparent */
+	[aria-label*="apps" i],
+	[aria-label*="apps" i] * {
+		border-color: transparent !important;
 	}
 }
 
@@ -669,6 +701,27 @@ cite,
 	[role="button"] * {
 		color: #${c.base05} !important;
 	}
+
+	/* inactive language tabs: the text colour, not Google's dim grey */
+	[role="tab"]:not([aria-selected="true"]),
+	[role="tab"]:not([aria-selected="true"]) * {
+		color: #${c.base05} !important;
+	}
+
+	/* icons inside buttons (the source-box pencil was near-black), not the logo */
+	button svg,
+	[role="button"] svg,
+	[aria-label*="andwriting" i] svg,
+	[aria-label*="eyboard" i] svg {
+		fill: currentColor !important;
+		color: #${c.base05} !important;
+	}
+
+	/* the "Translation" placeholder is aria-hidden, which the font rule skips
+	   (it is there to protect icon-font ligatures, so icon-like classes stay out) */
+	[aria-hidden="true"]:not(svg, [class*="icon" i], [class*="material" i], [class*="symbol" i], [class*="glyph" i]) {
+		font-family: "${sans}", sans-serif !important;
+	}
 }
 
 /* accounts.google.com sign-in pages (not its embedded widgets): Google's own
@@ -704,6 +757,21 @@ cite,
 
 	button * {
 		color: inherit !important;
+	}
+
+	/* the floating label is wider in the mono font than Google's notch, so the
+	   focused outline ran through its text (verified on a zoomed shot): an opaque
+	   page-coloured label knocks the line out */
+	label,
+	label *,
+	[class*="label" i],
+	*:has(> input) > :not(input),
+	*:has(> input) > :not(input) * {
+		background-color: #${c.base00} !important;
+	}
+
+	label {
+		padding: 0 4px !important;
 	}
 
 	/* the primary action keeps the accent fill (Google's ids for the identifier
