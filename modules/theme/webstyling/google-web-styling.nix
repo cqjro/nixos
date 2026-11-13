@@ -442,16 +442,10 @@ cite,
 	}
 
 	/* Google's light-grey outlines (accordions, outlined buttons, fields) become
-	   the quiet border; links and tabs keep transparent borders (forcing a colour
-	   there drew boxes around the help tabs) */
-	div,
-	section,
-	ul,
-	li,
-	button,
-	input,
-	select,
-	textarea {
+	   the quiet border (measured on help: the accordion edge was rgb(169,172,170));
+	   links and tabs keep their own border colours (forcing one there drew boxes
+	   around the help tabs) */
+	*:not(a, [role="tab"], [aria-current="page"], [aria-current="true"], [aria-selected="true"]) {
 		border-color: #${c.base03} !important;
 	}
 
@@ -491,10 +485,33 @@ cite,
 		fill: currentColor;
 	}
 
-	/* the hero search field ("Describe your issue") is transparent (name="q"):
-	   a quiet underline marks it (a box on its wrapper came out ~90px tall) */
+	/* the hero search field ("Describe your issue") is the input itself (name="q",
+	   48px tall): the raised surface with the quiet border (a box on its wrapper
+	   came out ~90px tall) */
 	input[name="q"] {
-		border-bottom: 1px solid #${c.base03} !important;
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		border-radius: ${radius} !important;
+	}
+}
+
+/* /preferences: the setting rows are rounded [jsaction] boxes (found with an
+   outline probe), the footer "Feedback" a button-role element drawn as plain text
+   next to accent links, the "Parental controls" tile a link to Family Link.
+   The page wrapper, header, rail and button-role elements are excluded from the
+   card rule. */
+@-moz-document url-prefix("https://www.google.com/preferences") {
+	[jsaction]:not(html, body, header, nav, [role="banner"], [role="navigation"], [role="button"], :has([jsaction])),
+	a[href*="families.google"],
+	a[href*="familylink"] {
+		background-color: #${c.base01} !important;
+		border: 1px solid #${c.base03} !important;
+		border-radius: ${radius} !important;
+	}
+
+	[role="button"],
+	[role="button"] * {
+		color: #${c.base0D} !important;
 	}
 }
 
@@ -517,6 +534,15 @@ cite,
 	[role="main"],
 	label,
 	td {
+		color: #${c.base05} !important;
+	}
+
+	/* the dropdowns are custom listbox buttons (found with an outline probe): their
+	   shown value ("Any format", "Anytime") was Google's placeholder grey */
+	[aria-haspopup],
+	[aria-haspopup] *,
+	[role="combobox"],
+	[role="combobox"] * {
 		color: #${c.base05} !important;
 	}
 }
@@ -566,14 +592,54 @@ cite,
 		border-radius: 999px !important;
 	}
 
-	hr,
-	[role="separator"] {
+	/* every rule Google draws in light grey (header, nav bar) */
+	* {
 		border-color: #${c.base03} !important;
+	}
+
+	/* selected topic tab: accent text and underline, not a tinted block */
+	html [role="tab"][aria-selected="true"],
+	html [aria-current="page"] {
+		background-color: transparent !important;
+		border-bottom: 2px solid #${c.base0D} !important;
+		color: #${c.base0D} !important;
+	}
+
+	html [role="tab"][aria-selected="true"] *,
+	html [aria-current="page"] * {
+		color: #${c.base0D} !important;
+	}
+
+	/* the sign-in call-to-action links ("Picks for you", the "More news" row) have
+	   no child element and lost their label: draw it, as a pill like the header one */
+	a[href*="ServiceLogin"]:not(:has(*)) {
+		display: flex !important;
+		align-items: center;
+		justify-content: center;
+		min-height: 48px;
+		border-radius: 999px !important;
+	}
+
+	a[href*="ServiceLogin"]:not(:has(*))::before {
+		content: "Sign in";
+		color: #${c.base06};
+	}
+
+	/* the weather card paints its own white and stacks its slides: the card (found
+	   as the level-4 ancestor of its buttons with an outline probe) and everything
+	   in it is an opaque raised surface. The page header (its icon buttons matched
+	   too and got a lighter box) and any story list are excluded. */
+	*:has(> * > * > * > button):not(header, [role="banner"], header *, [role="banner"] *, :has(input, article)),
+	*:has(> * > * > * > button):not(header, [role="banner"], header *, [role="banner"] *, :has(input, article)) * {
+		background-color: #${c.base01} !important;
+		background-image: none !important;
 	}
 }
 
 /* translate.google.com: the source textarea is clear inside its panel (Google's
-   own surfaces otherwise), quiet outlines on the mode chips */
+   own surfaces otherwise), quiet outlines on the mode chips, the selected
+   language tab is accent text on the page (its underline stays), and Google's dim
+   greys (counter, feedback link, History/Saved labels) take the text colour */
 @-moz-document domain("translate.google.com") {
 	textarea {
 		background: transparent !important;
@@ -584,6 +650,24 @@ cite,
 	[role="tab"],
 	[role="button"] {
 		border-color: #${c.base03} !important;
+	}
+
+	html [role="tab"][aria-selected="true"] {
+		background-color: transparent !important;
+		color: #${c.base0D} !important;
+	}
+
+	html [role="tab"][aria-selected="true"] * {
+		color: #${c.base0D} !important;
+	}
+
+	:is(span, div, label, p):not([role="tab"], [role="tab"] *) {
+		color: #${c.base05} !important;
+	}
+
+	[role="button"],
+	[role="button"] * {
+		color: #${c.base05} !important;
 	}
 }
 
@@ -609,15 +693,39 @@ cite,
 		color: #${c.base06} !important;
 	}
 
+	/* the three buttons ("Forgot email?", "Create account", "Next") are plain
+	   button elements (outline probe): text buttons in accent, no pill */
 	button {
-		background-color: #${c.base01} !important;
-		border: 1px solid #${c.base03} !important;
+		background-color: transparent !important;
+		border: none !important;
 		border-radius: 999px !important;
-		color: #${c.base06} !important;
+		color: #${c.base0D} !important;
+	}
+
+	button * {
+		color: inherit !important;
+	}
+
+	/* the primary action keeps the accent fill (Google's ids for the identifier
+	   and password steps; if they change, Next falls back to an accent text button) */
+	#identifierNext button,
+	#passwordNext button {
+		background-color: #${c.base0D} !important;
+		color: #${c.base07} !important;
 	}
 
 	button:hover {
 		background-color: ${hover} !important;
+	}
+
+	#identifierNext button:hover,
+	#passwordNext button:hover {
+		background-color: color-mix(in srgb, #${c.base0D} 85%, #${c.base07}) !important;
+	}
+
+	/* the focused field's notched outline is the accent (it was forced grey above) */
+	*:has(input:focus) * {
+		border-color: #${c.base0D} !important;
 	}
 }
 
