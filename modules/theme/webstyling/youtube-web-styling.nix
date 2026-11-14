@@ -162,6 +162,16 @@ tp-yt-iron-dropdown {
 
 ytd-guide-entry-renderer .title,
 ytd-guide-entry-renderer yt-formatted-string {
+	font-size: 12px !important;
+}
+
+/* the widest-hit rows get slightly smaller type so they truncate less */
+ytd-ticket-shelf-renderer #rest-events :is(span, div, a, yt-formatted-string),
+ytd-ticket-shelf-renderer #primary-event :is(#title, #meta) :is(span, div, a, yt-formatted-string) {
+	font-size: 12.5px !important;
+}
+
+ytd-watch-flexy #secondary :is(#video-title, h3, h3 span, h3 a) {
 	font-size: 13px !important;
 }
 
@@ -414,7 +424,7 @@ ytd-guide-entry-renderer:not([active]):hover tp-yt-paper-item {
 yt-chip-cloud-chip-renderer:not([selected]) #chip-container {
 	background-color: #${c.base01} !important;
 	color: #${c.base05} !important;
-	border: 1px solid ${rule} !important;
+	border: 1px solid transparent !important;
 }
 
 .ytChipShapeActive,
@@ -485,23 +495,36 @@ yt-icon-button button {
 	fill: currentColor !important;
 }
 
-/* filled mono buttons (subscribe, join, check it out): the primary action, as an
-   accent outline like Sign in (no solid fill) */
+/* filled mono buttons (subscribe, join, check it out): the primary action, a
+   solid accent fill with base00 text, as the Vesktop theme does
+   (--button-filled-brand-background / -text) */
 .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled,
 .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled,
 ytd-subscribe-button-renderer :is(.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) {
-	background-color: transparent !important;
-	color: #${c.base0D} !important;
+	background-color: #${c.base0D} !important;
+	color: #${c.base00} !important;
 	border: 1px solid #${c.base0D} !important;
 	backdrop-filter: none !important;
 }
 
 :is(.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled):hover {
-	background-color: color-mix(in srgb, #${c.base0D} 15%, transparent) !important;
+	background-color: color-mix(in srgb, #${c.base0D} 80%, #${c.base06}) !important;
 }
 
 :is(.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled) :is(span, div, yt-icon, yt-formatted-string) {
-	color: #${c.base0D} !important;
+	color: #${c.base00} !important;
+}
+
+/* call-to-action buttons that are tonal/filled rather than outlined (sponsored
+   "Visit site", "Learn more"): the same solid accent primary */
+:is(.yt-spec-button-shape-next--call-to-action, .ytSpecButtonShapeNextCallToAction):is(.yt-spec-button-shape-next--tonal, .ytSpecButtonShapeNextTonal, .yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) {
+	background-color: #${c.base0D} !important;
+	border: 1px solid #${c.base0D} !important;
+	color: #${c.base00} !important;
+}
+
+:is(.yt-spec-button-shape-next--call-to-action, .ytSpecButtonShapeNextCallToAction):is(.yt-spec-button-shape-next--tonal, .ytSpecButtonShapeNextTonal, .yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) :is(span, div, yt-icon, yt-formatted-string) {
+	color: #${c.base00} !important;
 }
 
 /* no gradient fills on any button shape */
@@ -937,7 +960,7 @@ ytd-backstage-post-renderer {
 }
 
 .ytp-autonav-toggle-button[aria-checked="true"] {
-	background-color: color-mix(in srgb, #${c.base0D} 70%, transparent) !important;
+	background-color: color-mix(in srgb, #${c.base0D} 35%, #${c.base03}) !important;
 }
 
 .ytp-autonav-toggle-button::after {
