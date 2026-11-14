@@ -442,7 +442,7 @@ cite,
 	}
 
 	/* Google's light-grey outlines (accordions, outlined buttons, fields) become
-	   the quiet border (measured on help: the accordion edge was rgb(169,172,170));
+	   the quiet border (measured on help: the accordion edge was a light grey);
 	   links and tabs keep their own border colours (forcing one there drew boxes
 	   around the help tabs) */
 	*:not(a, [role="tab"], [aria-current="page"], [aria-current="true"], [aria-selected="true"]) {
@@ -649,7 +649,8 @@ cite,
 	}
 
 	/* the weather card paints its own white and stacks its slides: the card (found
-	   as the level-4 ancestor of its buttons with an outline probe) and everything
+	   as the level-4 ancestor of its buttons with an outline probe on 2026-11-13;
+	   structural, so re-probe if Google's DOM changes) and everything
 	   in it is an opaque raised surface. The page header (its icon buttons matched
 	   too and got a lighter box) and any story list are excluded. */
 	*:has(> * > * > * > button):not(header, [role="banner"], header *, [role="banner"] *, :has(input, article)),
