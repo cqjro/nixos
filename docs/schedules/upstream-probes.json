@@ -173,6 +173,16 @@
 			"probes": [
 				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/dw", "ref": "nixos-unstable", "pattern": "^dwsim" }
 			]
+		},
+		{
+			"id": "row-15",
+			"registryRow": 15,
+			"slug": "aura-browser-nixpkgs",
+			"title": "Aura browser pinned to a pre-bigscreen-ui commit (use the nixpkgs package if it lands)",
+			"action": "auto-pr",
+			"probes": [
+				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/kde/plasma", "ref": "nixos-unstable", "pattern": "^aura" }
+			]
 		}
 	],
 	"ignore": []
