@@ -10,6 +10,9 @@
 		# Own rules; no community theme copied.
 		zenWebStyling.siteStyles."reddit.com" = let
 			c = config.lib.stylix.colors;
+			# Stylix fonts, applied to text only (icons are SVG; no rule on *)
+			sans = "\"${config.stylix.fonts.sansSerif.name}\", sans-serif";
+			mono = "\"${config.stylix.fonts.monospace.name}\", monospace";
 			# base04 equals base02 (~2:1 on base00), too dim to read: blend base05 toward base00
 			muted = "color-mix(in srgb, #${c.base05} 78%, #${c.base00})";
 			# no lavender slot: blue/magenta blend for visited links
@@ -20,7 +23,8 @@
 			card = "color-mix(in srgb, #${c.base01} 75%, #${c.base03})";
 			chipHover = "color-mix(in srgb, #${c.base03} 60%, #${c.base02})";
 			# selected/voted state: accent tint instead of a loud solid fill
-			# (primary buttons such as Join / Log In are plain chips)
+			# (primary buttons such as Join are plain chips; the brand fill, used by
+			# Log In and the profile badges, keeps the accent)
 			tint = "color-mix(in srgb, #${c.base0D} 30%, #${c.base01})";
 		in ''
 :root,
@@ -35,6 +39,13 @@ html.theme-light,
 .theme-light,
 shreddit-app {
 	color-scheme: dark !important;
+
+	/* type: Shreddit's font tokens reach into shadow DOM */
+	--font-sans: ${sans} !important;
+	--font-display: ${sans} !important;
+	--font-mono: ${mono} !important;
+	--font-family-sans: ${sans} !important;
+	--font-family-mono: ${mono} !important;
 
 	--color-pizzaRed: #${c.base0D} !important;
 	--color-global-brand-orangered: #${c.base0D} !important;
@@ -51,11 +62,11 @@ shreddit-app {
 	--color-neutral-background-container-strong: ${card} !important;
 	--color-neutral-background-container-hover: ${chip} !important;
 	--color-neutral-background-hover: ${chip} !important;
-	--color-neutral-background-selected: #${c.base03} !important;
+	--color-neutral-background-selected: ${tint} !important;
 	--color-neutral-background-pressed: #${c.base03} !important;
 	--color-secondary-background: ${chip} !important;
 	--color-secondary-background-hover: ${chipHover} !important;
-	--color-secondary-background-selected: #${c.base03} !important;
+	--color-secondary-background-selected: ${tint} !important;
 	--color-secondary-background-pressed: #${c.base03} !important;
 	--color-transparent-background-hover: color-mix(in srgb, #${c.base03} 60%, transparent) !important;
 	--color-media-background: #${c.base01} !important;
@@ -106,8 +117,8 @@ shreddit-app {
 	--color-primary-background-selected: ${tint} !important;
 	--color-primary-onBackground: #${c.base06} !important;
 	--color-primary-onBackground-selected: #${c.base06} !important;
-	--color-brand-background: ${chip} !important;
-	--color-brand-background-hover: ${chipHover} !important;
+	--color-brand-background: #${c.base0D} !important;
+	--color-brand-background-hover: color-mix(in srgb, #${c.base0D} 85%, #${c.base06}) !important;
 	--color-brand-onBackground: #${c.base06} !important;
 	--color-avatar-gradient: #${c.base0D} !important;
 	--color-online: #${c.base0B} !important;
@@ -188,6 +199,27 @@ shreddit-app,
 	color: #${c.base05} !important;
 }
 
+/* Stylix text font on text containers and form controls only */
+body,
+shreddit-app,
+#shreddit-app,
+input,
+textarea,
+select,
+button {
+	font-family: ${sans} !important;
+}
+
+/* keyboard focus: one accent ring */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+	outline: 2px solid #${c.base0D} !important;
+	outline-offset: 2px !important;
+}
+
 /* header: flat page colour with one hairline */
 reddit-header-large,
 reddit-header-small,
@@ -238,6 +270,13 @@ shreddit-comment [id$="-comment-rtjson-content"] a {
 	color: #${c.base0D} !important;
 }
 
+/* feed cards wrap the whole text preview in one anchor: body colour, not a link */
+shreddit-feed [slot="text-body"] a,
+shreddit-feed a[slot="text-body"],
+shreddit-feed [slot="text-body"] a:visited {
+	color: #${c.base05} !important;
+}
+
 .md a:visited,
 [slot="text-body"] a:visited,
 [slot="comment"] a:visited {
@@ -264,6 +303,16 @@ shreddit-comment [id$="-comment-rtjson-content"] a {
 [slot="text-body"] pre code,
 [slot="comment"] pre code {
 	background-color: transparent !important;
+}
+
+.md pre,
+.md code,
+[slot="text-body"] pre,
+[slot="text-body"] code,
+[slot="comment"] pre,
+[slot="comment"] code {
+	font-family: ${mono} !important;
+	border-radius: 6px !important;
 }
 
 .md blockquote,
