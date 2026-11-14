@@ -91,6 +91,30 @@
 	--gm3-sys-color-inverse-on-surface: #${c.base00} !important;
 }
 
+/* Surface steps for Google's AI surfaces (AI Overview, AI Mode, menus, the suggestion
+   dropdown). In the human's Zen (2026-11-14) these showed Google's neutral blue-grey,
+   not the palette: they read the tokens above, but components redefine them on their
+   own host element, which beats the :root values; a user !important declaration on
+   every element wins over those author values. Ramp: page (base00) / raised (base01) /
+   hover (base01 + 8% text). UNVERIFIED: only the human's Zen shows these pages, and
+   the token names are Google's (fragile: they can be renamed). */
+:root,
+:root * {
+	--gm3-sys-color-surface: #${c.base00} !important;
+	--gm3-sys-color-surface-dim: #${c.base00} !important;
+	--gm3-sys-color-surface-container-lowest: #${c.base00} !important;
+	--gm3-sys-color-surface-container-low: #${c.base01} !important;
+	--gm3-sys-color-surface-container: #${c.base01} !important;
+	--gm3-sys-color-surface-container-high: ${hover} !important;
+	--gm3-sys-color-surface-container-highest: ${hover} !important;
+	--gm3-sys-color-surface-bright: ${hover} !important;
+	--gm3-sys-color-surface-variant: ${hover} !important;
+	--gm3-sys-color-background: #${c.base00} !important;
+	--gm3-sys-color-secondary-container: ${active} !important;
+	--gm3-sys-color-on-surface: #${c.base05} !important;
+	--gm3-sys-color-on-surface-variant: ${muted} !important;
+}
+
 html,
 body {
 	background-color: #${c.base00} !important;
@@ -235,10 +259,22 @@ strong {
 	font-weight: 600 !important;
 }
 
+/* The AI Overview / AI Mode highlight is a <mark>: measured on the human's screenshot
+   as a dark navy that matches the old accent wash over the page, painted as ragged
+   per-line boxes behind whole sentences. No fill now: bright text with a quiet accent
+   underline (uniform on every line, no boxes). */
 mark {
-	background-color: ${wash} !important;
+	background-color: transparent !important;
+	background-image: none !important;
 	color: #${c.base06} !important;
-	border-radius: 2px !important;
+	text-decoration-line: underline !important;
+	text-decoration-color: color-mix(in srgb, #${c.base0D} 60%, transparent) !important;
+	text-decoration-thickness: 1px !important;
+	text-underline-offset: 3px !important;
+	box-decoration-break: clone !important;
+	-webkit-box-decoration-break: clone !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
 }
 
 /* separate rule: an unsupported pseudo-element would drop the whole selector list */
@@ -270,7 +306,6 @@ header,
 }
 
 /* native form fields: one flat surface, no stray boxes */
-textarea,
 input[type="text"],
 input[type="search"],
 input[type="email"],
@@ -281,6 +316,31 @@ select {
 	appearance: none !important;
 	background: #${c.base01} !important;
 	color: #${c.base05} !important;
+}
+
+/* free-text areas ("Ask anything" in the AI Overview and AI Mode) sit inside a rounded
+   container that carries the surface: a fill of their own painted a darker bar that
+   stopped short of the container (seen in the human's Zen, 2026-11-14). Transparent,
+   so the container shows through full width. [role="textbox"] covers an editable div. */
+textarea,
+[role="textbox"] {
+	color-scheme: dark !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	background: transparent !important;
+	color: #${c.base05} !important;
+}
+
+/* ...and the container itself: the box two levels above a free-text area (not the
+   search box, whose textarea is name="q"), raised surface instead of Google's grey.
+   Only on /search (AI Overview, AI Mode): unscoped it painted the whole lower body of
+   the help page (a large block two levels above a hidden textarea), seen in a shot.
+   FRAGILE: a structural guess; if the depth is wrong this simply does not match. */
+@-moz-document url-prefix("https://www.google.com/search") {
+	*:has(> * > textarea:not([name="q"])) {
+		background-color: #${c.base01} !important;
+		border-color: #${c.base03} !important;
+	}
 }
 
 /* except inside the search pill where the pill itself carries the surface */
@@ -331,6 +391,61 @@ g-menu,
 	background-color: #${c.base01} !important;
 	border-color: #${c.base03} !important;
 	color: #${c.base05} !important;
+}
+
+/* The search box and its suggestion dropdown are one rounded container. Google paints
+   the "Trending searches" header row, the footer zone with the search buttons and the
+   AI Mode pill in neutral blue-greys of their own (two greys measured on
+   the human's screenshots). Every box inside takes the container surface instead.
+   :where keeps this rule at zero specificity, so any named surface rule (the pill,
+   the listbox, hover rows) still wins. FRAGILE: assumes the dropdown lives inside the
+   role="search" form; if it does not, nothing matches. */
+:where([role="search"]) :where(div, span, ul, li, section) {
+	background-color: transparent !important;
+}
+
+/* the AI Mode pill inside the search box: a quiet raised pill, accent label kept */
+[role="search"] :is(a[href*="udm=50"], [aria-label*="AI Mode" i]) {
+	background-color: ${hover} !important;
+}
+
+/* The account avatar (top right) showed as a flat white disc on every page. None of
+   the rules above targets images or avatars, and the nearest white in this file is the
+   --gm3-sys-color-on-primary token (base07); the cause is NOT established. Defensive:
+   a surface-coloured circle behind the avatar, no fill on boxes inside it, the photo
+   (img) on a transparent background so it shows over the circle. If the photo is
+   blocked or missing the circle stays surface-coloured, never white.
+   FRAGILE: matches Google's aria-label / sign-out link, not class names. */
+a[aria-label*="Google Account" i],
+a[href*="SignOutOptions"] {
+	background-color: #${c.base01} !important;
+	border-radius: 50% !important;
+}
+
+a[aria-label*="Google Account" i] :is(div, span),
+a[href*="SignOutOptions"] :is(div, span),
+a[aria-label*="Google Account" i] img,
+a[href*="SignOutOptions"] img {
+	background-color: transparent !important;
+}
+
+/* Footer: "Settings" is a button-role element beside accent <a> links and kept the
+   plain text colour. Matched as a non-link sibling of the policy links, and by the
+   classic footer ids. FRAGILE: footer markup. */
+*:has(> a[href*="policies.google.com"]) > :not(a),
+#fbar :is([role="button"], button, [aria-haspopup]),
+#footcnt :is([role="button"], button, [aria-haspopup]),
+footer :is([role="button"], button, [aria-haspopup]),
+[role="contentinfo"] :is([role="button"], button, [aria-haspopup]) {
+	color: #${c.base0D} !important;
+}
+
+*:has(> a[href*="policies.google.com"]) > :not(a) *,
+#fbar :is([role="button"], button, [aria-haspopup]) *,
+#footcnt :is([role="button"], button, [aria-haspopup]) *,
+footer :is([role="button"], button, [aria-haspopup]) *,
+[role="contentinfo"] :is([role="button"], button, [aria-haspopup]) * {
+	color: inherit !important;
 }
 
 /* sticky header bar while scrolling */
@@ -795,6 +910,24 @@ cite,
 	/* the focused field's notched outline is the accent (it was forced grey above) */
 	*:has(input:focus) * {
 		border-color: #${c.base0D} !important;
+	}
+}
+
+/* AI Mode (the conversational page, udm=50 in the URL; regexp() must match the whole
+   URL). On the human's screenshot the top bar (34,36,42) and the left rail (39,41,48)
+   were two different neutral greys against the purple page. Both become the one raised
+   surface. UNVERIFIED and FRAGILE: only the human's Zen shows this page, and the boxes
+   are found structurally (the smallest box holding the selected tab and the account /
+   apps buttons; the smallest box holding the rail buttons but no tab and no composer),
+   because the class names are hashed. A wrong guess matches nothing, or at worst a
+   bar-sized box on this one page. */
+@-moz-document regexp("https://www\\.google\\.com/search.*udm=50.*") {
+	*:has([aria-current="page"]):has(:is(a[aria-label*="Google apps" i], a[aria-label*="Google Account" i], a[href*="SignOutOptions"])):not(:has(textarea, article, main, [role="main"])) {
+		background-color: #${c.base01} !important;
+	}
+
+	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, article, main, [role="main"])) {
+		background-color: #${c.base01} !important;
 	}
 }
 
