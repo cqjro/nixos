@@ -29,6 +29,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.rss-sources
 				# inputs.self.modules.nixos.android
 				inputs.self.modules.nixos.waydroid
+				inputs.self.modules.nixos.bigscreen
 				inputs.self.modules.nixos.audio
 				inputs.self.modules.nixos.ios-sideloading
 				inputs.self.modules.nixos.tether
