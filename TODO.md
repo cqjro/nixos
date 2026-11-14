@@ -68,20 +68,6 @@ repeated as proposals.
   - *Note:* only Supervised threads prompt at all (Full access has nothing to
     approve), so approval pushes depend on the modes you actually run
 
-- [ ] **Waydroid Android TV** — turn this PC into a pseudo Android TV — **7/10**
-      (an archived `modules/_archive/waydroid.nix` already exists to
-      reintegrate; the kiosk session/autologin is the hard half)
-  - [ ] Configure Waydroid (Android TV image / launcher) as a NixOS + home-manager module
-  - [ ] Make it bootable: boot straight into the Android TV session, kiosk-style,
-        similar to <https://youtu.be/nROKp0BpFek?si=b9QBhJqReF9XOLH3>
-        (dedicated session + autologin, Android TV as the default target)
-  - *Proposed approach:* reintegrate the archived module first (needs a manual
-    image fetch — Waydroid can't ship the system/vendor images declaratively);
-    then a dedicated session via `services.xserver.displayManager`/UWSM with a
-    Waydroid launcher as the autologin session, mirroring the hyprland session
-    wiring, plus a `kiosk`-style `waydroid session` + `waydroid show-full-ui`
-    autostart. Frees a second screen from desktop duty.
-
 - [ ] **Zen Browser userContent styling** — fix `userContent.css` site theming — **3/10**
       (per-site CSS already proven; 10 existing `webstyling/*.nix` files are the template)
   - [ ] Google
