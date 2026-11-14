@@ -469,7 +469,7 @@ yt-chip-cloud-chip-renderer[selected] #chip-container * {
 .yt-spec-button-shape-next--tonal,
 .ytSpecButtonShapeNextTonal {
 	background-color: ${tint "30"} !important;
-	color: #${c.base05} !important;
+	color: #${c.base06} !important;
 	backdrop-filter: none !important;
 }
 
@@ -525,6 +525,17 @@ ytd-subscribe-button-renderer :is(.yt-spec-button-shape-next--filled, .ytSpecBut
 
 :is(.yt-spec-button-shape-next--call-to-action, .ytSpecButtonShapeNextCallToAction):is(.yt-spec-button-shape-next--tonal, .ytSpecButtonShapeNextTonal, .yt-spec-button-shape-next--filled, .ytSpecButtonShapeNextFilled) :is(span, div, yt-icon, yt-formatted-string) {
 	color: #${c.base00} !important;
+}
+
+/* flat, uniform corners (the Vesktop theme uses small radii, not pills): text
+   buttons and chips get 6px; icon buttons and the like/dislike segments keep
+   their own shape */
+.yt-spec-button-shape-next:not(.yt-spec-button-shape-next--icon-button),
+[class*="ytSpecButtonShapeNext"]:not([class*="IconButton"], [class*="Segmented"], [class*="IconOnly"]),
+.ytChipShapeChip,
+.ytChipShapeInactive,
+.ytChipShapeActive {
+	border-radius: 6px !important;
 }
 
 /* no gradient fills on any button shape */
