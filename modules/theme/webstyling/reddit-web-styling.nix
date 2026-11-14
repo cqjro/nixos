@@ -23,8 +23,8 @@
 			card = "color-mix(in srgb, #${c.base01} 75%, #${c.base03})";
 			chipHover = "color-mix(in srgb, #${c.base03} 60%, #${c.base02})";
 			# selected/voted state: accent tint instead of a loud solid fill
-			# (primary buttons such as Join and Log In are plain chips: Reddit paints the
-			# Log In label in a red token, unreadable on an accent fill)
+			# (primary buttons such as Join are plain chips; the brand fill, used by the
+			# profile badges and the logged-out Log In pill, keeps the accent)
 			tint = "color-mix(in srgb, #${c.base0D} 30%, #${c.base01})";
 		in ''
 :root,
@@ -117,8 +117,8 @@ shreddit-app {
 	--color-primary-background-selected: ${tint} !important;
 	--color-primary-onBackground: #${c.base06} !important;
 	--color-primary-onBackground-selected: #${c.base06} !important;
-	--color-brand-background: ${chip} !important;
-	--color-brand-background-hover: ${chipHover} !important;
+	--color-brand-background: #${c.base0D} !important;
+	--color-brand-background-hover: color-mix(in srgb, #${c.base0D} 85%, #${c.base06}) !important;
 	--color-brand-onBackground: #${c.base06} !important;
 	--color-avatar-gradient: #${c.base0D} !important;
 	--color-online: #${c.base0B} !important;
