@@ -5,6 +5,12 @@ in
 {
   flake.modules.homeManager."noctalia-shell" = {
     imports = [ noctaliaHm ];
+
+    # The unit follows graphical-session.target, which Plasma / Plasma
+    # Bigscreen also reach; keep Noctalia's bar and wallpaper out of KDE
+    # sessions. Negated so Hyprland still starts it if the variable is missing.
+    systemd.user.services.noctalia.Unit.ConditionEnvironment = "!XDG_CURRENT_DESKTOP=KDE";
+
     programs.noctalia = {
       enable = true;
       systemd = {

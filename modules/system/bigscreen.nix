@@ -72,6 +72,10 @@
 				unset QT_STYLE_OVERRIDE
 				export QT_QUICK_CONTROLS_STYLE=org.kde.breeze
 				export QT_QUICK_CONTROLS_MOBILE=true
+				# home-manager sets XDG_SESSION_DESKTOP=Hyprland for every
+				# login; the Bigscreen shell must identify as KDE.
+				export XDG_CURRENT_DESKTOP=KDE
+				export XDG_SESSION_DESKTOP=KDE
 			'';
 
 			# Bigscreen in a window, for testing from Hyprland without logging
@@ -79,7 +83,6 @@
 			# D-Bus session, so it does not touch the running desktop.
 			bigscreenWindowed = pkgs.writeShellScriptBin "bigscreen-windowed" ''
 				${bigscreenEnv}
-				export XDG_CURRENT_DESKTOP=KDE
 				exec dbus-run-session kwin_wayland --width 1920 --height 1080 "plasmashell -p org.kde.plasma.bigscreen"
 			'';
 
