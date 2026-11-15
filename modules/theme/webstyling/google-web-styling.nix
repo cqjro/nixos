@@ -346,6 +346,18 @@ textarea,
 	color: #${c.base05} !important;
 }
 
+/* The text cursor. In AI Mode's "Ask anything" box it was invisible while typing
+   (reported by the human; this file sets no caret colour, so Google's own caret colour
+   probably reads a variable that now resolves to a surface colour). An explicit accent
+   caret on every text field. UNVERIFIED; if the cursor is a drawn element and not the
+   native caret this changes nothing. */
+input,
+textarea,
+[contenteditable],
+[role="textbox"] {
+	caret-color: #${c.base0D} !important;
+}
+
 /* The container itself keeps Google's own surface for now. A first guess here (the box
    two levels above the textarea) hit the text-field wrapper, not the container, and
    painted the darker bar that stopped short of the rounded box (measured on the
