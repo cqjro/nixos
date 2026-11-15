@@ -72,6 +72,29 @@ repeated as proposals.
       (per-site CSS already proven; 10 existing `webstyling/*.nix` files are the template)
   - [ ] Instagram (deferred: not in use)
 
+- [ ] **`theme-shots-login` helper (optional)** — let site-styling threads see
+      logged-in pages (feeds, subscriptions, settings) without you attaching
+      manual screenshots — **5/10**
+  - *Proposed approach:* a second excluded command next to `theme-shots`
+    (`modules/scripts/theme-shots-login.sh`, packaged by `modules/theme/theme-shots.nix`)
+    that runs headless Zen against ONE dedicated persistent profile
+    (`~/.local/state/theme-shots-login/`), never your real profile. You log in once
+    by hand in a visible window with a **throwaway test account per site** (no
+    password manager, no 2FA tied to your phone), after which the helper reuses the
+    saved session for RAW vs THEMED shots of the logged-in page list. Keep the
+    PAC domain confinement and the settle/rejection checks from `theme-shots`.
+  - *Why optional:* the logged-out pages and your own screenshots already cover
+    most of the work, and an automated browser holding any session is a bigger
+    trust surface than the throwaway-profile `theme-shots`.
+  - [ ] Decide it is worth building (you chose manual screenshots on 2026-11-10;
+        revisit only if logged-in pages keep being the bottleneck)
+  - [ ] Security review (tier 2) before the first run: the session cookies persist
+        on disk, shots of logged-in pages contain personal data that goes to the
+        model provider, and a bot-detected throwaway account can be locked or
+        banned (Google, Reddit and Instagram all do this)
+  - [ ] Add the page list for the logged-in pages and a `docs/agents/theme-shots.md`
+        section; delete the profile directory after each styling session
+
 - [ ] **Game window control** — figure out the optimal way of controlling
       games on different windows (focus, moving between monitors/workspaces)
       and revise the Hyprland keybinds to do so — **6/10**
