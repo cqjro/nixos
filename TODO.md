@@ -70,10 +70,7 @@ repeated as proposals.
 
 - [ ] **Zen Browser userContent styling** — fix `userContent.css` site theming — **3/10**
       (per-site CSS already proven; 10 existing `webstyling/*.nix` files are the template)
-  - [ ] Google
-  - [ ] YouTube
-  - [ ] Reddit
-  - [ ] Instagram
+  - [ ] Instagram (deferred: not in use)
 
 - [ ] **Game window control** — figure out the optimal way of controlling
       games on different windows (focus, moving between monitors/workspaces)
