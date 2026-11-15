@@ -19,6 +19,9 @@
 	{
 		zenWebStyling.siteStyles."wikipedia.org" = let
 			c = config.lib.stylix.colors;
+			# Stylix fonts, as the Vesktop theme uses them; applied to text elements only
+			sans = "\"${config.stylix.fonts.sansSerif.name}\", sans-serif";
+			mono = "\"${config.stylix.fonts.monospace.name}\", monospace";
 			hex = slot: "#${c.${slot}}";
 			mix = a: pct: b: "color-mix(in srgb, ${a} ${toString pct}%, ${b})";
 			# translucent wash of a palette slot (message boxes, diffs, selection)
@@ -51,9 +54,9 @@
 			# table cells with a literal inline background (party colours, yes/no
 			# cells, topic-coloured infobox headers). Their lightness cannot be read
 			# from CSS, so every one gets a base00 veil: the hue survives, dimmed, and
-			# base05 text is readable on it (a white cell becomes ~4.7:1)
+			# base05 text is readable on it (a white cell becomes ~5.6:1)
 			inlineCells = ":is(.wikitable, .infobox, .navbox, .sidebar, .toccolours) :is(tr, th, td, caption)${literalBg}";
-			veil = tint "base00" 80;
+			veil = tint "base00" 86;
 			# links on base03 header cells need the lighter blue (~4.9:1)
 			headerCells = ":is(.wikitable th, .navbox-title, .navbox-group, .navbox-abovebelow, .infobox-above, .infobox-header, .sidebar-title, .sidebar-heading, .mp-h2)";
 		in ''
@@ -224,13 +227,147 @@ footer,
 	border-color: ${hex "base03"} !important;
 }
 
-/* one type family, as in Vesktop: the title and h2 drop Wikipedia's hard-coded
-   serif stack for the browser's sans-serif (the body's font) */
-h1, h2,
+/* one type family, as in Vesktop: the Stylix fonts on text elements only. Never
+   on * and never on icon/glyph classes (Codex and OOUI icons are masks or
+   background images, but stay untouched either way). */
+body,
+.mw-body,
+.vector-body,
+.mw-parser-output,
+h1, h2, h3, h4, h5, h6,
 .firstHeading,
 .mw-first-heading,
-.mw-page-title-main {
-	font-family: sans-serif !important;
+.mw-page-title-main,
+input,
+textarea,
+select,
+button,
+.cdx-button,
+.cdx-text-input__input {
+	font-family: ${sans} !important;
+}
+
+pre,
+code,
+kbd,
+samp,
+tt,
+.mw-code,
+.mw-highlight,
+.mw-highlight pre,
+#wpTextbox1,
+.cm-editor,
+.cm-content {
+	font-family: ${mono} !important;
+}
+
+/* the header wordmark container is .skin-invert (inverted below); its small
+   grey tagline came out faint, so this one element also gets a brightness lift */
+.mw-logo .mw-logo-container.skin-invert {
+	filter: invert(1) hue-rotate(180deg) brightness(1.6) !important;
+}
+
+/* sidebar group labels (Contents, Appearance: Text / Width / Color) in base text */
+.vector-menu-heading,
+.vector-pinnable-header-label,
+.vector-appearance .cdx-field__label,
+.vector-appearance .vector-menu-heading {
+	color: ${hex "base05"} !important;
+}
+
+/* no stray rules or fades on the side columns; footer badges follow the page */
+:is(.vector-column-start, .vector-column-end) {
+	border-top-color: transparent !important;
+}
+
+.vector-sticky-pinned-container::before,
+.vector-sticky-pinned-container::after {
+	background: none !important;
+}
+
+:is(#footer-icons, .footer-icons) img:not(.skin-invert *) {
+	filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* templates that hard-code a serif face inline (the "Why is the page
+   protected?" headings on the view-source page) follow the one family too */
+.mw-parser-output [style*="serif" i]:not(code):not(pre):not(kbd):not(samp) {
+	font-family: ${sans} !important;
+}
+
+/* thin scrollbars on the page palette */
+:root {
+	scrollbar-color: ${hex "base03"} ${hex "base00"} !important;
+	scrollbar-width: thin !important;
+}
+
+/* Vesktop-like surfaces: one 1px base03 border, 4px radius on controls and 6px
+   on floating panels, no drop shadows */
+.cdx-button,
+.cdx-text-input__input,
+.cdx-search-input__input-wrapper,
+.cdx-search-input .cdx-button,
+input:not([type="checkbox"]):not([type="radio"]):not([type="image"]),
+select,
+textarea,
+.oo-ui-buttonElement-framed > .oo-ui-buttonElement-button,
+.oo-ui-textInputWidget .oo-ui-inputWidget-input,
+.mw-ui-button {
+	border-radius: 4px !important;
+	box-shadow: none !important;
+}
+
+.cdx-text-input__input:focus,
+input:focus,
+textarea:focus,
+select:focus {
+	border-color: ${hex "base0D"} !important;
+	box-shadow: inset 0 0 0 1px ${hex "base0D"} !important;
+}
+
+.vector-dropdown-content,
+.cdx-menu,
+.cdx-dialog,
+.mwe-popups,
+.oo-ui-popupWidget-popup,
+.oo-ui-menuSelectWidget,
+.suggestions-results,
+.uls-menu {
+	border: 1px solid ${hex "base03"} !important;
+	border-radius: 6px !important;
+	box-shadow: none !important;
+}
+
+.vector-sticky-header,
+.vector-header-container,
+.mw-header {
+	box-shadow: none !important;
+	background-image: none !important;
+}
+
+/* hover and active rows, as in the Vesktop channel list: a base03 pill */
+.vector-menu-content-list .mw-list-item > a:hover,
+.vector-toc .vector-toc-link:hover,
+.vector-pinnable-element .mw-list-item > a:hover,
+.cdx-menu-item--enabled:hover,
+.suggestions-result:hover {
+	background-color: ${hex "base03"} !important;
+	border-radius: 4px !important;
+	text-decoration: none !important;
+}
+
+.cdx-button:not(.cdx-button--weight-primary):not(.cdx-button--weight-quiet) {
+	background-color: ${hex "base03"} !important;
+	border-color: ${hex "base03"} !important;
+	color: ${hex "base05"} !important;
+}
+
+.cdx-button:not(.cdx-button--weight-primary):hover {
+	background-color: ${hex "base02"} !important;
+}
+
+.cdx-button--weight-quiet:hover {
+	background-color: ${hex "base03"} !important;
 }
 
 /* literal template borders: the site's light greys become the base03 divider,
@@ -463,9 +600,12 @@ figcaption,
 	color: ${muted} !important;
 }
 
-/* content images only: navbox and ambox icons stay on the dark page */
-:is(figure, .thumb, .gallerybox, .infobox) img.mw-file-element:not(.skin-invert):not(.skin-invert *) {
+/* content images only: navbox and ambox icons stay on the dark page, and not
+   edit pencils and other UI icons (the Wikidata pencil in the Rust infobox sat
+   on a light square in the live shot) */
+:is(figure, .thumb, .gallerybox, .infobox) img.mw-file-element:not(.skin-invert):not(.skin-invert *):not(:is(.penicon, .noprint, a[href*="wikidata.org"]) img) {
 	background-color: ${hex "base05"} !important;
+	border-radius: 4px !important;
 }
 
 /* inverted images and maths. Unconditional: these are the elements Wikipedia's
@@ -699,14 +839,59 @@ del.diffchange {
 
 #pagehistory li.selected,
 .mw-changeslist-line.mw-changeslist-line-watched {
-	background-color: ${tint "base0D" 15} !important;
-	outline-color: ${hex "base03"} !important;
+	background-color: ${hex "base01"} !important;
+	outline: 1px solid ${hex "base03"} !important;
+}
+
+/* history compare radios: an unselected ring in the muted text colour, not the
+   near-invisible dark disc of the default control */
+#pagehistory input[type="radio"],
+.mw-history-compareselectedversions input[type="radio"] {
+	accent-color: ${hex "base0D"};
+	color-scheme: dark;
+	opacity: 0.9;
 }
 
 .mw-changeslist-legend,
 .mw-tag-marker {
 	background-color: ${hex "base01"} !important;
 	border-color: ${hex "base03"} !important;
+}
+
+/* fundraising banner (CentralNotice): its own plum panel and white amount
+   buttons. Flattened onto the page like any other panel; the selected amount
+   keeps the accent as its active state. */
+#centralNotice :not(img):not(svg):not(svg *):not(a) {
+	background-color: transparent !important;
+	background-image: none !important;
+	border-color: ${hex "base03"} !important;
+	color: ${hex "base05"} !important;
+	box-shadow: none !important;
+}
+
+#centralNotice > *:first-child {
+	background-color: ${hex "base01"} !important;
+	border: 1px solid ${hex "base03"} !important;
+	border-radius: 6px !important;
+}
+
+#centralNotice :is(button, label, input[type="submit"], input[type="button"]) {
+	background-color: ${hex "base03"} !important;
+	border: 1px solid ${hex "base03"} !important;
+	border-radius: 4px !important;
+	color: ${hex "base05"} !important;
+}
+
+#centralNotice :is(button, label):hover {
+	background-color: ${hex "base02"} !important;
+}
+
+#centralNotice input:checked + label,
+#centralNotice :is(button, label)[aria-pressed="true"],
+#centralNotice :is(button, label)[aria-checked="true"] {
+	background-color: ${accentFill} !important;
+	border-color: ${accentFill} !important;
+	color: ${hex "base07"} !important;
 }
 
 /* main page portal boxes: hard-coded #f9f9f9/#f5fffa/#f5faff on the live shot */
@@ -716,8 +901,10 @@ del.diffchange {
 	color: ${hex "base05"} !important;
 }
 
-/* any other block with a literal inline background in content: same veil as cells */
-.mw-parser-output :is(div, table, p)${literalBg} {
+/* any other block with a literal inline background in content: same veil as
+   cells. Not charts: pie slices and bars are inline-coloured divs whose colour
+   is the data (the population pie went muddy on the live shot). */
+.mw-parser-output :is(div, table, p)${literalBg}:not([id^="mp-"]):not(.MainPageBG):not(.mp-bordered):not(.mp-box):not(:is([class*="pie"], [class*="chart"], [class*="bar"], [class*="legend"]), :is([class*="pie"], [class*="chart"], [class*="bar"], [class*="legend"]) *) {
 	background-image: linear-gradient(${veil}, ${veil}) !important;
 	color: ${hex "base05"} !important;
 }
