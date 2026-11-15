@@ -88,8 +88,20 @@
 
 			# The session the greeter starts. Upstream's own session script with
 			# the Qt overrides from bigscreenEnv applied after its environment.
+			# kwin and plasmashell are systemd user units, so they get their
+			# environment from the user manager, which already holds Home
+			# Manager's environment.d values (QT_STYLE_OVERRIDE=kvantum,
+			# QT_QPA_PLATFORMTHEME=qt5ct). A shell `unset` cannot clear those, so
+			# change them in the manager too (it ends with the login).
 			bigscreenSessionScript = pkgs.writeShellScript "plasma-bigscreen-session" ''
 				${bigscreenEnv}
+				${pkgs.systemd}/bin/systemctl --user unset-environment QT_STYLE_OVERRIDE || true
+				${pkgs.systemd}/bin/systemctl --user set-environment \
+					QT_QPA_PLATFORMTHEME=kde \
+					QT_QUICK_CONTROLS_STYLE=org.kde.breeze \
+					QT_QUICK_CONTROLS_MOBILE=true \
+					XDG_CURRENT_DESKTOP=KDE \
+					XDG_SESSION_DESKTOP=KDE || true
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
 			'';
 			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" ''
