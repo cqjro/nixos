@@ -600,9 +600,9 @@ figcaption,
 	color: ${muted} !important;
 }
 
-/* content images only: navbox and ambox icons stay on the dark page */
-/* (not edit pencils and other UI icons: the Wikidata pencil in the Rust infobox
-   sat on a light square in the live shot) */
+/* content images only: navbox and ambox icons stay on the dark page, and not
+   edit pencils and other UI icons (the Wikidata pencil in the Rust infobox sat
+   on a light square in the live shot) */
 :is(figure, .thumb, .gallerybox, .infobox) img.mw-file-element:not(.skin-invert):not(.skin-invert *):not(:is(.penicon, .noprint, a[href*="wikidata.org"]) img) {
 	background-color: ${hex "base05"} !important;
 	border-radius: 4px !important;
