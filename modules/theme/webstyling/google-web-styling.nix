@@ -331,17 +331,12 @@ textarea,
 	color: #${c.base05} !important;
 }
 
-/* ...and the container itself: the box two levels above a free-text area (not the
-   search box, whose textarea is name="q"), raised surface instead of Google's grey.
-   Only on /search (AI Overview, AI Mode): unscoped it painted the whole lower body of
-   the help page (a large block two levels above a hidden textarea), seen in a shot.
-   FRAGILE: a structural guess; if the depth is wrong this simply does not match. */
-@-moz-document url-prefix("https://www.google.com/search") {
-	*:has(> * > textarea:not([name="q"])) {
-		background-color: #${c.base01} !important;
-		border-color: #${c.base03} !important;
-	}
-}
+/* The container itself keeps Google's own surface for now. A first guess here (the box
+   two levels above the textarea) hit the text-field wrapper, not the container, and
+   painted the darker bar that stopped short of the rounded box (measured on the
+   human's screenshot: the bar was exactly the page raised surface, the container a
+   neutral blue-grey). Recolouring the container needs the real element or the colour
+   token it reads; both come from a console probe in the human's Zen. */
 
 /* except inside the search pill where the pill itself carries the surface */
 .RNNXgb textarea,
@@ -926,7 +921,14 @@ cite,
 		background-color: #${c.base01} !important;
 	}
 
-	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, article, main, [role="main"])) {
+}
+
+/* The left rail also shows on the AI Mode landing page ("Hi ..., what's on your mind?"),
+   whose URL has no udm=50: it kept the neutral grey there (measured on a screenshot).
+   So this rule is scoped to www.google.com and instead requires BOTH a "New chat" and a
+   "Settings" or "Menu" button, which only the rail holds. FRAGILE: aria-labels. */
+@-moz-document url-prefix("https://www.google.com/") {
+	*:has([aria-label*="New chat" i]):has(:is([aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, article, main, [role="main"])) {
 		background-color: #${c.base01} !important;
 	}
 }
