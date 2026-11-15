@@ -67,6 +67,10 @@
 			useUserPackages = true;
 			useGlobalPkgs = true;
 			backupFileExtension = "backup";
+			# Plasma sessions (Bigscreen, Plasma) rewrite ~/.gtkrc-2.0 and similar
+			# files over Home Manager's links; without this a stale .backup from an
+			# earlier session makes the next activation fail.
+			overwriteBackup = true;
 		};
 
 		services.seatd = {
