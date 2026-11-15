@@ -605,6 +605,7 @@ figcaption,
    sat on a light square in the live shot) */
 :is(figure, .thumb, .gallerybox, .infobox) img.mw-file-element:not(.skin-invert):not(.skin-invert *):not(:is(.penicon, .noprint, a[href*="wikidata.org"]) img) {
 	background-color: ${hex "base05"} !important;
+	border-radius: 4px !important;
 }
 
 /* inverted images and maths. Unconditional: these are the elements Wikipedia's
@@ -839,7 +840,16 @@ del.diffchange {
 #pagehistory li.selected,
 .mw-changeslist-line.mw-changeslist-line-watched {
 	background-color: ${hex "base01"} !important;
-	outline-color: ${hex "base03"} !important;
+	outline: 1px solid ${hex "base03"} !important;
+}
+
+/* history compare radios: an unselected ring in the muted text colour, not the
+   near-invisible dark disc of the default control */
+#pagehistory input[type="radio"],
+.mw-history-compareselectedversions input[type="radio"] {
+	accent-color: ${hex "base0D"};
+	color-scheme: dark;
+	opacity: 0.9;
 }
 
 .mw-changeslist-legend,
