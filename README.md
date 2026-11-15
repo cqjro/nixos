@@ -185,7 +185,7 @@ matches the rest of the config out of the box.
   OSD, widgets, clipboard, session control) controlled through the CLI.
 - **Walker** — GTK launcher (Rofi-style) with a fully stylix-themed stylesheet.
 - **xremap** — Caps↔Esc/Super remap plus an extensive layered keymap:
-  `Super+O` focuses-or-launches your apps (terminal, nvim, browser, mail,
+  `Super+O` focuses-or-launches your apps (T3 Code, nvim, browser, mail,
   discord…), `Super+M/B/V/R/L/A/S/D/C/K` drive media, volume, brightness,
   sessions, panels and screenshots through `noctalia`.
 - **Zen Browser** (twilight) — managed profiles with pinned tabs *per workspace*

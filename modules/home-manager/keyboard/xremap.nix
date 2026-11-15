@@ -42,7 +42,7 @@
 						super-o = {
 							remap = {
 # Terminal apps
-								t.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "${../../scripts/focus-window.sh}" "--by" "class" "ghostty" "com.mitchellh.ghostty" "1"]; # Focus or launch terminal
+								t.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "${../../scripts/focus-window.sh}" "--by" "class" "t3code-desktop" "t3code" "1"]; # Focus or launch T3 Code (terminal: Super+T, T)
 								e.launch = ["systemd-run" "--user" "--scope" "--collect" "--" "bash" "${../../scripts/focus-window.sh}" "--by" "title" "ghostty -e nvim" "nvim" "1"]; # Focus or launch Neovim
 
 # Core applications
