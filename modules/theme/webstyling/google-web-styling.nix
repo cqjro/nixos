@@ -994,6 +994,28 @@ button.cEme7d :is(span, div) {
 	border-radius: inherit !important;
 }
 
+/* The "More" (three dots) button is not a button element: div.vqxIde[role="button"] >
+   div.YHsVn > div.wVj4w, and the two wrappers have radius 0, so the hover painted a square
+   around the round dots. All three are round now (explicit, not a blanket descendant rule:
+   the tooltip div is inside .YHsVn and must keep its own shape). FRAGILE: hashed names. */
+.vqxIde:has(> .YHsVn > .wVj4w),
+.vqxIde > .YHsVn:has(> .wVj4w),
+.vqxIde > .YHsVn > .wVj4w,
+.vqxIde:has(> .YHsVn > .wVj4w)::before,
+.vqxIde:has(> .YHsVn > .wVj4w)::after,
+.vqxIde > .YHsVn:has(> .wVj4w)::before,
+.vqxIde > .YHsVn:has(> .wVj4w)::after {
+	border-radius: 9999px !important;
+}
+
+/* The related-results card keeps a 1px edge in the border colour. AI Mode already drew
+   one (the human prefers it); the main results page did not, so it is drawn here as an
+   inset ring on the rounded fill layer, and the AI Mode block below turns the ring off so
+   the two never double up. */
+${card} :is(.lE72Gc, .eFSEae > div:empty:first-child) {
+	box-shadow: inset 0 0 0 1px #${c.base03} !important;
+}
+
 /* AI Mode (the conversational page, udm=50 in the URL; regexp() must match the whole
    URL). On the human's screenshots the top bar and the left rail were two different
    surfaces (one purple raised, one neutral grey) and the corner box holding the Google
@@ -1018,6 +1040,12 @@ button.cEme7d :is(span, div) {
 	/* the left rail: the box holding the menu / settings / new-chat buttons (page colour) */
 	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, form, article, main, [role="main"])) {
 		background-color: #${c.base00} !important;
+	}
+
+	/* AI Mode's related-results card already has its own edge: no second ring (see the
+	   card rules above) */
+	${card} :is(.lE72Gc, .eFSEae > div:empty:first-child) {
+		box-shadow: none !important;
 	}
 }
 
