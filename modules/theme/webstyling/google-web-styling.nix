@@ -950,6 +950,60 @@ cite,
 	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, form, article, main, [role="main"])) {
 		background-color: #${c.base00} !important;
 	}
+
+	/* The related-results card to the right of an answer (Reddit / YouTube / site rows
+	   plus a "Show all" pill). The human pasted its DOM (2026-11-15): the container carries
+	   a stable data-xid, so the card is scoped by that; the rows inside only have hashed
+	   classes (.gpZmoc title, .hxIQcc snippet, .jdxGff source, .U0Yrcf row divider,
+	   .bPlg5e the fade above "Show all"), marked FRAGILE. The card is the raised surface
+	   (it came out the page colour); border-color only, so no second border appears if
+	   Google already draws one. Row titles are links, so they take the accent. */
+	[data-xid="aim-aside-initial-corroboration-container"],
+	[data-xid="aim-aside-initial-corroboration-container"] > div {
+		background-color: #${c.base01} !important;
+		border-color: #${c.base03} !important;
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] li > div {
+		background-color: transparent !important;
+		border-radius: ${radius};
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] li > div:hover {
+		background-color: ${hover} !important;
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] .gpZmoc,
+	[data-xid="aim-aside-initial-corroboration-container"] .gpZmoc * {
+		color: #${c.base0D} !important;
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] :is(.hxIQcc, .hxIQcc *, .jdxGff, .jdxGff *) {
+		color: ${muted} !important;
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] .U0Yrcf {
+		background-color: #${c.base03} !important;
+	}
+
+	/* the fade above "Show all" faded to the old grey */
+	[data-xid="aim-aside-initial-corroboration-container"] .bPlg5e {
+		background: linear-gradient(transparent, #${c.base01}) !important;
+	}
+
+	[data-xid="aim-aside-initial-corroboration-container"] img {
+		border-radius: ${radius};
+	}
+
+	/* the row menus ("About this result") and the answer's round action buttons (copy,
+	   share, thumbs, more) are one button kind: the button holds empty state-layer spans
+	   and a focus-ring div that carry no radius of their own, so a hover painted a square
+	   around a round button. The children take the button's radius. UNVERIFIED for the
+	   action row (its DOM was not pasted, only the card's, which has the same parts);
+	   FRAGILE: the :has structure. */
+	button:has(> span:empty):has(> div:empty) > :is(span, div) {
+		border-radius: inherit !important;
+	}
 }
 
 /* The same left rail on the AI Mode landing page ("Hi ..., what's on your mind?"), whose
