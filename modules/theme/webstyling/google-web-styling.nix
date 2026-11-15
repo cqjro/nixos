@@ -29,6 +29,10 @@
 			mono = config.stylix.fonts.monospace.name;
 			# one radius for every surface this file draws
 			radius = "8px";
+			# the related-results card beside an AI answer (AI Mode and the main results page
+			# share it): the data-xid is the stable handle, .IQTBxd the hashed class on the
+			# main results page, whose container has no data-xid we know of. FRAGILE.
+			card = ":is([data-xid=\"aim-aside-initial-corroboration-container\"], .IQTBxd)";
 		in ''
 :root {
 	color-scheme: dark !important;
@@ -925,6 +929,71 @@ cite,
 	}
 }
 
+/* The related-results card beside an AI answer (Reddit / YouTube / site rows plus a "Show
+   all" pill), on AI Mode and on the main results page (the AI Overview there). Probes and
+   pasted DOM from the human's Zen (2026-11-15): the card's fill is its own empty first
+   child (.lE72Gc, 24px radius, the literal grey that --xhUGwc holds at that element). The
+   container and its direct child have no radius, so painting them showed square corners
+   behind the rounded card: only the fill layer is painted. The rows only have hashed
+   classes (.gpZmoc title, .hxIQcc snippet, .jdxGff source, .U0Yrcf row divider, .bPlg5e
+   the fade above "Show all"). Row titles are links, so they take the accent. FRAGILE:
+   hashed names. UNVERIFIED on the main results page (the AI Mode card is the same
+   component, but its container there was not inspected). */
+${card} :is(.lE72Gc, .eFSEae > div:empty:first-child) {
+	background-color: #${c.base01} !important;
+}
+
+${card} li > div {
+	background-color: transparent !important;
+	border-radius: ${radius};
+}
+
+${card} li > div:hover {
+	background-color: ${hover} !important;
+}
+
+${card} .gpZmoc,
+${card} .gpZmoc * {
+	color: #${c.base0D} !important;
+}
+
+${card} :is(.hxIQcc, .hxIQcc *, .jdxGff, .jdxGff *) {
+	color: ${muted} !important;
+}
+
+${card} .U0Yrcf {
+	background-color: #${c.base03} !important;
+}
+
+/* the fade above "Show all" faded to the old grey */
+${card} .bPlg5e {
+	background: linear-gradient(transparent, #${c.base01}) !important;
+}
+
+${card} img {
+	border-radius: ${radius};
+}
+
+/* The round buttons under an AI answer (copy, share, good / bad response, more), on both
+   pages. Probe and pasted DOM: 36 by 36, fully rounded, filled with the literal grey that
+   --xhUGwc holds at the button (--xhUGwc itself must stay the page colour elsewhere, so
+   the fill is set directly). The buttons come in three shapes: copy and share hold a
+   progress-ring (.C12YAe, .Hz4U2, .CfiFM); good / bad response are button.cEme7d with one
+   span (.E5xycb); "More" is a div.wVj4w inside .YHsVn. Their inner state-layer boxes have
+   radius 0, which painted a square on hover, so they take the button's radius. The rail
+   buttons share .YHsVn but are not matched (no ring, not .cEme7d). FRAGILE: hashed class
+   names. UNVERIFIED on the hover itself. */
+button:has(:is(.C12YAe, .Hz4U2, .CfiFM)),
+button.cEme7d,
+.YHsVn > .wVj4w {
+	background-color: #${c.base01} !important;
+}
+
+button:has(:is(.C12YAe, .Hz4U2, .CfiFM)) :is(span, div),
+button.cEme7d :is(span, div) {
+	border-radius: inherit !important;
+}
+
 /* AI Mode (the conversational page, udm=50 in the URL; regexp() must match the whole
    URL). On the human's screenshots the top bar and the left rail were two different
    surfaces (one purple raised, one neutral grey) and the corner box holding the Google
@@ -949,69 +1018,6 @@ cite,
 	/* the left rail: the box holding the menu / settings / new-chat buttons (page colour) */
 	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, form, article, main, [role="main"])) {
 		background-color: #${c.base00} !important;
-	}
-
-	/* The related-results card to the right of an answer (Reddit / YouTube / site rows
-	   plus a "Show all" pill). The human pasted its DOM (2026-11-15): the container carries
-	   a stable data-xid, so the card is scoped by that; the rows inside only have hashed
-	   classes (.gpZmoc title, .hxIQcc snippet, .jdxGff source, .U0Yrcf row divider,
-	   .bPlg5e the fade above "Show all"), marked FRAGILE. Row titles are links, so they
-	   take the accent.
-
-	   The card's fill is its own empty first child, .lE72Gc (a console probe in the human's
-	   Zen, 2026-11-15: 370 by 346, 24px radius, the literal grey that --xhUGwc holds at
-	   that element). A first version painted the container and its direct child as well,
-	   which have no radius, and showed as square corners behind the rounded card: only the
-	   rounded fill layer is painted now. */
-	[data-xid="aim-aside-initial-corroboration-container"] :is(.lE72Gc, .eFSEae > div:empty:first-child) {
-		background-color: #${c.base01} !important;
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] li > div {
-		background-color: transparent !important;
-		border-radius: ${radius};
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] li > div:hover {
-		background-color: ${hover} !important;
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] .gpZmoc,
-	[data-xid="aim-aside-initial-corroboration-container"] .gpZmoc * {
-		color: #${c.base0D} !important;
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] :is(.hxIQcc, .hxIQcc *, .jdxGff, .jdxGff *) {
-		color: ${muted} !important;
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] .U0Yrcf {
-		background-color: #${c.base03} !important;
-	}
-
-	/* the fade above "Show all" faded to the old grey */
-	[data-xid="aim-aside-initial-corroboration-container"] .bPlg5e {
-		background: linear-gradient(transparent, #${c.base01}) !important;
-	}
-
-	[data-xid="aim-aside-initial-corroboration-container"] img {
-		border-radius: ${radius};
-	}
-
-	/* The round action buttons under an answer (copy, share, thumbs, more). Probe
-	   (2026-11-15): 36 by 36, fully rounded, filled with the literal grey that --xhUGwc
-	   holds at the button (--xhUGwc itself must stay the page colour elsewhere, so the
-	   fill is set directly), and holding state-layer spans / divs (.D2ixAc, .ZU3Xof,
-	   .C12YAe, .Hz4U2, .CfiFM) whose radius is 0: a hover painted a square around the
-	   round button. The raised surface for the fill; the inner layers take the button's
-	   radius. (The card's row menus and the "Copy / Edit" chips are another button kind,
-	   already round.) FRAGILE: hashed class names. UNVERIFIED on the hover itself. */
-	button:has(:is(.C12YAe, .Hz4U2, .CfiFM)) {
-		background-color: #${c.base01} !important;
-	}
-
-	button:has(:is(.C12YAe, .Hz4U2, .CfiFM)) :is(span, div) {
-		border-radius: inherit !important;
 	}
 }
 
