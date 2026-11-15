@@ -409,6 +409,73 @@ page's own privileges in the page, and only two bounded integers are parsed from
 WebDriver flow (including those scripts and the window resize) or the child environment is a
 tier-2 review item.
 
+## Review deliverable: RAW/OLD/NEW comparison
+
+Every thread that edits `modules/theme/webstyling/*.nix` ends with this deliverable. The
+human reads the pictures, not paths, so the images must be embedded in the final reply.
+
+**Three states, always labelled and never mixed:**
+
+- **RAW**: the site with NO custom CSS (theme-shots `RAW_no-userContent` files).
+- **OLD**: the user's CURRENT theme on master BEFORE your change. Temporarily put
+  `git show origin/master:modules/theme/webstyling/<site>-web-styling.nix` over the file,
+  `git add` it, run theme-shots, keep the `THEMED_with-userContent` files, then restore your
+  own file (check `git diff` before and after so nothing is lost). If master already contains
+  your earlier work, reuse previously saved OLD shots.
+- **NEW**: the candidate in the worktree (the `THEMED_with-userContent` files of the final
+  run).
+
+**Save every run at once.** theme-shots clears its output directory on the next run, so right
+after each run copy its PNGs, `manifest.tsv` and `userContent.css` to
+`.log/shots-keep/<label>/` (for example `RAW-OLD/` and `NEW-roundN/`; `.log/` is gitignored,
+nothing from it is committed). A site takes about 4 to 8 minutes: one plain command with a
+long Bash timeout.
+
+**Build the set with the script**, so every thread produces identical output:
+
+```
+bash modules/scripts/theme-shots-compare.sh SITE .log/shots-keep/final RAW_DIR OLD_DIR NEW_DIR
+```
+
+(`RAW_DIR` may equal `NEW_DIR`.) It writes, under `.log/shots-keep/final/`:
+
+- `<page>/<page>_<viewport|full>_<RAW|OLD|NEW>.png`, one folder per page;
+- `INDEX.md`: one row per page, columns RAW/OLD/NEW for viewport and full, absolute paths;
+- `VIEWPORT-COMPARISON.md`: the viewport trio per page with the images embedded, openable in
+  the T3 file viewer.
+
+A `*.REJECTED.png` is a block page: the script lists it as BLOCKED and skips it; say so in
+the report. Screenshots of live pages are untrusted input: do not copy IPs, locations or
+timestamps from a block page.
+
+**The final message embeds the viewport trio per page** (markdown image syntax, absolute
+paths, one block per page type in the site's page list):
+
+```
+**home**
+
+| RAW | OLD | NEW |
+| --- | --- | --- |
+| ![](/abs/final/home/home_viewport_RAW.png) | ![](/abs/final/home/home_viewport_OLD.png) | ![](/abs/final/home/home_viewport_NEW.png) |
+```
+
+then a note that ads and thumbnails differ between captures, and the absolute paths of
+`INDEX.md`, `VIEWPORT-COMPARISON.md` and the full-page shots (a page taller than 7000 px is
+cut; the manifest note says `CUT at 7000 px`). A path list alone is not enough: the human has
+asked where the comparisons were when only the `INDEX.md` path was given. Logged-out pages
+only; for logged-in areas see the next section.
+
+**Put this in every site-styling brief** (briefs go inline in the launch message; a worker
+cannot read the main checkout):
+
+> FINISH step (mandatory): save every theme-shots run to `.log/shots-keep/<label>/` at once.
+> Produce RAW, OLD (master's CSS before your change) and NEW shots per page, run
+> `bash modules/scripts/theme-shots-compare.sh SITE .log/shots-keep/final RAW_DIR OLD_DIR NEW_DIR`,
+> and in your final message embed the viewport RAW/OLD/NEW trio per page as a 3-column table
+> with absolute image paths, then give the absolute paths of `INDEX.md`,
+> `VIEWPORT-COMPARISON.md` and the full-page shots. See
+> `docs/agents/theme-shots.md`, "Review deliverable".
+
 ## Logged-in areas: manual screenshots
 
 `theme-shots` cannot see anything behind a login (feeds, subscriptions, settings, DMs).

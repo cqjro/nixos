@@ -460,6 +460,10 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
   `modules/theme/theme-shots.nix`). Details, limits and the trust assumptions:
   [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) and
   `docs/agents/security.md`.
+- `modules/scripts/theme-shots-compare.sh` — builds the RAW/OLD/NEW comparison set
+  (per-page PNGs, `INDEX.md`, `VIEWPORT-COMPARISON.md`) that every site-styling thread
+  hands over; run by hand, not packaged. See "Review deliverable" in
+  [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md).
 - `modules/scripts/abt-browser-shim.js` — the Actual Budget Tweaks browser shim
   (upstream shim + the Stylix theme seed); stamped with the palette at build
   time, see [Actual Budget theming](#actual-budget-theming).
