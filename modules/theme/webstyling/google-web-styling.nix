@@ -994,6 +994,21 @@ button.cEme7d :is(span, div) {
 	border-radius: inherit !important;
 }
 
+/* The fill above is !important, which also overrode Google's own hover fill on the thumbs
+   and on More (their hover is a fill change on the element itself; copy and share hover
+   through their inner layers and were unaffected). So the hover, the keyboard focus and
+   the pressed state (a chosen thumb) are set here: one quiet step up, and the accent tint. */
+button.cEme7d:is(:hover, :focus-visible),
+.vqxIde:hover > .YHsVn > .wVj4w,
+.vqxIde:focus-visible > .YHsVn > .wVj4w,
+.YHsVn:hover > .wVj4w {
+	background-color: ${hover} !important;
+}
+
+button.cEme7d[aria-pressed="true"] {
+	background-color: ${active} !important;
+}
+
 /* The "More" (three dots) button is not a button element: div.vqxIde[role="button"] >
    div.YHsVn > div.wVj4w, and the two wrappers have radius 0, so the hover painted a square
    around the round dots. All three are round now (explicit, not a blanket descendant rule:
