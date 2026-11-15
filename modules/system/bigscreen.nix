@@ -114,9 +114,9 @@
 					sleep 12
 					{
 						echo "--- kwin_wayland environment"
-						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -ox kwin_wayland)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
+						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -of kwin_wayland)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
 						echo "--- plasmashell environment"
-						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -ox plasmashell)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
+						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -of plasmashell)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
 					} 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
 				''}
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
@@ -134,15 +134,6 @@
 			])).overrideAttrs (_: {
 				passthru.providedSessions = [ "plasma-bigscreen" ];
 			});
-			# The greeter also scans the system profile's wayland-sessions, and
-			# upstream ships a session there with the same name as ours that skips
-			# the Qt overrides (it wins the name clash and shows a white screen).
-			# Install the package without that file so only bigscreenSession is listed.
-			bigscreenPackage = pkgs.symlinkJoin {
-				name = "plasma-bigscreen-without-session";
-				paths = [ kde.plasma-bigscreen ];
-				postBuild = "rm -rf $out/share/wayland-sessions";
-			};
 			bigscreenWindowedDesktop = pkgs.makeDesktopItem {
 				name = "bigscreen-windowed";
 				desktopName = "Plasma Bigscreen (windowed test)";
@@ -156,6 +147,15 @@
 			# Plasma 6 base (KWin, plasma-workspace, KCMs, portals).
 			services.desktopManager.plasma6.enable = true;
 			services.displayManager.sessionPackages = [ bigscreenSession ];
+
+			# The greeter also scans the system profile's wayland-sessions, and
+			# upstream ships a session there with the same name as ours that skips
+			# the Qt overrides (it wins the name clash). Drop only that file from the
+			# profile; the package itself must stay untouched, because Plasma rejects
+			# plasmoid files that resolve outside their package directory.
+			environment.extraSetup = ''
+				rm -f $out/share/wayland-sessions/plasma-bigscreen-wayland.desktop
+			'';
 
 			# Keep the Plasma base small: no desktop apps Hyprland already covers.
 			environment.plasma6.excludePackages = with kde; [
@@ -191,7 +191,7 @@
 			programs.kdeconnect.enable = true;
 
 			environment.systemPackages = [
-				bigscreenPackage
+				kde.plasma-bigscreen
 				kde.plasma-nano # shell package Bigscreen builds on
 				bigscreenWindowed
 				bigscreenWindowedDesktop
