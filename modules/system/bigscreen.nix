@@ -132,11 +132,13 @@
 			services.desktopManager.plasma6.enable = true;
 			services.displayManager.sessionPackages = [ bigscreenSession ];
 
-			# The greeter also scans the system profile's wayland-sessions, and
-			# upstream ships a session there with the same name as ours that skips
-			# the Qt overrides (it wins the name clash). Drop only that file from the
-			# profile; the package itself must stay untouched, because Plasma rejects
-			# plasmoid files that resolve outside their package directory.
+			# Deliberate host choice, not an upstream bug: upstream's session is
+			# right for stock KDE, but this host runs Hyprland's Kvantum theming and
+			# needs the session script above instead. The greeter also scans the
+			# system profile's wayland-sessions, and upstream's file has the same
+			# name as ours and wins the clash, so drop only that file from the
+			# profile. The package itself must stay untouched, because Plasma
+			# rejects plasmoid files that resolve outside their package directory.
 			environment.extraSetup = ''
 				rm -f $out/share/wayland-sessions/plasma-bigscreen-wayland.desktop
 			'';
