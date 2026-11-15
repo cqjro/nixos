@@ -95,13 +95,25 @@
 			# change them in the manager too (it ends with the login).
 			bigscreenSessionScript = pkgs.writeShellScript "plasma-bigscreen-session" ''
 				${bigscreenEnv}
-				${pkgs.systemd}/bin/systemctl --user unset-environment QT_STYLE_OVERRIDE || true
+				export QT_STYLE_OVERRIDE=Breeze
 				${pkgs.systemd}/bin/systemctl --user set-environment \
 					QT_QPA_PLATFORMTHEME=kde \
+					QT_STYLE_OVERRIDE=Breeze \
 					QT_QUICK_CONTROLS_STYLE=org.kde.breeze \
 					QT_QUICK_CONTROLS_MOBILE=true \
 					XDG_CURRENT_DESKTOP=KDE \
 					XDG_SESSION_DESKTOP=KDE || true
+				# Diagnostics for the journal (journalctl -b -1 -t bigscreen-env): the
+				# manager's environment and the Qt variables kwin really started with.
+				(
+					sleep 15
+					{
+						echo "--- manager environment"
+						${pkgs.systemd}/bin/systemctl --user show-environment | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
+						echo "--- kwin_wayland environment"
+						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -ox kwin_wayland)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
+					} 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
+				) &
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
 			'';
 			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" ''
