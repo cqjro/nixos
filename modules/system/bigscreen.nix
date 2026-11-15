@@ -121,14 +121,17 @@
 				''}
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
 			'';
-			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" ''
-				[Desktop Entry]
-				Name=Plasma Bigscreen
-				Comment=Plasma Bigscreen by KDE
-				Exec=${kde.plasma-workspace}/libexec/plasma-dbus-run-session-if-needed ${bigscreenSessionScript}
-				DesktopNames=KDE
-				Type=Application
-			'').overrideAttrs (_: {
+			# Joined from a list so no line is indented: the greeter ignores a
+			# session file whose "[Desktop Entry]" line has leading whitespace.
+			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" (lib.concatStringsSep "\n" [
+				"[Desktop Entry]"
+				"Name=Plasma Bigscreen"
+				"Comment=Plasma Bigscreen by KDE"
+				"Exec=${kde.plasma-workspace}/libexec/plasma-dbus-run-session-if-needed ${bigscreenSessionScript}"
+				"DesktopNames=KDE"
+				"Type=Application"
+				""
+			])).overrideAttrs (_: {
 				passthru.providedSessions = [ "plasma-bigscreen" ];
 			});
 			# The greeter also scans the system profile's wayland-sessions, and
