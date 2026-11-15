@@ -278,7 +278,11 @@ matches the rest of the config out of the box.
   VacuumTube, Steam Big Picture, RetroArch, the Aura browser (built from a
   pinned upstream commit) and KDE Connect (opens TCP/UDP 1714-1764).
   `bigscreen-windowed` runs the Bigscreen shell in a window for testing. Aura
-  and RetroArch are on trial.
+  and RetroArch are on trial. Sessions are chosen only in the greeter: there is
+  no tty autostart of Hyprland (from a bare tty run `start-hyprland`), and
+  Noctalia and the nixdatifier tray app are skipped in KDE sessions. Enabling
+  Plasma also adds a plain "Plasma (Wayland)" greeter entry, which is not a
+  supported session on this host (it can show a black screen).
 - **Xbox Game Pass** — [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus),
   an Xbox-style launcher for Microsoft Store / PC Game Pass titles, installed on
   `GOD-KILLER` via `modules/home-manager/apps/xodus-nexus.nix`. The launcher

@@ -320,6 +320,9 @@ Read the matching entry before touching that area.
 - **Waydroid** — userdata is `~/.local/share/waydroid`; black screen on
   GOD-KILLER while the display is on NVIDIA; software rendering on NVIDIA is
   not viable.
+- **Greeter sessions (Bigscreen)** — name clashes with the system profile,
+  indented `.desktop` files are ignored, `test` needs a greetd restart, and the
+  systemd user manager holds the Qt env.
 - **Xodus Nexus** — pinned AppImage; backend self-installs; needs the `keyring`
   fragments.
 - **Secrets and firmware are gitignored** and must never be committed; the T2

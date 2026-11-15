@@ -94,9 +94,6 @@
 			# QT_QPA_PLATFORMTHEME=qt5ct). A shell `unset` cannot clear those, so
 			# change them in the manager too (it ends with the login).
 			bigscreenSessionScript = pkgs.writeShellScript "plasma-bigscreen-session" ''
-				# Temporary diagnostics (journalctl -t bigscreen-env): that this script
-				# ran, and what the user manager and kwin_wayland really hold.
-				echo "session script $0 started; env QT_STYLE_OVERRIDE=$QT_STYLE_OVERRIDE QT_QPA_PLATFORMTHEME=$QT_QPA_PLATFORMTHEME" | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
 				${bigscreenEnv}
 				export QT_STYLE_OVERRIDE=Breeze
 				${pkgs.systemd}/bin/systemctl --user set-environment \
@@ -105,20 +102,7 @@
 					QT_QUICK_CONTROLS_STYLE=org.kde.breeze \
 					QT_QUICK_CONTROLS_MOBILE=true \
 					XDG_CURRENT_DESKTOP=KDE \
-					XDG_SESSION_DESKTOP=KDE 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
-				{
-					echo "--- manager environment after set-environment"
-					${pkgs.systemd}/bin/systemctl --user show-environment | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
-				} 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
-				${pkgs.util-linux}/bin/setsid -f ${pkgs.writeShellScript "bigscreen-kwin-env" ''
-					sleep 12
-					{
-						echo "--- kwin_wayland environment"
-						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -of kwin_wayland)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
-						echo "--- plasmashell environment"
-						${pkgs.coreutils}/bin/tr '\0' '\n' < /proc/$(${pkgs.procps}/bin/pgrep -of plasmashell)/environ | ${pkgs.gnugrep}/bin/grep -E '^(QT_|XDG_|QML|PLASMA)'
-					} 2>&1 | ${pkgs.systemd}/bin/systemd-cat -t bigscreen-env
-				''}
+					XDG_SESSION_DESKTOP=KDE || true
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
 			'';
 			# Joined from a list so no line is indented: the greeter ignores a
