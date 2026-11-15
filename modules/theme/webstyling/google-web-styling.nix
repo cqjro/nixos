@@ -406,11 +406,18 @@ g-menu,
 /* The search box and its suggestion dropdown are one rounded container. Google paints
    the "Trending searches" header row, the footer zone with the search buttons and the
    AI Mode pill in neutral blue-greys of their own (two greys measured on
-   the human's screenshots). Every box inside takes the container surface instead.
-   :where keeps this rule at zero specificity, so any named surface rule (the pill,
-   the listbox, hover rows) still wins. FRAGILE: assumes the dropdown lives inside the
-   role="search" form; if it does not, nothing matches. */
-:where([role="search"]) :where(div, span, ul, li, section) {
+   the human's screenshots). Boxes inside the closed search box are made transparent
+   so the pill's own surface shows. While the suggestion list is open (the input is a
+   combobox with aria-expanded="true") the rule is off: there the extra panels
+   ("People also ask", "People also search for") have no surface behind them, so
+   clearing their fill let the page content show through them (the human's Zen,
+   2026-11-14), and they keep Google's own fill, recoloured by the variable overrides.
+   Painting the role="search" form itself was tried and rejected: it is a full-width
+   wrapper (theme-shots on the home page showed a slab behind the pill).
+   :where keeps the descendant part at zero specificity, so any named surface rule (the
+   pill, the listbox, hover rows) still wins. FRAGILE: assumes the dropdown lives inside
+   the role="search" form; if it does not, nothing matches. */
+:where([role="search"]:not(:has([aria-expanded="true"]))) :where(div, span, ul, li, section) {
 	background-color: transparent !important;
 }
 
@@ -932,16 +939,17 @@ cite,
 }
 
 /* AI Mode (the conversational page, udm=50 in the URL; regexp() must match the whole
-   URL). On the human's screenshot the top bar (34,36,42) and the left rail (39,41,48)
-   were two different neutral greys against the purple page. Both become the one raised
-   surface. UNVERIFIED and FRAGILE: only the human's Zen shows this page, and the boxes
-   are found structurally (the smallest box holding the selected tab and the account /
-   apps buttons; the smallest box holding the rail buttons but no tab and no composer),
-   because the class names are hashed. A wrong guess matches nothing, or at worst a
-   bar-sized box on this one page. */
+   URL). On the human's screenshots the top bar and the left rail were two different
+   surfaces (one purple raised, one neutral grey) and the corner box holding the Google
+   logo a third (the page colour). All three now take the page colour, so the chrome is
+   flat and one surface. (A raised bar would also need the logo corner box, which has no
+   stable selector.) The boxes are found structurally (the box holding the selected tab
+   and the account / apps buttons), because the class names are hashed. UNVERIFIED and
+   FRAGILE: only the human's Zen shows this page. Painting the page colour on a box that
+   is already close to it makes a wrong guess nearly harmless. */
 @-moz-document regexp("https://www\\.google\\.com/search.*udm=50.*") {
 	*:has([aria-current="page"]):has(:is(a[aria-label*="Google apps" i], a[aria-label*="Google Account" i], a[href*="SignOutOptions"])):not(:has(textarea, article, main, [role="main"])) {
-		background-color: #${c.base01} !important;
+		background-color: #${c.base00} !important;
 	}
 
 	/* the rail's expanded drawer (hamburger): a navigation box inside the main region
@@ -950,15 +958,22 @@ cite,
 	[role="main"] [role="navigation"] {
 		background-color: #${c.base01} !important;
 	}
+
+	/* the left rail: the box holding the menu / settings / new-chat buttons (page colour) */
+	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, form, article, main, [role="main"])) {
+		background-color: #${c.base00} !important;
+	}
 }
 
-/* The left rail also shows on the AI Mode landing page ("Hi ..., what's on your mind?"),
-   whose URL has no udm=50: it kept the neutral grey there (measured on a screenshot).
-   So this rule is scoped to www.google.com and instead requires BOTH a "New chat" and a
-   "Settings" or "Menu" button, which only the rail holds. FRAGILE: aria-labels. */
-@-moz-document url-prefix("https://www.google.com/") {
-	*:has([aria-label*="New chat" i]):has(:is([aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, article, main, [role="main"])) {
-		background-color: #${c.base01} !important;
+/* The same left rail on the AI Mode landing page ("Hi ..., what's on your mind?"), whose
+   URL is the bare home page with no udm=50. A first version needed both a "New chat" and
+   a "Settings" / "Menu" button in one box and matched nothing (the gear is not in the
+   same box as the other two); any one of them is enough. It is scoped to the home URL
+   and the AI Mode URL only: on ordinary results pages "Menu" labels sit inside cards,
+   and painting those boxes the page colour would hide the cards. FRAGILE: aria-labels. */
+@-moz-document regexp("https://www\\.google\\.com/(\\?.*)?") {
+	*:has(:is([aria-label*="New chat" i], [aria-label="Settings" i], [aria-label*="Menu" i])):not(:has([aria-current="page"], textarea, form, article, main, [role="main"])) {
+		background-color: #${c.base00} !important;
 	}
 }
 
