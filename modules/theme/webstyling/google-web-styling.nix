@@ -46,11 +46,7 @@
 	--COEmY: #${c.base05} !important;
 	--YLNNHc: #${c.base05} !important;
 	--JKqx2: #${c.base0D} !important;
-	--gS5jXb: #${c.base01} !important;
-	--mXZkqc: #${c.base01} !important;
 	--EpFNW: #${c.base01} !important;
-	--XKMDxc: #${c.base01} !important;
-	--TSWZIb: #${c.base01} !important;
 	--Nsm0ce: #${c.base0D} !important;
 
 	--uv-styles-color-surface: #${c.base00} !important;
@@ -113,6 +109,25 @@
 	--gm3-sys-color-secondary-container: ${active} !important;
 	--gm3-sys-color-on-surface: #${c.base05} !important;
 	--gm3-sys-color-on-surface-variant: ${muted} !important;
+
+	/* Google's hashed surface variables. A console probe in the human's Zen (AI Mode,
+	   2026-11-14) found these declared with literal neutral blue-greys, which are the
+	   greys on the composer box, the upgrade card, the result-panel cards, the "Show all"
+	   pill and the round action buttons under an answer. Grouped by the grey each holds:
+	   the darkest and the lightest become the raised surface (base01), the middle grey
+	   one step above it (hover) so pills stay visible on cards.
+	   FRAGILE: the names are generated and can change with any Google deploy; if they
+	   do these lines silently stop matching and the greys come back (re-run the probe).
+	   --xhUGwc is deliberately left to the :root block above: it is the page background. */
+	--CwQ7J: #${c.base01} !important;
+	--PBxOKe: #${c.base01} !important;
+	--XKMDxc: ${hover} !important;
+	--DEeStf: ${hover} !important;
+	--ghost-card-background: ${hover} !important;
+	--aYn2S: #${c.base01} !important;
+	--mXZkqc: #${c.base01} !important;
+	--gS5jXb: #${c.base01} !important;
+	--TSWZIb: #${c.base01} !important;
 }
 
 html,
@@ -404,17 +419,25 @@ g-menu,
 	background-color: ${hover} !important;
 }
 
-/* The account avatar (top right) showed as a flat white disc on every page. None of
-   the rules above targets images or avatars, and the nearest white in this file is the
-   --gm3-sys-color-on-primary token (base07); the cause is NOT established. Defensive:
-   a surface-coloured circle behind the avatar, no fill on boxes inside it, the photo
-   (img) on a transparent background so it shows over the circle. If the photo is
-   blocked or missing the circle stays surface-coloured, never white.
+/* The account avatar (top right) showed as a flat white disc on every page. A console
+   probe in the human's Zen found the link holds the loaded profile photo (an img from
+   lh3.googleusercontent.com, 32 by 32, transparent background) followed by an svg
+   circle overlay, and the only pure white this file sets is the
+   --gm3-sys-color-on-primary token (base07). The most likely cause is that overlay
+   circle filling with that token on top of the photo, so the overlay is hidden and the
+   photo shows. If the white were the photo itself nothing here changes it (re-probe).
+   A surface-coloured circle sits behind, boxes inside have no fill, and the photo has
+   a transparent background.
    FRAGILE: matches Google's aria-label / sign-out link, not class names. */
 a[aria-label*="Google Account" i],
 a[href*="SignOutOptions"] {
 	background-color: #${c.base01} !important;
 	border-radius: 50% !important;
+}
+
+a[aria-label*="Google Account" i] svg,
+a[href*="SignOutOptions"] svg {
+	display: none !important;
 }
 
 a[aria-label*="Google Account" i] :is(div, span),
@@ -921,6 +944,12 @@ cite,
 		background-color: #${c.base01} !important;
 	}
 
+	/* the rail's expanded drawer (hamburger): a navigation box inside the main region
+	   painted a neutral grey of its own (probe: 261 by 602, off-screen until opened).
+	   FRAGILE: roles only; unverified while open. */
+	[role="main"] [role="navigation"] {
+		background-color: #${c.base01} !important;
+	}
 }
 
 /* The left rail also shows on the AI Mode landing page ("Hi ..., what's on your mind?"),
