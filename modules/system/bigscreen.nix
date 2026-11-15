@@ -131,6 +131,15 @@
 			'').overrideAttrs (_: {
 				passthru.providedSessions = [ "plasma-bigscreen" ];
 			});
+			# The greeter also scans the system profile's wayland-sessions, and
+			# upstream ships a session there with the same name as ours that skips
+			# the Qt overrides (it wins the name clash and shows a white screen).
+			# Install the package without that file so only bigscreenSession is listed.
+			bigscreenPackage = pkgs.symlinkJoin {
+				name = "plasma-bigscreen-without-session";
+				paths = [ kde.plasma-bigscreen ];
+				postBuild = "rm -rf $out/share/wayland-sessions";
+			};
 			bigscreenWindowedDesktop = pkgs.makeDesktopItem {
 				name = "bigscreen-windowed";
 				desktopName = "Plasma Bigscreen (windowed test)";
@@ -179,7 +188,7 @@
 			programs.kdeconnect.enable = true;
 
 			environment.systemPackages = [
-				kde.plasma-bigscreen
+				bigscreenPackage
 				kde.plasma-nano # shell package Bigscreen builds on
 				bigscreenWindowed
 				bigscreenWindowedDesktop
