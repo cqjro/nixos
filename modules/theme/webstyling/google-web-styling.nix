@@ -438,33 +438,8 @@ g-menu,
 	background-color: ${hover} !important;
 }
 
-/* The account avatar (top right) showed as a flat white disc on every page. A console
-   probe in the human's Zen found the link holds the loaded profile photo (an img from
-   lh3.googleusercontent.com, 32 by 32, transparent background) followed by an svg
-   circle overlay, and the only pure white this file sets is the
-   --gm3-sys-color-on-primary token (base07). The most likely cause is that overlay
-   circle filling with that token on top of the photo, so the overlay is hidden and the
-   photo shows. If the white were the photo itself nothing here changes it (re-probe).
-   A surface-coloured circle sits behind, boxes inside have no fill, and the photo has
-   a transparent background.
-   FRAGILE: matches Google's aria-label / sign-out link, not class names. */
-a[aria-label*="Google Account" i],
-a[href*="SignOutOptions"] {
-	background-color: #${c.base01} !important;
-	border-radius: 50% !important;
-}
-
-a[aria-label*="Google Account" i] svg,
-a[href*="SignOutOptions"] svg {
-	display: none !important;
-}
-
-a[aria-label*="Google Account" i] :is(div, span),
-a[href*="SignOutOptions"] :is(div, span),
-a[aria-label*="Google Account" i] img,
-a[href*="SignOutOptions"] img {
-	background-color: transparent !important;
-}
+/* (The white account avatar on the human's screenshots is their real profile photo, not
+   a styling fault: no rule here touches it.) */
 
 /* Footer: "Settings" is a button-role element beside accent <a> links and kept the
    plain text colour. Matched as a non-link sibling of the policy links, and by the
