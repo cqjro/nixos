@@ -3,6 +3,36 @@
 Hard-won traps, indexed from [AGENTS.md](../../AGENTS.md#gotchas). Add new ones here
 and a one-line pointer in the AGENTS.md index.
 
+- **Greeter sessions (Plasma Bigscreen)** — fixed 2026-11-15 after a long chase;
+  all of these are easy to hit again:
+  - The greeter (noctalia-greeter) reads sessions from greetd's `XDG_DATA_DIRS`
+    (`sessionData.desktops`) **and** the system profile's
+    `share/wayland-sessions`; on a name clash the profile's file wins. Upstream's
+    `plasma-bigscreen-wayland.desktop` is also named "Plasma Bigscreen", so it
+    hid ours; `environment.extraSetup` in `modules/system/bigscreen.nix` removes
+    it. `noctalia-greeter sessions` (with `XDG_DATA_DIRS` set) lists what it sees.
+  - It silently ignores a `.desktop` file whose `[Desktop Entry]` line has
+    leading whitespace (an indented Nix `''` string); build the file from a list
+    joined with newlines.
+  - greetd bakes the session directory into its config at boot, and
+    `rebuild.sh test` does not restart it: after a `test`, run
+    `sudo systemctl restart greetd` (logs you out) or the greeter keeps the old
+    session list. A reboot would undo the `test`.
+  - kwin and plasmashell are systemd user units, so they take their environment
+    from the user manager, which already holds Home Manager's `environment.d`
+    Qt values (`QT_STYLE_OVERRIDE=kvantum`, `QT_QPA_PLATFORMTHEME=qt5ct`); a
+    shell `unset` in the session script cannot clear them, so the script uses
+    `systemctl --user set-environment`. Without it the shell fails with
+    `module "kvantum" is not installed` and shows a white screen.
+  - Do not symlinkJoin or otherwise copy the `plasma-bigscreen` package: Plasma
+    rejects plasmoid files that resolve outside their package directory ("Path
+    traversal attempt detected", "package org.kde.bigscreen.homescreen does not
+    exist").
+  - A tty1 `exec start-hyprland` in the zsh profile hijacks every greeter
+    session (greetd runs them through the login shell with `DISPLAY` unset);
+    keep it out. The plain "Plasma (Wayland)" session that `plasma6.enable`
+    adds comes from `plasma-workspace.sessions` and cannot be removed cleanly.
+
 - **Waydroid Android userdata is `~/.local/share/waydroid`**, not
   `/var/lib/waydroid/userdata.img` (`waydroid.host_data_path`). Replacing the
   images or running `waydroid init -f` does not reset it. Stale data from an

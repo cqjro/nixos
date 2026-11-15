@@ -118,6 +118,8 @@
 				Description = "Nixdatifier tray app";
 				PartOf = [ "graphical-session.target" ];
 				After = [ "graphical-session.target" ];
+				# Hyprland tray app: skip it in KDE (Plasma / Bigscreen) sessions.
+				ConditionEnvironment = "!XDG_CURRENT_DESKTOP=KDE";
 			};
 			Service = {
 				ExecStart = "${config.programs.nixdatifier.package}/bin/nixdatifier --background";

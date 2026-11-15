@@ -72,6 +72,10 @@
 				unset QT_STYLE_OVERRIDE
 				export QT_QUICK_CONTROLS_STYLE=org.kde.breeze
 				export QT_QUICK_CONTROLS_MOBILE=true
+				# home-manager sets XDG_SESSION_DESKTOP=Hyprland for every
+				# login; the Bigscreen shell must identify as KDE.
+				export XDG_CURRENT_DESKTOP=KDE
+				export XDG_SESSION_DESKTOP=KDE
 			'';
 
 			# Bigscreen in a window, for testing from Hyprland without logging
@@ -79,24 +83,39 @@
 			# D-Bus session, so it does not touch the running desktop.
 			bigscreenWindowed = pkgs.writeShellScriptBin "bigscreen-windowed" ''
 				${bigscreenEnv}
-				export XDG_CURRENT_DESKTOP=KDE
 				exec dbus-run-session kwin_wayland --width 1920 --height 1080 "plasmashell -p org.kde.plasma.bigscreen"
 			'';
 
 			# The session the greeter starts. Upstream's own session script with
 			# the Qt overrides from bigscreenEnv applied after its environment.
+			# kwin and plasmashell are systemd user units, so they get their
+			# environment from the user manager, which already holds Home
+			# Manager's environment.d values (QT_STYLE_OVERRIDE=kvantum,
+			# QT_QPA_PLATFORMTHEME=qt5ct). A shell `unset` cannot clear those, so
+			# change them in the manager too (it ends with the login).
 			bigscreenSessionScript = pkgs.writeShellScript "plasma-bigscreen-session" ''
 				${bigscreenEnv}
+				export QT_STYLE_OVERRIDE=Breeze
+				${pkgs.systemd}/bin/systemctl --user set-environment \
+					QT_QPA_PLATFORMTHEME=kde \
+					QT_STYLE_OVERRIDE=Breeze \
+					QT_QUICK_CONTROLS_STYLE=org.kde.breeze \
+					QT_QUICK_CONTROLS_MOBILE=true \
+					XDG_CURRENT_DESKTOP=KDE \
+					XDG_SESSION_DESKTOP=KDE || true
 				exec startplasma-wayland --xwayland --libinput --exit-with-session=${kde.plasma-workspace}/libexec/startplasma-waylandsession
 			'';
-			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" ''
-				[Desktop Entry]
-				Name=Plasma Bigscreen
-				Comment=Plasma Bigscreen by KDE
-				Exec=${kde.plasma-workspace}/libexec/plasma-dbus-run-session-if-needed ${bigscreenSessionScript}
-				DesktopNames=KDE
-				Type=Application
-			'').overrideAttrs (_: {
+			# Joined from a list so no line is indented: the greeter ignores a
+			# session file whose "[Desktop Entry]" line has leading whitespace.
+			bigscreenSession = (pkgs.writeTextDir "share/wayland-sessions/plasma-bigscreen.desktop" (lib.concatStringsSep "\n" [
+				"[Desktop Entry]"
+				"Name=Plasma Bigscreen"
+				"Comment=Plasma Bigscreen by KDE"
+				"Exec=${kde.plasma-workspace}/libexec/plasma-dbus-run-session-if-needed ${bigscreenSessionScript}"
+				"DesktopNames=KDE"
+				"Type=Application"
+				""
+			])).overrideAttrs (_: {
 				passthru.providedSessions = [ "plasma-bigscreen" ];
 			});
 			bigscreenWindowedDesktop = pkgs.makeDesktopItem {
@@ -112,6 +131,17 @@
 			# Plasma 6 base (KWin, plasma-workspace, KCMs, portals).
 			services.desktopManager.plasma6.enable = true;
 			services.displayManager.sessionPackages = [ bigscreenSession ];
+
+			# Deliberate host choice, not an upstream bug: upstream's session is
+			# right for stock KDE, but this host runs Hyprland's Kvantum theming and
+			# needs the session script above instead. The greeter also scans the
+			# system profile's wayland-sessions, and upstream's file has the same
+			# name as ours and wins the clash, so drop only that file from the
+			# profile. The package itself must stay untouched, because Plasma
+			# rejects plasmoid files that resolve outside their package directory.
+			environment.extraSetup = ''
+				rm -f $out/share/wayland-sessions/plasma-bigscreen-wayland.desktop
+			'';
 
 			# Keep the Plasma base small: no desktop apps Hyprland already covers.
 			environment.plasma6.excludePackages = with kde; [

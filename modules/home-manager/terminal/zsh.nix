@@ -30,11 +30,12 @@
 				xremap-binds = "bash ${../../scripts/keybind-cheatsheet.sh} ${../keyboard/xremap.nix} ${../../scripts/parse_xremap.py}";
 			};
 
-			profileExtra = ''
-				if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
-  					exec start-hyprland
-				fi
-			'';
+			# No tty1 autostart of Hyprland here: sessions are chosen in the
+			# noctalia greeter. greetd runs every session through this login
+			# shell on tty1 with DISPLAY unset, so the old
+			# `exec start-hyprland` check turned every other session (Plasma
+			# Bigscreen, Plasma) into Hyprland. From a bare tty, run
+			# `start-hyprland` by hand.
 		};
 	};
 }
