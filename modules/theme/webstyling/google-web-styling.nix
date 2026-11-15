@@ -955,13 +955,16 @@ cite,
 	   plus a "Show all" pill). The human pasted its DOM (2026-11-15): the container carries
 	   a stable data-xid, so the card is scoped by that; the rows inside only have hashed
 	   classes (.gpZmoc title, .hxIQcc snippet, .jdxGff source, .U0Yrcf row divider,
-	   .bPlg5e the fade above "Show all"), marked FRAGILE. The card is the raised surface
-	   (it came out the page colour); border-color only, so no second border appears if
-	   Google already draws one. Row titles are links, so they take the accent. */
-	[data-xid="aim-aside-initial-corroboration-container"],
-	[data-xid="aim-aside-initial-corroboration-container"] > div {
+	   .bPlg5e the fade above "Show all"), marked FRAGILE. Row titles are links, so they
+	   take the accent.
+
+	   The card's fill is its own empty first child, .lE72Gc (a console probe in the human's
+	   Zen, 2026-11-15: 370 by 346, 24px radius, the literal grey that --xhUGwc holds at
+	   that element). A first version painted the container and its direct child as well,
+	   which have no radius, and showed as square corners behind the rounded card: only the
+	   rounded fill layer is painted now. */
+	[data-xid="aim-aside-initial-corroboration-container"] :is(.lE72Gc, .eFSEae > div:empty:first-child) {
 		background-color: #${c.base01} !important;
-		border-color: #${c.base03} !important;
 	}
 
 	[data-xid="aim-aside-initial-corroboration-container"] li > div {
@@ -995,13 +998,19 @@ cite,
 		border-radius: ${radius};
 	}
 
-	/* the row menus ("About this result") and the answer's round action buttons (copy,
-	   share, thumbs, more) are one button kind: the button holds empty state-layer spans
-	   and a focus-ring div that carry no radius of their own, so a hover painted a square
-	   around a round button. The children take the button's radius. UNVERIFIED for the
-	   action row (its DOM was not pasted, only the card's, which has the same parts);
-	   FRAGILE: the :has structure. */
-	button:has(> span:empty):has(> div:empty) > :is(span, div) {
+	/* The round action buttons under an answer (copy, share, thumbs, more). Probe
+	   (2026-11-15): 36 by 36, fully rounded, filled with the literal grey that --xhUGwc
+	   holds at the button (--xhUGwc itself must stay the page colour elsewhere, so the
+	   fill is set directly), and holding state-layer spans / divs (.D2ixAc, .ZU3Xof,
+	   .C12YAe, .Hz4U2, .CfiFM) whose radius is 0: a hover painted a square around the
+	   round button. The raised surface for the fill; the inner layers take the button's
+	   radius. (The card's row menus and the "Copy / Edit" chips are another button kind,
+	   already round.) FRAGILE: hashed class names. UNVERIFIED on the hover itself. */
+	button:has(:is(.C12YAe, .Hz4U2, .CfiFM)) {
+		background-color: #${c.base01} !important;
+	}
+
+	button:has(:is(.C12YAe, .Hz4U2, .CfiFM)) :is(span, div) {
 		border-radius: inherit !important;
 	}
 }
