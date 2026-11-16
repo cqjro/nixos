@@ -50,6 +50,12 @@
 						t3code # Super+O T (heavy: see docs/hosts/CHRONOCIDE.md)
 						proton-apps # Proton Mail (Super+O P), VPN, Pass
 						zathura # PDFs, ~30 MB
+						# added on request (2026-11-16)
+						inputs.self.modules.homeManager."github-cli" # gh as git's HTTPS credential helper
+						mpv
+						sioyek # academic PDF viewer
+						spicetify # patched Spotify (heavy: see docs/hosts/CHRONOCIDE.md)
+						nixdatifier # generations/diff tray app + CLI
 					];
 			};
 			useUserPackages = true;

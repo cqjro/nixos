@@ -112,6 +112,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.networking
 				inputs.self.modules.nixos.stylix
 				inputs.self.modules.nixos.power-profiles
+				inputs.self.modules.nixos.manifest # spicetify reads osConfig.manifest
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.keyring
 				inputs.self.modules.nixos.noctalia-greeter

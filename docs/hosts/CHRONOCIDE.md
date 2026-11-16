@@ -58,25 +58,33 @@ Approximate idle RAM in parentheses; "closure" means disk only.
 | `proton-apps` (new) | Proton Mail (`Super+O P`), Proton VPN (GUI + CLI), Proton Pass | requested; split out of `apps-packages` so this host does not take the rest of that bag. Proton Drive has no Linux desktop client in nixpkgs, so there is none to include | Mail ~300-500 MB, Pass ~300 MB (both Electron), VPN GUI ~150 MB |
 | `obsidian` | `Super+O N` | xremap (installed from `home.nix`) | ~300-500 MB (Electron) |
 | `zathura` | PDF viewer | tiny; document viewing without a browser | ~30 MB |
+| `github-cli` | `gh` plus git's HTTPS credential helper | added on request | none idle |
+| `mpv`, `sioyek` | video player, academic PDF viewer | added on request | ~50-100 MB each while open |
+| `spicetify` | Stylix-themed, patched Spotify (`manifest.enableSpicetify`, default true; `manifest` added to the host's NixOS modules because the fragment reads `osConfig.manifest`) | added on request | **~400-700 MB** (Electron/CEF); `ncspot` is the light alternative |
+| `nixdatifier` | generations, package diffs and flake-update tray app plus the `nixdatifier` CLI/TUI | added on request; its `fontScale = 1.3` is tuned for THEOCIDE's 4K output, so lower it in Configure → Design on this 1366x768 panel | ~100-200 MB for the tray app; the CLI is small |
+| `vlc`, `obs-studio`, `firefox`, `brave`, `onlyoffice-desktopeditors` | installed from `home.nix`, picked one by one from `apps-packages` | added on request | vlc ~100 MB, **firefox/brave ~500 MB-1 GB each**, **onlyoffice ~500 MB-1 GB**, **obs ~300 MB idle and heavy while recording** (the HD 6000 has no good hardware encoder path here) |
 | `wl-clipboard`, `libnotify`, `brightnessctl` | CLI helpers (`notify-send` for `start.sh`, backlight keys) | | none |
 
-Only **one** Electron app should be open at a time on this machine; two plus
-Zen will push into zram.
+Only **one** heavy app should be open at a time on this machine: the Electron
+apps (Vesktop, Obsidian, Proton, Spotify, OnlyOffice, T3 Code) and the browsers
+(Zen, Firefox, Brave) are each 300 MB-1.5 GB, and two plus Zen will push into
+zram. With four browsers and several Electron apps installed the closure is
+also large, so check disk space before the first build (`nix path-info -Sh`).
 
 ### Deliberately left out
 
 | Module | Why |
 | --- | --- |
 | Steam, games, `millennium`, `minecraft`, `waydroid`, `bigscreen` (Plasma) | no GPU headroom, no RAM; `Super+O S` has nothing to launch |
-| `nvidia`, `openrgb`, `manifest` | other hardware |
+| `nvidia`, `openrgb` | other hardware |
 | `ios-sideloading`, `tether` | iPhone bridge; not needed on this machine |
 | `hyprland` (+ the `hyprland` flake input at runtime), `hypr*` tools in `desktop-packages`, `walker` | niri replaces them; Noctalia has its own launcher; no Hyprland compile or runtime |
 | `desktop-packages` | its contents are Hyprland tools or are covered by Noctalia/niri (screenshots, polkit, volume, Bluetooth, audio panels); the few needed helpers are listed above |
 | `audio` | its only addition is `easyeffects` (heavy GTK/Qt); pipewire is configured inline |
 | `printing` (CUPS), `vpn` (openconnect-sso, gpclient), `doodads`, `tailscale` | no use case yet; add when needed |
-| `claude-code`, `claude-code-policy`, `secret-guard`, `agent-notifications`, `mcp-servers`, `github-cli`, `theme-shots`, all `*-web-styling` | agent tooling and site styling live on THEOCIDE/MENTICIDE; web styling is Zen CSS for sites that are not worth the build time here |
-| `spicetify`, `discord-theme` host options, `mpv`, `sioyek`, `calibre`, `onlyoffice`, `apps-packages` (vlc, obs, remmina, brave, firefox, chromium, helium, ...) | each is 100 MB to 1 GB of RAM or closure for something Zen/`zathura` already covers |
-| `3d-printing`, `latex`, `languages-packages`, `dwsim`, `xodus-nexus`, `learnharness`, `nixdatifier`, `rss-sync` | heavy toolchains or tools for other machines; use `nix shell` for a one-off |
+| `claude-code`, `claude-code-policy`, `secret-guard`, `agent-notifications`, `mcp-servers`, `theme-shots`, all `*-web-styling` | agent tooling and site styling live on THEOCIDE/MENTICIDE; web styling is Zen CSS for sites that are not worth the build time here |
+| `discord-theme` host options, `calibre`, the rest of `apps-packages` (remmina, chromium, helium, image viewers, localsend, lunatask, newsflash) | each is 100 MB to 1 GB of RAM or closure for something Zen/`zathura` already covers |
+| `3d-printing`, `latex`, `languages-packages`, `dwsim`, `xodus-nexus`, `learnharness`, `rss-sync` | heavy toolchains or tools for other machines; use `nix shell` for a one-off |
 
 ## Decisions that differ from the reference brief
 
