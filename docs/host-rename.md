@@ -65,6 +65,41 @@ one at a time, MENTICIDE last (it is headless; a mistake needs physical access).
 - `/var/lib/firmware-src/REGICIDE` is the new staging dir (same note as
   MENTICIDE: leave it, or move it and re-run the importer).
 
+## Tailnet URLs: what changes and how to keep them stable
+
+The repository contains no real tailnet URL (only `<tailnet>` placeholders), so
+nothing in Nix depends on the old MagicDNS names. The names matter only to
+clients, bookmarks and your own config files.
+
+**Unchanged by a hostname change:** the tailnet name (`<tailnet>.ts.net`), the
+100.x / fd7a: addresses, the node key and login, ACLs written by user or tag,
+every Cloudflare route (`*.cqjro.ca`, identified by tunnel UUID), and anything
+that reaches a machine by its tailnet or LAN IP.
+
+**Changes when the Tailscale node name changes:** the MagicDNS name
+(`redrum.<tailnet>.ts.net` → `menticide.<tailnet>.ts.net`, `god-killer` →
+`theocide`), the `tailscale serve` HTTPS URLs and their certificates, and any
+ACL or grant that names a machine. The node name follows the OS hostname
+unless it was renamed by hand in the admin console (Tailscale's behaviour,
+not verified here: check the machine's name after the first switch).
+
+Everything that stores the old name then has to be updated: T3 environments on
+the desktop app and phone (add the new URL and re-pair; label rename is a T3
+setting), `~/.config/agent-notify/server` and the ntfy phone subscription,
+`~/.ssh/config`, bookmarks, and anything else typed with the old name. Re-run
+the serve publishers after the switch to be safe: `sudo systemctl restart
+t3code-tailscale-serve` on MENTICIDE, and your own `sudo tailscale serve --bg
+--https=443 http://127.0.0.1:3773` (and the `:8443` ntfy one) where you
+published by hand; check `tailscale serve status`.
+
+**Decoupling the two renames.** The OS hostname and the Tailscale node name are
+separate. Before switching a machine, rename it in the Tailscale admin console
+to its *old* name (a manual name stops following the hostname). The switch then
+changes nothing on the tailnet, and no URL moves. When you are ready, rename
+the node in the admin console to the new name, which is the moment the URLs
+change, and do the client updates above once. Agents never run `tailscale set`
+(guard-blocked), so this is yours to do.
+
 ## Rollout order
 
 1. Merge the PR. On a machine still called by its old name, `./rebuild.sh
