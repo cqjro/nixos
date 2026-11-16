@@ -72,7 +72,9 @@
 
 		# Kernel and Wi-Fi. The Broadcom `wl` driver (broadcom_sta) is fragile on
 		# new kernels, so pin the 6.18 LTS series: never linuxPackages_latest.
-		# (6.12 also works; it reaches end of life in December 2026.)
+		# (6.12 also works; it reaches end of life in December 2026.) This is a
+		# hardware constraint (the driver is unmaintained and will not be fixed),
+		# not a workaround for an upstream bug, so it has no registry row.
 		boot.kernelPackages = pkgs.linuxPackages_6_18;
 		boot.kernelModules = [ "wl" ];
 		boot.extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
