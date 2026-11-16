@@ -11,5 +11,11 @@
 			",XF86MonBrightnessUp,   exec, ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"
 			",XF86MonBrightnessDown, exec, ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"
 		];
+
+		# niri backup session: the same ddcutil commands as the Hyprland binds
+		niri.brightnessBinds = [
+			''XF86MonBrightnessUp allow-when-locked=true { spawn-sh "ddcutil setvcp 10 + 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 + 5 --bus 10 --noverify --sleep-multiplier 0.1"; }''
+			''XF86MonBrightnessDown allow-when-locked=true { spawn-sh "ddcutil setvcp 10 - 5 --bus 9 --noverify --sleep-multiplier 0.1 && ddcutil setvcp 10 - 5 --bus 10 --noverify --sleep-multiplier 0.1"; }''
+		];
 	};
 }

@@ -22,5 +22,12 @@
 				"eDP-1,2560x1600@60,0x0,1.25"
 			];
 		};
+
+		# the same panel for the niri backup session
+		niri.outputs."eDP-1" = {
+			mode = "2560x1600@60.000";
+			scale = 1.25;
+			position = { x = 0; y = 0; };
+		};
 	};
 }

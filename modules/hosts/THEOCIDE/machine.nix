@@ -11,6 +11,7 @@
 						THEOCIDE-monitors
 						environment
 						hyprland
+						niri
 						mpv
 						sioyek
 						zathura
@@ -52,6 +53,7 @@
 						claude-web-styling
 						calibre
 					apps-packages
+					proton-apps
 					xodus-nexus
 					learnharness
 					keyring
