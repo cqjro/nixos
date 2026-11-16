@@ -75,6 +75,10 @@ one at a time, MENTICIDE last (it is headless; a mistake needs physical access).
 3. REGICIDE, then MENTICIDE last: `./rebuild.sh dry MENTICIDE` first, then
    `ssh redrum` → `./rebuild.sh switch MENTICIDE`. Keep a second terminal or
    the IP address ready, because the old SSH alias may stop resolving.
+   Do not use the frozen `rebuild` zsh alias for the first switch (a store
+   copy without the shim); use `./rebuild.sh` from the merged `~/.nixos`.
+   For MENTICIDE connect with `ssh cairo@<tailnet or LAN IP>`, not the alias,
+   and skip `test` there: use `dry`, then `switch`, with a second session open.
 4. Fix the outside items above, then remove the shim in `rebuild.sh` and
    `schedule-precheck`.
 
