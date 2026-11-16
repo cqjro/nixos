@@ -7,8 +7,8 @@ it through `CLAUDE.md`; other agents read it directly). The
 
 ## Project at a glance
 
-Personal NixOS flake (`flake-parts` + `import-tree`) that configures three
-machines (`THEOCIDE`, `REGICIDE`, `MENTICIDE`) from a pool of small, self-contained
+Personal NixOS flake (`flake-parts` + `import-tree`) that configures four
+machines (`THEOCIDE`, `REGICIDE`, `MENTICIDE`, `CHRONOCIDE`) from a pool of small, self-contained
 module fragments, all themed from one base16 palette via Stylix.
 
 ## How the agent docs are organised
@@ -30,6 +30,7 @@ Read the others **when the task calls for them**:
 | [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
 | [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) | styling a site in `modules/theme/webstyling/*.nix` (the Zen per-site CSS): `theme-shots` (logged-out RAW vs THEMED viewport and full-page screenshots plus a `manifest.tsv`, 35 pages over google, youtube, reddit, instagram and wikipedia), its limits, the mandatory RAW/OLD/NEW comparison deliverable (embedded in the final reply, built with `modules/scripts/theme-shots-compare.sh`), and what to do for logged-in pages (the human attaches manual screenshots) |
 | [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
+| [`docs/hosts/CHRONOCIDE.md`](docs/hosts/CHRONOCIDE.md) | the MacBook Air host: its app/module include/exclude list, install order, build-host command and verify checklist; [`docs/hosts/niri.md`](docs/hosts/niri.md) for niri (the shared backup desktop: options, Hyprland mapping, what has no equivalent) |
 | [`docs/host-names.md`](docs/host-names.md) | naming or adding a host (meanings, former names `GOD-KILLER`/`LittleNix`/`REDRUM`, candidate list); [`docs/host-rename.md`](docs/host-rename.md) for the rename rollout and its outside-the-repo steps |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
@@ -50,7 +51,7 @@ config-sync                       # zsh alias -> modules/scripts/config-sync.sh 
 nix develop .#youtube-sync        # devshell for the youtube-sync helper
 ```
 
-- All three hosts evaluate **purely**: the Apple T2 Wi-Fi/Bluetooth firmware
+- All four hosts evaluate **purely**: the Apple T2 Wi-Fi/Bluetooth firmware
   for MENTICIDE and REGICIDE comes from the Nix store
   (`modules/system/t2-firmware.nix`, `pkgs.requireFile` pinned by hash), so
   evaluation needs no files and no `--impure`; only a *build* of a T2 host needs
@@ -175,7 +176,9 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
   build HOST` for each affected host this machine may build, then the review
   tiers ([`docs/agents/review.md`](docs/agents/review.md); the `ship-pr` skill
   runs them). Empty output with exit 0 from `build` is success.
-- **Which machine builds what.** THEOCIDE may build THEOCIDE and MENTICIDE.
+- **Which machine builds what.** THEOCIDE may build THEOCIDE, MENTICIDE and
+  CHRONOCIDE (the 4 GB MacBook Air builds on THEOCIDE, see
+  [`docs/hosts/CHRONOCIDE.md`](docs/hosts/CHRONOCIDE.md)).
   MENTICIDE may build MENTICIDE only and runs **eval-only** checks
   (`./rebuild.sh eval THEOCIDE`) for THEOCIDE changes. Remote hosts are
   never switched or test-activated by agents (a remote activation needs a

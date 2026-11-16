@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-	flake.modules.homeManager."xremap" = {
+	flake.modules.homeManager."xremap" = { lib, ... }: {
 		imports = [
 			inputs.xremap-flake.homeManagerModules.default
 		];
@@ -19,7 +19,10 @@
 		# keyboards as they reappear.
 		services.xremap = {
 			enable = true;
-			withHypr = true;
+			# Per-compositor client; a niri-only host sets withHypr = false and
+			# withNiri = true (modules/hosts/CHRONOCIDE/home.nix). No keymap is
+			# per-application, so this only decides which IPC xremap links against.
+			withHypr = lib.mkDefault true;
 			watch = true;
 			config = {
 				modmap = [

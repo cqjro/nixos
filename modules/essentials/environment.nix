@@ -11,7 +11,7 @@
 	};
 
 	# User-level session variables (home-manager)
-	flake.modules.homeManager.environment = {
+	flake.modules.homeManager.environment = { lib, ... }: {
 		home.sessionVariables = {
 			EDITOR = "nvim";
 			BROWSER = "zen";
@@ -20,7 +20,7 @@
 			ELECTRON_OZONE_PLATFORM_HINT = "wayland";
 			OZONE_PLATFORM_HINT = "wayland";
 			XDG_SESSION_TYPE = "wayland";
-			XDG_SESSION_DESKTOP = "Hyprland";
+			XDG_SESSION_DESKTOP = lib.mkDefault "Hyprland"; # niri-only hosts override it
 		};
 	};
 }

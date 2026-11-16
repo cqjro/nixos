@@ -1,6 +1,6 @@
 # NixOS Config
 
-My personal NixOS configuration, managed as a Git flake and spread across three
+My personal NixOS configuration, managed as a Git flake and spread across four
 machines. Everything — desktop shell, terminal, apps, websites, even Discord and
 Spotify — is themed from a single base16 palette via [Stylix](https://github.com/danth/stylix).
 
@@ -21,13 +21,14 @@ Spotify — is themed from a single base16 palette via [Stylix](https://github.c
 
 ## Machines
 
-Three hosts are defined in `modules/hosts/host.nix`, each a near-complete
+Four hosts are defined in `modules/hosts/host.nix`, each a near-complete
 NixOS configuration that picks and chooses its modules from the pool:
 
 | Host | Hardware | Role |
 | --- | --- | --- |
 | `THEOCIDE` | AMD desktop, NVIDIA GPU, dual 4K monitors (BenQ + MSI OLED) | Main workstation: full Hyprland desktop, gaming, media |
 | `REGICIDE` | Apple T2 MacBook (`nixos-hardware` `apple-t2`) | Laptop desktop, touchbar, mobile spicetify/discord |
+| `CHRONOCIDE` | MacBook Air early 2015, 11-inch (i7 Broadwell, HD 6000, **4 GB RAM**, 1366x768, Broadcom BCM4360 Wi-Fi) | Memory-constrained laptop on [niri](https://github.com/YaLTeR/niri) + Noctalia (no Hyprland): pinned 6.18 LTS kernel for the Broadcom `wl` driver, zram swap, builds on THEOCIDE. App list, install order and risks: [docs/hosts/CHRONOCIDE.md](docs/hosts/CHRONOCIDE.md) |
 | `MENTICIDE` | Apple T2 MacBook | Headless server (no DE): Tailscale, Paperless-ngx, Actual Budget, Linkwarden, Beszel, Glance, Homepage dashboard, Cloudflared, YouTube automation |
 
 Hosts are named after "-cide" terms (killing or erasure); meanings, the names
@@ -58,8 +59,9 @@ rebuild.sh             # Staged rebuild (check/eval/build/test/switch/push/gener
 AGENTS.md              # Shared agent guidance (CLAUDE.md imports it for Claude Code)
 .claude/               # Reviewer subagents and workflow skills (start-todo, ship-pr, merge-pr)
 .github/               # Pull request template
-start.sh               # Startup script run by Hyprland: loads the SSH agent (no config pull)
+start.sh               # Startup script run by Hyprland and niri: loads the SSH agent (no config pull)
 TODO.md                # Planned updates to the config (wishlist, not tracked as issues)
+docs/hosts/            # Per-host guides (CHRONOCIDE: app list, install order, verify checklist)
 docs/agents/           # On-demand agent reference: workflow, review tiers, recipes, registry, gotchas
 docs/secrets.md          # Secrets audit, rotation runbook, secrets design (sops-nix deferred), T3 request_secret, secret-guard hooks
 docs/waydroid/         # Android TV (Waydroid) plan, spike notes and pinned image info
@@ -71,11 +73,12 @@ modules/
 │   ├── host.nix       #   Assembles all nixosConfigurations
 │   ├── THEOCIDE/    #   machine.nix / home.nix / hardware.nix / monitors.nix
 │   ├── REGICIDE/
+│   ├── CHRONOCIDE/    #   MacBook Air 2015 (hardware.nix is a placeholder)
 │   └── MENTICIDE/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
 │   ├── ai-tools/      #   claude-code (permissions), mcp-servers (mcp-nixos), t3code, github-cli
 │   ├── apps/          #   3d-printing, calibre, dwsim, millennium, mpv, nemo, nixdatifier, spicetify, xodus-nexus, zen-browser, ...
-│   ├── desktop/       #   hyprland, gtk, noctalia-shell, walker, ...
+│   ├── desktop/       #   hyprland, niri (shared backup session), gtk, noctalia-shell, walker, ...
 │   ├── keyboard/      #   xremap (powerful key remaps + app launching)
 │   ├── languages/     #   latex, language toolchains
 │   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
@@ -187,6 +190,11 @@ matches the rest of the config out of the box.
   declarations parsed from `desc:` strings, disabled borders with soft glow
   shadows, custom bezier curves and animation tuning, and full window/bindings
   via a small Nix → Lua DSL.
+- **niri** — a shared, selectable backup session on every graphical host
+  (THEOCIDE and REGICIDE keep Hyprland as the default; CHRONOCIDE uses niri
+  only). One module generates `~/.config/niri/config.kdl` (validated at build
+  time, Stylix colours) from per-host options, mirroring the Hyprland binds and
+  rules; see [docs/hosts/niri.md](docs/hosts/niri.md).
 - **noctalia** — a full shell bar/panel system (dock, control centre, media
   OSD, widgets, clipboard, session control) controlled through the CLI.
 - **Walker** — GTK launcher (Rofi-style) with a fully stylix-themed stylesheet.

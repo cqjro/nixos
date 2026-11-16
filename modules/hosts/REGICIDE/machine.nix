@@ -19,6 +19,7 @@
 						REGICIDE-monitors
 						environment
 						hyprland
+						niri
 						mpv
 						sioyek
 						zathura
@@ -46,6 +47,7 @@
 						nemo
 						calibre
 						apps-packages
+						proton-apps
 						nixdatifier
 						inputs.self.modules.homeManager."3d-printing"
 						latex
