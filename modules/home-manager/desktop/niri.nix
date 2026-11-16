@@ -118,7 +118,7 @@
 					softness 40
 					spread 5
 					offset x=0 y=5
-					color "#00000090"
+					color "${c.base00}90"
 				}'' else ""}
 			}
 

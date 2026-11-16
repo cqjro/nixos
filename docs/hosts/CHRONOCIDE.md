@@ -136,22 +136,26 @@ does not exist until the `wl` driver is built into the installed system.
    ```
 
    Evaluation still happens on the laptop. If it runs out of memory, skip
-   evaluation there: on THEOCIDE build the toplevel and push it, then activate
-   it on the laptop (as root):
+   evaluation there: on THEOCIDE build the toplevel, then **pull** it from the
+   laptop (this needs no sshd on the laptop, which has none) and activate it
+   as root:
 
    ```bash
    # on THEOCIDE
-   out=$(nix build --no-link --print-out-paths \
-     ".#nixosConfigurations.CHRONOCIDE.config.system.build.toplevel")
-   nix copy --to ssh-ng://cairo@<CHRONOCIDE-address> "$out"
-   # on CHRONOCIDE
+   nix build --no-link --print-out-paths \
+     ".#nixosConfigurations.CHRONOCIDE.config.system.build.toplevel"
+   # on CHRONOCIDE, with the printed path
+   out=/nix/store/...-nixos-system-CHRONOCIDE-...
+   nix copy --from ssh-ng://cairo@<THEOCIDE-address> "$out"
    sudo nix-env -p /nix/var/nix/profiles/system --set "$out"
    sudo "$out/bin/switch-to-configuration" switch
    ```
 
-   Both routes need SSH from one machine to the other and rely on `cairo`
-   being a trusted Nix user on CHRONOCIDE (set in `machine.nix`). The first
-   switch must happen over the wired connection. Reboot afterwards.
+   Both routes only need SSH **from the laptop to THEOCIDE** and rely on
+   `cairo` being a trusted Nix user on CHRONOCIDE (set in `machine.nix`).
+   CHRONOCIDE runs no sshd. The first switch must happen over the wired
+   connection, with a rescue USB and the console at hand (see Recovery).
+   Reboot afterwards.
 7. **Later rebuilds** use the same command, from merged `master`
    (`git pull --ff-only` first).
 
@@ -174,6 +178,19 @@ does not exist until the `wl` driver is built into the installed system.
       `T` start or focus Zen / Nemo / Vesktop / Obsidian / Proton Mail / T3 Code.
 - [ ] `niri msg outputs` shows `eDP-1` at 1366x768 scale 1; tap-to-click and
       natural scroll work.
+
+## Recovery
+
+- The hardware placeholder uses the labels `nixos` and `BOOT`: a mismatch or
+  an unreplaced placeholder drops the boot into initrd emergency mode. Do the
+  first `switch` only after step 4, and prefer `nixos-rebuild boot` first, reboot,
+  and only then `switch`.
+- If the systemd-boot entry does not persist on this Apple EFI, boot the
+  installer USB and use the GRUB fallback in `machine.nix`.
+- A bad generation: pick the previous one in the systemd-boot menu. If the
+  greeter or niri fails, switch to another VT (Ctrl+Alt+F2) for a text login.
+- No Wi-Fi after a bad `wl` build: boot the previous generation, or use USB
+  Ethernet or tethering.
 
 ## Known risks
 
