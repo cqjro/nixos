@@ -6,15 +6,15 @@ cadence, same purpose (is a registry workaround removable?), but the polling is
 done by `bin/schedule-precheck upstream`, issues are filed by the script, and a
 fix goes to a worker on a branch, not to the root checkout.
 
-- **Runs on:** REDRUM, daily at 06:30 (its own T3 server, project `nixos` at
+- **Runs on:** MENTICIDE, daily at 06:30 (its own T3 server, project `nixos` at
   `/var/lib/t3code/nixos`), calling the packaged
   `/run/current-system/sw/bin/schedule-precheck` (`modules/server/schedule-precheck.nix`).
-  Created from a GOD-KILLER thread with `schedule_task` and the linked REDRUM
+  Created from a THEOCIDE thread with `schedule_task` and the linked MENTICIDE
   `environmentId`. It launches workers itself (`Worker launching: ENABLED`). The prompt below
-  is the GOD-KILLER text; the REDRUM text differs only as in "REDRUM variant".
-  The GOD-KILLER task (`scheduled-task:491745ad-e182-42e6-9541-6b5e0d388cdc`, Saturday 12:00)
-  is kept but **disabled** (`enabled: false`) as a fallback. Re-enable it only if REDRUM is
-  down for a while, and not together with the REDRUM task: both would try to launch a
+  is the THEOCIDE text; the MENTICIDE text differs only as in "MENTICIDE variant".
+  The THEOCIDE task (`scheduled-task:491745ad-e182-42e6-9541-6b5e0d388cdc`, Saturday 12:00)
+  is kept but **disabled** (`enabled: false`) as a fallback. Re-enable it only if MENTICIDE is
+  down for a while, and not together with the MENTICIDE task: both would try to launch a
   worker for the same issue (the `worker-launched` label and the branch check make that
   harmless but wasteful).
 - **Model / effort:** Haiku, low (the "scheduled checks" row of the model table in
@@ -105,12 +105,12 @@ one:
 }
 ```
 
-REDRUM variant (the live one): the same prompt with every
+MENTICIDE variant (the live one): the same prompt with every
 `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` replaced by
 `/run/current-system/sw/bin/schedule-precheck`, and the schedule
 `{ "type": "fixed_time", "timeOfDay": "06:30" }` (no `weekdays` means every day). Workers
-launched from REDRUM use the same briefs. They never build GOD-KILLER (`./rebuild.sh eval
-GOD-KILLER` instead, see worker-briefs.md), so a fix that touches GOD-KILLER is only
+launched from MENTICIDE use the same briefs. They never build THEOCIDE (`./rebuild.sh eval
+THEOCIDE` instead, see worker-briefs.md), so a fix that touches THEOCIDE is only
 evaluated by the worker; the host is built when you review the PR and switch.
 
 ## Suggested wording for the standing instruction (handoff to the workflow thread)

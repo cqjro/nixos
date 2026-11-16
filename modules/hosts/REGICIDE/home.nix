@@ -1,6 +1,6 @@
 { ... }:
 {
-	flake.modules.homeManager.LittleNix = {
+	flake.modules.homeManager.REGICIDE = {
 		home.username = "cairo";
 		home.homeDirectory = "/home/cairo";
 

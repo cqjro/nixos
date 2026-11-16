@@ -2,7 +2,7 @@
 
 # Syncs ~/.nixos from GitHub. Extract of the sync portion of start.sh so the
 # config can be pulled from a terminal or when SSH'd into another host
-# (e.g. REDRUM) — your SSH key needs to be loaded in an agent first
+# (e.g. MENTICIDE) — your SSH key needs to be loaded in an agent first
 # (start.sh does this automatically on login).
 
 # Configuration

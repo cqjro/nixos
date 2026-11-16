@@ -44,7 +44,7 @@
 			Group = "beszel-hub";
 		};
 
-		# Agent monitoring REDRUM itself. It connects outbound to the hub via
+		# Agent monitoring MENTICIDE itself. It connects outbound to the hub via
 		# HUB_URL, so its public KEY (and optional TOKEN) live outside the nix
 		# store in `${workDir}/agent.env` — see the file permission steps below.
 		services.beszel.agent = {

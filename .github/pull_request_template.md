@@ -7,9 +7,9 @@
 
 ## Hosts affected
 
-- [ ] GOD-KILLER
-- [ ] REDRUM
-- [ ] LittleNix
+- [ ] THEOCIDE
+- [ ] MENTICIDE
+- [ ] REGICIDE
 
 ## Verification
 

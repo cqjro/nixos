@@ -1,12 +1,12 @@
 { ... }:
 {
-	flake.modules.nixos."LittleNix-monitors" = { pkgs, ... }: {
+	flake.modules.nixos."REGICIDE-monitors" = { pkgs, ... }: {
 		environment.systemPackages = with pkgs; [
 			brightnessctl
 		];
 	};
 
-	flake.modules.homeManager."LittleNix-monitors" = {
+	flake.modules.homeManager."REGICIDE-monitors" = {
 		hyprland.bindel = [
 			",XF86MonBrightnessUp,   exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%+"
 			",XF86MonBrightnessDown, exec, brightnessctl --device acpi_video0 -e4 -n2 set 5%-"

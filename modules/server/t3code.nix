@@ -10,9 +10,9 @@ in
 	flake.modules.nixos.t3code = { config, inputs, pkgs, lib, ... }:
 		let
 			# The desktop client refuses servers older than itself ("This client
-			# requires a newer server"). REDRUM's pinned nixpkgs
-			# (modules/hosts/REDRUM/T2-PIN.md) ships t3code 0.0.33, so the server
-			# comes from the main `nixpkgs` input, the same build GOD-KILLER runs.
+			# requires a newer server"). MENTICIDE's pinned nixpkgs
+			# (modules/hosts/MENTICIDE/T2-PIN.md) ships t3code 0.0.33, so the server
+			# comes from the main `nixpkgs` input, the same build THEOCIDE runs.
 			# TODO-remove: use `pkgs.t3code` again once the pin is lifted.
 			mainPkgs = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 			t3code = mainPkgs.t3code;
@@ -40,7 +40,7 @@ in
 
 		# `claude` / `gh` for the t3code user to log in once by hand
 		# (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`) and `t3`
-		# for `t3 pair`; git is already in the REDRUM system profile.
+		# for `t3 pair`; git is already in the MENTICIDE system profile.
 		environment.systemPackages = [ claude-code pkgs.gh t3code ];
 
 		# The server only drives a provider, it does not ship one: everything the
@@ -73,7 +73,7 @@ in
 					"GIT_CONFIG_COUNT=3"
 					"GIT_CONFIG_KEY_0=credential.https://github.com.helper"
 					"GIT_CONFIG_VALUE_0=!${pkgs.gh}/bin/gh auth git-credential"
-					# commit identity (same as cairo's on GOD-KILLER); env, not a
+					# commit identity (same as cairo's on THEOCIDE); env, not a
 					# config file, so it also reaches the agent's sandboxed git
 					"GIT_CONFIG_KEY_1=user.name"
 					"GIT_CONFIG_VALUE_1=cqjro"
@@ -88,7 +88,7 @@ in
 
 		# The agent's Claude Code policy is the shared managed policy
 		# (`claude-code-policy`, modules/home-manager/ai-tools/claude-code.nix,
-		# added to REDRUM in modules/hosts/host.nix): the same rules as the
+		# added to MENTICIDE in modules/hosts/host.nix): the same rules as the
 		# desktop, read by every user from /etc/claude-code. `~/` in its rules is
 		# ${workDir} for this user, so the gh token and Claude login stay denied.
 

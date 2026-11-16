@@ -12,7 +12,7 @@ in
 	# Tailscale only, no Cloudflare tunnel: it binds loopback and the human
 	# publishes it on the tailnet (agents must not run `tailscale serve`):
 	#   sudo tailscale serve --bg --https=8443 http://127.0.0.1:8089
-	# Then base-url below must equal https://redrum.<tailnet>.ts.net:8443.
+	# Then base-url below must equal https://menticide.<tailnet>.ts.net:8443.
 	flake.modules.nixos.ntfy = { lib, ... }: {
 		# services.ntfy-sh runs as its own static `ntfy-sh` user with
 		# /var/lib/ntfy-sh, which satisfies the dedicated-user rule.
@@ -22,7 +22,7 @@ in
 				listen-http = "127.0.0.1:${toString port}";
 				# TODO: replace with the real tailnet name (never committed per-machine
 				# values elsewhere; this one is only a placeholder)
-				base-url = lib.mkDefault "https://redrum.example.ts.net:8443";
+				base-url = lib.mkDefault "https://menticide.example.ts.net:8443";
 				# tailscale serve is the reverse proxy
 				behind-proxy = true;
 				cache-file = "/var/lib/ntfy-sh/cache.db";

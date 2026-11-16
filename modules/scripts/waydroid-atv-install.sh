@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Provision the pinned WayDroid-ATV images on GOD-KILLER.
+# Provision the pinned WayDroid-ATV images on THEOCIDE.
 #
 # Usage:  sudo ./waydroid-atv-install.sh [--system <zip>] [--vendor <zip>]
 #
@@ -82,7 +82,7 @@ ls -lh /etc/waydroid-extra/images
 echo "==> waydroid init -f"
 waydroid init -f
 
-echo "==> applying GOD-KILLER GPU props to waydroid_base.prop"
+echo "==> applying THEOCIDE GPU props to waydroid_base.prop"
 # Waydroid renders on the AMD iGPU; its probe skips NVIDIA. Pick the first
 # non-NVIDIA render node so this still works if the iGPU enumeration moves.
 render_node=""

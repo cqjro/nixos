@@ -3,10 +3,10 @@
 	"rules": [
 		{ "glob": "modules/hosts/(HOST)/**", "hosts": "host" },
 		{ "glob": "modules/hosts/host.nix", "hosts": "*" },
-		{ "glob": "modules/server/**", "hosts": ["REDRUM"] },
+		{ "glob": "modules/server/**", "hosts": ["MENTICIDE"] },
 		{ "glob": "modules/_archive/**", "hosts": [] },
-		{ "glob": "modules/scripts/sync_playlist.py", "hosts": ["REDRUM"] },
-		{ "glob": "modules/scripts/abt-browser-shim.js", "hosts": ["REDRUM"] },
+		{ "glob": "modules/scripts/sync_playlist.py", "hosts": ["MENTICIDE"] },
+		{ "glob": "modules/scripts/abt-browser-shim.js", "hosts": ["MENTICIDE"] },
 		{ "glob": "docs/**", "hosts": [] },
 		{ "glob": ".claude/**", "hosts": [] },
 		{ "glob": ".github/**", "hosts": [] },

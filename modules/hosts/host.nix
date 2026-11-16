@@ -4,7 +4,7 @@
 		system = "x86_64-linux";
 		overlays = [];
 	in {
-		GOD-KILLER = inputs.nixpkgs.lib.nixosSystem {
+		THEOCIDE = inputs.nixpkgs.lib.nixosSystem {
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
@@ -44,16 +44,16 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos."agent-notifications"
 				{ agent-notifications.desktop = true; }
 				inputs.self.modules.nixos.config-revision
-				inputs.self.modules.nixos."GOD-KILLER"
-				inputs.self.modules.nixos."GOD-KILLER-hardware"
-				inputs.self.modules.nixos."GOD-KILLER-monitors"
+				inputs.self.modules.nixos."THEOCIDE"
+				inputs.self.modules.nixos."THEOCIDE-hardware"
+				inputs.self.modules.nixos."THEOCIDE-monitors"
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
 				{ nixpkgs.overlays = overlays; }
 			];
 		};
 
-		LittleNix = inputs.nixpkgs.lib.nixosSystem {
+		REGICIDE = inputs.nixpkgs.lib.nixosSystem {
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
@@ -81,9 +81,9 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.rss-sources
 				inputs.self.modules.nixos.noctalia-greeter
 				inputs.self.modules.nixos.config-revision
-				inputs.self.modules.nixos."LittleNix"
-				inputs.self.modules.nixos."LittleNix-hardware"
-				inputs.self.modules.nixos."LittleNix-monitors"
+				inputs.self.modules.nixos."REGICIDE"
+				inputs.self.modules.nixos."REGICIDE-hardware"
+				inputs.self.modules.nixos."REGICIDE-monitors"
 				inputs.nixos-hardware.nixosModules.apple-t2
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
@@ -91,12 +91,12 @@ inputs.self.modules.nixos.games
 			];
 		};
 
-		# REDRUM is built from pinned nixpkgs cac0c1ef (kernel 6.18.46) because
+		# MENTICIDE is built from pinned nixpkgs cac0c1ef (kernel 6.18.46) because
 		# linux >= 6.18.47 breaks the apple-t2 t2linux patchset
 		# (nixos-hardware#2027). TODO-remove: switch back to
 		# `inputs.nixpkgs.lib.nixosSystem` once 2027 is fixed on current nixpkgs.
-		# See modules/hosts/REDRUM/T2-PIN.md.
-		REDRUM = inputs.nixpkgs-redrum.lib.nixosSystem {
+		# See modules/hosts/MENTICIDE/T2-PIN.md.
+		MENTICIDE = inputs.nixpkgs-menticide.lib.nixosSystem {
 			inherit system;
 			specialArgs = { inherit inputs; };
 			modules = [
@@ -105,8 +105,8 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
 				inputs.self.modules.nixos.config-revision
-				inputs.self.modules.nixos."REDRUM"
-				inputs.self.modules.nixos."REDRUM-hardware"
+				inputs.self.modules.nixos."MENTICIDE"
+				inputs.self.modules.nixos."MENTICIDE-hardware"
 				inputs.self.modules.nixos.tailscale
 				inputs.self.modules.nixos.actual-budget
 				# ABT sidecar: set services.abt-sidecar.enable = false to

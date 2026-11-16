@@ -10,9 +10,9 @@
 			listenPort = 8082; # default
 
 			settings = {
-				title = "REDRUM";
+				title = "MENTICIDE";
 			};
-			# "Homelab" tab: one entry per REDRUM app exposed via a cloudflared
+			# "Homelab" tab: one entry per MENTICIDE app exposed via a cloudflared
 			# tunnel (kept in sync with the modules in this directory).
 			services = [
 				{

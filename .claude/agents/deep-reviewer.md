@@ -14,7 +14,7 @@ read-only git and `./rebuild.sh eval HOST`.
 1. Read AGENTS.md, then the diff (`git diff origin/master...HEAD`).
 2. Rule on each unresolved finding: valid (with the fix) or not (with why).
 3. Look for what cheaper tiers miss: wrong option semantics (verify with the
-   `nix` MCP tool and, for REDRUM, the pinned `nixpkgs-redrum` source via
+   `nix` MCP tool and, for MENTICIDE, the pinned `nixpkgs-menticide` source via
    `flake-inputs`), evaluation-order or `mkIf`/`mkForce` priority mistakes,
    module options defined but never consumed, closure growth, security
    regressions (secrets reaching the store, services exposed), and docs that no

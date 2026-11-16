@@ -2,8 +2,8 @@
 {
 	flake.modules.nixos.tailscale = { config, inputs, lib, pkgs, ... }:
 		let
-			# tailscale has to track upstream security releases. REDRUM is built
-			# from a pinned nixpkgs (modules/hosts/REDRUM/T2-PIN.md) whose
+			# tailscale has to track upstream security releases. MENTICIDE is built
+			# from a pinned nixpkgs (modules/hosts/MENTICIDE/T2-PIN.md) whose
 			# tailscale is 1.102.2 *and* whose Go (1.26.5) is too old to build
 			# 1.104.4 (go.mod wants >= 1.27.3), so the pin is built from the main
 			# `nixpkgs` input's package recipe (Go 1.27.3). That input still ships

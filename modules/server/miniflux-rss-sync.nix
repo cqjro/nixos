@@ -6,7 +6,7 @@ in
 {
 	# Subscribes Miniflux to every feed in `rss-sources.feeds`
 	# (modules/system/rss-feeds.json) whenever the list changes, i.e. on the
-	# REDRUM switch that deploys the change, and once per boot.
+	# MENTICIDE switch that deploys the change, and once per boot.
 	flake.modules.nixos."miniflux-rss-sync" = { config, pkgs, lib, ... }:
 	let
 		cfg = config.miniflux-rss-sync;

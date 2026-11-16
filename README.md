@@ -26,12 +26,18 @@ NixOS configuration that picks and chooses its modules from the pool:
 
 | Host | Hardware | Role |
 | --- | --- | --- |
-| `GOD-KILLER` | AMD desktop, NVIDIA GPU, dual 4K monitors (BenQ + MSI OLED) | Main workstation: full Hyprland desktop, gaming, media |
-| `LittleNix` | Apple T2 MacBook (`nixos-hardware` `apple-t2`) | Laptop desktop, touchbar, mobile spicetify/discord |
-| `REDRUM` | Apple T2 MacBook | Headless server (no DE): Tailscale, Paperless-ngx, Actual Budget, Linkwarden, Beszel, Glance, Homepage dashboard, Cloudflared, YouTube automation |
+| `THEOCIDE` | AMD desktop, NVIDIA GPU, dual 4K monitors (BenQ + MSI OLED) | Main workstation: full Hyprland desktop, gaming, media |
+| `REGICIDE` | Apple T2 MacBook (`nixos-hardware` `apple-t2`) | Laptop desktop, touchbar, mobile spicetify/discord |
+| `MENTICIDE` | Apple T2 MacBook | Headless server (no DE): Tailscale, Paperless-ngx, Actual Budget, Linkwarden, Beszel, Glance, Homepage dashboard, Cloudflared, YouTube automation |
 
-`REDRUM` is built against a **pinned nixpkgs** (`cac0c1ef`) because `linux >= 6.18.47`
-breaks the t2linux patchset on the T2 Macs. See `modules/hosts/REDRUM/T2-PIN.md`
+Hosts are named after "-cide" terms (killing or erasure); meanings, the names
+they replaced (`GOD-KILLER`, `LittleNix`, `REDRUM`) and the candidate list for
+future machines are in [docs/host-names.md](docs/host-names.md). The one-time
+rollout notes for the 2026-11-15 rename (Tailscale, SSH, T3, ntfy, firmware
+staging dirs) are in [docs/host-rename.md](docs/host-rename.md).
+
+`MENTICIDE` is built against a **pinned nixpkgs** (`cac0c1ef`) because `linux >= 6.18.47`
+breaks the t2linux patchset on the T2 Macs. See `modules/hosts/MENTICIDE/T2-PIN.md`
 for details and the TODO for when it can be unpinned, and
 [Pending upstream fixes](#pending-upstream-fixes) for the full list of
 workarounds currently in the tree. Packages that have to track upstream security
@@ -63,9 +69,9 @@ modules/
 ├── essentials/        # System services: networking, dbus, bluetooth, audio, printing, users, keyring, nvidia...
 ├── hosts/             # Per-machine config:
 │   ├── host.nix       #   Assembles all nixosConfigurations
-│   ├── GOD-KILLER/    #   machine.nix / home.nix / hardware.nix / monitors.nix
-│   ├── LittleNix/
-│   └── REDRUM/        #   (incl. T2-PIN.md)
+│   ├── THEOCIDE/    #   machine.nix / home.nix / hardware.nix / monitors.nix
+│   ├── REGICIDE/
+│   └── MENTICIDE/        #   (incl. T2-PIN.md)
 ├── home-manager/      # User-level config
 │   ├── ai-tools/      #   claude-code (permissions), mcp-servers (mcp-nixos), t3code, github-cli
 │   ├── apps/          #   3d-printing, calibre, dwsim, millennium, mpv, nemo, nixdatifier, spicetify, xodus-nexus, zen-browser, ...
@@ -74,7 +80,7 @@ modules/
 │   ├── languages/     #   latex, language toolchains
 │   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
 ├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet, theme-shots)
-├── server/            # REDRUM services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, youtube
+├── server/            # MENTICIDE services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, youtube
 ├── system/            # System-level config: games, minecraft, bigscreen, waydroid, ios-sideloading, tether, flatpak, rss-sources, vpn...
 └── theme/             # Everything color-related
     └── webstyling/    #   Per-site CSS themes for the browser
@@ -84,7 +90,7 @@ modules/
 
 [`TODO.md`](TODO.md) lists planned updates to this configuration — features
 and improvements that are wanted but not yet implemented (system-level items
-like Waydroid/Android TV, and REDRUM server additions such as Immich and
+like Waydroid/Android TV, and MENTICIDE server additions such as Immich and
 Pi-hole). It is a working checklist, not a roadmap or issue tracker; items
 are removed from it once they land in the tree.
 
@@ -155,7 +161,7 @@ targets:
 
 ### Actual Budget theming
 
-Actual Budget runs on REDRUM behind the **Actual Budget Tweaks** (ABT) sidecar
+Actual Budget runs on MENTICIDE behind the **Actual Budget Tweaks** (ABT) sidecar
 (`modules/server/actual-budget-tweaks.nix`), a small reverse proxy that injects
 ABT's UI tweaks into every browser that opens `budget.cqjro.ca` — no extension
 needed. ABT themes the app from a set of `--ctp-*` CSS tokens, so the sidecar
@@ -191,13 +197,13 @@ matches the rest of the config out of the box.
 - **Zen Browser** (twilight) — managed profiles with pinned tabs *per workspace*
   (`Entertainment`, `Nix`, `Browsing`), container isolation, ublock-origin /
   Proton Pass / Dark Reader / Stylus, and the webstyling stack above.
-- **Server stack on REDRUM** — Tailscale, Paperless-ngx (paperless storage, tied to
+- **Server stack on MENTICIDE** — Tailscale, Paperless-ngx (paperless storage, tied to
   the stylix `glance` theme only for the glance dashboard), Actual Budget
   (self-hosted finance) with **Actual Budget Tweaks** (a sidecar proxy that
   injects UI tweaks and is seeded with the Stylix palette — see
   [Actual Budget theming](#actual-budget-theming)), Linkwarden (bookmarks), Beszel (server monitoring),
   Glance (feed dashboard, themed by Stylix), Miniflux (RSS reader) with
-  ReactFlux (a Miniflux web client), a T3 Code agent server (tailnet-only, see [T3 Code on REDRUM](#t3-code-on-redrum)), a Cloudflare-hosted homepage
+  ReactFlux (a Miniflux web client), a T3 Code agent server (tailnet-only, see [T3 Code on MENTICIDE](#t3-code-on-menticide)), a Cloudflare-hosted homepage
   (with a Homelab tab listing every exposed app), and a systemd YouTube
   playlist-sync service (hourly; reads subscriptions via the Data API but checks
   each channel's RSS feed for new uploads to stay under the daily API quota)
@@ -206,8 +212,8 @@ matches the rest of the config out of the box.
   Flatpak support, Minecraft + game launchers, Waydroid, iOS sideloading
   toolchain, `mtkclient`/`rockbox-utility` gadget firmware "doodads", VPN, and
   printing.
-- **Tether** — iPhone ↔ Linux bridge on the desktop hosts (GOD-KILLER and
-  LittleNix): notification mirroring (ANCS), SMS/iMessage + contacts
+- **Tether** — iPhone ↔ Linux bridge on the desktop hosts (THEOCIDE and
+  REGICIDE): notification mirroring (ANCS), SMS/iMessage + contacts
   (MAP/PBAP) over Bluetooth, plus clipboard sync, file transfer and OTP
   handling over Wi-Fi via the iOS app. Defined in `modules/system/tether.nix`
   (wraps `github:zackb/tether`'s NixOS module). See the pairing steps below.
@@ -219,10 +225,10 @@ matches the rest of the config out of the box.
   at `/etc/rss-sources.opml` — import that file into any reader (FreshRSS, Yarr,
   NetNewsWire, …) to bulk-subscribe. `category` becomes the folder/category in
   readers that have one (Miniflux's "Nuclear" holds the nuclear-industry feeds).
-  - **Miniflux sync (list → Miniflux, automatic)** — the REDRUM unit
+  - **Miniflux sync (list → Miniflux, automatic)** — the MENTICIDE unit
     `miniflux-rss-sync` (`modules/server/miniflux-rss-sync.nix`) subscribes
     Miniflux to every feed in the list, creating categories such as "Nuclear".
-    It runs on the REDRUM switch that changes the list (and at boot), as the
+    It runs on the MENTICIDE switch that changes the list (and at boot), as the
     `miniflux` user over loopback, authenticating with a Miniflux API key kept
     in `/var/lib/miniflux/api-token` (create it once, see "Create app secrets";
     the unit logs `no API key` / `401` until it exists and is valid, and the
@@ -237,7 +243,7 @@ matches the rest of the config out of the box.
     phone, and refuses to prune more than 5 feeds (or anything when the list is
     empty) in one run. Rotating your Miniflux login does not affect it; only
     revoking the API key does.
-  - **Miniflux → list (manual)** — `rss-sync` on GOD-KILLER
+  - **Miniflux → list (manual)** — `rss-sync` on THEOCIDE
     (`modules/scripts/rss-sync.py`, `home-manager/terminal/rss-sync.nix`) is for
     the reverse direction, and every command is a dry run until given its flag:
 
@@ -255,7 +261,7 @@ matches the rest of the config out of the box.
     read -rs v; echo; printf '%s' "$v" | install -m 600 /dev/stdin
     ~/.config/rss-sync/api-token; unset v` (or export `MINIFLUX_TOKEN`).
     `push` and `prune --yes` also exist but are the unit's
-    job; running them by hand on GOD-KILLER uses a different snapshot than the
+    job; running them by hand on THEOCIDE uses a different snapshot than the
     unit. A feed whose URL Miniflux rewrites after a permanent redirect shows up
     as one deletion plus one addition; `pull --write --apply-removals` resolves
     it. With `prune` off, a feed removed from the list but still in Miniflux is
@@ -265,14 +271,14 @@ matches the rest of the config out of the box.
   store tools from the desktop: the tray app's icon lives in noctalia's bar
   tray (a click toggles the window), a 6h background timer notifies when flake
   inputs are outdated, and the same package ships the `nixdatifier` CLI/TUI
-  (installed CLI-only on REDRUM). Its TUI theme is generated from the Stylix
+  (installed CLI-only on MENTICIDE). Its TUI theme is generated from the Stylix
   palette. Every rebuild merges a declarative slice into the widget's
   `~/.config/nixdatifier/standalone.json` and restarts the tray app (flake
   path `~/.nixos`, 20 generations, font scale 1.3, palette colours); all
   other widget settings stay app-owned and survive rebuilds. From
   `github:Muddyblack/nixdatifier` via
   `modules/home-manager/apps/nixdatifier.nix` — not in nixpkgs yet.
-- **TV mode (Plasma Bigscreen)** — `GOD-KILLER` offers KDE Plasma Bigscreen as a
+- **TV mode (Plasma Bigscreen)** — `THEOCIDE` offers KDE Plasma Bigscreen as a
   second session in the greeter (`modules/system/bigscreen.nix`; Hyprland stays
   the default), with couch apps that also open from Hyprland: Jellyfin Desktop,
   VacuumTube, Steam Big Picture, RetroArch, the Aura browser (built from a
@@ -285,16 +291,16 @@ matches the rest of the config out of the box.
   supported session on this host (it can show a black screen).
 - **Xbox Game Pass** — [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus),
   an Xbox-style launcher for Microsoft Store / PC Game Pass titles, installed on
-  `GOD-KILLER` via `modules/home-manager/apps/xodus-nexus.nix`. The launcher
+  `THEOCIDE` via `modules/home-manager/apps/xodus-nexus.nix`. The launcher
   downloads its Xodus backend and Nexus runtime on first run (see
   [Xbox Game Pass (Xodus Nexus)](#xbox-game-pass-xodus-nexus)).
 - **DWSIM** — [DWSIM](https://dwsim.org), an open-source chemical process
   simulator, repackaged from the official `.deb` release (not in nixpkgs) by
-  `modules/home-manager/apps/dwsim.nix` on `GOD-KILLER`. The version and hash
+  `modules/home-manager/apps/dwsim.nix` on `THEOCIDE`. The version and hash
   are the `dwsim.version` / `dwsim.hash` options; `modules/scripts/dwsim-update.sh`
   prints the latest pair.
 - **3D printing** — a slicer + modelling toolchain on the desktop hosts
-  (GOD-KILLER, LittleNix): **QIDI Studio** as the slicer for QIDI printers
+  (THEOCIDE, REGICIDE): **QIDI Studio** as the slicer for QIDI printers
   (a Bambu Studio / PrusaSlicer fork), plus **FreeCAD** and **SolveSpace** for
   parametric CAD, **OpenSCAD** for script-driven solids and **Blender** for mesh
   work — installed via `modules/home-manager/apps/3d-printing.nix`. All are from
@@ -305,7 +311,7 @@ matches the rest of the config out of the box.
 
 ## AI agents
 
-`GOD-KILLER` runs coding agents through [T3 Code](https://github.com/pingdotgg/t3code)
+`THEOCIDE` runs coding agents through [T3 Code](https://github.com/pingdotgg/t3code)
 (`modules/home-manager/ai-tools/t3code.nix`, themed from Stylix) driving Claude
 Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
 `t3code.nix` builds the native capture helper (nixpkgs does not; see
@@ -314,7 +320,7 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
 `modules/home-manager/ai-tools/`:
 
 - **Permissions** (`claude-code.nix`, fragment `claude-code-policy`) — one
-  managed policy for GOD-KILLER and REDRUM in
+  managed policy for THEOCIDE and MENTICIDE in
   `/etc/claude-code/managed-settings.json`, which agents cannot edit. Bash runs
   in a bubblewrap sandbox that hides your home directory and limits the network
   to GitHub and nixos.org; secrets and the T2 firmware are denied; a
@@ -324,7 +330,7 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
   `rebuild.sh switch|test|push`, `git push`, commits on `master` and `gh pr
   merge` ask. Only hooks from the managed policy run. A second hook,
   `secret-guard`, blocks a message or tool call that carries a key or token and
-  guards the T2 firmware paths (on GOD-KILLER and REDRUM; `docs/secrets.md`).
+  guards the T2 firmware paths (on THEOCIDE and MENTICIDE; `docs/secrets.md`).
   Full access keeps the sandbox, denies and guard but refuses every `ask`
   instead of prompting.
   Detail and the smoke test: [`docs/agents/security.md`](docs/agents/security.md).
@@ -334,7 +340,7 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
 - **Rebuilds** — agents run `./rebuild.sh check|eval|build HOST` freely (silent
   on success without a terminal; the log is `.log/nixos-build.log`).
   `test`/`dry`/`switch` need your approval in T3 *and* your password in a GUI
-  dialog. Remote hosts (REDRUM) are built by the agent but activated by you in
+  dialog. Remote hosts (MENTICIDE) are built by the agent but activated by you in
   a terminal. See [Change workflow](#change-workflow).
 - **Agent docs** — `AGENTS.md` is the shared guide for any agent; `CLAUDE.md`
   imports it (`@AGENTS.md`) and adds Claude-only notes; long reference material
@@ -356,12 +362,12 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
   pick Supervised per thread for policy, secrets or networking work.
 - **Notifications** (`notifications.nix`, fragment `agent-notifications`) — approval,
   completion and failure alerts through `claude-code-policy.hooks`: desktop popups on
-  GOD-KILLER, ntfy push to a phone on both hosts (ntfy only on REDRUM). Setup and
+  THEOCIDE, ntfy push to a phone on both hosts (ntfy only on MENTICIDE). Setup and
   tests in [`docs/notifications.md`](docs/notifications.md).
 
 ## Xbox Game Pass (Xodus Nexus)
 
-`GOD-KILLER` installs [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus)
+`THEOCIDE` installs [Xodus Nexus](https://github.com/domsvoboda/xodus-nexus)
 from `modules/home-manager/apps/xodus-nexus.nix`: an Xbox-style launcher for
 Microsoft Store and PC Game Pass games that runs them through a shared
 Proton-based runtime (no Windows install).
@@ -391,20 +397,20 @@ workaround.
 
 | # | Workaround | Where | Blocked on | Re-enable when |
 | --- | --- | --- | --- | --- |
-| 1 | REDRUM built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/REDRUM/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
+| 1 | MENTICIDE built from a pinned nixpkgs (`cac0c1ef`, kernel 6.18.46) instead of `nixpkgs/nixos-unstable` | `flake.nix:18`, `modules/hosts/host.nix:91`, `modules/hosts/MENTICIDE/T2-PIN.md` | `NixOS/nixos-hardware#2027` — `linux_6_18 >= 6.18.47` rejects the `facf1c7` t2linux patchset | the issue is resolved (or the pin is otherwise obsolete); full removal steps in `T2-PIN.md` |
 | 2 | Local override re-wraps `qidi-studio` via `appimageTools.wrapAppImage`: adds `libsoup_3`/`libpng`/`glib-networking` to its FHS env, pins `SSL_CERT_FILE`/`SSL_CERT_DIR` at nixpkgs `cacert`, and points `GIO_EXTRA_MODULES` at glib-networking | `modules/home-manager/apps/3d-printing.nix` | nixpkgs `pkgs/by-name/qi/qidi-studio/package.nix` only lists `webkitgtk_4_1` in `extraPkgs`; the AppImage bundles just its ffmpeg libs, so webkitgtk's runtime deps (`libsoup_3`, `libpng`) never reach the FHS env and the app dies with `libsoup-3.0.so.0: cannot open shared object file`. The env also lacks the Fedora CA path (`/etc/pki/tls/certs/ca-bundle.crt`) the app probes (certificate-store nag) and glib-networking's GIO TLS backend, so every web view reports "TLS support not available". The sibling package `qidi-slicer-bin` already adds `libsoup_3`/`libpng` | upstream `qidi-studio` lists `libsoup_3`/`libpng` in `extraPkgs` (like `qidi-slicer-bin`) **and** the CA + GIO-TLS gaps are addressed; then use `pkgs.qidi-studio` directly and delete the override |
 | 3 | Local binary patch of qidi-studio's webview User-Agent (`modules/scripts/patch-qidi-studio-ua.py`) to inject the Safari `Version/… Safari/…` tokens | `modules/home-manager/apps/3d-printing.nix` (`postExtract`) | `QIDITECH/QIDIStudio#244` — the non-Windows branch of `src/slic3r/GUI/Widgets/WebView.cpp` hardcodes a UA with no browser token, so the login / online-model page's UA sniffing can't set the `X-DeviceType` header and `api.qidimaker.com` replies `{"code":2010,"message":"X-DeviceType missing in request header"}`. Windows is unaffected (its UA has `Chrome/… Safari/…`). The token must be Safari, not Chrome: the webview is WebKitGTK, and the qidimaker SPA takes Chrome-only code paths it can't run, rendering the pages blank | upstream appends a standard browser token to the non-Windows UA (both in `WebView()` and `RecreateAll()`); then drop `postExtract`/the patch script and `contents`, reverting to `pkgs.appimageTools.wrapType2` |
 | 4 | Store-measurement timeout in nixdatifier's `diskusage` helper raised from 120s to 300s (package patch via `overrideAttrs`) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: `package/contents/tools/sh/diskusage` hardcodes `timeout --kill-after=5s 120s` around `nix-store --gc --print-dead`, and that scan alone takes ~119.5s on this store (326k paths, ~244k dead) — the probe is killed at random, so the Tools storage card stays empty while the free-space number (a cheap `df` read) still shows. Not yet reported upstream | upstream raises the cap or makes it configurable; then delete `patchedPackage` and keep the default package |
 | 5 | Window outline recoloured to blend with the panel background (same `overrideAttrs` patch as #4) | `modules/home-manager/apps/nixdatifier.nix` (`patchedPackage`, `# TODO-remove:`) | `Muddyblack/nixdatifier`: the root panel `Rectangle` in `FullView.qml` hardcodes `border.color: UI.Theme.wash(fullView.accentColor, .18)` — a 1px outline of the accent colour at 18% opacity. With the dark palette accent (`#007bd3`) that reads as a faint blue frame around the standalone window, and no setting controls it. The patch repaints it with the panel background colour (visually identical to removing it with an opaque background) | upstream makes the border colour/width configurable or drops it; then delete this `substituteInPlace` |
 | 6 | Xodus Nexus launcher packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`) | `modules/home-manager/apps/xodus-nexus.nix` (`# TODO-remove:`) | not in nixpkgs and upstream `domsvoboda/xodus-nexus` publishes no `flake.nix` or Nix expression — only the AppImage and an `install.sh`. Upstream `xodus-gaming/xodus` is an unpackaged Rust CLI/service with no releases, and Nexus installs its own patched backend at runtime anyway | `pkgs.xodus-nexus` (or equivalent) lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
-| 8 | LearnHarness packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`, GOD-KILLER only) | `modules/home-manager/apps/learnharness.nix` (`# TODO-remove:`) | not in nixpkgs (search.nixos.org unstable has no `learnharness`, checked 2026-11-03), and `amosblomqvist/learnharness` ships no `flake.nix` or Nix expression. The AppImage cannot self-update from the store; bump `version` + `hash` in the module | `pkgs.learnharness` lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
-| 9 | Native Hyprland capture helper (`t3-hyprland-snap-shot`) built from the `t3code` source with `rustPlatform.buildRustPackage` and installed into `t3code-unwrapped` via `overrideAttrs` `postInstall` (GOD-KILLER only; REDRUM's server package is untouched). Overriding the unwrapped package makes nix rebuild the Electron app locally | `modules/home-manager/ai-tools/t3code.nix` (`# TODO-remove:`); global bind in `modules/home-manager/desktop/hyprland.nix` | nixpkgs `pkgs/by-name/t3/t3code` (0.1.0, rev `3ec6363`) builds the Electron app but not the native capture helpers (`native/hyprland-snap-shot`, `native/kde-snap-shot`; only `native/browser-secret` and the resource monitor are packaged), so the unpackaged app reports "The Hyprland capture helper is missing from this build" when "Allow snapshots" runs setup. The app looks for the bundle at `<libexec/t3code>/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot` and lstat-rejects symlinks. The KDE helper is not packaged here (GOD-KILLER runs Hyprland) | nixpkgs `t3code` (or `t3code-unwrapped`) installs the Hyprland (and KDE) capture helper at that path; then drop `hyprlandCaptureHelper`/`t3codeWithCapture` and the `package` override, and verify "Allow snapshots" still works. The `CTRL + SHIFT + 2` global bind stays (it is config, not a workaround) |
+| 8 | LearnHarness packaged from its pinned GitHub AppImage (`fetchurl` + `appimageTools.wrapType2`, THEOCIDE only) | `modules/home-manager/apps/learnharness.nix` (`# TODO-remove:`) | not in nixpkgs (search.nixos.org unstable has no `learnharness`, checked 2026-11-03), and `amosblomqvist/learnharness` ships no `flake.nix` or Nix expression. The AppImage cannot self-update from the store; bump `version` + `hash` in the module | `pkgs.learnharness` lands in nixpkgs, or upstream publishes a flake/Nix package; then drop the pin and use the package/flake input |
+| 9 | Native Hyprland capture helper (`t3-hyprland-snap-shot`) built from the `t3code` source with `rustPlatform.buildRustPackage` and installed into `t3code-unwrapped` via `overrideAttrs` `postInstall` (THEOCIDE only; MENTICIDE's server package is untouched). Overriding the unwrapped package makes nix rebuild the Electron app locally | `modules/home-manager/ai-tools/t3code.nix` (`# TODO-remove:`); global bind in `modules/home-manager/desktop/hyprland.nix` | nixpkgs `pkgs/by-name/t3/t3code` (0.1.0, rev `3ec6363`) builds the Electron app but not the native capture helpers (`native/hyprland-snap-shot`, `native/kde-snap-shot`; only `native/browser-secret` and the resource monitor are packaged), so the unpackaged app reports "The Hyprland capture helper is missing from this build" when "Allow snapshots" runs setup. The app looks for the bundle at `<libexec/t3code>/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot` and lstat-rejects symlinks. The KDE helper is not packaged here (THEOCIDE runs Hyprland) | nixpkgs `t3code` (or `t3code-unwrapped`) installs the Hyprland (and KDE) capture helper at that path; then drop `hyprlandCaptureHelper`/`t3codeWithCapture` and the `package` override, and verify "Allow snapshots" still works. The `CTRL + SHIFT + 2` global bind stays (it is config, not a workaround) |
 | 10 | `opencode` taken from the previous nixpkgs (`inputs.nixpkgs-opencode`, rev `3ec636362e18`) instead of the main `nixpkgs` | `flake.nix` (input), `modules/home-manager/terminal/opencode.nix` (`# TODO-remove:`) | nixpkgs `1d06008` (observed 2026-11-05): the fixed-output derivation `opencode-node_modules-2.2.5` has a stale hash (specified `sha256-xfOVcw1+…`, got `sha256-prx9dX7k…`), so `pkgs.opencode` does not build | `nix build nixpkgs#opencode` succeeds on nixos-unstable; then use `pkgs.opencode` and delete the input |
 | 11 | Stylix `rofi` target disabled for every home-manager user (loses nothing today: no module here enables rofi) | `modules/theme/stylix.nix` (`# TODO-remove:`) | `nix-community/stylix` `modules/rofi/hm.nix` still sets the renamed `programs.rofi.font` (home-manager now wants `programs.rofi.settings.font`), so every eval warns | Stylix sets `programs.rofi.settings.font`; then delete the `home-manager.sharedModules` line (rofi only needs the target back if it is ever enabled) |
 | 12 | `programs.opencode.tui` forced empty and the Stylix theme selected through `programs.opencode.cli.theme = "stylix"` instead | `modules/home-manager/terminal/opencode.nix` (`# TODO-remove:`) | `nix-community/stylix` `modules/opencode/hm.nix` still writes `programs.opencode.tui.theme`, which OpenCode 2 ignores and home-manager warns about; the theme file itself (`programs.opencode.themes.stylix`) is still generated by Stylix | Stylix writes the theme name to `programs.opencode.cli`; then drop `tui = lib.mkForce { }` and `cli.theme` (and the `lib` argument) |
 | 13 | `services.avahi` set directly (`settings.publish`: publishing and user-service publishing on, addresses published) with tether's `wifi.enable` left off; `wifi.openFirewall` still used | `modules/system/tether.nix` (`# TODO-remove:`) | `zackb/tether` `nix/module.nix` (`wifi.enable` block) still sets the obsolete `services.avahi.publish.enable` / `publish.userServices`, so any host enabling it warns | tether sets `services.avahi.settings.publish.*`; then set `wifi.enable = true` and delete the `services.avahi` block |
-| 14 | DWSIM repackaged from the official amd64 `.deb` release (`fetchurl` + `dpkg-deb` + `autoPatchelfHook`, GOD-KILLER only) behind the `dwsim.version` / `dwsim.hash` options | `modules/home-manager/apps/dwsim.nix` (`# TODO-remove:`), `modules/scripts/dwsim-update.sh` | not in nixpkgs (`pkgs/by-name/dw` has no `dwsim`). Upstream (`DanWBR/dwsim10`) ships Linux only as a `.deb` / tarball with its own bundled self-contained .NET runtime, so the module unpacks it and patches the native libs by hand | `pkgs.dwsim` lands in nixpkgs; then **rewrite the module** to install `pkgs.dwsim` (keep the `dwsim` fragment name and the `machine.nix` import), drop the `.deb` derivation, the `version`/`hash` options and `dwsim-update.sh`, and fix the README DWSIM bullet |
-| 15 | Aura browser (Plasma Bigscreen) built from upstream commit `d1d8712c` (2026-07-23) with `kdePackages.mkKdeDerivation`, GOD-KILLER only | `modules/system/bigscreen.nix` (`# TODO-remove:`) | not in nixpkgs (`pkgs/kde/plasma` has no `aura-browser`). The release tag `v26.11.0` imports `org.kde.bigscreen.ui`, which exists only in Bigscreen 6.8.80+, while nixpkgs ships Bigscreen 6.8.2 (module `org.kde.bigscreen`), so the build is pinned to the last commit before upstream's "Port to bigscreen-ui" (2026-10-30) | `aura-browser` lands in nixpkgs (drop the derivation and use the package), or nixpkgs moves `plasma-bigscreen` to 6.9 or newer (then switch the pin to the `v26.11.0` tag or later). The probe covers only the first; the second needs a look at the nixpkgs Bigscreen version |
+| 14 | DWSIM repackaged from the official amd64 `.deb` release (`fetchurl` + `dpkg-deb` + `autoPatchelfHook`, THEOCIDE only) behind the `dwsim.version` / `dwsim.hash` options | `modules/home-manager/apps/dwsim.nix` (`# TODO-remove:`), `modules/scripts/dwsim-update.sh` | not in nixpkgs (`pkgs/by-name/dw` has no `dwsim`). Upstream (`DanWBR/dwsim10`) ships Linux only as a `.deb` / tarball with its own bundled self-contained .NET runtime, so the module unpacks it and patches the native libs by hand | `pkgs.dwsim` lands in nixpkgs; then **rewrite the module** to install `pkgs.dwsim` (keep the `dwsim` fragment name and the `machine.nix` import), drop the `.deb` derivation, the `version`/`hash` options and `dwsim-update.sh`, and fix the README DWSIM bullet |
+| 15 | Aura browser (Plasma Bigscreen) built from upstream commit `d1d8712c` (2026-07-23) with `kdePackages.mkKdeDerivation`, THEOCIDE only | `modules/system/bigscreen.nix` (`# TODO-remove:`) | not in nixpkgs (`pkgs/kde/plasma` has no `aura-browser`). The release tag `v26.11.0` imports `org.kde.bigscreen.ui`, which exists only in Bigscreen 6.8.80+, while nixpkgs ships Bigscreen 6.8.2 (module `org.kde.bigscreen`), so the build is pinned to the last commit before upstream's "Port to bigscreen-ui" (2026-10-30) | `aura-browser` lands in nixpkgs (drop the derivation and use the package), or nixpkgs moves `plasma-bigscreen` to 6.9 or newer (then switch the pin to the `v26.11.0` tag or later). The probe covers only the first; the second needs a look at the nixpkgs Bigscreen version |
 
 ## Scheduled threads
 
@@ -412,7 +418,7 @@ Recurring T3 threads (upstream-fix registry polling, evaluation warnings per hos
 per-machine "merged but not switched yet" notice) share a deterministic pre-step,
 `docs/schedules/bin/schedule-precheck`, so a model only runs when something changed. Findings
 become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls or writes to
-`~/.nixos`. Prompts, the issue-permission requirement and the REDRUM steps are in
+`~/.nixos`. Prompts, the issue-permission requirement and the MENTICIDE steps are in
 [`docs/schedules/README.md`](docs/schedules/README.md).
 
 ## Scripts
@@ -446,7 +452,7 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
   SSH auth and does the stash/pull/stash-pop against `~/.nixos`. Available from
   any terminal as the `config-sync` zsh alias (`bash
   ${../../scripts/config-sync.sh}`), so it works outside of login — e.g. midway
-  through a session or SSH'd into REDRUM (needs the SSH key loaded in an agent;
+  through a session or SSH'd into MENTICIDE (needs the SSH key loaded in an agent;
   `start.sh` does this on login). Logs to `~/.nixos/.log/config-sync.log`.
 - `modules/scripts/focus-window.sh` — focus an app by class/title or launch it.
 - `modules/scripts/keybind-cheatsheet.sh` — render the xremap keymap as a
@@ -510,7 +516,7 @@ kept for pulling `~/.nixos` by hand without switching:
 
 - **Anywhere in a terminal** — `config-sync` (zsh alias wired in
   `modules/home-manager/terminal/zsh.nix`, like `rebuild`).
-- **SSH'd into REDRUM** — same `config-sync` command, as long as the SSH key is
+- **SSH'd into MENTICIDE** — same `config-sync` command, as long as the SSH key is
   loaded in that agent (`ssh-add ~/.ssh/id_ed25519`).
 
 The sync itself:
@@ -582,7 +588,7 @@ you want the OTP autofill native-messaging hosts.
 
 ## Installation
 
-`GOD-KILLER` is also where this repo lives (`~/.nixos`), so it is a *self-hosting*
+`THEOCIDE` is also where this repo lives (`~/.nixos`), so it is a *self-hosting*
 flake — the config in `modules/` is both the shipped system and the source of
 this repository's files.
 
@@ -593,15 +599,15 @@ To deploy an existing machine:
 git clone git@github.com:cqjro/nixos.git ~/.nixos
 cd ~/.nixos
 
-# 2. T2 hosts only (REDRUM, LittleNix), before their first build on this machine:
+# 2. T2 hosts only (MENTICIDE, REGICIDE), before their first build on this machine:
 #    put the Apple brcm firmware in /var/lib/firmware-src/<HOST>/brcm (never in
 #    the repo) and import it into the Nix store; see docs/firmware.md
-nix run .#t2-firmware-import -- REDRUM
+nix run .#t2-firmware-import -- MENTICIDE
 
 # 3. Rebuild any host from the repo (flake is self-contained, so this works
 #    from any machine with Nix installed)
-sudo nixos-rebuild switch --flake ".#GOD-KILLER"
-#     replace GOD-KILLER with LittleNix or REDRUM as appropriate
+sudo nixos-rebuild switch --flake ".#THEOCIDE"
+#     replace THEOCIDE with REGICIDE or MENTICIDE as appropriate
 ```
 
 For a fresh install from the live ISO, first bring up NixOS (installer →
@@ -610,7 +616,7 @@ step 2 first):
 
 ```bash
 # Prefer the standalone installer for correct hardware/partition setup, or:
-nixos-install --flake ".#GOD-KILLER"
+nixos-install --flake ".#THEOCIDE"
 ```
 
 Notes:
@@ -639,12 +645,12 @@ agent procedure is in `docs/agents/workflow.md`.
    stays on a clean `master`.
 2. **Verify.** The agent runs `./rebuild.sh check` and `./rebuild.sh build`
    for the affected hosts:
-   - **GOD-KILLER** builds GOD-KILLER and REDRUM.
-   - **REDRUM** builds only itself, and only *evaluates* GOD-KILLER (`./rebuild.sh eval GOD-KILLER`).
+   - **THEOCIDE** builds THEOCIDE and MENTICIDE.
+   - **MENTICIDE** builds only itself, and only *evaluates* THEOCIDE (`./rebuild.sh eval THEOCIDE`).
 3. **Try it without recording it.** `./rebuild.sh test HOST` activates the
    branch build but writes no boot entry or generation. `./rebuild.sh revert`
    or a reboot undoes it. `./rebuild.sh dry HOST` only reports what would
-   restart, which is the safer choice for network/SSH changes on headless REDRUM.
+   restart, which is the safer choice for network/SSH changes on headless MENTICIDE.
 4. **Review.** Reviews are tiered, cheapest first:
    1. Deterministic checks, which are free.
    2. A Haiku convention reviewer.
@@ -689,9 +695,9 @@ Or open a dev shell for the YouTube sync tooling:
 nix develop .#youtube-sync
 ```
 
-## REDRUM server setup
+## MENTICIDE server setup
 
-REDRUM exposes apps through **Cloudflare Tunnels** via `services.cloudflared` in
+MENTICIDE exposes apps through **Cloudflare Tunnels** via `services.cloudflared` in
 `modules/server/*.nix`. Each app gets its own tunnel, credentials file and
 DNS record. The tunnel UUIDs are in the modules: they are identifiers, not
 secrets. The tunnel *credentials* (`/var/lib/cloudflared/<app>.json`) are the
@@ -785,7 +791,7 @@ talks straight to the Miniflux API (CORS is enabled on Miniflux's side).)
 ### 6. Rebuild and log in once
 
 ```bash
-./rebuild.sh                              # picks REDRUM, then restart cloudflared-tunnel-* if needed
+./rebuild.sh                              # picks MENTICIDE, then restart cloudflared-tunnel-* if needed
 ssh <server> systemctl restart cloudflared-tunnel-*.service
 ```
 
@@ -800,7 +806,7 @@ ssh <server> systemctl restart cloudflared-tunnel-*.service
   and paste the Miniflux API token from above; it stores config in your browser).
 
 The feed-sync unit (`miniflux-rss-sync`) needs its own Miniflux API key (Settings
-→ API Keys, description e.g. "rss-sync REDRUM"), stored where only the
+→ API Keys, description e.g. "rss-sync MENTICIDE"), stored where only the
 `miniflux` user reads it. Run these one line at a time:
 
 ```bash
@@ -810,7 +816,7 @@ unset K
 sudo systemctl restart miniflux-rss-sync
 ```
 
-### T3 Code on REDRUM
+### T3 Code on MENTICIDE
 
 Agents can run on either machine because **each machine runs its own T3 server**
 (an "environment"); clients connect to one or more of them over Tailscale. There
@@ -818,23 +824,23 @@ is no Cloudflare tunnel for T3.
 
 | Environment | Server | Reached at |
 | --- | --- | --- |
-| GOD-KILLER | the desktop app's local backend (`127.0.0.1:3773`) | the app itself; for other devices publish it with `tailscale serve` (see [Reaching GOD-KILLER from other devices](#reaching-god-killer-from-other-devices)) |
-| REDRUM | `t3code.service` (`modules/server/t3code.nix`, `127.0.0.1:8088`) | `https://redrum.<tailnet>.ts.net`, published by `t3code-tailscale-serve.service` |
+| THEOCIDE | the desktop app's local backend (`127.0.0.1:3773`) | the app itself; for other devices publish it with `tailscale serve` (see [Reaching THEOCIDE from other devices](#reaching-theocide-from-other-devices)) |
+| MENTICIDE | `t3code.service` (`modules/server/t3code.nix`, `127.0.0.1:8088`) | `https://menticide.<tailnet>.ts.net`, published by `t3code-tailscale-serve.service` |
 
 Prerequisites: MagicDNS + HTTPS certificates enabled in the Tailscale admin
 console. **Client and server versions must match:** the desktop app refuses an
-older server ("This client requires a newer server"). REDRUM's pinned nixpkgs
+older server ("This client requires a newer server"). MENTICIDE's pinned nixpkgs
 only ships t3code 0.0.33, so `t3code.nix` takes the package from the main
-`nixpkgs` input (the build GOD-KILLER runs; `# TODO-remove:` with the T2 pin) —
+`nixpkgs` input (the build THEOCIDE runs; `# TODO-remove:` with the T2 pin) —
 after a `nix flake update nixpkgs`, switch both machines. The same goes for the
 `claude` CLI (`# TODO-remove:` with the pin): T3 only lists a Claude model when the
-CLI meets that model's minimum version, and the pinned nixpkgs' 2.1.238 left REDRUM
+CLI meets that model's minimum version, and the pinned nixpkgs' 2.1.238 left MENTICIDE
 with only the legacy model ("only legacy Fable 5 is available" in Settings). The server only drives the provider, it does not ship one, so the module
 puts `claude`, `gh`, `git`, `bash` and `nix` on the unit's `PATH` (and `claude`/`gh`/`t3`
 in the system profile), makes `gh` git's credential helper for the service only,
 sets the service's git identity, adds the `t3code` user to `systemd-journal` (read
 logs, no access to your home) and puts the sandbox tools on its `PATH`. The Claude
-policy is the same `claude-code-policy` fragment as GOD-KILLER's (see "AI agents"
+policy is the same `claude-code-policy` fragment as THEOCIDE's (see "AI agents"
 above). Log in once as the
 `t3code` user after the switch — credentials land in `/var/lib/t3code`, never in
 the store:
@@ -846,10 +852,10 @@ sudo -u t3code -H sh -c 'cd ~ && gh auth login'   # GitHub.com -> HTTPS -> brows
 sudo systemctl restart t3code
 ```
 
-Then, on REDRUM, mint a pairing token for each device (default TTL 5 min):
+Then, on MENTICIDE, mint a pairing token for each device (default TTL 5 min):
 
 ```bash
-sudo -u t3code -H t3 pair --label god-killer                # token for the desktop app
+sudo -u t3code -H t3 pair --label theocide                # token for the desktop app
 sudo -u t3code -H t3 pair --label iphone --ttl 15m \
   --scope orchestration:read --scope orchestration:operate  # phone: view + drive threads only
 ```
@@ -858,7 +864,7 @@ sudo -u t3code -H t3 pair --label iphone --ttl 15m \
 `127.0.0.1:8088`, so the link and QR from `t3 pair` say `http://127.0.0.1:8088/…`,
 which the client cannot reach (`Failed to fetch remote environment endpoint
 http://127.0.0.1:8088/…`). Replace only that part with
-`https://redrum.<tailnet>.ts.net` (no `:8088`, no `http`, and **no trailing dot** —
+`https://menticide.<tailnet>.ts.net` (no `:8088`, no `http`, and **no trailing dot** —
 `tailscale status --json | jq -r .Self.DNSName` ends in one), keeping the path
 and token as printed. `t3 pair --tailscale` is not an alternative: it would make
 the `t3code` user run `tailscale serve` itself, without the rights to, and
@@ -869,7 +875,7 @@ is invalid" means the token expired, was already tried (including the failed
 `127.0.0.1` attempt) or was minted before a switch/restart — mint a new one and
 use it once.
 
-In the GOD-KILLER app, add REDRUM under Settings → Connections with the edited
+In the THEOCIDE app, add MENTICIDE under Settings → Connections with the edited
 link. The app stores saved connections in the system keyring; if it fails with
 "Desktop secure storage is unavailable in this system context", the keyring is
 locked — see [Keyring](#keyring-gnome-keyring) below. Threads on both machines
@@ -879,10 +885,10 @@ from the connections list.
 
 #### Working on either machine
 
-The repo is one project on both servers: REDRUM has its own clone (owned by
-`t3code` in `/var/lib/t3code`) and REDRUM builds were tested from it, so a
-thread started on the REDRUM environment can edit, check, evaluate and build
-REDRUM like one on GOD-KILLER (GOD-KILLER is eval-only there). T3 does not move
+The repo is one project on both servers: MENTICIDE has its own clone (owned by
+`t3code` in `/var/lib/t3code`) and MENTICIDE builds were tested from it, so a
+thread started on the MENTICIDE environment can edit, check, evaluate and build
+MENTICIDE like one on THEOCIDE (THEOCIDE is eval-only there). T3 does not move
 code between machines: GitHub is the hub, a thread stays on the server that runs
 it, and a branch lives on one machine at a time (push, then fetch on the other).
 
@@ -892,30 +898,30 @@ switch|boot|test|dry-activate` in Auto and Full access; an agent that needs one
 launches a Supervised child thread (its approval card is yours) or hands you the
 command. From your phone:
 
-- **GOD-KILLER:** open the GOD-KILLER environment's terminal in T3 (a real tty,
+- **THEOCIDE:** open the THEOCIDE environment's terminal in T3 (a real tty,
   so `sudo` asks for the password right there) and run `cd ~/.nixos &&
-  ./rebuild.sh switch GOD-KILLER` as a plain command (tested 2026-11-06). A
+  ./rebuild.sh switch THEOCIDE` as a plain command (tested 2026-11-06). A
   `systemd-run --user --wait` wrapper without `--pty` and `--working-directory`
   gives the command no tty (so it falls back to the desktop's GUI password
   dialog), no output and the wrong directory. A token with terminal scope is as
   powerful as your user: mint it only when needed and revoke it if the phone is
   lost.
-- **REDRUM:** `ssh redrum`, then `./rebuild.sh switch REDRUM`.
+- **MENTICIDE:** `ssh menticide`, then `./rebuild.sh switch MENTICIDE`.
 
-#### Reaching GOD-KILLER from other devices
+#### Reaching THEOCIDE from other devices
 
 Nothing exposes the desktop backend by default, so a phone gets
-`Remote environment endpoint https://god-killer.<tailnet>.ts.net/.well-known/t3/environment
-timed out`. Publish it once on GOD-KILLER (MagicDNS + HTTPS certificates must be
+`Remote environment endpoint https://theocide.<tailnet>.ts.net/.well-known/t3/environment
+timed out`. Publish it once on THEOCIDE (MagicDNS + HTTPS certificates must be
 enabled, as above):
 
 ```bash
 sudo tailscale serve --bg --https=443 http://127.0.0.1:3773
-tailscale serve status            # https://god-killer.<tailnet>.ts.net -> 127.0.0.1:3773
+tailscale serve status            # https://theocide.<tailnet>.ts.net -> 127.0.0.1:3773
 ```
 
 The mapping is saved in tailscaled's state and survives reboots and rebuilds. Then
-open `https://god-killer.<tailnet>.ts.net/.well-known/t3/environment` on the phone
+open `https://theocide.<tailnet>.ts.net/.well-known/t3/environment` on the phone
 (Tailscale connected) — it should return JSON — and pair from the desktop app's
 own pairing link/QR, not `t3 pair` (that targets a different server).
 
@@ -932,21 +938,21 @@ own pairing link/QR, not `t3 pair` (that targets a different server).
   stays. Do not switch the toggle off afterwards: that runs `serve … off`, which
   needs the same rights (remove it deliberately with
   `sudo tailscale serve --https=443 off`).
-- GOD-KILLER is only reachable while the desktop app is running and the machine
-  is awake; REDRUM's service is always up.
+- THEOCIDE is only reachable while the desktop app is running and the machine
+  is awake; MENTICIDE's service is always up.
 
 #### Keyring (gnome-keyring)
 
 Electron's secure storage (T3's saved connections, Xodus Nexus' sign-in) needs an
 unlocked Secret Service. The `keyring` fragments in `modules/essentials/keyring.nix`
 provide `gnome-keyring` and unlock the login keyring from the greetd PAM session;
-the NixOS fragment is in the GOD-KILLER and LittleNix lists in `host.nix`, and the
-home-manager one in GOD-KILLER's `machine.nix` imports. The unlock happens only at a **password** login
+the NixOS fragment is in the THEOCIDE and REGICIDE lists in `host.nix`, and the
+home-manager one in THEOCIDE's `machine.nix` imports. The unlock happens only at a **password** login
 (not autologin/fingerprint), only after logging out and back in once, and only if
 the keyring's password equals the login password. To unlock the running session
 without logging out: `gnome-keyring-daemon --unlock`, then type the password.
 
-## File access permissions (REDRUM)
+## File access permissions (MENTICIDE)
 
 Every service runs as its own dedicated system user (same pattern as `linkwarden`
 and `actual-budget`). Users, homes and data dirs are provisioned by Nix

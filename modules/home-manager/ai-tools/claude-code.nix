@@ -27,8 +27,8 @@
 		};
 	};
 
-	# Claude Code policy for every user on the host: cairo on GOD-KILLER and the
-	# t3code service user on REDRUM read the same file, so the two cannot drift.
+	# Claude Code policy for every user on the host: cairo on THEOCIDE and the
+	# t3code service user on MENTICIDE read the same file, so the two cannot drift.
 	# Layers, strongest first (docs/agents/security.md has the evidence):
 	#   1. sandbox: bubblewrap; with blockReadsOutsideWorkingDirectories it
 	#      swaps /home for an empty tmpfs and re-opens only the working dirs,
@@ -81,15 +81,15 @@
 				# worktree copy (relative path) is code the agent can edit and stays
 				# sandboxed. The script runs with the gh token that can write issues
 				# and labels, so do not widen this pattern. The policy is shared with
-				# REDRUM, where /home/cairo is not readable by t3code (inert there).
+				# MENTICIDE, where /home/cairo is not readable by t3code (inert there).
 				"/home/cairo/.nixos/docs/schedules/bin/schedule-precheck *"
-				# REDRUM: the same script packaged by the `schedule-precheck` NixOS
+				# MENTICIDE: the same script packaged by the `schedule-precheck` NixOS
 				# fragment into the system profile. The path is a root-owned symlink
 				# into the store, so (unlike t3code's own checkout) no agent can edit
 				# what it runs, and the shared policy needs no bare name on PATH.
 				"/run/current-system/sw/bin/schedule-precheck *"
-				# theme-shots (modules/theme/theme-shots.nix, GOD-KILLER only; inert on
-				# REDRUM, where nothing installs it): renders the generated Zen CSS on
+				# theme-shots (modules/theme/theme-shots.nix, THEOCIDE only; inert on
+				# MENTICIDE, where nothing installs it): renders the generated Zen CSS on
 				# four fixed sites in a throwaway, logged-out headless profile of the
 				# installed Zen. It needs the nix daemon socket (nix eval) and the
 				# sites, which strictAllowlist would refuse. Absolute path into the
@@ -415,7 +415,7 @@
 				];
 
 				# sandbox runtime (the T3 Code package wraps these into its own PATH;
-				# a terminal `claude` needs them system-wide). The REDRUM service PATH
+				# a terminal `claude` needs them system-wide). The MENTICIDE service PATH
 				# is set in modules/server/t3code.nix.
 				environment.systemPackages = [ pkgs.bubblewrap pkgs.socat guard ];
 

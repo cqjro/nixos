@@ -201,7 +201,7 @@ fi
 
 sent=""
 
-# desktop (GOD-KILLER). Hooks launched by systemd-run may lack the session
+# desktop (THEOCIDE). Hooks launched by systemd-run may lack the session
 # bus variables, so fall back to the per-user socket.
 if [ "$quiet" = 0 ] && [ "$kind" != info ] && command -v notify-send >/dev/null 2>&1; then
 	if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "/run/user/$(id -u)/bus" ]; then

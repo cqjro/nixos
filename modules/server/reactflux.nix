@@ -1,9 +1,9 @@
 { inputs, ... }:
 let
 	system = "x86_64-linux";
-	# REDRUM is built from the pinned nixpkgs (see modules/hosts/REDRUM/T2-PIN.md),
+	# MENTICIDE is built from the pinned nixpkgs (see modules/hosts/MENTICIDE/T2-PIN.md),
 	# so the build toolchain below must come from the same pins for a stable hash.
-	pkgs = inputs.nixpkgs-redrum.legacyPackages.${system};
+	pkgs = inputs.nixpkgs-menticide.legacyPackages.${system};
 
 	# ReactFlux (electh/ReactFlux) is a third-party web frontend for Miniflux.
 	# It's not packaged in nixpkgs and the repo ships no flake.nix, so the source
@@ -33,8 +33,8 @@ let
 
 	# pnpm deps are downloaded once as a fixed-output derivation (FOD). This uses
 	# nixpkgs' own fetcher (fetcherVersion 4 = pnpm 11) instead of the hand-rolled
-	# FOD this file had: that one hashed differently on every fetch (REDRUM and
-	# GOD-KILLER disagreed, 2026-11-06) because pnpm 11 keeps per-file `checkedAt`
+	# FOD this file had: that one hashed differently on every fetch (MENTICIDE and
+	# THEOCIDE disagreed, 2026-11-06) because pnpm 11 keeps per-file `checkedAt`
 	# timestamps in a SQLite index (`store/v11/index.db`) plus a registry metadata
 	# cache. The fetcher strips the timestamps, dumps the index to SQL text and
 	# packs a reproducible tarball; `pnpmConfigHook` below rebuilds the database

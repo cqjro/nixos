@@ -2,7 +2,7 @@
 
 Session: `ses_ea40b3490ffehrTKIy93qWd1fs` (opencode, 2026-10-20/21)
 
-Goal: turn GOD-KILLER into a pseudo Android TV — Waydroid with the
+Goal: turn THEOCIDE into a pseudo Android TV — Waydroid with the
 [WayDroid-ATV](https://github.com/WayDroid-ATV/waydroid-androidtv-builds)
 Android TV image, available **both** as a greeter session (kiosk, like the
 Hyprland/Steam entries) and as a desktop app window inside Hyprland.
@@ -14,7 +14,7 @@ notes, pinned image hashes, remote-pairing notes.
 
 | Decision | Choice |
 | --- | --- |
-| Host | **GOD-KILLER only** (NVIDIA proprietary is the top risk — spike first) |
+| Host | **THEOCIDE only** (NVIDIA proprietary is the top risk — spike first) |
 | Boot behaviour | module option `waydroid-tv.autologin` — **default off** (greeter flow unchanged; option on = greetd `initial_session` straight into TV) |
 | Image provisioning | **Pinned Nix FODs** — both release zips fetched with hashes into the store; first-boot oneshot installs them. Bump = edit url+hash. |
 | Image flavour | **GAPPS build** (`20261017`, Android TV 17 / LineageOS 24.0). Google TV mode is left **off** (default) — it's a runtime toggle inside the image (Settings → System → Waydroid options → Google TV mode), not an image choice. |
@@ -90,7 +90,7 @@ New/reintegrated files:
     (container check → ensure-apps → `waydroid show-full-ui`).
   - `autologin = true` → `services.greetd.settings.initial_session = {
     command = <session script>; user = "cairo"; }`.
-- `modules/hosts/host.nix` — GOD-KILLER gets
+- `modules/hosts/host.nix` — THEOCIDE gets
   `inputs.self.modules.nixos.waydroid` + `...waydroid-tv` + an attrset module
   enabling it (abt-sidecar pattern).
 
@@ -98,7 +98,7 @@ New/reintegrated files:
 
 ### Phase 0 — NVIDIA spike (gate) ← *current*
 
-1. Reintegrate the archived module, wire into GOD-KILLER, rebuild.
+1. Reintegrate the archived module, wire into THEOCIDE, rebuild.
 2. Manual ATV image install: fetch the two zips, extract to
    `/etc/waydroid-extra/images/`, `sudo waydroid init -f`, append the
    `bt_remote_pairing=false` prop.
@@ -131,7 +131,7 @@ provisioning marker mechanics); remove the Android TV item from `TODO.md`.
 
 ## Risks / caveats
 
-- **NVIDIA** (GOD-KILLER renders through proprietary NVIDIA): historically
+- **NVIDIA** (THEOCIDE renders through proprietary NVIDIA): historically
   Waydroid's pain point; ATV builds call NVIDIA support "experimental,
   untested". Phase 0 gate.
 - Disk/store cost ≈ 4 GB (pinned zips + extracted images + `/var/lib` copy).
@@ -152,7 +152,7 @@ provisioning marker mechanics); remove the Android TV item from `TODO.md`.
 ## Phase 0 status
 
 - [x] Reintegrate `modules/system/waydroid.nix`
-- [x] Wire into GOD-KILLER in `host.nix`
+- [x] Wire into THEOCIDE in `host.nix`
 - [x] Eval/rebuild passes (binder kernel config assertion)
 - [x] ATV images fetched + hashes recorded (see [SPIKE.md](./SPIKE.md))
 - [x] ATV images copied to `/etc/waydroid-extra/images/` + `waydroid init -f` run

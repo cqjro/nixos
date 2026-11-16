@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-	flake.modules.nixos."REDRUM" = { pkgs, ... }: {
+	flake.modules.nixos."MENTICIDE" = { pkgs, ... }: {
 		services.logind.settings.Login.HandleLidSwitch = "ignore";
 
 		# Use the systemd-boot EFI boot loader.
@@ -23,7 +23,7 @@
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						REDRUM
+						MENTICIDE
 						zsh
 						ghostty
 						git
@@ -39,7 +39,7 @@
 						terminal-packages
 						nixdatifier
 					];
-					# CLI/TUI only — REDRUM has no graphical session for the tray app
+					# CLI/TUI only — MENTICIDE has no graphical session for the tray app
 					programs.nixdatifier.ui = false;
 			};
 			useUserPackages = true;
@@ -47,7 +47,7 @@
 			backupFileExtension = "backup";
 		};
 
-		networking.hostName = "REDRUM"; # Define your hostname.
+		networking.hostName = "MENTICIDE"; # Define your hostname.
 
 		# Configure network connections interactively with nmcli or nmtui.
 		networking.networkmanager.enable = true;
@@ -57,12 +57,12 @@
 		# Define a user account.
 		users.users.cairo = {
 			isNormalUser = true;
-			# REDRUM defines its own user block instead of importing the shared
+			# MENTICIDE defines its own user block instead of importing the shared
 			# essentials/users module, so the zsh login shell must be set here too —
 			# otherwise SSH sessions land in bash and the home-manager zsh aliases
 			# (rebuild, config-sync, cd=z, …) plus zoxide integration never load.
 			# Do not import essentials/users.nix here instead: its extraGroups
-			# reference seat/plugdev, which no module REDRUM imports creates, so
+			# reference seat/plugdev, which no module MENTICIDE imports creates, so
 			# activation would fail with "group does not exist"; it would also
 			# enable hardware.uinput for xremap, which this headless server never
 			# uses. When essentials/users.nix changes, mirror it in this block.

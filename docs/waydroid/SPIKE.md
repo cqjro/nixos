@@ -1,6 +1,6 @@
 # Phase 0 — NVIDIA spike runbook
 
-Goal: prove Waydroid + the ATV image run on GOD-KILLER's proprietary NVIDIA
+Goal: prove Waydroid + the ATV image run on THEOCIDE's proprietary NVIDIA
 stack before building the `waydroid-tv` module.
 
 The ATV images are already fetched into the Nix store (hash-pinned, see
@@ -71,7 +71,7 @@ sudo ~/.nixos/modules/scripts/waydroid-atv-install.sh \
 Manual equivalent, if you prefer to run the steps by hand:
 
 ```bash
-# 1. Activate the reintegrated Waydroid module (pick GOD-KILLER)
+# 1. Activate the reintegrated Waydroid module (pick THEOCIDE)
 cd ~/.nixos && ./rebuild.sh
 
 # 2. (recommended) reboot so the new kernel params take effect (psi=1)
@@ -115,7 +115,7 @@ waydroid show-full-ui
 - Typing on the keyboard and pressing arrow keys navigates the ATV launcher.
 
 > [!NOTE]
-> On the current GOD-KILLER topology the render criterion **cannot pass yet**
+> On the current THEOCIDE topology the render criterion **cannot pass yet**
 > even with a healthy boot: the display is on NVIDIA, Waydroid renders on the
 > AMD iGPU, and Hyprland does not present the AMD dmabufs (silent black). This
 > is a host cross-GPU limitation, not an ATV/image bug. See
@@ -154,7 +154,7 @@ sudo journalctl -u waydroid-container -n 100 --no-pager
   (Android 12) test boot.
 - **Still black on `20261017` while boot is healthy** (`Android with user 0 is
   ready`, IP assigned, no zygote loop) — this is the **known cross-GPU**
-  case on GOD-KILLER, now confirmed: Hyprland scans out on NVIDIA but Waydroid
+  case on THEOCIDE, now confirmed: Hyprland scans out on NVIDIA but Waydroid
   renders on the AMD iGPU, so the dmabufs are never presented. Reproduction
   and the A/B test (NVIDIA mpv = visible, Mesa/AMD mpv = black) are in
   [PLAN.md → Handoff](./PLAN.md#handoff--paused-2026-10-25); do not chase
@@ -175,7 +175,7 @@ Phase 1 (`modules/system/waydroid-tv.nix`) can start.
 
 ## Resume checklist (quick copy)
 
-- [ ] Run rebuild: `cd ~/.nixos && ./rebuild.sh` → GOD-KILLER
+- [ ] Run rebuild: `cd ~/.nixos && ./rebuild.sh` → THEOCIDE
 - [ ] Reboot (recommended)
 - [ ] `sudo ~/.nixos/modules/scripts/waydroid-atv-install.sh`
 - [ ] `waydroid show-full-ui` in Hyprland and test keyboard + navigation

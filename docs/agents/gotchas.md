@@ -42,7 +42,7 @@ and a one-line pointer in the AGENTS.md index.
   `process with updatable components 'zygote' exited 4 times before boot
   completed`. Stop the session, `rm -rf ~/.local/share/waydroid`, restart; the
   installer script now does this (`modules/scripts/waydroid-atv-install.sh`).
-- **Waydroid is black on GOD-KILLER while the display is on NVIDIA** — confirmed
+- **Waydroid is black on THEOCIDE while the display is on NVIDIA** — confirmed
   2026-10-25, and it is not an image/prop bug. Waydroid's probe skips
   `nvidia`, so it renders on the AMD iGPU (`renderD129`), while Hyprland scans
   out DP-3/HDMI-A-1 from NVIDIA (`card1`); the AMD dmabufs are never presented
@@ -51,7 +51,7 @@ and a one-line pointer in the AGENTS.md index.
   `docs/waydroid/PLAN.md` → "Handoff — paused 2026-10-25" for the A/B evidence
   and the topology/upstream options.
 - **Xodus Nexus is a pinned AppImage** (`modules/home-manager/apps/xodus-nexus.nix`,
-  `GOD-KILLER` only). Nix packages only the launcher; its Xodus backend and
+  `THEOCIDE` only). Nix packages only the launcher; its Xodus backend and
   Nexus runtime self-install from GitHub into the user data directory on first
   run (Settings → Xodus backend / Nexus runtime → Install). The launcher cannot
   self-update from its read-only store path — bump the module's `version` and
@@ -67,7 +67,7 @@ and a one-line pointer in the AGENTS.md index.
   Wi-Fi/Bluetooth firmware is proprietary and lives outside the repo (store path
   pinned by hash via `modules/system/t2-firmware.nix`); never read, print or
   attach its contents. See `docs/firmware.md`.
-- **YouTube playlist sync is quota-bound** (REDRUM, `modules/server/youtube-automation.nix`
+- **YouTube playlist sync is quota-bound** (MENTICIDE, `modules/server/youtube-automation.nix`
   + `modules/scripts/sync_playlist.py`). The Data API allows 10,000 units/day
   (reads 1, playlist insert/delete 50); polling every subscription's uploads
   playlist every 15 minutes exhausted it on 2026-10-31 (`quotaExceeded` on every
@@ -81,9 +81,9 @@ and a one-line pointer in the AGENTS.md index.
   `modules/_archive/youtube-support/` is the retired original — don't edit it.
   Check health with `journalctl -u youtube-playlist-sync` and the quota graph
   in Google Cloud Console (YouTube Data API v3 → Quotas).
-- **REDRUM is built from pinned nixpkgs** (`nixpkgs-redrum`, rev `cac0c1ef`)
+- **MENTICIDE is built from pinned nixpkgs** (`nixpkgs-menticide`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
-  without reading `modules/hosts/REDRUM/T2-PIN.md` and re-checking
+  without reading `modules/hosts/MENTICIDE/T2-PIN.md` and re-checking
   `NixOS/nixos-hardware#2027` (row 1 of [the registry](upstream-registry.md)). Packages that must
   track upstream security fixes are overridden explicitly —
   currently `services.cloudflared.package` in `modules/server/cloudflared.nix`
@@ -106,18 +106,18 @@ and a one-line pointer in the AGENTS.md index.
   invisible to `nixos-rebuild` until staged.
 - `stylix.enableReleaseChecks = false` is set in host `home.nix` files to avoid
   the release-mismatch error — keep it consistent across hosts.
-- **REDRUM does not import `essentials/users.nix`** — it defines its own
-  `users.users.cairo` in `hosts/REDRUM/machine.nix`, so anything the shared
+- **MENTICIDE does not import `essentials/users.nix`** — it defines its own
+  `users.users.cairo` in `hosts/MENTICIDE/machine.nix`, so anything the shared
   users module sets (currently `shell = pkgs.zsh`) must be duplicated there.
   Without `shell = pkgs.zsh`, SSH sessions land in bash and none of the
   home-manager zsh config (aliases `rebuild`/`config-sync`/`cd = "z"`, zoxide
   integration) loads. **Do not "fix" this by importing the shared module on
-  REDRUM**: it sets `extraGroups = [ … "seat" … "plugdev" ]` and those groups
-  are not created by any module REDRUM imports (they exist on the desktop
+  MENTICIDE**: it sets `extraGroups = [ … "seat" … "plugdev" ]` and those groups
+  are not created by any module MENTICIDE imports (they exist on the desktop
   hosts only), so user activation fails with `group does not exist` and the
   switch aborts — and it would also enable `hardware.uinput` + the uinput/input
   groups for xremap, which a headless server never uses. When changing
-  `essentials/users.nix`, mirror the change in REDRUM's user block.
+  `essentials/users.nix`, mirror the change in MENTICIDE's user block.
 - **pnpm `packageManager` pins in server FODs** — pnpm's
   `manage-package-manager-versions` self-downloads whatever version
   `package.json` pins whenever it differs from the running `pkgs.pnpm`; that
@@ -135,19 +135,19 @@ and a one-line pointer in the AGENTS.md index.
   a hand-rolled `pnpmDeps` fixed-output derivation keeps per-file `checkedAt`
   timestamps in the store's index files and the registry metadata cache (live
   dist-tags, etags), so its `outputHash` differs on **every fetch**, not just
-  across the GOD-KILLER/REDRUM pins (2026-11-06: three fetches of one
+  across the THEOCIDE/MENTICIDE pins (2026-11-06: three fetches of one
   derivation gave `4qTSmVb…`, `W7+saec…` and `ZoJaD+u…`). Symptom is `error:
   hash mismatch in fixed-output derivation` on an otherwise-unchanged tree, and
   pasting the `got:` value never converges. **Both server FODs are fixed**
   (2026-11-06), each verified by fetching twice (same hash) and by a full
-  `build REDRUM`; a new hash is needed only when the source rev, the lockfile
+  `build MENTICIDE`; a new hash is needed only when the source rev, the lockfile
   or the pnpm version changes (build with a fake hash once, copy `got:`).
   `actual-budget-tweaks.nix` keeps a hand-rolled FOD with the metadata cache
   kept out of `$out` and the timestamps, `tmp` and `projects` stripped.
   `reactflux.nix` uses nixpkgs' `fetchPnpmDeps` (`fetcherVersion = 4`, the
   pnpm 11 SQLite index dumped to SQL text) with `pnpmConfigHook` in the build.
   Prefer `fetchPnpmDeps` for a new pnpm project. If a hash mismatch still
-  appears on REDRUM only, build on GOD-KILLER and ship the result
+  appears on MENTICIDE only, build on THEOCIDE and ship the result
   ([workflow.md](workflow.md#machines-and-what-each-may-do)).
 
 - **Waydroid software rendering on proprietary NVIDIA is not viable** — Waydroid

@@ -35,7 +35,7 @@
 				PAPERLESS_OCR_LANGUAGE = "eng";
 			};
 
-			# Postgres runs locally on REDRUM (redis is auto-configured).
+			# Postgres runs locally on MENTICIDE (redis is auto-configured).
 			# Flip `configureTika = true` for OCR of Office/e-mail files
 			# (pull in gotenberg + tika JVM services).
 			database.createLocally = true;

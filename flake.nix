@@ -16,12 +16,12 @@
 		# 	inputs.nixpkgs.follows = "nixpkgs";
 		# };
 
-		# REDRUM T2 kernel pin: cac0c1ef is the last nixpkgs rev whose kernel is
+		# MENTICIDE T2 kernel pin: cac0c1ef is the last nixpkgs rev whose kernel is
 		# still 6.18.46; linux >= 6.18.47 breaks the apple-t2 t2linux patchset
 		# (nixos-hardware#2027). TODO-remove: drop this input AND the `nixpkgs.pkgs`
-		# override in the REDRUM block of modules/hosts/host.nix once nixos-hardware
-		# is fixed on current nixpkgs. See modules/hosts/REDRUM/T2-PIN.md.
-		nixpkgs-redrum.url = "github:NixOS/nixpkgs/cac0c1ef61ab13dc82e5368e34de132a74336d79";
+		# override in the MENTICIDE block of modules/hosts/host.nix once nixos-hardware
+		# is fixed on current nixpkgs. See modules/hosts/MENTICIDE/T2-PIN.md.
+		nixpkgs-menticide.url = "github:NixOS/nixpkgs/cac0c1ef61ab13dc82e5368e34de132a74336d79";
 
 		# home-manager
 		home-manager = {

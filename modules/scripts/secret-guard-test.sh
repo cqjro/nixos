@@ -39,23 +39,23 @@ check "empty prompt passes"        pass  prompt '{"prompt":""}'
 check "garbage stdin fails open"   pass  prompt 'not json'
 check "tool: bash with token asks" block tool   "$(tool Bash "curl -H 'Authorization: Bearer $(rep Z 30)' https://example.com")"
 check "tool: write with key denies" block tool  "$(tool Write "$pem")"
-check "tool: ordinary bash passes" pass  tool   "$(tool Bash "./rebuild.sh build REDRUM")"
+check "tool: ordinary bash passes" pass  tool   "$(tool Bash "./rebuild.sh build MENTICIDE")"
 check "tool: nix assignment passes" pass tool   "$(tool Edit "password = config.sops.secrets.x.path;")"
-check "tool: git add firmware asks"   block tool   "$(tool Bash "git add -f modules/hosts/REDRUM/firmware/brcm/x.bin")"
+check "tool: git add firmware asks"   block tool   "$(tool Bash "git add -f modules/hosts/MENTICIDE/firmware/brcm/x.bin")"
 check "tool: git add blob ext asks"   block tool   "$(tool Bash "git add some.clm_blob")"
 check "tool: git add docs passes"     pass  tool   "$(tool Bash "git add docs/firmware.md modules/hosts/firmware.nix")"
 check "tool: git commit msg passes"   pass  tool   "$(tool Bash "git commit -m \"firmware: use requireFile\"")"
-check "tool: Write mentioning git add passes" pass tool "$(tool Write "run: git add -f modules/hosts/REDRUM/firmware/brcm/x.bin")"
-check "read: firmware-src asks"           block tool "$(toolp Read file_path /var/lib/firmware-src/REDRUM/brcm/a.txt)"
-check "read: hosts firmware dir asks"     block tool "$(toolp Grep path modules/hosts/REDRUM/firmware/brcm)"
+check "tool: Write mentioning git add passes" pass tool "$(tool Write "run: git add -f modules/hosts/MENTICIDE/firmware/brcm/x.bin")"
+check "read: firmware-src asks"           block tool "$(toolp Read file_path /var/lib/firmware-src/MENTICIDE/brcm/a.txt)"
+check "read: hosts firmware dir asks"     block tool "$(toolp Grep path modules/hosts/MENTICIDE/firmware/brcm)"
 check "read: clm_blob asks"               block tool "$(toolp Read file_path /tmp/x.clm_blob)"
 check "read: firmware doc passes"         pass  tool "$(toolp Read file_path /home/u/.nixos/docs/firmware.md)"
 check "read: ordinary nix file passes"    pass  tool "$(toolp Read file_path /home/u/.nixos/modules/system/t2-firmware.nix)"
 check "grep: pattern naming brcmfmac ok"  pass  tool "$(jq -n '{tool_name:"Grep",tool_input:{pattern:"brcmfmac",path:"."}}')"
-check "bash: cat firmware-src asks"       block tool "$(tool Bash "cat /var/lib/firmware-src/REDRUM/brcm/a.txt")"
-check "bash: strings on firmware asks"    block tool "$(tool Bash "strings hosts/REDRUM/firmware/brcm/x.bin | head")"
+check "bash: cat firmware-src asks"       block tool "$(tool Bash "cat /var/lib/firmware-src/MENTICIDE/brcm/a.txt")"
+check "bash: strings on firmware asks"    block tool "$(tool Bash "strings hosts/MENTICIDE/firmware/brcm/x.bin | head")"
 check "bash: ls firmware-src passes"      pass  tool "$(tool Bash "ls /var/lib/firmware-src")"
-check "bash: t2-firmware-import passes"   pass  tool "$(tool Bash "nix run .#t2-firmware-import -- REDRUM")"
+check "bash: t2-firmware-import passes"   pass  tool "$(tool Bash "nix run .#t2-firmware-import -- MENTICIDE")"
 
 # decision of a tool hook: ask / deny / pass (no output)
 decide() { # name expect(ask|deny|pass) mode json
@@ -81,7 +81,7 @@ decide "fw compressed: Read .ptb.gz asks"           ask  tool "$(toolp Read file
 decide "fw compressed: git add .ptb.zst asks"       ask  tool "$(tool Bash "git add a.ptb.zst")"
 # 3. extra read/exfil verbs
 for v in zcat zstdcat unzstd xzcat unxz bzcat gunzip lz4cat bat nl tac dd tee adb gh wget; do
-	decide "fw verb: $v on firmware-src asks" ask tool "$(tool Bash "$v /var/lib/firmware-src/REDRUM/brcm/a.bin")"
+	decide "fw verb: $v on firmware-src asks" ask tool "$(tool Bash "$v /var/lib/firmware-src/MENTICIDE/brcm/a.bin")"
 done
 # 4. nix daemon reads
 decide "fw nix: store cat asks"                     ask  tool "$(tool Bash "nix store cat $fwd/lib/firmware/brcm/a.txt")"
@@ -94,15 +94,15 @@ decide "fw nix: bundle asks"                        ask  tool "$(tool Bash "nix 
 decide "fw nix: nix-store --dump asks"              ask  tool "$(tool Bash "nix-store --dump $fwd")"
 decide "fw nix: nix-store --export asks"            ask  tool "$(tool Bash "nix-store --export $fwz")"
 decide "fw nix: store ls (names only) passes"       pass tool "$(tool Bash "nix path-info $fwd")"
-decide "fw nix: copy of an ordinary path passes"    pass tool "$(tool Bash "nix copy --to ssh-ng://redrum /nix/store/$(rep d 32)-hello-2.12")"
+decide "fw nix: copy of an ordinary path passes"    pass tool "$(tool Bash "nix copy --to ssh-ng://menticide /nix/store/$(rep d 32)-hello-2.12")"
 # 5. Full access: every ask becomes deny
-decide "full access: git add firmware denies"   deny tool "$(PM=bypassPermissions tool Bash "git add -f hosts/REDRUM/firmware/brcm/x.bin")"
-decide "full access: cat firmware-src denies"   deny tool "$(PM=bypassPermissions tool Bash "cat /var/lib/firmware-src/REDRUM/brcm/a.txt")"
+decide "full access: git add firmware denies"   deny tool "$(PM=bypassPermissions tool Bash "git add -f hosts/MENTICIDE/firmware/brcm/x.bin")"
+decide "full access: cat firmware-src denies"   deny tool "$(PM=bypassPermissions tool Bash "cat /var/lib/firmware-src/MENTICIDE/brcm/a.txt")"
 decide "full access: nix store cat denies"      deny tool "$(PM=bypassPermissions tool Bash "nix store cat $fwz/x")"
 decide "full access: Read firmware path denies" deny tool "$(PM=bypassPermissions toolp Read file_path /var/lib/firmware-src/a)"
 decide "full access: secret in Bash denies"     deny tool "$(PM=bypassPermissions tool Bash "curl -H 'Authorization: Bearer $(rep Z 30)' https://example.com")"
-decide "full access: ordinary Bash passes"      pass tool "$(PM=bypassPermissions tool Bash "./rebuild.sh build REDRUM")"
-decide "default mode: cat firmware-src only asks" ask tool "$(PM=default tool Bash "cat /var/lib/firmware-src/REDRUM/brcm/a.txt")"
+decide "full access: ordinary Bash passes"      pass tool "$(PM=bypassPermissions tool Bash "./rebuild.sh build MENTICIDE")"
+decide "default mode: cat firmware-src only asks" ask tool "$(PM=default tool Bash "cat /var/lib/firmware-src/MENTICIDE/brcm/a.txt")"
 decide "write of a secret still denies (any mode)"   deny tool "$(tool Write "$pem")"
 
 

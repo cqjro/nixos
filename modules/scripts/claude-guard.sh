@@ -49,7 +49,7 @@ ask() {
 	exit 0
 }
 
-# home-like prefixes a secret path can hang off (cairo, root, the REDRUM
+# home-like prefixes a secret path can hang off (cairo, root, the MENTICIDE
 # t3code service user)
 pfx='(~|\$HOME|\$\{HOME\}|/home/[^/[:space:]]+|/root|/var/lib/t3code)'
 # end of a path component
@@ -82,8 +82,8 @@ config_re='\.claude/settings[^/[:space:]]*\.json|/etc/claude-code|managed-settin
 check_bash() {
 	local cmd=$1 cwd=$2
 
-	# the main checkout's schedule script (GOD-KILLER), the packaged one in the
-	# system profile (REDRUM) and the packaged theme-shots (GOD-KILLER) run
+	# the main checkout's schedule script (THEOCIDE), the packaged one in the
+	# system profile (MENTICIDE) and the packaged theme-shots (THEOCIDE) run
 	# unsandboxed (sandbox.excludedCommands), so their absolute paths may only
 	# appear as the command word of ONE plain command: no substitution, chaining,
 	# pipe or redirect may ride the exclusion. Quoted arguments may not contain $,
@@ -293,8 +293,8 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect pass Bash 'git commit -m "explain why ~/.config/git stays readable"'
 	expect pass Bash 'jq .permissions ~/.claude/settings.json 2>/dev/null'
 	expect pass Bash 'grep -rn "process.env.HOME" src'
-	expect pass Bash 'nix eval --impure .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'
-	expect pass Bash 'nixos-rebuild build --flake .#GOD-KILLER --impure'
+	expect pass Bash 'nix eval --impure .#nixosConfigurations.MENTICIDE.config.system.build.toplevel.drvPath'
+	expect pass Bash 'nixos-rebuild build --flake .#THEOCIDE --impure'
 	expect pass Bash 'curl -fsSL https://api.github.com/zen | jq .'
 	expect pass Bash 'ls ~/.config/git'
 	expect block Edit '/home/cairo/.claude/settings.json'
@@ -346,30 +346,30 @@ if [ "${1:-}" = "--self-test" ]; then
 	expect pass Bash 'rm -rf result'
 	expect ask Bash 'nix eval --impure --expr "builtins.readFile /home/cairo/Documents/x"'
 	expect pass Bash 'nix eval --expr "1 + 1"'
-	expect block Bash 'cat /var/lib/firmware-src/REDRUM/brcm/brcmfmac4364b3-pcie.apple,maui.txt'
-	expect block Bash 'tar czf /tmp/fw.tgz modules/hosts/LittleNix/firmware/'
-	expect block Bash 'git add -f modules/hosts/LittleNix/firmware/brcm'
+	expect block Bash 'cat /var/lib/firmware-src/MENTICIDE/brcm/brcmfmac4364b3-pcie.apple,maui.txt'
+	expect block Bash 'tar czf /tmp/fw.tgz modules/hosts/REGICIDE/firmware/'
+	expect block Bash 'git add -f modules/hosts/REGICIDE/firmware/brcm'
 	expect block Bash 'base64 /nix/store/abc-brcm-firmware/lib/firmware/brcm/x.clm_blob'
 	expect block Bash 'cp ~/x.txcap_blob /home/cairo/.t3/userdata/attachments/'
 	expect block Bash 'nix store cat /nix/store/abc-brcm-firmware/x.ptb'
 	expect block Bash 'zstdcat /run/current-system/firmware/brcm/brcmfmac4364b3-pcie.bin.zst'
 	expect block Bash 'xzcat /nix/store/abc-firmware/lib/firmware/brcm/x.clm_blob.xz | head'
-	expect block Bash 'adb push /var/lib/firmware-src/REDRUM/brcm /sdcard/'
+	expect block Bash 'adb push /var/lib/firmware-src/MENTICIDE/brcm /sdcard/'
 	expect block Bash 'tar czf /tmp/fw.tgz /nix/store/abc-brcm-firmware-zstd'
 	expect block Bash 'nix copy --to file:///tmp/cache /nix/store/abc-brcm-firmware'
 	expect block Bash 'nix-store --export /nix/store/abc-brcm-firmware-zstd > /tmp/x'
 	expect block Bash 'strings /nix/store/abc-brcm-firmware/brcmfmac4364b3-pcie.apple,maui.txcap_blob'
-	expect pass Bash 'ls -la /var/lib/firmware-src/REDRUM/brcm'
+	expect pass Bash 'ls -la /var/lib/firmware-src/MENTICIDE/brcm'
 	expect pass Bash 'ls /run/current-system/firmware/brcm'
 	expect pass Bash 'cat docs/firmware.md'
 	expect pass Bash 'nix path-info /nix/store/abc-brcm-firmware'
 	expect pass Bash 'git add modules/system/t2-firmware.nix'
 	expect pass Bash 'cat modules/system/t2-firmware.nix'
-	expect block Bash 'git show 2412d99:hosts/REDRUM/firmware/brcm/brcmfmac4364b3-pcie.bin'
-	expect block Bash 'git archive HEAD modules/hosts/LittleNix/firmware'
-	expect pass Bash 'git log --stat -- modules/hosts/REDRUM/firmware'
+	expect block Bash 'git show 2412d99:hosts/MENTICIDE/firmware/brcm/brcmfmac4364b3-pcie.bin'
+	expect block Bash 'git archive HEAD modules/hosts/REGICIDE/firmware'
+	expect pass Bash 'git log --stat -- modules/hosts/MENTICIDE/firmware'
 	expect pass Bash 'git show --stat HEAD'
-	expect pass Bash './rebuild.sh check GOD-KILLER REDRUM'
+	expect pass Bash './rebuild.sh check THEOCIDE MENTICIDE'
 	expect pass Bash 'git diff origin/master...HEAD | grep -nE "boot\.|services\.openssh|security\.sudo"'
 	expect block Bash 'tailscale serve --bg 3773'
 	expect pass Bash 'tailscale status'
@@ -380,44 +380,44 @@ if [ "${1:-}" = "--self-test" ]; then
 	pmode=bypassPermissions
 	expect block Bash 'git push origin master'
 	expect block Bash 'sudo -n true'
-	expect block Bash 'cd /x && ./rebuild.sh switch GOD-KILLER -m msg'
+	expect block Bash 'cd /x && ./rebuild.sh switch THEOCIDE -m msg'
 	expect block Bash 'gh pr merge 12 --squash'
 	expect block Bash './rebuild.sh revert'
-	expect pass Bash './rebuild.sh check GOD-KILLER'
+	expect pass Bash './rebuild.sh check THEOCIDE'
 	expect block Bash 'git push -u origin todo/foo'
 	expect pass Bash 'git commit -m x'
-	expect pass Bash 'nix eval --impure .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'
+	expect pass Bash 'nix eval --impure .#nixosConfigurations.MENTICIDE.config.system.build.toplevel.drvPath'
 	# Auto answers `ask` rules with a classifier and no card, so system
 	# activation is refused there too (and in any mode we do not recognise)
 	for pmode in auto somethingnew; do
-		expect block Bash './rebuild.sh switch GOD-KILLER'
-		expect block Bash './rebuild.sh switch REDRUM -m msg'
-		expect block Bash './rebuild.sh test REDRUM'
-		expect block Bash './rebuild.sh dry GOD-KILLER'
+		expect block Bash './rebuild.sh switch THEOCIDE'
+		expect block Bash './rebuild.sh switch MENTICIDE -m msg'
+		expect block Bash './rebuild.sh test MENTICIDE'
+		expect block Bash './rebuild.sh dry THEOCIDE'
 		expect block Bash './rebuild.sh revert'
-		expect block Bash 'FOO=1 ./rebuild.sh deploy REDRUM'
-		expect block Bash 'systemd-run --user --wait ./rebuild.sh switch GOD-KILLER'
-		expect block Bash 'cd /x && ./rebuild.sh test GOD-KILLER'
-		expect block Bash 'sudo nixos-rebuild switch --flake .#GOD-KILLER'
-		expect block Bash 'nixos-rebuild test --flake .#REDRUM'
-		expect block Bash 'nixos-rebuild --flake .#REDRUM boot'
+		expect block Bash 'FOO=1 ./rebuild.sh deploy MENTICIDE'
+		expect block Bash 'systemd-run --user --wait ./rebuild.sh switch THEOCIDE'
+		expect block Bash 'cd /x && ./rebuild.sh test THEOCIDE'
+		expect block Bash 'sudo nixos-rebuild switch --flake .#THEOCIDE'
+		expect block Bash 'nixos-rebuild test --flake .#MENTICIDE'
+		expect block Bash 'nixos-rebuild --flake .#MENTICIDE boot'
 		expect block Bash 'bash -c "./rebuild.sh switch"'
 		expect block Bash "sh -c 'cd x && ./rebuild.sh test'"
 		expect block Bash 'sh -c "nixos-rebuild switch"'
 		expect block Bash '/nix/var/nix/profiles/system/bin/switch-to-configuration test'
-		expect pass Bash './rebuild.sh check GOD-KILLER REDRUM'
-		expect pass Bash './rebuild.sh build REDRUM'
-		expect pass Bash './rebuild.sh eval GOD-KILLER'
+		expect pass Bash './rebuild.sh check THEOCIDE MENTICIDE'
+		expect pass Bash './rebuild.sh build MENTICIDE'
+		expect pass Bash './rebuild.sh eval THEOCIDE'
 		expect pass Bash './rebuild.sh generations'
-		expect pass Bash 'nixos-rebuild build --flake .#GOD-KILLER'
-		expect pass Bash 'git commit -m "docs: switch GOD-KILLER with rebuild.sh switch from the T3 terminal"'
-		expect pass Bash 'echo "the human runs ./rebuild.sh test REDRUM"'
+		expect pass Bash 'nixos-rebuild build --flake .#THEOCIDE'
+		expect pass Bash 'git commit -m "docs: switch THEOCIDE with rebuild.sh switch from the T3 terminal"'
+		expect pass Bash 'echo "the human runs ./rebuild.sh test MENTICIDE"'
 		expect pass Bash 'git push -u origin todo/foo'
 	done
 	# Supervised (default) and Accept edits show the card: left to the ask rules
 	for pmode in default acceptEdits; do
-		expect pass Bash './rebuild.sh switch GOD-KILLER'
-		expect pass Bash 'sudo nixos-rebuild test --flake .#REDRUM'
+		expect pass Bash './rebuild.sh switch THEOCIDE'
+		expect pass Bash 'sudo nixos-rebuild test --flake .#MENTICIDE'
 	done
 	pmode=bypassPermissions
 	rm -f "$rules"

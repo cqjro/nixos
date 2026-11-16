@@ -64,7 +64,7 @@ Ordered by risk (blast radius × likelihood it was reachable). Steps marked
 
 ### 4.1 GitHub (highest risk) **you**
 
-> **Status 2026-11-03:** done on GOD-KILLER (fine-grained token limited to `cqjro/nixos`; the broad "GitHub CLI" grant revoked). Still open: REDRUM's `t3code` user gets its own token when it is re-cloned (TODO.md).
+> **Status 2026-11-03:** done on THEOCIDE (fine-grained token limited to `cqjro/nixos`; the broad "GitHub CLI" grant revoked). Still open: MENTICIDE's `t3code` user gets its own token when it is re-cloned (TODO.md).
 
 Blast radius: the current `gh` token covers every private repo you own.
 
@@ -72,11 +72,11 @@ Blast radius: the current `gh` token covers every private repo you own.
    github.com → Settings → Developer settings → Fine-grained tokens → generate.
    Repository access: **only `cqjro/nixos`**. Permissions: Contents RW, Pull
    requests RW, Metadata R (add Issues RW only if the scheduled-thread design
-   files issues). Expiry 30-90 days. One token **per machine** (GOD-KILLER,
-   REDRUM `t3code` user) so you can revoke one.
+   files issues). Expiry 30-90 days. One token **per machine** (THEOCIDE,
+   MENTICIDE `t3code` user) so you can revoke one.
 2. Enter it without touching a command line or chat:
    `read -rs T; printf %s "$T" | gh auth login --with-token; unset T`
-   On REDRUM: `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`.
+   On MENTICIDE: `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`.
    (`gh` keeps it in `hosts.yml` when no keyring is available, which is the
    headless case.)
 3. Revoke the old broad grant: github.com → Settings → Applications → Authorized
@@ -90,8 +90,8 @@ Blast radius: the current `gh` token covers every private repo you own.
 Only if the key has no passphrase, or a Full access thread could `cat` it and
 you do not trust the passphrase: `ssh-keygen -t ed25519 -a 100` (passphrase on),
 add the public key to GitHub twice (Authentication and Signing), replace the
-two keys in `modules/hosts/REDRUM/machine.nix:80-81` (public keys, safe to
-commit) and switch REDRUM *before* deleting the old key from GitHub and from
+two keys in `modules/hosts/MENTICIDE/machine.nix:80-81` (public keys, safe to
+commit) and switch MENTICIDE *before* deleting the old key from GitHub and from
 `authorized_keys`. Keep an existing SSH session open while testing the new key.
 Agents never need this key: pushes go over HTTPS with the PAT from 4.1.
 
@@ -101,7 +101,7 @@ Agents never need this key: pushes go over HTTPS with the PAT from 4.1.
   git, so only needed if the files were readable by an agent. Rotate by creating
   a replacement: `cloudflared tunnel create <app>-2`, copy its JSON over the
   credentials file, update the UUID in the module, add the DNS route
-  (`cloudflared tunnel route dns <app>-2 <host>`), switch REDRUM, confirm the
+  (`cloudflared tunnel route dns <app>-2 <host>`), switch MENTICIDE, confirm the
   hostname answers, then `cloudflared tunnel delete <old>`.
 - **`cert.pem`** from `cloudflared tunnel login` (in `~/.cloudflared/` on
   whichever machine ran it) is an *account-level* certificate able to create
@@ -114,8 +114,8 @@ Agents never need this key: pushes go over HTTPS with the PAT from 4.1.
 ### 4.4 Claude / Anthropic **you**
 
 Re-authenticate so the stored OAuth token is replaced: `claude` → `/logout`,
-`/login` (GOD-KILLER); `sudo -u t3code -H claude` → `/logout`, `/login`
-(REDRUM). Then review active sessions at claude.ai → Settings → Account and
+`/login` (THEOCIDE); `sudo -u t3code -H claude` → `/logout`, `/login`
+(MENTICIDE). Then review active sessions at claude.ai → Settings → Account and
 sign out other devices. Consequence of a leak is quota theft, not billing, but
 the token also lets someone read your account's chat history.
 
@@ -124,9 +124,9 @@ the token also lets someone read your account's chat history.
 No auth key is stored in the repo (no `authKeyFile` anywhere). If a pre-auth
 key was ever used to enrol a machine, revoke it in the admin console → Settings
 → Keys. To force re-auth of a node: `tailscale logout` then `tailscale up` (or
-expire the node key in the console; disable key expiry for REDRUM after). If
+expire the node key in the console; disable key expiry for MENTICIDE after). If
 an agent ever ran `tailscale serve`/`set`, review `tailscale serve status` and
-the ACLs. Consider an ACL that limits who can reach REDRUM's T3 port.
+the ACLs. Consider an ACL that limits who can reach MENTICIDE's T3 port.
 
 ### 4.6 T3 Code sessions and pairing **you**
 
@@ -144,8 +144,8 @@ not let an agent read or touch that directory).
 | Credential | Where | Rotate by |
 | --- | --- | --- |
 | Miniflux admin password | `/var/lib/miniflux/admin.env` | Change in the web UI (Settings → Users); Miniflux only reads the file when the admin is first created, so it may go stale harmlessly (nothing else uses it) |
-| Miniflux API key for the `miniflux-rss-sync` unit (REDRUM) | `/var/lib/miniflux/api-token` | Settings → API Keys: create new, replace the file (README step 6), `systemctl restart miniflux-rss-sync`, delete the old key |
-| Miniflux API token (manual `rss-sync pull` on GOD-KILLER) | `~/.config/rss-sync/api-token` | Settings → API Keys: create new, replace the file, delete the old key |
+| Miniflux API key for the `miniflux-rss-sync` unit (MENTICIDE) | `/var/lib/miniflux/api-token` | Settings → API Keys: create new, replace the file (README step 6), `systemctl restart miniflux-rss-sync`, delete the old key |
+| Miniflux API token (manual `rss-sync pull` on THEOCIDE) | `~/.config/rss-sync/api-token` | Settings → API Keys: create new, replace the file, delete the old key |
 | Linkwarden `NEXTAUTH_SECRET` | `/var/lib/linkwarden/nextauth-secret` | `openssl rand -base64 32` into the file, restart the unit (everyone is logged out) |
 | Linkwarden `POSTGRES_PASSWORD` | `/var/lib/linkwarden/postgres-password` | `ALTER USER … PASSWORD …` in Postgres, update the file, restart |
 | Actual Budget server password | in the Actual UI | Settings → Change server password; file-level encryption keys are separate and cannot be rotated retroactively |
@@ -182,7 +182,7 @@ rotation.
 
 ### 5.1 Requirements for this repo
 
-- Three hosts, one of them headless and unattended (REDRUM must decrypt at
+- Three hosts, one of them headless and unattended (MENTICIDE must decrypt at
   boot with no password, no network, no agent).
 - The ciphertext lives in the repo, so agents can read it, and **must be able
   to build and evaluate without any key**.
@@ -218,34 +218,34 @@ simplicity. agenix is a perfectly good fallback; the module shape in
 | --- | --- |
 | `flake.nix` / `flake.lock` | `sops-nix` input (`follows nixpkgs`), locked at 2026-10-26 |
 | `modules/essentials/secrets.nix` | Fragment `nixos.secrets`: imports the sops-nix module, **inert until `secrets/<hostname>.yaml` exists in the repo**; decrypts with `/etc/ssh/ssh_host_ed25519_key`, no GPG, no generated key. Fragment `nixos."secrets-glance"`: moves Glance's `GLANCE_SECRET_KEY`/`GLANCE_PASSWORD` to a sops template rendered at `/run/secrets/rendered/glance.env`, replacing the hand-written `/var/lib/glance/glance.env`, restarting `glance.service` on change |
-| `modules/hosts/host.nix` | Adds both fragments to **REDRUM** only |
-| `.sops.yaml` | Creation rules with two `TODO` age recipients (admin + REDRUM host key) |
+| `modules/hosts/host.nix` | Adds both fragments to **MENTICIDE** only |
+| `.sops.yaml` | Creation rules with two `TODO` age recipients (admin + MENTICIDE host key) |
 
-Why inert-by-default: until you bootstrap, REDRUM builds exactly as before
+Why inert-by-default: until you bootstrap, MENTICIDE builds exactly as before
 (Glance keeps reading the hand-written file). Nothing breaks, agents and the
 weekly build check work without keys, and the switch that activates it is the
 one you control.
 
-Verified (2026-11-01, GOD-KILLER):
+Verified (2026-11-01, THEOCIDE):
 
-- `nix eval --impure …REDRUM…toplevel.drvPath` succeeds with the module inert
+- `nix eval --impure …MENTICIDE…toplevel.drvPath` succeeds with the module inert
   **and** active (tested with a throwaway key and a dummy file that was deleted
   afterwards; nothing was committed).
-- `sops-install-secrets` builds against REDRUM's pinned nixpkgs `cac0c1ef`
+- `sops-install-secrets` builds against MENTICIDE's pinned nixpkgs `cac0c1ef`
   (the Go-version trap that affects Tailscale does not apply).
 - The generated manifest in the store lists secret **names** and `<SOPS:…:PLACEHOLDER>`
   tokens only; no value, no dummy string.
 - `services.glance.environmentFile` resolves to `/run/secrets/rendered/glance.env`.
-- GOD-KILLER and the hook wiring evaluate (`drvPath`).
+- THEOCIDE and the hook wiring evaluate (`drvPath`).
 
-**Not verified:** an actual activation on REDRUM, the file ownership of the
-rendered env file at runtime, and a full REDRUM `build` (only eval plus the
-`sops-install-secrets` build were run). LittleNix does not evaluate in this
+**Not verified:** an actual activation on MENTICIDE, the file ownership of the
+rendered env file at runtime, and a full MENTICIDE `build` (only eval plus the
+`sops-install-secrets` build were run). REGICIDE does not evaluate in this
 checkout for an unrelated reason (gitignored firmware, thread 2).
 
 ### 5.4 Bootstrap (you)
 
-On GOD-KILLER:
+On THEOCIDE:
 
 ```bash
 # 1. your admin key; keep the private half out of agents' reach
@@ -253,28 +253,28 @@ mkdir -p ~/.config/sops/age && age-keygen -o ~/.config/sops/age/keys.txt
 chmod 600 ~/.config/sops/age/keys.txt
 age-keygen -y ~/.config/sops/age/keys.txt        # prints age1…  (public; goes in .sops.yaml)
 
-# 2. REDRUM's recipient: derived from its PUBLIC host key, no secret involved
-ssh-keyscan -t ed25519 <redrum-address> 2>/dev/null | nix run nixpkgs#ssh-to-age
+# 2. MENTICIDE's recipient: derived from its PUBLIC host key, no secret involved
+ssh-keyscan -t ed25519 <menticide-address> 2>/dev/null | nix run nixpkgs#ssh-to-age
 ```
 
 Put both public strings into `.sops.yaml` (replace the two `TODO` lines), then:
 
 ```bash
 # 3. create the file (opens $EDITOR on a template; add the two keys)
-sops secrets/REDRUM.yaml
+sops secrets/MENTICIDE.yaml
 #   glance_secret_key: <output of `glance secret:make`>
 #   glance_password:   <a new password>
-git add secrets/REDRUM.yaml .sops.yaml
+git add secrets/MENTICIDE.yaml .sops.yaml
 
-# 4. build, then switch REDRUM yourself (agents may build but never switch it)
-./rebuild.sh build REDRUM
-./rebuild.sh switch REDRUM -m "REDRUM: sops-nix, glance secrets" --target USER@IP
+# 4. build, then switch MENTICIDE yourself (agents may build but never switch it)
+./rebuild.sh build MENTICIDE
+./rebuild.sh switch MENTICIDE -m "MENTICIDE: sops-nix, glance secrets" --target USER@IP
 ```
 
 Afterwards delete `/var/lib/glance/glance.env`, and `Read`-deny your admin key
 (handoff H3). Back up `~/.config/sops/age/keys.txt` somewhere that is not this
 repo and not a synced folder an agent can read; losing it means re-encrypting
-from a host that can still decrypt (REDRUM's own key can, via
+from a host that can still decrypt (MENTICIDE's own key can, via
 `SOPS_AGE_SSH_PRIVATE_KEY_FILE` as root).
 
 ### 5.5 Day-2 workflow
@@ -282,7 +282,7 @@ from a host that can still decrypt (REDRUM's own key can, via
 | Task | Who | How |
 | --- | --- | --- |
 | Declare a new secret and wire a service | agent (or you) | Add `sops.secrets.<name>` / a `sops.templates` entry in the service's fragment, and say which key name the file needs. Evaluates with no key |
-| Put the value in | **you** | `sops secrets/REDRUM.yaml`, or non-interactively without exposing it on a command line: `read -rs v; jq -Rn --arg v "$v" '$v' \| sops set --value-stdin secrets/REDRUM.yaml '["name"]'; unset v` |
+| Put the value in | **you** | `sops secrets/MENTICIDE.yaml`, or non-interactively without exposing it on a command line: `read -rs v; jq -Rn --arg v "$v" '$v' \| sops set --value-stdin secrets/MENTICIDE.yaml '["name"]'; unset v` |
 | Rotate a value | you | Same command with the new value, then switch the host |
 | Add a host | you | Add its age key and a rule to `.sops.yaml`, then `sops updatekeys secrets/<HOST>.yaml` |
 | Review a secrets PR | agent/you | The diff shows key names and `ENC[…]` blobs; a reviewer can confirm the *shape* (no plaintext slipped in) without any key. `gitleaks` or the guard (section 7) catches a plaintext file |
@@ -295,7 +295,7 @@ An agent that is asked to "add a secret" should end its turn with the exact
 Each is a fragment edit plus one `sops` command; do them one switch at a time,
 lowest blast radius first: Glance (done here) → Beszel agent env → Paperless
 admin → Miniflux `admin.env` → Linkwarden secrets → `rss-sync` API token →
-(stop here while the repo is public, see 5.7). Possible only for a private repo: Cloudflare tunnel credentials (`credentialsFile` takes any path; use `sops.secrets.<name>.format = "binary"` with the JSON as a file) and the YouTube `client_secret.json`/`token.json` (the token file is *rewritten* by the app on refresh, so it needs a writable copy; copy it into place at start with `ExecStartPre`). Not suitable for sops: the Claude/GitHub logins on REDRUM (interactive, rewritten by the CLIs).
+(stop here while the repo is public, see 5.7). Possible only for a private repo: Cloudflare tunnel credentials (`credentialsFile` takes any path; use `sops.secrets.<name>.format = "binary"` with the JSON as a file) and the YouTube `client_secret.json`/`token.json` (the token file is *rewritten* by the app on refresh, so it needs a writable copy; copy it into place at start with `ExecStartPre`). Not suitable for sops: the Claude/GitHub logins on MENTICIDE (interactive, rewritten by the CLIs).
 
 ### 5.7 What "secret" means when the ciphertext is in a public repo
 
@@ -400,14 +400,14 @@ This is advisory text. The enforceable layers are the hooks (section 7), the
 ## 7. Keeping secrets out of prompts: secret-guard
 
 `modules/home-manager/ai-tools/secret-guard.nix` defines the NixOS fragment
-`nixos."secret-guard"`, imported in `host.nix` by **GOD-KILLER and REDRUM** (the
+`nixos."secret-guard"`, imported in `host.nix` by **THEOCIDE and MENTICIDE** (the
 hosts that import `claude-code-policy`). It sets `claude-code-policy.hooks`, because
 the managed policy has `allowManagedHooksOnly = true`: Claude Code reads hooks
 **only** from there and silently ignores home-manager
 `programs.claude-code.settings.hooks`, project `.claude/settings.json`, skills and
 subagents (`docs/agents/security.md`, "Adding hooks (merge point)"). The fragment
 installs two hooks backed by `modules/scripts/secret-guard.sh`, with store-path
-commands; `claude-guard` stays first in `PreToolUse`. LittleNix has no policy, so it
+commands; `claude-guard` stays first in `PreToolUse`. REGICIDE has no policy, so it
 must not import the fragment.
 
 | Hook | Does |
@@ -436,8 +436,8 @@ are assembled at run time). Retro-scan: `secret-guard-scan.sh`.
 | `PreToolUse` hooks configured in a project `.claude/settings.local.json` fire under T3, and are picked up mid-session | **Verified 2026-11-01** (probe logged a hook event for a Bash call in this thread) |
 | `UserPromptSubmit` fires for a message typed in the T3 composer | **Verified 2026-11-02**: the probe logged 12 `UserPromptSubmit` events from the owner's messages in this thread (and 110 `PreToolUse`). Still open: whether a *blocking* one shows its reason in the UI (needs the `SECGUARD-MARKER` message below) |
 | A blocking `UserPromptSubmit` surfaces in the T3 UI (shows the reason, not an error loop) | **Verified 2026-11-02** (owner-observed): the UI shows `UserPromptSubmit operation blocked by hook: <reason>`, with the hook's reason text, and the agent does not run. A normal message afterwards is expected to continue the thread (not separately checked) |
-| Hooks from the managed policy (`claude-code-policy.hooks`, the only source now) fire under T3 | **Untested until the owner switches.** Everything above was observed with a project-level probe, a different channel that `allowManagedHooksOnly` now ignores; the managed channel is the same Claude Code mechanism, but it has not been observed for secret-guard. Evaluated: `claude-code-policy.hooks` has `PreToolUse` = 2 (`claude-guard` first, then secret-guard) and `UserPromptSubmit` = 1 on GOD-KILLER and REDRUM. Smoke-test step 24 in `docs/agents/security.md` is the check after the switch |
-| Hooks run on REDRUM's `t3code` user | **Wired, untested**: REDRUM imports the fragment too, so the same managed JSON carries them (`/etc/claude-code/managed-settings.json`). Needs a REDRUM switch by the owner |
+| Hooks from the managed policy (`claude-code-policy.hooks`, the only source now) fire under T3 | **Untested until the owner switches.** Everything above was observed with a project-level probe, a different channel that `allowManagedHooksOnly` now ignores; the managed channel is the same Claude Code mechanism, but it has not been observed for secret-guard. Evaluated: `claude-code-policy.hooks` has `PreToolUse` = 2 (`claude-guard` first, then secret-guard) and `UserPromptSubmit` = 1 on THEOCIDE and MENTICIDE. Smoke-test step 24 in `docs/agents/security.md` is the check after the switch |
+| Hooks run on MENTICIDE's `t3code` user | **Wired, untested**: MENTICIDE imports the fragment too, so the same managed JSON carries them (`/etc/claude-code/managed-settings.json`). Needs a MENTICIDE switch by the owner |
 
 **The test (done 2026-11-02).** A probe in this worktree's untracked
 `.claude/settings.local.json` logged each hook event (never the prompt) and blocked
@@ -467,7 +467,7 @@ pre-commit/pre-push hook is the matching layer for files (handoff H4).
 | H2 | Firmware thread (owner of the 6.3 run) | Superseded by the new-repo plan, which has since run (2026-11-02 to 2026-11-05; summary in `docs/firmware.md` section 6, the original 6.3 command in `git show 23acd2e:docs/firmware.md`). The scans over the old public history found **no credential**; the extra paths, the mailmap and the replace-text were in the 6.3 command. The authoritative list of what must be decided before that single run is in the private audit; send me or the owner any change to it first, because the new repo is pushed once. Your firmware filename patterns are in the guard (7.2). Re-run gitleaks/trufflehog on the scratch clone before the push. |
 
 
-| H3 | Thread 4 (permissions) | **(b) and (c) done** with the move to `claude-code-policy.hooks` (this branch, after PR #3): the fragment is wired on GOD-KILLER and REDRUM, and the home-manager hook and its import are gone. (a) `claude-code.nix`: add `Read` denies for `/etc/ssh/ssh_host_*` (and `~/.config/sops/**` if sops-nix is ever reintegrated); with the sandbox, `denyRead` the same plus `~/.ssh`, `~/.config/gh`, `~/.claude/.credentials.json`. (b) Hook merge: `claude-code-policy.hooks` lists concatenate across modules (checked by eval). Any `deny` wins, but two `ask`/`allow` results from different hooks are not combined predictably, and under Full access an `ask` is auto-approved, so secret-guard now turns its own `ask` into `deny` when `permission_mode` is `bypassPermissions` (as `claude-guard` does). (c) REDRUM: done by the same fragment. (d) Never put `disableBypassPermissionsMode` back; under Full access the `Read` denies do not stop Bash, so the sandbox and PAT scoping (4.1) are the real controls. |
+| H3 | Thread 4 (permissions) | **(b) and (c) done** with the move to `claude-code-policy.hooks` (this branch, after PR #3): the fragment is wired on THEOCIDE and MENTICIDE, and the home-manager hook and its import are gone. (a) `claude-code.nix`: add `Read` denies for `/etc/ssh/ssh_host_*` (and `~/.config/sops/**` if sops-nix is ever reintegrated); with the sandbox, `denyRead` the same plus `~/.ssh`, `~/.config/gh`, `~/.claude/.credentials.json`. (b) Hook merge: `claude-code-policy.hooks` lists concatenate across modules (checked by eval). Any `deny` wins, but two `ask`/`allow` results from different hooks are not combined predictably, and under Full access an `ask` is auto-approved, so secret-guard now turns its own `ask` into `deny` when `permission_mode` is `bypassPermissions` (as `claude-guard` does). (c) MENTICIDE: done by the same fragment. (d) Never put `disableBypassPermissionsMode` back; under Full access the `Read` denies do not stop Bash, so the sandbox and PAT scoping (4.1) are the real controls. |
 | H4 | Thread 1/4 | Add `gitleaks` (already builds via `nix run nixpkgs#gitleaks`) as a `rebuild.sh`/pre-push check on the staged diff. |
 | H5 | Thread 3 (schedules) | Scheduled prompts are stored in plain text: no credentials in them; use the GitHub CLI login of the machine, or `request_secret` + `secretRef` for webhooks. |
 | H6 | Thread 6 (notifications) | If ntfy is added, its topic name is a bearer secret: keep it in an on-host file (as thread 6 already does), not in `notifications.nix`. |
@@ -478,11 +478,11 @@ pre-commit/pre-push hook is the matching layer for files (handoff H4).
 ## 9. Unverified assumptions
 
 - `UserPromptSubmit` firing and blocking display under T3 (7.1, needs you).
-- Hooks at user level under T3; hooks on REDRUM.
+- Hooks at user level under T3; hooks on MENTICIDE.
 - What `~/.t3/userdata/secrets` contains and how a T3 session secret is
   invalidated (4.6).
 - Which T3 tools besides `schedule_task` accept a `secretRef`.
-- sops-nix itself: it was only evaluated, never activated on REDRUM (archived).
+- sops-nix itself: it was only evaluated, never activated on MENTICIDE (archived).
 - Whether the tunnel UUIDs are real, and whether the Linkwarden literals
   were ever live.
 - That the SSH key is passphrase-protected (inferred from `start.sh`).

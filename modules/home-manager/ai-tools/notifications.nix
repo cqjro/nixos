@@ -38,9 +38,9 @@ in
 	# from `claude-code-policy.hooks` (docs/agents/security.md, "Adding hooks");
 	# home-manager `programs.claude-code.settings.hooks` would be ignored. Import
 	# this fragment only on hosts that also import `claude-code-policy`
-	# (GOD-KILLER, REDRUM); the option does not exist on LittleNix.
+	# (THEOCIDE, MENTICIDE); the option does not exist on REGICIDE.
 	#
-	# The hook runs as the agent's user (cairo on GOD-KILLER, t3code on REDRUM,
+	# The hook runs as the agent's user (cairo on THEOCIDE, t3code on MENTICIDE,
 	# home /var/lib/t3code). The ntfy topic/token are read at run time from
 	# ~/.config/agent-notify (docs/notifications.md); nothing secret is in the
 	# store or the policy JSON.
@@ -50,7 +50,7 @@ in
 			options.agent-notifications.desktop = lib.mkOption {
 				type = lib.types.bool;
 				default = false;
-				description = "Also raise a desktop popup (libnotify). True on GOD-KILLER, false on REDRUM.";
+				description = "Also raise a desktop popup (libnotify). True on THEOCIDE, false on MENTICIDE.";
 			};
 			options.agent-notifications.package = lib.mkOption {
 				type = lib.types.package;

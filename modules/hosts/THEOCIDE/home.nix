@@ -1,6 +1,6 @@
 { ... }:
 {
-	flake.modules.homeManager.REDRUM = {
+	flake.modules.homeManager.THEOCIDE = {
 		home.username = "cairo";
 		home.homeDirectory = "/home/cairo";
 
@@ -13,5 +13,16 @@
 
 		# Let Home Manager install and manage itself.
 		programs.home-manager.enable = true;
+
+		# get rid of mismatch version error on rebuild
+		stylix.enableReleaseChecks = false;
+
+		# configuring pc specific hyprland settings
+		hyprland = {
+			monitors = [
+				"desc:BNQ BenQ EW2780U L6L01871019,3840x2160@60,640x-1440,1.50" # BENQ
+				"desc:Microstep MAG321UP OLED,3840x2160@165,0x0,1.00" # MSI OLED
+			];
+		};
 	};
 }

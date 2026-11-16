@@ -118,11 +118,11 @@ merge, push to master, or switch any host.
      row, do not renumber; `./rebuild.sh check` fails if the two tables' row numbers differ),
    - the matching entry in docs/schedules/upstream-probes.json,
    - any TODO.md item or doc that refers to the workaround,
-   - row 1 only: follow modules/hosts/REDRUM/T2-PIN.md.
+   - row 1 only: follow modules/hosts/MENTICIDE/T2-PIN.md.
 4. Verify with the workflow tooling, from this worktree: `./rebuild.sh check <affected hosts>`
    (tier 0: syntax, secrets/firmware, whitespace, registry sync, eval), then
-   `./rebuild.sh build <host>` for each affected host this machine may build. On REDRUM
-   never build GOD-KILLER; use `./rebuild.sh eval GOD-KILLER`. Empty output with exit 0 is
+   `./rebuild.sh build <host>` for each affected host this machine may build. On MENTICIDE
+   never build THEOCIDE; use `./rebuild.sh eval THEOCIDE`. Empty output with exit 0 is
    success; read .log/nixos-build.log on failure.
 5. Finish with the `ship-pr` skill (docs/agents/review.md tiers: tier 1 reviewer always,
    tier 2 only when the diff touches the lockout surface). The push and `gh pr create`
@@ -208,7 +208,7 @@ or switch any host. Never close an issue yourself.
    instead of making it.
 4. Verify: `./rebuild.sh check <affected hosts>` (the warning must be gone and no new
    one introduced), then `./rebuild.sh build <host>` for each affected host this machine
-   may build (on REDRUM never build GOD-KILLER; use `./rebuild.sh eval GOD-KILLER`).
+   may build (on MENTICIDE never build THEOCIDE; use `./rebuild.sh eval THEOCIDE`).
    A fix is not done until the host builds.
 5. Finish with the `ship-pr` skill (review tiers in docs/agents/review.md). The push and
    `gh pr create` are ask rules; if declined, stop with the branch committed locally.
@@ -224,6 +224,6 @@ to close anything.
 
 ## Rows that never get a worker
 
-`notify-only` rows (today: row 1, the REDRUM nixpkgs pin) need kernel testing and a
+`notify-only` rows (today: row 1, the MENTICIDE nixpkgs pin) need kernel testing and a
 human-run switch of a headless machine. The schedule files the issue and the
-dispatcher says "needs you". Follow `modules/hosts/REDRUM/T2-PIN.md` by hand.
+dispatcher says "needs you". Follow `modules/hosts/MENTICIDE/T2-PIN.md` by hand.

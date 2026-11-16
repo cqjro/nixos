@@ -7,8 +7,8 @@ wraps each in `@-moz-document domain("<domain>")` and appends it to the generate
 silently. `theme-shots` shows an agent what a rule does today, on pages that need no
 login.
 
-`theme-shots` is installed system-wide by `modules/theme/theme-shots.nix` (GOD-KILLER
-only), so it exists after a **GOD-KILLER switch** of the PR that adds it. It reads a
+`theme-shots` is installed system-wide by `modules/theme/theme-shots.nix` (THEOCIDE
+only), so it exists after a **THEOCIDE switch** of the PR that adds it. It reads a
 fixed page list, `modules/scripts/theme-shots-urls.txt`, from the Nix store: 35 pages of
 different types, up to ten per site (listed in "The page list" below). Only the 13 pages of
 the first live run (2026-11-11) are verified live; the rest is **UNVERIFIED LIVE** until the
@@ -42,7 +42,7 @@ tracked files.
 
 What it does, in order:
 
-1. `nix eval --json git+file://<worktree>#nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.zen-browser.profiles.default`
+1. `nix eval --json git+file://<worktree>#nixosConfigurations.THEOCIDE.config.home-manager.users.cairo.programs.zen-browser.profiles.default`
    (only `userContent` and `settings`; no `--impure`, flake `nixConfig` ignored), so it
    renders **your branch's** CSS and prefs, not the switched ones. Pure mode is not a
    read confinement (security.md).
@@ -199,7 +199,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
   does not see a skeleton: always look at the image. Raise `SETTLE_SECS` in the script
   (a tier-2 item, then a switch) if a site needs longer. A failed shot now says why in
   `report.txt` (`capture failed: load: …`, `screenshot: …`).
-  **Live result of the 6 s settle (2026-11-09, GOD-KILLER switched with it):** all 14
+  **Live result of the 6 s settle (2026-11-09, THEOCIDE switched with it):** all 14
   shots over the four sites then in the list (instagram twice) reported `ok` in 8-11 s each, and every one
   was a fully drawn page (youtube home and watch with thumbnails, reddit home and post,
   instagram login with the illustration). No blank, no skeleton, and the Instagram login
@@ -231,7 +231,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
   Google's "unusual traffic from your computer network" page with a reCAPTCHA box, not
   search results. The curl preflight (a different client) was not redirected and the image
   is not blank, so nothing rejected it; the browser-final-URL check above was added in
-  response. First run with it (2026-11-10, GOD-KILLER switched with PR #59): both phases
+  response. First run with it (2026-11-10, THEOCIDE switched with PR #59): both phases
   `REJECTED`, `the browser ended at https://www.google.com/sorry/index`, 9 s each, kept as
   `google-search-{before,after}.REJECTED.png` (the names then; now `google-search-viewport-{RAW,THEMED}…`), exit 4. So Google's block page **does** sit
   at a `/sorry` URL and the check sees it; a google `ok` is therefore no longer
@@ -269,7 +269,7 @@ switch**; the wikipedia URLs were each fetched once (not in a browser) to check 
   `proxyConnectFailure`, no timeout, no host to add to `ALLOWED_DOMAINS`). A missing shot
   does not mean the CSS broke; a successful shot is real, but look at it.
 - **New pages: verified live (added 2026-11-10 with PR #62; first live run 2026-11-11,
-  GOD-KILLER switched with it).** The branch that added them could not run the tool, so
+  THEOCIDE switched with it).** The branch that added them could not run the tool, so
   they were first tested against local servers (see "Verified in the sandbox"). The first
   real run: `theme-shots wikipedia` 6/6 `ok` (8-9 s each) and `theme-shots google` 8 `ok`,
   2 `REJECTED` (`search`, `the browser ended at https://www.google.com/sorry/index`, as

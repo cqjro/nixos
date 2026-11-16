@@ -1,13 +1,13 @@
 { inputs, ... }:
 {
 	# `schedule-precheck` (docs/schedules/bin/schedule-precheck) packaged into the
-	# system profile, so the REDRUM scheduled threads can run it as
+	# system profile, so the MENTICIDE scheduled threads can run it as
 	# /run/current-system/sw/bin/schedule-precheck: an absolute path an agent
 	# cannot edit (the policy excludes it from the sandbox and allow-lists it,
 	# modules/home-manager/ai-tools/claude-code.nix). The script and the JSON files it
 	# reads beside it are copied from the flake source, so they are the version of
-	# the REDRUM generation: a merged probe change reaches REDRUM's schedules after
-	# the next REDRUM switch. gh, git and nix come from the system profile
+	# the MENTICIDE generation: a merged probe change reaches MENTICIDE's schedules after
+	# the next MENTICIDE switch. gh, git and nix come from the system profile
 	# (the script sets its own fixed PATH); only python3 is wrapped in.
 	flake.modules.nixos."schedule-precheck" = { pkgs, ... }:
 	let
