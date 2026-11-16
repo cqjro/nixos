@@ -18,6 +18,15 @@
 		home.packages = with pkgs; [
 			obsidian # Super+O N (Electron, heavy: see docs/hosts/CHRONOCIDE.md)
 			libnotify # notify-send, used by start.sh
+			# added on request (2026-11-16); picked individually from apps-packages
+			# so this host does not take the rest of that bag (remmina, chromium,
+			# helium, image viewers, ...). Heavy ones are listed in
+			# docs/hosts/CHRONOCIDE.md.
+			vlc
+			obs-studio
+			firefox
+			brave
+			onlyoffice-desktopeditors
 		];
 
 		# niri is the only session here; the shared environment fragment defaults
