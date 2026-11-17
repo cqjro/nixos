@@ -12,7 +12,7 @@ picking the T3 environment in the client.
 
 | Thread runs on | Edit config for | `eval` | `build` | `test` / `dry` | `switch` |
 | --- | --- | --- | --- | --- | --- |
-| THEOCIDE (home, fast) | any host | any host | THEOCIDE, MENTICIDE (REGICIDE only once its firmware is imported here) | THEOCIDE locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); MENTICIDE only by the human from a terminal (`--target`) | THEOCIDE, from merged `master`, human-approved (same routes) |
+| THEOCIDE (home, fast) | any host | any host | THEOCIDE, MENTICIDE, CHRONOCIDE (REGICIDE only once its firmware is imported here) | THEOCIDE locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); MENTICIDE only by the human from a terminal (`--target`) | THEOCIDE, from merged `master`, human-approved (same routes) |
 | MENTICIDE (away, always on) | any host | any host — **eval-only for THEOCIDE** | MENTICIDE only (never THEOCIDE: too slow, and pointless) | human, over SSH | human, over SSH |
 
 - MENTICIDE agents run as the `t3code` system user and cannot sudo, so every

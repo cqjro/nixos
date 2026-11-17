@@ -17,10 +17,7 @@
 
 			# productivity & utilities
 			obsidian
-			protonmail-desktop # email
-			proton-vpn-cli # vpn cli
-			proton-vpn # vpn gui
-			proton-pass # password manager
+			# Proton Mail / VPN / Pass: see proton-apps (apps/proton.nix)
 			obs-studio
 			localsend # airdrop replacement
 			remmina # remote desktop on linux

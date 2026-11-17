@@ -10,6 +10,7 @@
 - [ ] THEOCIDE
 - [ ] MENTICIDE
 - [ ] REGICIDE
+- [ ] CHRONOCIDE
 
 ## Verification
 

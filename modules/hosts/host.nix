@@ -10,6 +10,7 @@
 			modules = [
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
+				inputs.self.modules.nixos.niri
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
@@ -59,6 +60,7 @@ inputs.self.modules.nixos.games
 			modules = [
 				inputs.self.modules.nixos.zsh
 				inputs.self.modules.nixos.hyprland
+				inputs.self.modules.nixos.niri
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
@@ -85,6 +87,38 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos."REGICIDE-hardware"
 				inputs.self.modules.nixos."REGICIDE-monitors"
 				inputs.nixos-hardware.nixosModules.apple-t2
+				inputs.home-manager.nixosModules.default
+				inputs.stylix.nixosModules.stylix
+				{ nixpkgs.overlays = overlays; }
+			];
+		};
+
+		# MacBook Air early 2015 (4 GB): niri + Noctalia only, no Hyprland. See
+		# docs/hosts/CHRONOCIDE.md.
+		CHRONOCIDE = inputs.nixpkgs.lib.nixosSystem {
+			inherit system;
+			specialArgs = { inherit inputs; };
+			modules = [
+				inputs.self.modules.nixos.zsh
+				inputs.self.modules.nixos.niri
+				inputs.self.modules.nixos.nixpkgs
+				inputs.self.modules.nixos.time
+				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos.environment
+				inputs.self.modules.nixos.users
+				inputs.self.modules.nixos.dbus
+				inputs.self.modules.nixos.bluetooth
+				inputs.self.modules.nixos.ssh
+				inputs.self.modules.nixos.networking
+				inputs.self.modules.nixos.stylix
+				inputs.self.modules.nixos.power-profiles
+				inputs.self.modules.nixos.manifest # spicetify reads osConfig.manifest
+				inputs.self.modules.nixos.rss-sources
+				inputs.self.modules.nixos.keyring
+				inputs.self.modules.nixos.noctalia-greeter
+				inputs.self.modules.nixos.config-revision
+				inputs.self.modules.nixos."CHRONOCIDE"
+				inputs.self.modules.nixos."CHRONOCIDE-hardware"
 				inputs.home-manager.nixosModules.default
 				inputs.stylix.nixosModules.stylix
 				{ nixpkgs.overlays = overlays; }

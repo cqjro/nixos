@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-	flake.modules.nixos.noctalia-greeter = { pkgs, config, ... }: let
+	flake.modules.nixos.noctalia-greeter = { pkgs, config, lib, ... }: let
 		c = config.lib.stylix.colors.withHashtag;
 	in
 	{
@@ -11,7 +11,8 @@
 		services.displayManager.noctalia-greeter = {
 			enable = true;
 
-			greeter-args = "--session hyprland";
+			# Default session; a host without Hyprland overrides it (CHRONOCIDE: niri).
+			greeter-args = lib.mkDefault "--session hyprland";
 
 			settings = {
 				cursor = {
