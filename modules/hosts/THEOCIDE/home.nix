@@ -32,7 +32,7 @@
 		niri = {
 			outputs = {
 				"PNP(BNQ) BenQ EW2780U L6L01871019" = {
-					mode = "3840x2160@60.000";
+					mode = "3840x2160@59.997";
 					scale = 1.5;
 					position = { x = 640; y = -1440; };
 				};
