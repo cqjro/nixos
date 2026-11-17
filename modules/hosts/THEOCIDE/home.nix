@@ -28,7 +28,10 @@
 		# the same two monitors for the niri backup session. Names are niri's
 		# "Make Model Serial" exactly as `niri msg outputs` prints them (checked
 		# on THEOCIDE 2026-11-17). niri takes the refresh rate from the mode list,
-		# so the OLED's is 164.992, not 165.000.
+		# so the OLED's is 164.992, not 165.000. Under niri the OLED runs at 120 Hz:
+		# at 164.992 Hz every window in the right-hand column flickers black/purple
+		# (not the cursor plane; Hyprland is fine at 165 Hz). Retry 164.992 after a
+		# driver or niri bump.
 		niri = {
 			outputs = {
 				"PNP(BNQ) BenQ EW2780U L6L01871019" = {
@@ -37,7 +40,7 @@
 					position = { x = 640; y = -1440; };
 				};
 				"Microstep MAG321UP OLED Unknown" = {
-					mode = "3840x2160@164.992";
+					mode = "3840x2160@119.999";
 					scale = 1.0;
 					position = { x = 0; y = 0; };
 				};
