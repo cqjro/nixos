@@ -42,7 +42,7 @@
 					position = { x = 0; y = 0; };
 				};
 			};
-			blur = true; # same as Hyprland's decoration.blur
+			blur = false; # niri blur at 4K/165 Hz is a suspect for the right-column flicker (Hyprland keeps its own blur)
 			# at 164.992 Hz windows in the right-hand column of the OLED flicker black/
 			# purple (not the cursor plane; 120 Hz and Hyprland are fine). niri logs
 			# "DP-3 running faster than expected" vblanks: NVIDIA scans out unfinished
