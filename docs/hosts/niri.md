@@ -46,7 +46,7 @@ Per-session switches that already follow the compositor:
 | `niri.touchpad.{tap,naturalScroll,disableWhileTyping,clickMethod,scrollFactor}` | tap off, natural scroll, dwt, clickfinger, 0.7 (the Hyprland values) | CHRONOCIDE turns tap on |
 | `niri.columnWidth` | 0.5 | CHRONOCIDE 1.0 |
 | `niri.gaps.{inner,outer}` | 5 / 15 (Hyprland `gaps_in` / `gaps_out`) | CHRONOCIDE 4 / 6 |
-| `niri.cornerRadius`, `niri.shadow`, `niri.blur`, `niri.waitForFrameCompletion`, `niri.focusRing`, `niri.terminal`, `niri.keyboardLayout`, `niri.cursor.*` | radius 10, shadow on, blur off, frame-completion wait off, ring off, ghostty, us, the Stylix cursor | blur on and frame-completion wait on for THEOCIDE (NVIDIA artifacts at 165 Hz); CHRONOCIDE: shadow off, ring on |
+| `niri.cornerRadius`, `niri.shadow`, `niri.blur`, `niri.focusRing`, `niri.terminal`, `niri.keyboardLayout`, `niri.cursor.*` | radius 10, shadow on, blur off, ring off, ghostty, us, the Stylix cursor | blur off for THEOCIDE (NVIDIA flicker at 165 Hz with blur on); CHRONOCIDE: shadow off, ring on |
 
 Colours (overview backdrop, insert hint, focus ring) come from Stylix; the
 cursor from `stylix.cursor`.
