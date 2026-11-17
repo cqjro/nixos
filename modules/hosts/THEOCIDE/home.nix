@@ -32,7 +32,7 @@
 		niri = {
 			outputs = {
 				"PNP(BNQ) BenQ EW2780U L6L01871019" = {
-					mode = "3840x2160@60.000";
+					mode = "3840x2160@59.997";
 					scale = 1.5;
 					position = { x = 640; y = -1440; };
 				};
@@ -42,7 +42,14 @@
 					position = { x = 0; y = 0; };
 				};
 			};
-			blur = true; # same as Hyprland's decoration.blur
+			# Blur off under niri: with niri's compositor blur on, windows in the
+			# OLED's right-hand column flickered black/purple at 164.992 Hz (fine at
+			# 120 Hz, with blur off, and in Hyprland, which keeps its own blur). Not the
+			# cursor plane, not frame completion. A deliberate per-host setting, not a
+			# registry row: the culprit (niri, the NVIDIA driver or the OLED's link) is
+			# not isolated and no upstream issue is known, so there is nothing to probe.
+			# Retry blur = true after a niri or driver bump.
+			blur = false;
 		};
 	};
 }
