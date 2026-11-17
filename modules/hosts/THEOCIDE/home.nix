@@ -43,6 +43,9 @@
 				};
 			};
 			blur = true; # same as Hyprland's decoration.blur
+			# the OLED flashes black/purple squares over T3 Code at 164.992 Hz (gone at
+			# 120 Hz): suspect the NVIDIA hardware cursor plane. Remove if it is not.
+			disableCursorPlane = true;
 		};
 	};
 }
