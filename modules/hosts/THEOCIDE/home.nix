@@ -45,7 +45,10 @@
 			# Blur off under niri: with niri's compositor blur on, windows in the
 			# OLED's right-hand column flickered black/purple at 164.992 Hz (fine at
 			# 120 Hz, with blur off, and in Hyprland, which keeps its own blur). Not the
-			# cursor plane, not frame completion. Retry after a niri or driver bump.
+			# cursor plane, not frame completion. A deliberate per-host setting, not a
+			# registry row: the culprit (niri, the NVIDIA driver or the OLED's link) is
+			# not isolated and no upstream issue is known, so there is nothing to probe.
+			# Retry blur = true after a niri or driver bump.
 			blur = false;
 		};
 	};
