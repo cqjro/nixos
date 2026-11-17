@@ -146,9 +146,9 @@
 			// so there is no spawn-at-startup for it here.
 			spawn-at-startup "bash" "${../../../start.sh}"
 
+			// Allows notification actions and window activation from Noctalia
 			// (and Hyprland's focus_on_activate behaviour).
 			debug { honor-xdg-activation-with-invalid-serial; }
-			}
 
 			// Hyprland's special workspace "magic": a plain named workspace here.
 			workspace "magic"
