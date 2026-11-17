@@ -32,6 +32,13 @@ one at a time, MENTICIDE last (it is headless; a mistake needs physical access).
   sessions keep the old `$HOSTNAME`, and Xwayland apps can lose their
   `~/.Xauthority` cookie (keyed by hostname). **Log out and back in** (or
   reboot) after switching.
+- Chromium/CEF/Electron apps record the hostname in their `SingletonLock`.
+  An app that was killed before the rename leaves a lock naming the old host,
+  and then exits silently with code 1 (seen on THEOCIDE: Spotify, whose
+  profile is `~/.cache/spotify`, not `~/.config/spotify`; `strace` showed
+  `connect(.../org.chromium.Chromium.*/SingletonSocket) = ECONNREFUSED`).
+  Fix: with the app closed, delete its `Singleton*` files and the matching
+  `/tmp/org.chromium.Chromium.*` directory.
 - Router/DHCP lease names and any `*.local` (mDNS) name change with the
   hostname; static DHCP reservations keyed by MAC are unaffected.
 
