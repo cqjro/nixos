@@ -26,17 +26,18 @@
 		};
 
 		# the same two monitors for the niri backup session. Names are niri's
-		# "Make Model Serial" (see `niri msg outputs`); the OLED's serial is not
-		# known here, so check it on first use and fix the key if niri ignores it.
+		# "Make Model Serial" exactly as `niri msg outputs` prints them (checked
+		# on THEOCIDE 2026-11-17). niri takes the refresh rate from the mode list,
+		# so the OLED's is 164.992, not 165.000.
 		niri = {
 			outputs = {
-				"BNQ BenQ EW2780U L6L01871019" = {
+				"PNP(BNQ) BenQ EW2780U L6L01871019" = {
 					mode = "3840x2160@60.000";
 					scale = 1.5;
 					position = { x = 640; y = -1440; };
 				};
 				"Microstep MAG321UP OLED Unknown" = {
-					mode = "3840x2160@165.000";
+					mode = "3840x2160@164.992";
 					scale = 1.0;
 					position = { x = 0; y = 0; };
 				};
