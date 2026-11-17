@@ -43,9 +43,11 @@
 				};
 			};
 			blur = true; # same as Hyprland's decoration.blur
-			# the OLED flashes black/purple squares over T3 Code at 164.992 Hz (gone at
-			# 120 Hz): suspect the NVIDIA hardware cursor plane. Remove if it is not.
-			disableCursorPlane = true;
+			# at 164.992 Hz windows in the right-hand column of the OLED flicker black/
+			# purple (not the cursor plane; 120 Hz and Hyprland are fine). niri logs
+			# "DP-3 running faster than expected" vblanks: NVIDIA scans out unfinished
+			# frames. Remove if the wait does not help.
+			waitForFrameCompletion = true;
 		};
 	};
 }

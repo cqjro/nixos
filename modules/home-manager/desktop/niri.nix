@@ -150,7 +150,7 @@
 			// (and Hyprland's focus_on_activate behaviour).
 			debug {
 				honor-xdg-activation-with-invalid-serial
-				${lib.optionalString cfg.disableCursorPlane "disable-cursor-plane"}
+				${lib.optionalString cfg.waitForFrameCompletion "wait-for-frame-completion-before-queueing"}
 			}
 
 			// Hyprland's special workspace "magic": a plain named workspace here.
@@ -308,7 +308,7 @@
 			focusRing = lib.mkOption { type = lib.types.bool; default = false; description = "Draw a Stylix-coloured focus ring (the Hyprland config has no border)."; };
 			shadow = lib.mkOption { type = lib.types.bool; default = true; description = "Window shadows (Hyprland decoration.shadow)."; };
 			blur = lib.mkOption { type = lib.types.bool; default = false; description = "Compositor blur behind windows and Noctalia surfaces (needs niri >= 26.04; GPU cost)."; };
-			disableCursorPlane = lib.mkOption { type = lib.types.bool; default = false; description = "niri debug flag: draw the cursor with the frame instead of on the hardware cursor plane (works around NVIDIA flicker/artifacts at high refresh rates)."; };
+			waitForFrameCompletion = lib.mkOption { type = lib.types.bool; default = false; description = "niri debug flag: wait for each frame to finish rendering before queueing it to DRM (works around NVIDIA scanning out unfinished frames: flickering squares at high refresh rates)."; };
 			terminal = lib.mkOption { type = lib.types.str; default = "ghostty"; description = "Program for Mod+Return."; };
 
 			brightnessBinds = lib.mkOption {
