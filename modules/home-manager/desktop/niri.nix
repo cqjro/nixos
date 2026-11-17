@@ -11,7 +11,7 @@
 # systemd user unit (modules/home-manager/desktop/noctalia-shell.nix).
 { ... }:
 {
-	flake.modules.nixos.niri = { config, lib, ... }: {
+	flake.modules.nixos.niri = { config, lib, pkgs, ... }: {
 		programs.niri = {
 			enable = true;
 			# Nautilus is only the default FileChooser backend of the gnome
@@ -19,6 +19,11 @@
 			# keeps nautilus + its dependencies out of the closure.
 			useNautilus = false;
 		};
+
+		# niri has no built-in Xwayland: from 25.08 it starts xwayland-satellite
+		# from $PATH on demand and exports $DISPLAY. Without it every X11-only
+		# client (Steam: "Unable to open X11 display, exiting") fails to start.
+		environment.systemPackages = [ pkgs.xwayland-satellite ];
 
 		# programs.niri registers the "niri" session through
 		# services.displayManager.sessionPackages, so the noctalia-greeter lists

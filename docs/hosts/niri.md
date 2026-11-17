@@ -20,6 +20,11 @@ in. Noctalia (systemd user unit), xremap and `start.sh` start in either session.
 The greeter default stays `--session hyprland`
 (`modules/essentials/noctalia-greeter.nix`, a `mkDefault`).
 
+X11-only apps (Steam) need Xwayland: niri has none built in, so the niri fragment
+installs `xwayland-satellite`, which niri starts from `$PATH` on demand and
+exports `$DISPLAY` for. Without it Steam exits with "Unable to open X11
+display".
+
 Per-session switches that already follow the compositor:
 
 - `modules/scripts/focus-window.sh` (the `Super+O` launcher chain) uses
