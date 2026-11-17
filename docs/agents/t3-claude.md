@@ -1,10 +1,10 @@
 # T3 Code + Claude Code reference
 
-Operational detail for agents running under T3 Code on GOD-KILLER and REDRUM.
+Operational detail for agents running under T3 Code on THEOCIDE and MENTICIDE.
 The essentials are summarised in [AGENTS.md](../../AGENTS.md#agent-safety-essentials);
-read this when touching pushes, pairing, or T3 on REDRUM.
+read this when touching pushes, pairing, or T3 on MENTICIDE.
 
-The desktop (GOD-KILLER) runs agents through T3 Code, which drives Claude Code.
+The desktop (THEOCIDE) runs agents through T3 Code, which drives Claude Code.
 What an agent may do (permissions, the sandbox, the `claude-guard` hook, which
 T3 mode to pick, the smoke test) is one managed policy for both hosts,
 described in [security.md](security.md) — read it before assuming what an agent
@@ -31,46 +31,46 @@ may do.
   `gh auth token|status <args>|refresh|login|logout|switch`, `git credential*` and
   `*hosts.yml*` in Bash. These globs are best-effort — a push still runs with
   your token once approved, so keep `git push *` and `gh api *` as `ask` rules.
-- **Multi-machine T3.** Each machine runs its own T3 server; clients (GOD-KILLER
-  app, phone browser) pair to several over Tailscale. REDRUM's server is
+- **Multi-machine T3.** Each machine runs its own T3 server; clients (THEOCIDE
+  app, phone browser) pair to several over Tailscale. MENTICIDE's server is
   `modules/server/t3code.nix` (`127.0.0.1:8088`, published by the root oneshot
   `t3code-tailscale-serve` via `tailscale serve`), with **no Cloudflare tunnel**.
-  Pairing steps are in the README ("T3 Code on REDRUM"). Pairing scopes default
+  Pairing steps are in the README ("T3 Code on MENTICIDE"). Pairing scopes default
   to terminal + filesystem write, so a paired device is as powerful as the
   server's user — keep phone tokens narrow. Port 8086 is the ABT sidecar; do not
-  reuse it. The REDRUM agent runs as the `t3code` system user, which home-manager
+  reuse it. The MENTICIDE agent runs as the `t3code` system user, which home-manager
   never reaches: its tools (`claude`, `gh`, `git`, `bash`, `nix`), the `gh` git
   credential helper and git identity (`GIT_CONFIG_*` env) and the sandbox
   tools are declared in `t3code.nix`; the Claude policy is the same
-  `claude-code-policy` fragment GOD-KILLER imports, so there is nothing to keep
+  `claude-code-policy` fragment THEOCIDE imports, so there is nothing to keep
   in step. Its logins (`sudo -u t3code -H claude` / `gh auth login`) are manual
   one-offs stored in `/var/lib/t3code`. The T2 firmware comes from a
-  world-readable store path, so `t3code` needs no extra access to it. REDRUM has
+  world-readable store path, so `t3code` needs no extra access to it. MENTICIDE has
   its own clone of the repo, owned by `t3code` in `/var/lib/t3code`, and a
-  REDRUM build was tested there, so REDRUM threads are full repo threads (see
+  MENTICIDE build was tested there, so MENTICIDE threads are full repo threads (see
   [workflow.md](workflow.md#one-project-either-machine)). The clone is
   agent-writable: never point a privileged switch at it; the human switches
   from their own checkout.
-  - **Phone tokens and the terminal.** The T3 terminal on GOD-KILLER gives a
+  - **Phone tokens and the terminal.** The T3 terminal on THEOCIDE gives a
     real tty (tested 2026-11-06: `tty && sudo -v` works), so the human can run
-    `cd ~/.nixos && ./rebuild.sh switch GOD-KILLER` from the phone as a plain
-    command and type the sudo password there (a full GOD-KILLER switch worked
+    `cd ~/.nixos && ./rebuild.sh switch THEOCIDE` from the phone as a plain
+    command and type the sudo password there (a full THEOCIDE switch worked
     this way). Do not wrap it in `systemd-run --user --wait` without `--pty` and
     `--working-directory`: the command then has no tty (so `rebuild.sh` falls
     back to the desktop's GUI password dialog), no visible output and runs in
     `$HOME`. That needs a token with terminal scope, which is as powerful as
     `cairo`: mint it only when needed and revoke it if the phone is lost.
-  Operational facts (full detail in the README's "T3 Code on REDRUM"):
+  Operational facts (full detail in the README's "T3 Code on MENTICIDE"):
   - Client and server versions must match ("This client requires a newer
-    server"). REDRUM's pinned nixpkgs ships an older t3code, so `t3code.nix`
+    server"). MENTICIDE's pinned nixpkgs ships an older t3code, so `t3code.nix`
     takes the package from the main `nixpkgs` input (`# TODO-remove:`, listed in
     `T2-PIN.md`); after `nix flake update nixpkgs`, both machines need a switch.
   - `t3 pair` prints a `http://127.0.0.1:8088/…` link (the server binds
-    loopback); the host must be rewritten to `https://redrum.<tailnet>.ts.net`
+    loopback); the host must be rewritten to `https://menticide.<tailnet>.ts.net`
     (no trailing dot — `.Self.DNSName` has one). Tokens are single-use, 5 min.
     Do not use `t3 pair --tailscale` (t3code user lacks the rights, clashes
     with `t3code-tailscale-serve` on :443).
-  - GOD-KILLER's backend (`127.0.0.1:3773`) is published for phones with
+  - THEOCIDE's backend (`127.0.0.1:3773`) is published for phones with
     `sudo tailscale serve --bg --https=443 http://127.0.0.1:3773`, run by the
     human. The app's Tailscale HTTPS toggle fails silently without Tailscale
     operator rights; **do not set `tailscale set --operator`** for agents'
@@ -80,20 +80,20 @@ may do.
   - The desktop app stores saved connections in the system keyring; "Desktop
     secure storage is unavailable" = locked keyring (see the Xodus gotcha:
     `keyring` fragments, password login required).
-- **Driving REDRUM from a GOD-KILLER thread (verified 2026-11-07).**
-  - **Link.** Settings → Labs → Linked environments on GOD-KILLER, then
-    `t3_environment_links` lists REDRUM with its `environmentId`. Pass it to
+- **Driving MENTICIDE from a THEOCIDE thread (verified 2026-11-07).**
+  - **Link.** Settings → Labs → Linked environments on THEOCIDE, then
+    `t3_environment_links` lists MENTICIDE with its `environmentId`. Pass it to
     `t3_project_list` / `t3_thread_launch` (use the project id from *that*
     environment's list). `t3_environment_link`, `t3_project_create` and
     `t3_project_clone` need a full-access thread or the UI (`capability_denied`
     from Auto), so link and register in the UI instead.
-  - **`gh` login on REDRUM.** The unit's git credential helper is `gh`, so the
+  - **`gh` login on MENTICIDE.** The unit's git credential helper is `gh`, so the
     token must be in `gh`'s own store; the human supplies it without it
     touching a command line: `sudo -u t3code -H sh -c 'cd ~ && read -rs v &&
     printf "%s" "$v" | gh auth login --hostname github.com --git-protocol https
     --insecure-storage --with-token; unset v'`, then `sudo systemctl restart
-    t3code`. Pushes from an Auto REDRUM thread then work.
-  - **Harmless noise.** `rebuild.sh push` on REDRUM prints `unknown command
+    t3code`. Pushes from an Auto MENTICIDE thread then work.
+  - **Harmless noise.** `rebuild.sh push` on MENTICIDE prints `unknown command
     "store" for "gh"` plus the usage list before the push output: git sends
     `store` to the credential helper and `gh` does not implement it. The push
     still succeeds.

@@ -13,7 +13,7 @@
 
 The base reintegrated module lives at `modules/system/waydroid.nix`.
 The feature module will go in `modules/system/waydroid-tv.nix`.
-Wiring: GOD-KILLER only (`modules/hosts/host.nix` already includes
+Wiring: THEOCIDE only (`modules/hosts/host.nix` already includes
 `inputs.self.modules.nixos.waydroid`).
 
 
@@ -39,7 +39,7 @@ If the images were also replaced, use
 the pinned images, runs `init -f`, and re-applies the AMD/ATV props.
 
 ## Restart + test after prop changes (AMD, minigbm)
-Exact steps used on GOD-KILLER (Hyprland on NVIDIA, Waydroid on AMD iGPU):
+Exact steps used on THEOCIDE (Hyprland on NVIDIA, Waydroid on AMD iGPU):
 
 1. Stop session and container
 ```bash

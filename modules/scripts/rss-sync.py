@@ -8,7 +8,7 @@ Snapshot    : modules/system/rss-feeds.synced.json  (feed URLs both sides agreed
 
 Commands (every one is a dry run unless given its apply flag, except apply):
   status                 show what each command would do
-  apply [--prune]        what the REDRUM `miniflux-rss-sync` unit runs on every switch:
+  apply [--prune]        what the MENTICIDE `miniflux-rss-sync` unit runs on every switch:
                          push, then (with --prune) prune --yes
   push                   create feeds that are in the master list but not in Miniflux
   pull [--write]         add Miniflux-only feeds to the master list
@@ -20,7 +20,7 @@ a phone is never lost before `pull` has seen it.
 
 Config: MINIFLUX_URL (default https://feed.cqjro.ca). Auth is a Miniflux API key
 (Settings -> API Keys), from MINIFLUX_TOKEN or else the file named by
-RSS_SYNC_TOKEN_FILE (default ~/.config/rss-sync/api-token; the REDRUM unit points it
+RSS_SYNC_TOKEN_FILE (default ~/.config/rss-sync/api-token; the MENTICIDE unit points it
 at /var/lib/miniflux/api-token). RSS_SYNC_MASTER / RSS_SYNC_SNAPSHOT override the file
 paths; RSS_SYNC_WAIT=<seconds> waits for Miniflux's /healthcheck before starting.
 """
@@ -225,7 +225,7 @@ def cmd_push(args):
 
 
 def cmd_apply(args):
-	"""Unattended sync for the REDRUM unit: push new feeds, optionally prune dropped ones.
+	"""Unattended sync for the MENTICIDE unit: push new feeds, optionally prune dropped ones.
 	A feed that fails to subscribe is not recorded, so the next run retries it."""
 	failed = cmd_push(args)
 	if args.prune:

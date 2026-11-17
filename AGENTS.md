@@ -8,7 +8,7 @@ it through `CLAUDE.md`; other agents read it directly). The
 ## Project at a glance
 
 Personal NixOS flake (`flake-parts` + `import-tree`) that configures three
-machines (`GOD-KILLER`, `LittleNix`, `REDRUM`) from a pool of small, self-contained
+machines (`THEOCIDE`, `REGICIDE`, `MENTICIDE`) from a pool of small, self-contained
 module fragments, all themed from one base16 palette via Stylix.
 
 ## How the agent docs are organised
@@ -22,21 +22,22 @@ Read the others **when the task calls for them**:
 | `CLAUDE.md` | loaded by Claude Code; imports this file and adds Claude-only notes (subagents, skills, T3 tools). Never put shared rules there |
 | [`docs/agents/workflow.md`](docs/agents/workflow.md) | branching, PRs, testing, merging, cross-machine handoff, generation tracking, model choice, the path to close and settling a thread |
 | [`docs/agents/review.md`](docs/agents/review.md) | reviewing a branch (tiers 0–3) |
-| [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a REDRUM server module, theming the ABT sidecar, archiving a module |
+| [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md) | creating a MENTICIDE server module, theming the ABT sidecar, archiving a module |
 | [`docs/agents/security.md`](docs/agents/security.md) | permissions, sandbox, the `claude-guard` hook, the security smoke test, adding a hook |
-| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | pushes, pairing, T3 on REDRUM |
+| [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md) | pushes, pairing, T3 on MENTICIDE |
 | [`docs/agents/secrets.md`](docs/agents/secrets.md) | any task involving a secret, token, key, env file, `request_secret`, or the T2 firmware paths |
 | [`docs/agents/upstream-registry.md`](docs/agents/upstream-registry.md) | any rebuild conversation, or adding/removing a workaround |
 | [`docs/agents/notifications.md`](docs/agents/notifications.md) | adding or changing approval/completion notifications (`agent-notify`, ntfy) |
 | [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md) | styling a site in `modules/theme/webstyling/*.nix` (the Zen per-site CSS): `theme-shots` (logged-out RAW vs THEMED viewport and full-page screenshots plus a `manifest.tsv`, 35 pages over google, youtube, reddit, instagram and wikipedia), its limits, the mandatory RAW/OLD/NEW comparison deliverable (embedded in the final reply, built with `modules/scripts/theme-shots-compare.sh`), and what to do for logged-in pages (the human attaches manual screenshots) |
 | [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
+| [`docs/host-names.md`](docs/host-names.md) | naming or adding a host (meanings, former names `GOD-KILLER`/`LittleNix`/`REDRUM`, candidate list); [`docs/host-rename.md`](docs/host-rename.md) for the rename rollout and its outside-the-repo steps |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
 ## Quick commands
 
 ```bash
 ./rebuild.sh check [HOST...]      # tier-0 checks: syntax, tracked secrets/firmware, whitespace, registry sync, eval
-./rebuild.sh eval HOST            # evaluate only (drvPath); how REDRUM checks GOD-KILLER
+./rebuild.sh eval HOST            # evaluate only (drvPath); how MENTICIDE checks THEOCIDE
 ./rebuild.sh build HOST           # unprivileged build + closure diff (agent-safe, no root, no commit)
 ./rebuild.sh test HOST            # activate without recording a generation (sudo via GUI askpass); reboot/revert undoes it
 ./rebuild.sh dry HOST             # dry-activate: what a switch would restart
@@ -50,7 +51,7 @@ nix develop .#youtube-sync        # devshell for the youtube-sync helper
 ```
 
 - All three hosts evaluate **purely**: the Apple T2 Wi-Fi/Bluetooth firmware
-  for REDRUM and LittleNix comes from the Nix store
+  for MENTICIDE and REGICIDE comes from the Nix store
   (`modules/system/t2-firmware.nix`, `pkgs.requireFile` pinned by hash), so
   evaluation needs no files and no `--impure`; only a *build* of a T2 host needs
   the firmware imported into that machine's store: the human places it in
@@ -81,7 +82,7 @@ modules/
   hosts/           # host.nix (assembles nixosConfigurations) + one dir per machine
   home-manager/    # user config: ai-tools/, apps/, desktop/, keyboard/, languages/, terminal/
   scripts/         # helper shell/python scripts
-  server/          # REDRUM services (actual-budget, linkwarden, tailscale, …)
+  server/          # MENTICIDE services (actual-budget, linkwarden, tailscale, …)
   system/          # games, minecraft, waydroid, ios-sideloading, tether, vpn, manifest, rss-sources, t2-firmware, …
   theme/           # stylix scheme + openrgb + webstyling/ + discord-theme
   _archive/        # retired modules — prefer archiving here over deleting
@@ -113,7 +114,7 @@ Hosts then opt in **explicitly**:
 Other conventions:
 
 - Fragment names are exact strings and often contain hyphens — quote them
-  (`inputs.self.modules.nixos."GOD-KILLER-hardware"`).
+  (`inputs.self.modules.nixos."THEOCIDE-hardware"`).
 - Per-host overrides for a shared module are implemented as **module options**
   consumed elsewhere. Example: `hyprland.monitors` / `hyprland.bindel` are
   defined in `home-manager/desktop/hyprland.nix` and set per host in
@@ -127,13 +128,13 @@ Other conventions:
   `nom` via `osConfig.rss-sources.feeds`. The list is data in
   `modules/system/rss-feeds.json` (read with `builtins.fromJSON`), not Nix
   source, and one script, `modules/scripts/rss-sync.py`, syncs it with Miniflux
-  in both directions. List → Miniflux is automatic: the REDRUM unit
+  in both directions. List → Miniflux is automatic: the MENTICIDE unit
   `miniflux-rss-sync` (`modules/server/miniflux-rss-sync.nix`) runs `apply` on
   the switch that changes the list, authenticating with an API key the human
   keeps in `/var/lib/miniflux/api-token` (`Read`-denied; never read it) and
   keeping its own snapshot at `/var/lib/miniflux/rss-sync-snapshot.json`; pruning is opt-in
   (`miniflux-rss-sync.prune`). Miniflux → list is the manual `rss-sync pull`
-  on GOD-KILLER, with its own snapshot `rss-feeds.synced.json`: hand-edit the
+  on THEOCIDE, with its own snapshot `rss-feeds.synced.json`: hand-edit the
   master list freely, but do not hand-edit or delete either snapshot (without
   one a deletion in Miniflux looks like a feed that was never pushed). The
   module also renders the list as OPML (`rss-sources.opml`,
@@ -152,7 +153,7 @@ Other conventions:
 
 Recipes (read the one you need, in [`docs/agents/module-recipes.md`](docs/agents/module-recipes.md)):
 
-- **Creating a server module (REDRUM)** — free `127.0.0.1` port, dedicated
+- **Creating a server module (MENTICIDE)** — free `127.0.0.1` port, dedicated
   user, secrets under `/var/lib/<app>`, tunnel UUID committed (an identifier;
   the credentials JSON is the secret), README + Homepage updates.
 - **Theming the Actual Budget Tweaks sidecar** — the base16 → ABT token map and
@@ -174,15 +175,15 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
   build HOST` for each affected host this machine may build, then the review
   tiers ([`docs/agents/review.md`](docs/agents/review.md); the `ship-pr` skill
   runs them). Empty output with exit 0 from `build` is success.
-- **Which machine builds what.** GOD-KILLER may build GOD-KILLER and REDRUM.
-  REDRUM may build REDRUM only and runs **eval-only** checks
-  (`./rebuild.sh eval GOD-KILLER`) for GOD-KILLER changes. Remote hosts are
+- **Which machine builds what.** THEOCIDE may build THEOCIDE and MENTICIDE.
+  MENTICIDE may build MENTICIDE only and runs **eval-only** checks
+  (`./rebuild.sh eval THEOCIDE`) for THEOCIDE changes. Remote hosts are
   never switched or test-activated by agents (a remote activation needs a
-  terminal for the sudo password). The REDRUM clone is `t3code`-owned and
+  terminal for the sudo password). The MENTICIDE clone is `t3code`-owned and
   agent-writable, so it is never the source of a privileged switch.
 - **Test without recording.** `./rebuild.sh test HOST` (local only,
   human-approved) activates a branch build without a generation; `./rebuild.sh
-  revert` or a reboot undoes it. On REDRUM prefer `dry` for lockout-surface
+  revert` or a reboot undoes it. On MENTICIDE prefer `dry` for lockout-surface
   changes.
 - **PRs.** Commit and push (`./rebuild.sh push`) only when asked; open the PR
   with `gh pr create` and `.github/pull_request_template.md`, then T3's
@@ -208,7 +209,7 @@ human with a `Path to close` block — format and settle checklist in
 
 - One ordered list of the remaining steps, from both sides, each tagged
   **Agent** or **You**, in the order they unblock each other, ending with the
-  step that closes the thread (e.g. "PR merged and REDRUM switched").
+  step that closes the thread (e.g. "PR merged and MENTICIDE switched").
 - Work handed to another thread or agent goes under **Delegated**, with a
   `t3-thread://` link or task id; it no longer blocks this thread.
 - When no steps remain, or every remaining step is delegated, recommend
@@ -222,21 +223,21 @@ Code as the `hm` plugin: tools `mcp__plugin_hm_nixos__nix` and
 `mcp__plugin_hm_nixos__nix_versions` (allow-listed, no prompt). They are
 **deferred**: load them first with `ToolSearch`
 (`select:mcp__plugin_hm_nixos__nix,mcp__plugin_hm_nixos__nix_versions`) or the
-call fails input validation. GOD-KILLER only for now (REDRUM's `t3code` user has
+call fails input validation. THEOCIDE only for now (MENTICIDE's `t3code` user has
 no home-manager).
 
 - **Before using an option or package**, confirm it instead of guessing:
   `{"action":"info","query":"services.foo.enable","type":"option"}`,
   `{"action":"info","query":"<pkg>"}`, home-manager options with
   `"source":"home-manager"`.
-- **REDRUM's pinned nixpkgs is not in the remote index** (it tracks unstable and
+- **MENTICIDE's pinned nixpkgs is not in the remote index** (it tracks unstable and
   stable only). Read the pinned source directly:
-  `{"action":"flake-inputs","type":"ls","query":"nixpkgs-redrum:nixos/modules/services"}`,
+  `{"action":"flake-inputs","type":"ls","query":"nixpkgs-menticide:nixos/modules/services"}`,
   then `"type":"read"`. Same for stylix, home-manager or nixos-hardware
   behaviour at the locked rev.
 - **Before a heavy build**, `{"action":"cache","query":"<pkg>"}` shows whether
   it substitutes from cache.nixos.org or builds from source — pick the machine
-  accordingly (GOD-KILLER for source builds).
+  accordingly (THEOCIDE for source builds).
 - **Version history / upstream registry checks**: `nix_versions` finds the
   nixpkgs commit that shipped a version (useful for the T2 pin and rows that
   wait on a nixpkgs fix).
@@ -252,7 +253,7 @@ hosts (`flake.modules.nixos."claude-code-policy"` in
 `modules/home-manager/ai-tools/claude-code.nix`, installed as
 `/etc/claude-code/managed-settings.json`); details, the mode table and the
 smoke test in [`docs/agents/security.md`](docs/agents/security.md). Pushes,
-pairing and T3 on REDRUM: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md).
+pairing and T3 on MENTICIDE: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.md).
 
 - TODO/worktree threads and scheduled workers run **Auto** (default since
   2026-11-05); policy, secrets or networking work runs **Supervised**. In Auto a
@@ -318,7 +319,7 @@ One line each; the detail is in [`docs/agents/gotchas.md`](docs/agents/gotchas.m
 Read the matching entry before touching that area.
 
 - **Waydroid** — userdata is `~/.local/share/waydroid`; black screen on
-  GOD-KILLER while the display is on NVIDIA; software rendering on NVIDIA is
+  THEOCIDE while the display is on NVIDIA; software rendering on NVIDIA is
   not viable.
 - **Greeter sessions (Bigscreen)** — name clashes with the system profile,
   indented `.desktop` files are ignored, `test` needs a greetd restart, and the
@@ -328,15 +329,15 @@ Read the matching entry before touching that area.
 - **Secrets and firmware are gitignored** and must never be committed; the T2
   firmware is proprietary, lives outside the repo and is never read or attached.
 - **YouTube playlist sync** is quota-bound (RSS first, hourly timer).
-- **REDRUM is built from pinned nixpkgs** (`cac0c1ef`); security-relevant
+- **MENTICIDE is built from pinned nixpkgs** (`cac0c1ef`); security-relevant
   packages (cloudflared, tailscale, t3code) are overridden explicitly.
 - **Do not add `nix flake check` to `rebuild.sh`.**
 - **The `rebuild` zsh alias is a frozen store copy** — use `./rebuild.sh`.
 - **Flakes only see tracked files** — `rebuild.sh` stages with `git add --all`.
 - **`system.stateVersion` differs per host** — leave it alone.
 - **`stylix.enableReleaseChecks = false`** in every host `home.nix`.
-- **REDRUM does not import `essentials/users.nix`** — mirror user changes in
-  `hosts/REDRUM/machine.nix`; do not import the shared module there.
+- **MENTICIDE does not import `essentials/users.nix`** — mirror user changes in
+  `hosts/MENTICIDE/machine.nix`; do not import the shared module there.
 - **pnpm `packageManager` pins** and **pnpm FOD hashes** in
   `actual-budget-tweaks.nix` / `reactflux.nix` (both reproducible since
   2026-11-06; a hash changes only with the source rev, lockfile or pnpm).

@@ -1,12 +1,12 @@
 { inputs, ... }:
 {
-	flake.modules.nixos."LittleNix" = { pkgs, ... }: {
+	flake.modules.nixos."REGICIDE" = { pkgs, ... }: {
 		# T2 Mac Hardware Import: Apple Broadcom Wi-Fi/Bluetooth firmware, proprietary
 		# and NOT in git. Pinned by hash; place the files per docs/firmware.md.
 		imports = [ inputs.self.modules.nixos."t2-firmware" ];
 		# UNVERIFIED: this is the hash of the copy that was committed in the 2025 git
-		# history (now only in the private archive repo). If the files on the LittleNix
-		# machine differ, the importer prints the real hash: `nix run .#t2-firmware-import -- LittleNix`.
+		# history (now only in the private archive repo). If the files on the REGICIDE
+		# machine differ, the importer prints the real hash: `nix run .#t2-firmware-import -- REGICIDE`.
 		t2-firmware.hash = "sha256-bA/Thojm8PRCMrTwV40FhNZ++Y5pfRmPavgCNHkw+J4=";
 
 		# Home-Manager
@@ -15,8 +15,8 @@
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						LittleNix
-						LittleNix-monitors
+						REGICIDE
+						REGICIDE-monitors
 						environment
 						hyprland
 						mpv
@@ -64,7 +64,7 @@
 		boot.loader.efi.canTouchEfiVariables = true;
 		boot.extraModprobeConfig = "options hid-appletb-kbd mode=2"; # sets default state of touchbar
 
-		networking.hostName = "LittleNix"; # Define your hostname.
+		networking.hostName = "REGICIDE"; # Define your hostname.
 
 		fonts.packages = with pkgs; [
 			nerd-fonts.jetbrains-mono

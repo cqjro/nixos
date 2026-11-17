@@ -28,7 +28,7 @@ host + worktree + branch, which the native text lacks.
    the toggles called, and are they off by default?
 2. Phone app → Settings: the same, and is `notifyOnApproval` /
    `notifyOnCompletion` there? Does the phone app need to be paired to *each*
-   machine (GOD-KILLER and REDRUM) separately to get pushes from each?
+   machine (THEOCIDE and MENTICIDE) separately to get pushes from each?
 3. Does the notification text say which machine (environment) the thread is on?
 
 ## 2. Hook fallback (`agent-notify`)
@@ -46,12 +46,12 @@ host + worktree + branch, which the native text lacks.
 | `SubagentStop` | not registered (T3 itself waits for the whole run) | – | – |
 | `PermissionRequest` | Approval needed, ranked by the command (below) | 4 or 5 | critical |
 
-Title: `HOST - worktree (branch)`, e.g. `GOD-KILLER - workflow-notifications
+Title: `HOST - worktree (branch)`, e.g. `THEOCIDE - workflow-notifications
 (workflow/notifications)`. The worktree directory and branch are the closest
 thing a hook has to a "thread name" (`todo/<slug>` branches make this readable).
 It is the hook's `cwd`, so threads on `master` show `nixos (master)`.
 
-Delivery: `notify-send` on GOD-KILLER (falls back to
+Delivery: `notify-send` on THEOCIDE (falls back to
 `/run/user/UID/bus` when `systemd-run` did not pass the session bus) and an
 ntfy POST when `~/.config/agent-notify/topic` exists. The topic and token go to
 curl through stdin config, so they never appear in `ps`.
@@ -147,7 +147,7 @@ belongs with thread 3's schedules.
 | Option | Needs | Trade-off |
 | --- | --- | --- |
 | **ntfy.sh + private topic** (default) | an unguessable topic string | Zero infrastructure, works from anywhere, instant push on iOS and Android. The topic *is* the credential: anyone who knows it can read and publish. Messages transit a third party, hence the privacy note above. |
-| Self-hosted on REDRUM | `modules/server/ntfy.nix` (optional, **not** in `host.nix`) + a human-run `tailscale serve` | Messages stay on your network; phone must be on Tailscale; iOS still pings ntfy.sh (empty poll request) for instant push. More to maintain, and REDRUM being down silences GOD-KILLER's phone alerts. |
+| Self-hosted on MENTICIDE | `modules/server/ntfy.nix` (optional, **not** in `host.nix`) + a human-run `tailscale serve` | Messages stay on your network; phone must be on Tailscale; iOS still pings ntfy.sh (empty poll request) for instant push. More to maintain, and MENTICIDE being down silences THEOCIDE's phone alerts. |
 
 I recommend starting with ntfy.sh, and moving to self-hosting only if you do not
 want agent output (even just titles) transiting a third party. **Your call**,
@@ -159,17 +159,17 @@ The topic is a secret; it lives outside the repo (thread 5 owns secrets
 tooling, and this should move to its mechanism once chosen).
 
 ```bash
-# GOD-KILLER, as cairo
+# THEOCIDE, as cairo
 install -d -m 700 ~/.config/agent-notify
 umask 077
 head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32 > ~/.config/agent-notify/topic
-# REDRUM, for the t3code user (same or different topic; one topic is simplest)
+# MENTICIDE, for the t3code user (same or different topic; one topic is simplest)
 sudo install -d -m 700 -o t3code -g t3code /var/lib/t3code/.config/agent-notify
 sudo install -m 600 -o t3code -g t3code ~/.config/agent-notify/topic /var/lib/t3code/.config/agent-notify/topic
 ```
 
 Optional: `echo 22:00-07:00 > ~/.config/agent-notify/quiet-hours`; for a
-self-hosted server `echo https://redrum.<tailnet>.ts.net:8443 >
+self-hosted server `echo https://menticide.<tailnet>.ts.net:8443 >
 ~/.config/agent-notify/server` and, with auth, a `token` file. The agents' Read
 deny rules cover `~/.config/agent-notify/**` (`claude-code.nix`).
 
@@ -183,12 +183,12 @@ NixOS fragment `agent-notifications` sets it, with the store path of the
 `agent-notify` script as the command. There is no home-manager fragment and no
 `t3code.nix` hand-off any more.
 
-`modules/hosts/host.nix` imports the fragment on **GOD-KILLER and REDRUM
-only** (LittleNix has no `claude-code-policy`, so the option would not exist).
-`agent-notifications.desktop` picks the libnotify build: `true` on GOD-KILLER,
-`false` (default) on REDRUM, which is headless, so only ntfy is used there.
+`modules/hosts/host.nix` imports the fragment on **THEOCIDE and MENTICIDE
+only** (REGICIDE has no `claude-code-policy`, so the option would not exist).
+`agent-notifications.desktop` picks the libnotify build: `true` on THEOCIDE,
+`false` (default) on MENTICIDE, which is headless, so only ntfy is used there.
 
-* The hook runs as the agent's user: `cairo` on GOD-KILLER, `t3code` on REDRUM
+* The hook runs as the agent's user: `cairo` on THEOCIDE, `t3code` on MENTICIDE
   (home `/var/lib/t3code`; the unit sets `HOME` and `XDG_CONFIG_HOME`, so
   `/var/lib/t3code/.config/agent-notify` is found without more env).
 * The topic and token are read at run time from `~/.config/agent-notify`
@@ -205,23 +205,23 @@ only** (LittleNix has no `claude-code-policy`, so the option would not exist).
   the file.
 
 
-### Optional self-hosted ntfy (REDRUM)
+### Optional self-hosted ntfy (MENTICIDE)
 
 `modules/server/ntfy.nix` follows the "Creating a server module" rules: binds
 `127.0.0.1:8089` (free: ABT 8086, 8087 reserved, t3code 8088), runs as the
 module's own `ntfy-sh` user, no Cloudflare tunnel, `auth-default-access =
 deny-all`. Not imported anywhere until you approve. To adopt it:
 
-1. Add `inputs.self.modules.nixos.ntfy` to REDRUM in `host.nix`; set the real
+1. Add `inputs.self.modules.nixos.ntfy` to MENTICIDE in `host.nix`; set the real
    `base-url`.
-2. Rebuild REDRUM (you switch it), then create access:
+2. Rebuild MENTICIDE (you switch it), then create access:
    `sudo -u ntfy-sh ntfy user add --role=admin cairo`,
    `sudo -u ntfy-sh ntfy token add cairo` (use the token as the `token` file).
 3. Publish on the tailnet yourself: `sudo tailscale serve --bg --https=8443
    http://127.0.0.1:8089` (agents never run this).
 4. Add the README port-table row and an AGENTS.md mention (thread 1 handoff).
 
-Unverified: `nix eval` of the REDRUM toplevel with the module passes, but
+Unverified: `nix eval` of the MENTICIDE toplevel with the module passes, but
 runtime behaviour (ntfy-sh state dir, auth db, iOS upstream relay) is untested.
 
 ## 5. Phone setup
@@ -251,13 +251,13 @@ runtime behaviour (ntfy-sh state dir, auth db, iOS upstream relay) is untested.
 
 ## 6. Test procedure (you run it; tick each on both devices)
 
-Setup: `agent-notifications` switched on GOD-KILLER (the hooks only exist after a switch), topic file
+Setup: `agent-notifications` switched on THEOCIDE (the hooks only exist after a switch), topic file
 created, ntfy app subscribed.
 
-**6.1 Script alone (no T3).** On GOD-KILLER:
+**6.1 Script alone (no T3).** On THEOCIDE:
 `agent-notify test approval`, `agent-notify test finished`,
 `agent-notify test failed`. Expect desktop popup + phone push each; titles read
-`GOD-KILLER - <dir> (<branch>)`; approval and failed are high priority.
+`THEOCIDE - <dir> (<branch>)`; approval and failed are high priority.
 Check `~/.local/state/agent-notify/events.log`. (Desktop popup of the first run
 was seen working during development; phone path verified only against a local
 HTTP listener, not a real ntfy server.)
@@ -272,7 +272,7 @@ HTTP listener, not a real ntfy server.)
 2. *Completion:* a trivial prompt ("say hi"). Expect `kind=finished`.
 3. *Failure:* hard to trigger on purpose. Cheapest: in a shell, run `claude -p hi --model nonexistent` (a `model_not_found` StopFailure) with the hook active, then read `payloads.jsonl` for the real field names; otherwise wait for the next rate limit.
 4. *Full access:* repeat 2 in a Full access thread; expect completion only.
-5. Do the same from a thread on REDRUM's T3 (after REDRUM is switched): approval, completion; the title must say `REDRUM`.
+5. Do the same from a thread on MENTICIDE's T3 (after MENTICIDE is switched): approval, completion; the title must say `MENTICIDE`.
 6. *Dedupe/quiet:* send two completions <30 s apart (one push); set
    `quiet-hours` to cover now, finish a thread (no push), trigger an approval
    (push, priority 3).
@@ -283,7 +283,7 @@ per event type (or keep both, accepting duplicates).
 ## 7. Handoffs
 
 * **Thread 1 (AGENTS.md/README):** add a short "Notifications" bullet to the
-  agent workflow section pointing here; list ntfy under the REDRUM port table
+  agent workflow section pointing here; list ntfy under the MENTICIDE port table
   only if the optional module is adopted (port 8089); mention
   `agent-notifications` among the `ai-tools` fragments.
 * **Agent-security owner:** `Read(~/.config/agent-notify/**)` is on the deny list
@@ -298,7 +298,7 @@ per event type (or keep both, accepting duplicates).
 
 `rebuild.sh` (not edited here) has `notify_ok()` at the end of `switch` and of
 the interactive flow; it only calls `notify-send`, so a switch started from a
-phone or REDRUM would never reach the phone. `agent-notify` gained a
+phone or MENTICIDE would never reach the phone. `agent-notify` gained a
 non-hook entry point for it:
 
 ```bash
@@ -335,7 +335,7 @@ notifications or the `Stop` hook is **unobserved** (see 6.2), and a timer needs
 no LLM session.
 
 * **Both hosts:** the NixOS fragment exposes `config.agent-notifications.package`
-  (read-only) for a systemd unit. On REDRUM use a **system** timer with `serviceConfig.User = "t3code"`, and put the
+  (read-only) for a systemd unit. On MENTICIDE use a **system** timer with `serviceConfig.User = "t3code"`, and put the
   topic at `/var/lib/t3code/.config/agent-notify/topic` (mode 0600, owner
   `t3code`). Creating that file is the secret-handling thread's job; the topic
   is a credential, so use `request_secret`, never chat.

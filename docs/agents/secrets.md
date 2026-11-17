@@ -54,7 +54,7 @@ Secrets live in files on the machine, outside the repo (sops-nix is archived:
    history or chat:
    `read -rs v; printf '%s' "$v" | sudo install -m 600 -o <app> -g <app> /dev/stdin /var/lib/<app>/<name>; unset v`
    (for `KEY=value` env files use `printf 'KEY=%s\n' "$v" | ...`).
-3. Human restarts the unit. REDRUM is never switched or restarted by an agent.
+3. Human restarts the unit. MENTICIDE is never switched or restarted by an agent.
 
 Never write a secret into a tracked file. If the owner reintegrates sops-nix (see
 the header of the archived module), this section changes to the `sops` flow.
@@ -62,8 +62,8 @@ the header of the archived module), this section changes to the `sops` flow.
 ## Hooks that back this up
 
 `modules/home-manager/ai-tools/secret-guard.nix` (NixOS fragment `secret-guard`) adds two
-hooks to the managed policy through `claude-code-policy.hooks`, on GOD-KILLER and
-REDRUM. Hooks come only from that option (`allowManagedHooksOnly`): a hook set in
+hooks to the managed policy through `claude-code-policy.hooks`, on THEOCIDE and
+MENTICIDE. Hooks come only from that option (`allowManagedHooksOnly`): a hook set in
 home-manager settings, `.claude/settings.json` or a skill is ignored. They are a
 safety net, not a boundary (they fail open on bad input), and they never log what
 they matched:

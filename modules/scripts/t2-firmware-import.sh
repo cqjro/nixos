@@ -3,7 +3,7 @@
 # Imports a host's Apple Broadcom Wi-Fi/Bluetooth firmware (extracted from
 # macOS, NOT in git — see docs/firmware.md) into the Nix store and pins it with
 # a GC root, so `nixos-rebuild build|switch` of that T2 host can find it on this
-# machine. Run it on every machine that builds the host (GOD-KILLER and/or the
+# machine. Run it on every machine that builds the host (THEOCIDE and/or the
 # host itself). Exposed as `nix run .#t2-firmware-import -- HOST [DIR]`.
 #
 # The store path is content-addressed, so it is byte-for-byte the path the
@@ -13,7 +13,7 @@
 
 usage() {
 	echo "usage: t2-firmware-import HOST [DIR]" >&2
-	echo "  HOST  T2 host name (REDRUM, LittleNix)" >&2
+	echo "  HOST  T2 host name (MENTICIDE, REGICIDE)" >&2
 	echo "  DIR   directory holding the extracted brcm files" >&2
 	echo "        (default: /var/lib/firmware-src/HOST/brcm)" >&2
 	echo "env: T2_FIRMWARE_FLAKE  flake to read the pinned hash from (default: .)" >&2
@@ -46,7 +46,7 @@ hash=$(nix hash path --type sha256 --sri "$src")
 path=$(nix store add --mode nar --hash-algo sha256 --name brcm-firmware "$src")
 
 # Without a root the path is garbage-collected as soon as no system references it
-# (e.g. on GOD-KILLER, whose own closure never includes REDRUM's firmware).
+# (e.g. on THEOCIDE, whose own closure never includes MENTICIDE's firmware).
 root="$(dirname "$src")/brcm-firmware.gcroot"
 nix-store --add-root "$root" --indirect --realise "$path" > /dev/null
 

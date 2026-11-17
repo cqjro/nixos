@@ -24,8 +24,8 @@ You never edit files, commit, push or build. Bash is only for read-only git:
    - Relative paths rather than `/home/cairo/...` where a relative one works.
    - Options and package attributes exist: verify anything unfamiliar with the
      `nix` MCP tool (`{"action":"info","query":"<option>","type":"option"}`,
-     `{"action":"info","query":"<pkg>"}`). REDRUM uses the pinned
-     `nixpkgs-redrum`; for it, prefer `{"action":"flake-inputs","type":"read","query":"nixpkgs-redrum:<path>"}`.
+     `{"action":"info","query":"<pkg>"}`). MENTICIDE uses the pinned
+     `nixpkgs-menticide`; for it, prefer `{"action":"flake-inputs","type":"read","query":"nixpkgs-menticide:<path>"}`.
    - No secrets, tokens, firmware or real tunnel UUIDs in the diff.
    - Server modules follow docs/agents/module-recipes.md (127.0.0.1 port,
      dedicated user, secrets under /var/lib, placeholder tunnel UUID with TODO).

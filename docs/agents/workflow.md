@@ -12,29 +12,29 @@ picking the T3 environment in the client.
 
 | Thread runs on | Edit config for | `eval` | `build` | `test` / `dry` | `switch` |
 | --- | --- | --- | --- | --- | --- |
-| GOD-KILLER (home, fast) | any host | any host | GOD-KILLER, REDRUM (LittleNix only once its firmware is imported here) | GOD-KILLER locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); REDRUM only by the human from a terminal (`--target`) | GOD-KILLER, from merged `master`, human-approved (same routes) |
-| REDRUM (away, always on) | any host | any host — **eval-only for GOD-KILLER** | REDRUM only (never GOD-KILLER: too slow, and pointless) | human, over SSH | human, over SSH |
+| THEOCIDE (home, fast) | any host | any host | THEOCIDE, MENTICIDE (REGICIDE only once its firmware is imported here) | THEOCIDE locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); MENTICIDE only by the human from a terminal (`--target`) | THEOCIDE, from merged `master`, human-approved (same routes) |
+| MENTICIDE (away, always on) | any host | any host — **eval-only for THEOCIDE** | MENTICIDE only (never THEOCIDE: too slow, and pointless) | human, over SSH | human, over SSH |
 
-- REDRUM agents run as the `t3code` system user and cannot sudo, so every
-  activation on REDRUM is the human's (`ssh redrum`, then `./rebuild.sh test|switch REDRUM`).
-- REDRUM has its own clone of the repo, owned by `t3code` in its home
-  (`/var/lib/t3code`), and a `./rebuild.sh build REDRUM` was tested there. A
-  REDRUM thread is therefore a full repo thread: edit, `check`, `eval`, build
-  REDRUM and commit/push like on GOD-KILLER (GOD-KILLER stays eval-only).
-  Building REDRUM needs its firmware imported into REDRUM's store once
-  (`nix run .#t2-firmware-import -- REDRUM`; see `docs/firmware.md`). That
+- MENTICIDE agents run as the `t3code` system user and cannot sudo, so every
+  activation on MENTICIDE is the human's (`ssh menticide`, then `./rebuild.sh test|switch MENTICIDE`).
+- MENTICIDE has its own clone of the repo, owned by `t3code` in its home
+  (`/var/lib/t3code`), and a `./rebuild.sh build MENTICIDE` was tested there. A
+  MENTICIDE thread is therefore a full repo thread: edit, `check`, `eval`, build
+  MENTICIDE and commit/push like on THEOCIDE (THEOCIDE stays eval-only).
+  Building MENTICIDE needs its firmware imported into MENTICIDE's store once
+  (`nix run .#t2-firmware-import -- MENTICIDE`; see `docs/firmware.md`). That
   clone is agent-writable, so it must never be the source of a privileged
   switch: the human switches from their own `master` checkout.
-- A REDRUM build done on GOD-KILLER can be shipped instead of rebuilt:
-  `nix copy --no-check-sigs --to ssh-ng://redrum <toplevel path>` (run on
-  GOD-KILLER from a clean `master` build, so the path matches what REDRUM
-  computes), then the switch on REDRUM is a cache hit. `--no-check-sigs` is
+- A MENTICIDE build done on THEOCIDE can be shipped instead of rebuilt:
+  `nix copy --no-check-sigs --to ssh-ng://menticide <toplevel path>` (run on
+  THEOCIDE from a clean `master` build, so the path matches what MENTICIDE
+  computes), then the switch on MENTICIDE is a cache hit. `--no-check-sigs` is
   needed because locally built paths are unsigned; it works because `cairo` is a
-  trusted Nix user on REDRUM (`modules/hosts/REDRUM/machine.nix`). Run by the
-  human (it uses SSH keys agents cannot reach). Use it when REDRUM cannot
+  trusted Nix user on MENTICIDE (`modules/hosts/MENTICIDE/machine.nix`). Run by the
+  human (it uses SSH keys agents cannot reach). Use it when MENTICIDE cannot
   rebuild a fixed-output derivation itself (this is how generation 38 was
   switched on 2026-11-06, before the pnpm FODs were made reproducible, see
-  gotchas.md); the `dry`/`switch` on REDRUM then never builds it.
+  gotchas.md); the `dry`/`switch` on MENTICIDE then never builds it.
 
 ### One project, either machine
 
@@ -52,17 +52,17 @@ picking the environment when you start a thread.
   it in both places.
 - **Verified 2026-11-07** (master `0949eb1`, then a throwaway branch each way):
   both servers list the repo as a project with the same
-  `repositoryIdentity.canonicalKey` (`github.com/cqjro/nixos`; REDRUM's root is
-  `/var/lib/t3code/nixos`); `check` and `build REDRUM` pass on both machines
-  and yield the **identical** REDRUM toplevel from the same commit and
-  `flake.lock`; `eval GOD-KILLER` passes on REDRUM (no RAM/disk problem); a
+  `repositoryIdentity.canonicalKey` (`github.com/cqjro/nixos`; MENTICIDE's root is
+  `/var/lib/t3code/nixos`); `check` and `build MENTICIDE` pass on both machines
+  and yield the **identical** MENTICIDE toplevel from the same commit and
+  `flake.lock`; `eval THEOCIDE` passes on MENTICIDE (no RAM/disk problem); a
   branch pushed with `./rebuild.sh push` on either machine is fetched and
   built/checked on the other (`git fetch origin`, `git switch --detach
   origin/<branch>`) with the same toplevel path. Auto threads on both machines
   push over HTTPS without a card. A docs-only commit still changes the toplevel
   (the `git-<sha>` label), so compare paths only for the same commit.
-- Prefer REDRUM for edits, evals and REDRUM builds when GOD-KILLER is off;
-  prefer GOD-KILLER for anything that builds GOD-KILLER. Both draw on the same
+- Prefer MENTICIDE for edits, evals and MENTICIDE builds when THEOCIDE is off;
+  prefer THEOCIDE for anything that builds THEOCIDE. Both draw on the same
   Pro quota, so a second machine adds availability, not throughput.
 
 ### Activating a system (switch, test, dry, revert)
@@ -76,24 +76,24 @@ person would see a card ([security.md](security.md#t3-runtime-modes)).
   launch a **Supervised child thread** for just that step with
   `t3_thread_launch` (`runtimeMode: "approval-required"`; confirm in the launch
   result that it really is Supervised). Its `ask` card is the approval. On
-  GOD-KILLER the sudo password is typed in the desktop's GUI askpass dialog, so
+  THEOCIDE the sudo password is typed in the desktop's GUI askpass dialog, so
   that route only completes when someone is at the machine. Otherwise hand the
   human the exact command and wait.
-- **GOD-KILLER from your phone:** open the GOD-KILLER environment's terminal in
+- **THEOCIDE from your phone:** open the THEOCIDE environment's terminal in
   T3 (tested 2026-11-06: a real tty, `sudo -v` takes the password) and run it
   from the main checkout as a plain command: `cd ~/.nixos && ./rebuild.sh
-  switch GOD-KILLER` (worked on 2026-11-06). Do not wrap it in `systemd-run
+  switch THEOCIDE` (worked on 2026-11-06). Do not wrap it in `systemd-run
   --user --wait` without `--pty` and `--working-directory`: it then has no tty
   (so `rebuild.sh` falls back to the GUI password dialog), no visible output
   and runs in `$HOME`. Keep terminal scope off phone pairing tokens unless you
   need it: a token with terminal scope is as powerful as the server's user
   (revoke it if the phone is lost).
-- **REDRUM:** `ssh redrum` (from the phone too), then `./rebuild.sh switch
-  REDRUM` in the human's checkout. Agents never switch REDRUM and there is no
+- **MENTICIDE:** `ssh menticide` (from the phone too), then `./rebuild.sh switch
+  MENTICIDE` in the human's checkout. Agents never switch MENTICIDE and there is no
   privileged switch service.
-- A REDRUM thread cannot activate GOD-KILLER (`rebuild.sh` refuses a host that
+- A MENTICIDE thread cannot activate THEOCIDE (`rebuild.sh` refuses a host that
   is not the local machine, and a remote activation needs a terminal).
-  GOD-KILLER is told about merged changes by the unswitched-changes notifier,
+  THEOCIDE is told about merged changes by the unswitched-changes notifier,
   and switches when you do; nothing pulls or switches automatically.
 
 ## Checkouts
@@ -130,7 +130,7 @@ person would see a card ([security.md](security.md#t3-runtime-modes)).
    activates the branch build without a boot entry or generation; `./rebuild.sh
    revert` (or a reboot) returns to the recorded generation. `./rebuild.sh dry
    HOST` lists what a switch would restart without changing anything — prefer it
-   on REDRUM for network/SSH/Tailscale/boot/cloudflared changes, where a bad
+   on MENTICIDE for network/SSH/Tailscale/boot/cloudflared changes, where a bad
    activation on a headless box needs physical access.
 6. **Review** — see [review.md](review.md) for the tiers.
 7. **Push** the branch: `./rebuild.sh push` (pushes the current branch, never
@@ -154,7 +154,7 @@ person would see a card ([security.md](security.md#t3-runtime-modes)).
     on the host, in `~/.nixos`: `./rebuild.sh switch HOST` (it fetches and
     fast-forwards `master` first, and refuses if `master` has diverged or the
     tree is dirty while behind). Optionally note the result on the PR
-    (`gh pr comment <N> --body "GOD-KILLER: generation 231"`).
+    (`gh pr comment <N> --body "THEOCIDE: generation 231"`).
 
 `switch` refuses to run off `master`, so unmerged work can only ever be
 test-activated. The human can still bypass this for an emergency with plain
@@ -206,10 +206,10 @@ by showing the way to finishing it. Use this block, after the answer itself:
 
 ```markdown
 ### Path to close
-1. **Agent** — re-run `check` and `build` for GOD-KILLER and REDRUM.
+1. **Agent** — re-run `check` and `build` for THEOCIDE and MENTICIDE.
 2. **You** — approve the push card.
 3. **Agent** — open the PR and link it to this thread.
-4. **You** — say "merge it", then `./rebuild.sh switch REDRUM`. *(closes the thread)*
+4. **You** — say "merge it", then `./rebuild.sh switch MENTICIDE`. *(closes the thread)*
 
 **Delegated:** scheduled drift check → [Scheduled threads](t3-thread://v1/<threadId>)
 **Waiting on:** firmware PR merging first

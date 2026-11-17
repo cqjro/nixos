@@ -618,7 +618,9 @@ def hosts_for(path, rules, all_hosts):
 
 def cmd_unswitched(a, root, state, issues):
 	"""Merged commits on origin/master that this host has not switched to yet. Read-only."""
-	host = (a.hosts or [os.uname().nodename])[0]
+	# TRANSITION (host rename, 2026-11-15): a machine that has not switched yet still reports its old name.
+	legacy = {"GOD-KILLER": "THEOCIDE", "LittleNix": "REGICIDE", "REDRUM": "MENTICIDE"}
+	host = (a.hosts or [legacy.get(os.uname().nodename, os.uname().nodename)])[0]
 	report = {"schedule": "unswitched", "ranAt": now(), "host": host, "errors": [], "changed": False}
 	clone = ensure_clone(state, a.url)
 	head = run([*GIT, "rev-parse", "origin/master"], cwd=clone)[1].strip()

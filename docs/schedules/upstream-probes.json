@@ -4,8 +4,8 @@
 		{
 			"id": "row-1",
 			"registryRow": 1,
-			"slug": "redrum-t2-pin",
-			"title": "REDRUM nixpkgs pin (t2linux patchset vs linux >= 6.18.47)",
+			"slug": "menticide-t2-pin",
+			"title": "MENTICIDE nixpkgs pin (t2linux patchset vs linux >= 6.18.47)",
 			"action": "notify-only",
 			"probes": [
 				{ "type": "issue", "repo": "NixOS/nixos-hardware", "number": 2027 }

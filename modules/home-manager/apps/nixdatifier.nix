@@ -6,7 +6,7 @@
 	# own flake; the upstream Home Manager module is imported below and
 	# configured here. The tray icon registers as a StatusNotifierItem in
 	# noctalia's bar tray widget (a click toggles the window), so no extra
-	# panel/pill is needed. Hosts without a graphical session (REDRUM) set
+	# panel/pill is needed. Hosts without a graphical session (MENTICIDE) set
 	# `programs.nixdatifier.ui = false` for the CLI only.
 	#
 	# Widget-side settings the upstream module does not expose (font scale,
@@ -55,7 +55,7 @@
 		# blends in (visually identical to removing it with an opaque bg).
 		# ui = false (the cli package) is left stock: its helpers are
 		# wrapProgram-wrapped, so the timeout string is not patchable in
-		# place, and nothing on REDRUM measures the store automatically.
+		# place, and nothing on MENTICIDE measures the store automatically.
 		patchedPackage = basePackage.overrideAttrs (old: {
 			postInstall = (old.postInstall or "") + ''
 				substituteInPlace $out/share/nixdatifier/package/contents/tools/sh/diskusage \

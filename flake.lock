@@ -1036,7 +1036,7 @@
         "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
       }
     },
-    "nixpkgs-redrum": {
+    "nixpkgs-menticide": {
       "locked": {
         "lastModified": 1787490880,
         "narHash": "sha256-IzhKXR39VG4Bhe5PVAPN1aJGZ66s8phlsxXJOCDZ2GQ=",
@@ -1281,7 +1281,7 @@
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-opencode": "nixpkgs-opencode",
         "nixpkgs-openconnect-sso": "nixpkgs-openconnect-sso",
-        "nixpkgs-redrum": "nixpkgs-redrum",
+        "nixpkgs-menticide": "nixpkgs-menticide",
         "noctalia": "noctalia",
         "noctalia-greeter": "noctalia-greeter",
         "openconnect-sso": "openconnect-sso",

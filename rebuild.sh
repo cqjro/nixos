@@ -42,6 +42,29 @@ usage() {
     sed -n 's/^#   \(rebuild\.sh.*\)/\1/p' "$0"
 }
 
+# TRANSITION (host rename, 2026-11-15): until a machine has switched to its new
+# name, `hostname` still returns the old one. this_host maps old -> new so the
+# first `./rebuild.sh switch THEOCIDE` is accepted on a machine still called
+# GOD-KILLER. Delete the case arms once all three machines have switched.
+this_host() {
+    case "$(hostname)" in
+        GOD-KILLER) echo THEOCIDE ;;
+        LittleNix) echo REGICIDE ;;
+        REDRUM) echo MENTICIDE ;;
+        *) hostname ;;
+    esac
+}
+
+# Old name of a host, to match pre-rename "HOST: GEN ..." metadata commits.
+legacy_name() {
+    case "$1" in
+        THEOCIDE) echo GOD-KILLER ;;
+        REGICIDE) echo LittleNix ;;
+        MENTICIDE) echo REDRUM ;;
+        *) echo "$1" ;;
+    esac
+}
+
 die() {
     echo "$*" >&2
     exit 1
@@ -142,8 +165,8 @@ activate() {
     local action=$1 host=$2 remote=${3:-}
     local -a cmd flags
     git add --all # to ensure there isnt issues during build
-    if [ "$host" != "$(hostname)" ] && [ -z "$remote" ]; then
-        die "'$host' is not this machine ($(hostname)); pass --target USER@IP"
+    if [ "$host" != "$(this_host)" ] && [ -z "$remote" ]; then
+        die "'$host' is not this machine ($(this_host)); pass --target USER@IP"
     fi
     if [ -n "$remote" ]; then
         [ -t 0 ] || die "A remote $action needs a terminal for the sudo password; run ./rebuild.sh yourself."
@@ -269,7 +292,7 @@ cmd_build() {
     require_host "$host"
     git add --all # flakes only see tracked files
     build_host "$host" || exit 1
-    if [ "$host" = "$(hostname)" ]; then
+    if [ "$host" = "$(this_host)" ]; then
         nix store diff-closures /run/current-system ./result
     else
         echo "Built $host OK (a closure diff is only available for the local host)."
@@ -318,14 +341,14 @@ cmd_push() {
 cmd_generations() {
     local host gen date rev cur subject base
     parse_opts "$@"
-    host=$(if [ -n "$remote" ]; then ssh "$remote" hostname; else hostname; fi)
+    host=$(if [ -n "$remote" ]; then ssh "$remote" hostname; else this_host; fi)
     list_generations_json "$remote" |
         jq -r '.[] | [.generation, .date, .configurationRevision, (if .current then "*" else " " end)] | @tsv' |
         while IFS=$'\t' read -r gen date rev cur; do
             case $rev in
                 Unknown|"")
                     # older generations: recorded by the old post-switch commit "HOST: GEN … || MESSAGE"
-                    subject=$(git log --all -1 --format=%s -E --grep="^$host: $gen " | sed 's/.*|| //')
+                    subject=$(git log --all -1 --format=%s -E --grep="^($host|$(legacy_name "$host")): $gen " | sed 's/.*|| //')
                     rev="-"
                     [ -n "$subject" ] || subject="(no revision recorded)"
                     ;;
@@ -384,8 +407,8 @@ cmd_interactive() {
     done
 
     # Determine whether we're rebuilding locally or remotely
-    if [[ "$(hostname)" != "$dir" ]]; then
-        echo "Current hostname ('$(hostname)') differs from selected host ('$dir')."
+    if [[ "$(this_host)" != "$dir" ]]; then
+        echo "Current hostname ('$(this_host)') differs from selected host ('$dir')."
         read -r -p "Enter target user: " target_user
         read -r -p "Enter target IP address: " target_ip
         remote="${target_user}@${target_ip}"

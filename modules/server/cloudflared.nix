@@ -1,7 +1,7 @@
 { ... }:
 {
-	# cloudflared has to track upstream for security fixes, but REDRUM is built
-	# from a pinned nixpkgs (modules/hosts/REDRUM/T2-PIN.md): that rev ships
+	# cloudflared has to track upstream for security fixes, but MENTICIDE is built
+	# from a pinned nixpkgs (modules/hosts/MENTICIDE/T2-PIN.md): that rev ships
 	# 2026.7.3, and the locked `nixpkgs` input only reaches 2026.10.1.
 	# TODO-remove: this pins Cloudflare's own (static, signed) release binary.
 	# Once `nixpkgs` is bumped — master already has 2026.10.3 — delete

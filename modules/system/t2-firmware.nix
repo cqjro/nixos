@@ -11,7 +11,7 @@ in
 		text = builtins.readFile ../scripts/t2-firmware-import.sh;
 	};
 
-	# Apple Broadcom Wi-Fi/Bluetooth firmware for T2 Macs (REDRUM, LittleNix).
+	# Apple Broadcom Wi-Fi/Bluetooth firmware for T2 Macs (MENTICIDE, REGICIDE).
 	# The files are extracted from macOS and are not redistributable, so they are
 	# NOT in git: the store path is pinned by hash and must already exist in the
 	# local store (`requireFile`). Evaluation never needs the files, only the build
@@ -83,7 +83,7 @@ in
 			];
 
 			# 0750 cairo:users: the files are not secret, but agents (the t3code user
-			# on REDRUM) should not be able to list or read the staging copy. Builds
+			# on MENTICIDE) should not be able to list or read the staging copy. Builds
 			# use the world-readable store path, which does not need this directory.
 			systemd.tmpfiles.rules = [
 				"d /var/lib/firmware-src 0750 cairo users -"

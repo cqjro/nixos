@@ -17,20 +17,20 @@ Worktree safety, concretely: the script fetches `origin/master` into its own pri
 clone (`~/.local/state/nixos-schedules/clone`), uses `git worktree add --detach <tmp> <rev>`
 there and removes it in a `finally`. It never touches `~/.nixos` or its `.git`, and never
 checks out a branch, so it cannot collide with any branch another worktree holds. All three hosts now evaluate
-purely from a clean worktree (the firmware module is merged: LittleNix evaluated OK at
+purely from a clean worktree (the firmware module is merged: REGICIDE evaluated OK at
 `origin/master` on 2026-11-04), so the old firmware `ignore` entry is gone.
 
-- **Runs on:** REDRUM, weekly (Sunday 12:00), calling the packaged
+- **Runs on:** MENTICIDE, weekly (Sunday 12:00), calling the packaged
   `/run/current-system/sw/bin/schedule-precheck` (`modules/server/schedule-precheck.nix`),
-  created from a GOD-KILLER thread with `schedule_task` and the linked REDRUM
-  `environmentId`. Evaluation is host independent, so REDRUM evaluates all three hosts
-  (about 7 s for REDRUM, 15 s for GOD-KILLER); it never builds GOD-KILLER. It launches
-  workers itself (`Worker launching: ENABLED`); those verify a GOD-KILLER fix with
-  `./rebuild.sh eval GOD-KILLER` only, and the host is built when you review the PR and
-  switch. The GOD-KILLER task (`scheduled-task:9828e1b1-b716-4950-b14a-c02274829bf9`) is
-  to be **disabled** once the REDRUM one exists, not run alongside it. Cost to watch on
-  the first run: REDRUM's `t3code` user fetches every flake input of the GOD-KILLER and
-  LittleNix evaluations into its own nix cache.
+  created from a THEOCIDE thread with `schedule_task` and the linked MENTICIDE
+  `environmentId`. Evaluation is host independent, so MENTICIDE evaluates all three hosts
+  (about 7 s for MENTICIDE, 15 s for THEOCIDE); it never builds THEOCIDE. It launches
+  workers itself (`Worker launching: ENABLED`); those verify a THEOCIDE fix with
+  `./rebuild.sh eval THEOCIDE` only, and the host is built when you review the PR and
+  switch. The THEOCIDE task (`scheduled-task:9828e1b1-b716-4950-b14a-c02274829bf9`) is
+  to be **disabled** once the MENTICIDE one exists, not run alongside it. Cost to watch on
+  the first run: MENTICIDE's `t3code` user fetches every flake input of the THEOCIDE and
+  REGICIDE evaluations into its own nix cache.
 - **Model / effort:** Haiku, low for the dispatcher (the "scheduled checks" row of
   the model table in docs/agents/workflow.md; not settable by tool, see README);
   Sonnet medium for the worker (`worker-briefs.md`).
@@ -112,11 +112,11 @@ Or create fresh:
 }
 ```
 
-REDRUM variant (the live one): the same prompt with every
+MENTICIDE variant (the live one): the same prompt with every
 `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` replaced by
 `/run/current-system/sw/bin/schedule-precheck`, and the prompt's "NixOS config at
 /home/cairo/.nixos" line reading "at /var/lib/t3code/nixos"; the schedule is unchanged
 (`fixed_time`, `12:00`, `weekdays: [0]`).
 
-Sequencing note: Upstream Issues Check now runs daily on REDRUM, so the weekly Build
+Sequencing note: Upstream Issues Check now runs daily on MENTICIDE, so the weekly Build
 Flags run always sees a just-merged workaround removal.

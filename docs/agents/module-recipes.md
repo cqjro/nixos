@@ -4,9 +4,9 @@ Step-by-step recipes referenced from [AGENTS.md](../../AGENTS.md#the-module-patt
 Read the one you need before creating a server module, theming the ABT sidecar
 or archiving a module.
 
-## Creating a server module (REDRUM)
+## Creating a server module (MENTICIDE)
 
-`modules/server/*.nix` each define an app on REDRUM, exposed through a
+`modules/server/*.nix` each define an app on MENTICIDE, exposed through a
 Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
 `actual-budget.nix`, `minsiflux.nix`) — each one **must**:
 
@@ -39,7 +39,7 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    Homepage Homelab tab (`modules/server/homepage.nix` is a config fragment of
    its own) if it should show there.
 
-5. **Wire and document**: add `inputs.self.modules.nixos."<name>"` to the REDRUM
+5. **Wire and document**: add `inputs.self.modules.nixos."<name>"` to the MENTICIDE
    module list in `modules/hosts/host.nix`, then update the README: the feature bullet, the tunnel create/credential steps, the DNS CNAME table, the
    permissions table (`/var/lib/<app>` row) and the "log in once" notes.
 
@@ -49,9 +49,9 @@ Cloudflare tunnel. Follow the existing modules (`linkwarden.nix`,
    fixed-output `pnpm install` must run **with network** (that's the only place
    the registry is touched), then the real build installs `--offline` against a
    *copied* (writable) store **and** metadata cache. Neither `fetchPnpmDeps` nor
-   `buildPnpmPackage` exist in the pinned nixpkgs on REDRUM — hand-roll both.
-   `nix flake check` on REDRUM is not part of the loop; verify with
-   `nix eval '.#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath'`.
+   `buildPnpmPackage` exist in the pinned nixpkgs on MENTICIDE — hand-roll both.
+   `nix flake check` on MENTICIDE is not part of the loop; verify with
+   `nix eval '.#nixosConfigurations.MENTICIDE.config.system.build.toplevel.drvPath'`.
 
 ## Theming the Actual Budget Tweaks sidecar
 

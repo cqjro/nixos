@@ -9,7 +9,7 @@ exist today still run their original prompts.
 | --- | --- |
 | [`upstream-check.md`](./upstream-check.md) | Prompt + `schedule_task` JSON: "Upstream Issues Check" (registry polling) |
 | [`build-flags.md`](./build-flags.md) | Prompt + `schedule_task` JSON: "Build Flags" (eval warnings and failures) |
-| [`unswitched-changes.md`](./unswitched-changes.md) | Prompt + `schedule_task` JSON + REDRUM steps: per-host "merged but not switched yet" notifier |
+| [`unswitched-changes.md`](./unswitched-changes.md) | Prompt + `schedule_task` JSON + MENTICIDE steps: per-host "merged but not switched yet" notifier |
 | [`worker-briefs.md`](./worker-briefs.md) | The `t3_thread_launch` calls and briefs for the PR-opening worker threads |
 | [`bin/schedule-precheck`](./bin/schedule-precheck) | The deterministic pre-step (no LLM): probes, state, issue bookkeeping |
 | [`host-scopes.json`](./host-scopes.json) | Path → hosts rules the unswitched check uses |
@@ -138,12 +138,12 @@ schedule-precheck health SCHEDULE MESSAGE…
     run in the same turn, so it is deliberately not excluded (smoke test steps 27-32).
   The script is only as safe as its checkout: `~/.nixos` changes by merged PR plus your
   switch, and `docs/schedules/bin/*` is on the tier-2 review list for that reason. Full
-  reasoning, REDRUM and the packaged alternative: docs/agents/security.md, "Scheduled
+  reasoning, MENTICIDE and the packaged alternative: docs/agents/security.md, "Scheduled
   checks run unsandboxed".
 
 ### Verified vs untested
 
-Run on GOD-KILLER on 2026-11-01/02 in this worktree (the clone-based version, `unswitched`
+Run on THEOCIDE on 2026-11-01/02 in this worktree (the clone-based version, `unswitched`
 statuses and the reminder state machine included): all `upstream` probes against
 live GitHub (`--dry-run`), `buildflags` on all three hosts at `origin/master`
 (15 s / 11 s / 7 s eval; the temporary worktree is removed afterwards), warning
@@ -175,8 +175,8 @@ The issue-based design needs the `gh` token on the machine that runs the schedul
 them (`worker-launched`) and creates labels. Probes of other repositories (nixpkgs,
 nixos-hardware, QIDIStudio, nixdatifier, xodus-nexus, learnharness) only read public data.
 
-**Granted 2026-11-04:** the GOD-KILLER token has Issues read and write on `cqjro/nixos`, and
-the REDRUM `t3code` token (only `cqjro/nixos`, Contents + Pull requests + Issues, expires
+**Granted 2026-11-04:** the THEOCIDE token has Issues read and write on `cqjro/nixos`, and
+the MENTICIDE `t3code` token (only `cqjro/nixos`, Contents + Pull requests + Issues, expires
 2027-02-02) is installed. The issue-based design is therefore the decision; the paragraph
 below is kept only as the road not taken. Not re-tested with the new permission yet: the
 first real run is the Rollout smoke test.
@@ -204,27 +204,27 @@ standing PR must carry at least one commit.
 ## Placement
 
 Each T3 server has its own scheduler, and a scheduled task runs on the server
-that owns it. `schedule_task` called from a GOD-KILLER thread creates a
-GOD-KILLER task. REDRUM tasks must be created from a client connected to
-REDRUM's server.
+that owns it. `schedule_task` called from a THEOCIDE thread creates a
+THEOCIDE task. MENTICIDE tasks must be created from a client connected to
+MENTICIDE's server.
 
 | Schedule | Now | Target | Why |
 | --- | --- | --- | --- |
-| Upstream Issues Check | GOD-KILLER, weekly (kept, disabled) | REDRUM, daily 06:30, launches workers (after the REDRUM switch) | Only needs `gh` and a read-only checkout; REDRUM is always on, GOD-KILLER often is not. |
-| Build Flags | GOD-KILLER, weekly (to be disabled) | REDRUM, weekly Sunday 12:00, launches workers (after the REDRUM switch) | Nix evaluation does not depend on the machine, so REDRUM can evaluate all three hosts (REDRUM 7 s, GOD-KILLER 15 s). It is eval only, never a GOD-KILLER build. |
+| Upstream Issues Check | THEOCIDE, weekly (kept, disabled) | MENTICIDE, daily 06:30, launches workers (after the MENTICIDE switch) | Only needs `gh` and a read-only checkout; MENTICIDE is always on, THEOCIDE often is not. |
+| Build Flags | THEOCIDE, weekly (to be disabled) | MENTICIDE, weekly Sunday 12:00, launches workers (after the MENTICIDE switch) | Nix evaluation does not depend on the machine, so MENTICIDE can evaluate all three hosts (MENTICIDE 7 s, THEOCIDE 15 s). It is eval only, never a THEOCIDE build. |
 | Unswitched changes | none | every machine (own copy per T3 server, or a timer) | It must run on the host it is about; see `unswitched-changes.md`. |
-| Worker launches | GOD-KILLER | GOD-KILLER | Workers need builds for GOD-KILLER modules, which REDRUM must not do. The same prompts run on GOD-KILLER without `--detect-only` and pick up whatever REDRUM filed, because `actionable` is computed from live issue state, not local state. |
+| Worker launches | THEOCIDE | THEOCIDE | Workers need builds for THEOCIDE modules, which MENTICIDE must not do. The same prompts run on THEOCIDE without `--detect-only` and pick up whatever MENTICIDE filed, because `actionable` is computed from live issue state, not local state. |
 
-REDRUM prerequisites: the packaged script (`modules/server/schedule-precheck.nix`, run as
+MENTICIDE prerequisites: the packaged script (`modules/server/schedule-precheck.nix`, run as
 `/run/current-system/sw/bin/schedule-precheck`, policy entry in `claude-code.nix`; needs a
-REDRUM switch), the `t3code` `gh` login with Issues access on `cqjro/nixos`, and flakes
+MENTICIDE switch), the `t3code` `gh` login with Issues access on `cqjro/nixos`, and flakes
 enabled (they are). The repo is public, so the private clone needs no token.
 
-A missed run (GOD-KILLER off at Saturday noon): whether T3's scheduler catches
-up on boot is **unknown and untested**. Observe it: leave GOD-KILLER off over
+A missed run (THEOCIDE off at Saturday noon): whether T3's scheduler catches
+up on boot is **unknown and untested**. Observe it: leave THEOCIDE off over
 one scheduled time and see whether a thread appears at next start. The design
 copes either way, since each run is idempotent and `daysSinceLastSuccess` shows
-the gap, but the only real fix for "never fires" is moving detection to REDRUM.
+the gap, but the only real fix for "never fires" is moving detection to MENTICIDE.
 
 ## Model and effort
 
@@ -238,7 +238,7 @@ setting). So the plan is:
 | Dispatcher (scheduled thread) | Haiku, low (docs/agents/workflow.md: "Triage, scheduled checks") | Not settable by tool. Check whether T3's scheduled-task editor has a model picker (**please look**); otherwise it runs on the project default, which is fine because the dispatcher does almost nothing. |
 | Worker, upstream removal | Sonnet 5.5, medium (effort 1–3 row) | Set explicitly in `t3_thread_launch.modelSelection`. Mechanical removal, effort score 1–3. |
 | Worker, warning/eval fix | Sonnet 5.5, medium; high if the dispatcher marks it non-trivial | Same. Escalate to Opus 5.5 only after two failed rounds, per thread 1's tiers. |
-| Row 1 (REDRUM kernel pin) | none | `notify-only`: needs kernel testing and a human-run REDRUM switch. |
+| Row 1 (MENTICIDE kernel pin) | none | `notify-only`: needs kernel testing and a human-run MENTICIDE switch. |
 
 `modelSelection.options` as `{"effort": "low"}` was accepted by `t3_thread_launch`
 (verified 2026-11-02). A task created *from* a thread inherits that thread's model, so a
@@ -253,7 +253,7 @@ A webhook would need T3 Connect (a public tunnel), a signed secret via
 The upstream repos are third-party, so we cannot attach GitHub webhooks to them
 anyway; only our own repo could, and nothing there needs an instant reaction.
 Revisit if the cadence goes to daily or more, in which case a systemd timer on
-REDRUM running `schedule-precheck` and calling the webhook only when `changed`
+MENTICIDE running `schedule-precheck` and calling the webhook only when `changed`
 is true would cut the LLM floor to zero.
 
 ## Idle and failed runs
@@ -280,7 +280,7 @@ is true would cut the LLM floor to zero.
   carried a fix, `flake-inputs` to read the *locked* nixpkgs source, and `cache`
   to confirm a package is substituted. A fix that exists in `nixos-unstable` but
   not in the locked revision needs a `flake.lock` bump, which is a human
-  decision (REDRUM pins; T3 client/server versions must match), so a worker
+  decision (MENTICIDE pins; T3 client/server versions must match), so a worker
   stops and comments instead of bumping.
 - **T3 tools:** `t3_thread_launch` (worker, worktree, model), `t3_thread_list`
   (in-flight check), `link_pull_request` + `watch_pull_request` (worker links and
@@ -306,7 +306,7 @@ are why the design is worth having:
   `xodus*` in `pkgs/by-name/xo`; no `flake.nix` in `xodus-nexus`).
 - **Seven distinct evaluation warnings** exist today (texlive.combine, renamed
   `programs.noctalia-greeter`, nixcord, `programs.rofi.font`, opencode `tui`,
-  two avahi options) plus `pnpm: Override nodejs-slim` on REDRUM. LittleNix failed
+  two avahi options) plus `pnpm: Override nodejs-slim` on MENTICIDE. REGICIDE failed
   to evaluate on 2026-11-01 (missing firmware path); after the firmware PR merged it evaluates
   OK and the ignore entry was removed.
 - **Stale cross-references:** `3d-printing.nix` and `nixdatifier.nix` cited the wrong
@@ -317,7 +317,7 @@ are why the design is worth having:
 1. (Done) the workflow, firmware, security, secrets, notifications and schedules PRs are
    merged and both hosts switched. The script exists in `~/.nixos`.
 2. Merge the sandbox-policy PR (`workflow/schedule-sandbox`: exclusion + allow rule +
-   guard rule + these prompts) and **switch GOD-KILLER** (`./rebuild.sh switch` fast-forwards
+   guard rule + these prompts) and **switch THEOCIDE** (`./rebuild.sh switch` fast-forwards
    `master` itself; nothing pulls automatically).
 3. Approve the prompts in `upstream-check.md` and `build-flags.md` and update the two
    existing tasks (`update_scheduled_task`, ids in each file).
@@ -325,10 +325,10 @@ are why the design is worth having:
    with `--dry-run` appended to the script call in the prompt (edit it temporarily), then
    smoke-test steps 25-32 in docs/agents/security.md.
 5. Remove `--dry-run`, run once for real, and watch the issues appear.
-6. When the REDRUM prerequisites exist, create the `--detect-only` copies on
-   REDRUM's server (and see the REDRUM note in docs/agents/security.md: it needs the
-   packaged script, not an absolute path) and keep the GOD-KILLER tasks as they are: they
-   launch the workers for whatever REDRUM filed.
+6. When the MENTICIDE prerequisites exist, create the `--detect-only` copies on
+   MENTICIDE's server (and see the MENTICIDE note in docs/agents/security.md: it needs the
+   packaged script, not an absolute path) and keep the THEOCIDE tasks as they are: they
+   launch the workers for whatever MENTICIDE filed.
 
 The live "Build Flags" task still has its original prompt, which builds and **edits the
 clean `~/.nixos` checkout**. That dirties the tree you switch from (`switch` then refuses
@@ -354,7 +354,7 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 - Packaging: `schedule-precheck` borrows `python3` through `nix shell` because agent shells
   have none. Ship it properly (home-manager package or `writers.writePython3Bin` with
   `gh git nix` as runtime inputs) next to the other scripts in `modules/scripts/`, and add it
-  to the REDRUM `t3code` user's tools.
+  to the MENTICIDE `t3code` user's tools.
 - The `TODO.md` items "Upstream-fixes watchdog" and "Rebuild warnings catcher" are removed
   by this PR (implemented by the probes and `buildflags`). They are *built*, not yet *live*: the
   prompts are unapproved and the token lacks Issues permission, so the owner items stay in
@@ -364,7 +364,7 @@ worker briefs, Haiku low for scheduled checks, and the registry at
 
 - Done in `workflow/schedule-sandbox`: the absolute-path exclusion and allow rule for
   `schedule-precheck` (covers the `unswitched` check too), plus the guard rule. Still open:
-  REDRUM, where the shared entry is inert and no `t3code` entry exists (docs/agents/security.md, "Scheduled checks run unsandboxed").
+  MENTICIDE, where the shared entry is inert and no `t3code` entry exists (docs/agents/security.md, "Scheduled checks run unsandboxed").
   No `gh issue *` allow is needed.
 - Scheduled and worker threads must not run `full-access` (its asks are refused, so a
   worker cannot push). Decided 2026-11-05: workers launch in `auto`
@@ -373,7 +373,7 @@ worker briefs, Haiku low for scheduled checks, and the registry at
   worker never merges: `gh pr merge` stays an `ask` rule and needs the human's explicit
   instruction, and the hard protection for `master` is GitHub branch protection (TODO.md).
 
-**Thread 5 (secrets):** a fine-grained token for `gh` on REDRUM scoped to
+**Thread 5 (secrets):** a fine-grained token for `gh` on MENTICIDE scoped to
 `cqjro/nixos` with `issues: write`, `pull_requests: write`, `contents: write`.
 The schedules need nothing else.
 
@@ -381,7 +381,7 @@ The schedules need nothing else.
 waits on a PR approval, so "thread finished" and "approval needed" are the right wake signals.
 The unswitched check delivers through `agent-notify send info` with a label (the `info` kind
 now exists on `master`); what is still open (whether a scheduled thread's completion pings
-the phone, the REDRUM `t3code` topic file) is in the last section of
+the phone, the MENTICIDE `t3code` topic file) is in the last section of
 [`unswitched-changes.md`](./unswitched-changes.md).
 
 **Firmware thread:** nothing left; its `ignore` entry is already removed.

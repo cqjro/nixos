@@ -1,11 +1,11 @@
 # Agent security: sandbox, managed policy, guard hook
 
-How Claude Code (driven by T3 Code) is fenced on GOD-KILLER and REDRUM, what
+How Claude Code (driven by T3 Code) is fenced on THEOCIDE and MENTICIDE, what
 each layer actually enforces, and how to re-test it. Source of truth:
 `modules/home-manager/ai-tools/claude-code.nix` (fragment
 `claude-code-policy`, both hosts) and `modules/scripts/claude-guard.sh`.
 
-Evidence below comes from 2026-11-01 tests on GOD-KILLER with Claude Code
+Evidence below comes from 2026-11-01 tests on THEOCIDE with Claude Code
 2.1.308, run as nested `claude -p` sessions **inside a T3-launched agent's
 systemd-run scope** (`app-t3code-agents-….slice/t3code-claude-….scope`),
 with the generated policy passed via `--settings`. The policy has not yet been
@@ -24,7 +24,7 @@ depends on that is marked *(after switch)* and is covered by the smoke test.
 
 Everything lives in **one root-owned file**, `/etc/claude-code/managed-settings.json`,
 generated from one Nix attrset and read by every user on the host. That is
-cairo on GOD-KILLER and the `t3code` service user on REDRUM, so the two
+cairo on THEOCIDE and the `t3code` service user on MENTICIDE, so the two
 policies cannot drift. Managed settings sit above user, project, local and
 `--settings`, and the agent cannot edit them: `/etc` is root-owned and
 there is no passwordless sudo. The home-manager `~/.claude/settings.json`
@@ -84,8 +84,8 @@ They are excluded because they cannot work inside it:
 | --- | --- |
 | `nix eval/build/flake/log/path-info/why-depends/search/store/derivation`, `nix-store`, `nix-instantiate`, `nixos-rebuild`, `./rebuild.sh` | nix daemon socket is `AF_UNIX`, blocked by seccomp (`cannot create Unix domain socket`). Flake eval also fails on the masked `.gitmodules` |
 | `gh`, `git push/fetch/pull/ls-remote` | need the token in `~/.config/gh` (hidden; also `Read`-denied) |
-| `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` and `/run/current-system/sw/bin/schedule-precheck` (absolute paths only; the second is REDRUM's packaged copy) | the scheduled-thread script runs `gh`, `git` and `nix` itself (and its `nix shell` shebang), so every call inside it hit the sandbox (`cannot create Unix domain socket`, no `~/.config/gh`). See "Scheduled checks run unsandboxed" below |
-| `/run/current-system/sw/bin/theme-shots` (absolute path only; GOD-KILLER, packaged by `modules/theme/theme-shots.nix`; inert on REDRUM) | RAW-vs-THEMED viewport and full-page screenshots of the generated Zen CSS (`<site>-<page>-<mode>-<state>.png` + `manifest.tsv`): it needs the nix daemon socket (`nix eval`) and the five sites, which `strictAllowlist` would refuse. See "theme-shots runs unsandboxed" below |
+| `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` and `/run/current-system/sw/bin/schedule-precheck` (absolute paths only; the second is MENTICIDE's packaged copy) | the scheduled-thread script runs `gh`, `git` and `nix` itself (and its `nix shell` shebang), so every call inside it hit the sandbox (`cannot create Unix domain socket`, no `~/.config/gh`). See "Scheduled checks run unsandboxed" below |
+| `/run/current-system/sw/bin/theme-shots` (absolute path only; THEOCIDE, packaged by `modules/theme/theme-shots.nix`; inert on MENTICIDE) | RAW-vs-THEMED viewport and full-page screenshots of the generated Zen CSS (`<site>-<page>-<mode>-<state>.png` + `manifest.tsv`): it needs the nix daemon socket (`nix eval`) and the five sites, which `strictAllowlist` would refuse. See "theme-shots runs unsandboxed" below |
 | `systemctl`, `journalctl`, `loginctl`, `resolvectl`, `tailscale status` | D-Bus/unix sockets, `/run` |
 | `ss`, `ip addr/route/link show` | sandbox has its own network namespace |
 | read-only `hyprctl` subcommands, `nvidia-smi`, `vulkaninfo`, `glxinfo`, `eglinfo`, `wayland-info`, `mpv`, `waydroid`, `adb` | GPU/display probes need `/dev/dri`, Wayland and Hyprland sockets |
@@ -120,7 +120,7 @@ the main checkout only**.
 | What this does *not* protect | Much of the same reach already exists: `gh *`, `git fetch/pull/push/ls-remote *`, `nix eval/build *` and `./rebuild.sh *` are excluded commands too. **Open, pre-existing, narrower than first written (issue #20):** the sandbox's write allowlist includes `~/.nixos/.git`, which every linked worktree plus the human's `~/.nixos` share. `.git/config` and `.git/hooks` are protected read-only bind mounts (observed 2026-11-05 from an Accept edits/auto worktree thread: writes fail, `.git/config.lock` is a placeholder; a Full access thread and the `~/.nixos` main checkout were not tested), so an agent cannot plant `core.sshCommand`, `credential.helper` or a hook there. `.git/info/` and `.git/worktrees/` are still writable; `extensions.worktreeConfig` is unset, so a per-worktree `config.worktree` is not read. **Untested:** whether rewriting `.git/worktrees/<name>/commondir` (or `gitdir`) makes an unsandboxed `git fetch`/`pull`/`push` use a config or hooks directory the agent controls. If it does, the follow-up is denying writes to those two files (or narrowing the `.git/worktrees` grant) and a guard rule on Edit/Write of `.git/`. The script gate protects the script's own behaviour, not the whole exclusion list. `nix shell` in the script's shebang starts before the scrub and still reads the caller's `NIX_*` variables, so smoke step 30 must show a `VAR=value` prefix does not reach it |
 | Why only `~/.nixos/...` | `~/.nixos` changes by merged PR plus the owner's switch (it is not an agent working directory), and `claude-guard` blocks the Edit/Write tools on `~/.nixos/docs/schedules/bin/`. A worktree copy (`docs/schedules/bin/schedule-precheck`, relative) is code an agent can edit and run in the same turn, so it stays sandboxed and fails; workers do not call it (only the dispatcher's `mark-launched`/`health`, from the absolute path) |
 | Precedent and difference | `./rebuild.sh *` is excluded by relative path, so a worktree's edited `rebuild.sh` runs unsandboxed too (accepted risk below: the edit is in the diff you review). The schedule script is stricter: absolute path, guard-protected |
-| REDRUM | The `~/.nixos` entry is **inert there** (the policy fragment is shared by both hosts): `/home/cairo/.nixos` on REDRUM is the human's checkout, and the `t3code` agent cannot read `/home/cairo` (home dirs are 0700; *untested on REDRUM*). No entry for `t3code`'s own checkout was added on purpose: `t3code` owns it, so an absolute path there would be agent-editable. Instead the `schedule-precheck` NixOS fragment (`modules/server/schedule-precheck.nix`, REDRUM only) packages the script and its two JSON files from the flake source into `environment.systemPackages`, and the policy excludes and allow-lists the absolute path `/run/current-system/sw/bin/schedule-precheck *` (a root-owned symlink into the store: no agent can edit what it runs, and no bare name depends on `PATH`). `claude-guard` applies the same one-plain-command rule to that path. The script and probe file are the REDRUM generation's version, so a merged probe change reaches REDRUM's schedules after the next REDRUM switch. **Untested on REDRUM until the first scheduled run:** that `t3code` has a `gh` login with Issues access, that `/var/lib/t3code/.config` is outside the agent's sandbox write allowlist (so it cannot create the `allow-overrides` gate; the guard already blocks the Edit/Write tools there), and that the exclusion applies to this path |
+| MENTICIDE | The `~/.nixos` entry is **inert there** (the policy fragment is shared by both hosts): `/home/cairo/.nixos` on MENTICIDE is the human's checkout, and the `t3code` agent cannot read `/home/cairo` (home dirs are 0700; *untested on MENTICIDE*). No entry for `t3code`'s own checkout was added on purpose: `t3code` owns it, so an absolute path there would be agent-editable. Instead the `schedule-precheck` NixOS fragment (`modules/server/schedule-precheck.nix`, MENTICIDE only) packages the script and its two JSON files from the flake source into `environment.systemPackages`, and the policy excludes and allow-lists the absolute path `/run/current-system/sw/bin/schedule-precheck *` (a root-owned symlink into the store: no agent can edit what it runs, and no bare name depends on `PATH`). `claude-guard` applies the same one-plain-command rule to that path. The script and probe file are the MENTICIDE generation's version, so a merged probe change reaches MENTICIDE's schedules after the next MENTICIDE switch. **Untested on MENTICIDE until the first scheduled run:** that `t3code` has a `gh` login with Issues access, that `/var/lib/t3code/.config` is outside the agent's sandbox write allowlist (so it cannot create the `allow-overrides` gate; the guard already blocks the Edit/Write tools there), and that the exclusion applies to this path |
 | Plain commands only | Exclusion applies to the plain command. `cd … && …`, pipes and `; echo $?` run sandboxed and fail (observed for `gh` in the 2026-11-04 smoke test; smoke step 28 checks it for this script). The scheduled prompts therefore call the absolute path with nothing chained |
 | Guard scope | The new guard rule covers the **Edit/Write tools** only. A Bash write to `~/.nixos/docs/schedules/bin/` is stopped by the sandbox's write allowlist (`~/.nixos` is not writable, only its `.git`), not by the guard, so in Full access a Bash write is not guarded |
 | Evasions | The guard is a text tripwire: `..` components in an Edit path evade its regex, and a Full access Edit can still write anywhere not denied. The real protection is that the owner reviews merges and diffs of `docs/schedules/bin/` like `rebuild.sh` and `flake.nix` (they are on the tier-2 list for that reason) |
@@ -131,13 +131,13 @@ the main checkout only**.
 a worktree's flake on google, youtube, reddit, instagram and wikipedia in a throwaway, logged-out headless
 profile of the **installed Zen** (`zen-twilight`), so a thread can see which per-site
 rules are broken. Added 2026-11-08, same
-shape as `schedule-precheck` on REDRUM: a packaged script at a root-owned absolute path,
+shape as `schedule-precheck` on MENTICIDE: a packaged script at a root-owned absolute path,
 excluded from the sandbox and allow-listed for that path only.
 
 | | |
 | --- | --- |
 | Why it must be excluded | `nix eval` needs the nix daemon socket (blocked in the sandbox), and Zen must reach the sites, which `network.strictAllowlist` refuses. Neither works through `dangerouslyDisableSandbox` (off). |
-| The path | `/run/current-system/sw/bin/theme-shots` (a symlink into the store, from `modules/theme/theme-shots.nix`, GOD-KILLER only). Not a worktree or `~/.nixos` path: those are agent-editable or owner-switched files, and an unswitched branch has no copy at all, so **the PR that adds it must be merged and switched before any thread can use it**. On REDRUM the policy entry is inert (nothing installs the script). |
+| The path | `/run/current-system/sw/bin/theme-shots` (a symlink into the store, from `modules/theme/theme-shots.nix`, THEOCIDE only). Not a worktree or `~/.nixos` path: those are agent-editable or owner-switched files, and an unswitched branch has no copy at all, so **the PR that adds it must be merged and switched before any thread can use it**. On MENTICIDE the policy entry is inert (nothing installs the script). |
 | What an excluded script can do | Everything cairo can, with the network. Its safety is the script's safety **and its argument surface**: the pattern ends in `*`, so the agent chooses every argument |
 | Argument surface (invariant: nothing the caller supplies may choose a URL, command, Zen flag or path the script trusts) | Exactly three arguments. `SITE` is one of six words. `WORKTREE` is absolute, `[A-Za-z0-9._/+@-]` only (re-checked on the resolved path, so a symlink to a directory with `?`, `#` or `&` in its real name cannot alter the flake reference), resolves (`realpath -e`) to **exactly** `~/.t3/worktrees/<project>/<name>`, holds `flake.nix` and `.git` and is owned by the user, and **the caller's cwd must be inside it** (an agent's cwd is its own worktree, so it cannot point the script at another thread's worktree; run it from your worktree). `OUTDIR` is relative to the worktree or absolute and resolves (`realpath -m`, so symlinks count) to `<worktree>/.log/theme-shots` or below, **and the worktree's `.gitignore` must contain a `.log/` line (and no `!….log` re-include) or the run is refused**, so screenshots are not committed by accident (checked by reading the file: no `git` runs in a directory the agent controls, given issue #20). **This is a guard against slips, not a boundary**: the agent controls its own working-tree `.gitignore`, and the check does not stop `git add -f` or cover files already tracked under `.log/`; the hard guarantee is the owner's review of the PR. The script then `cd -P`s into the worktree, refuses a symlinked `.log`, `mkdir -p`s the output dir, `cd -P`s into it and compares the **kernel's** view (`readlink -f /proc/self/cwd`, not a re-resolved path string) with the expected path, so every write uses a fixed file name in a directory it already holds open and a rename-into-place never follows a symlink at the destination. Residual: a swap racing between the checks can make `mkdir -p` create empty directories at a path of the racer's choosing; no file is written there. URLs, browser flags, the PAC list, the profile and HOME are the script's. There are no options, no `--url` and **no profile argument** (a persistent logged-in test-account profile is deliberately out of scope; the profile directory is an internal detail of `make_profile()`). |
 | Environment | Every child gets a rebuilt environment (`env -i`: fixed `PATH` of the script's own `runtimeInputs`, passwd home, no `GIT_*`/`NIX_*`/`LD_*`/proxy/`MOZ_*` from the caller). geckodriver and the Zen it starts get their own empty `HOME`/`XDG_*`/`TMPDIR` and a **brand-new profile per shot**, all under one private `mktemp -d` that a `trap` deletes on exit. `assert_private_dir` resolves each of those paths before use and **hard-refuses** anything outside the temp dir or equal to or under the real `$HOME` (so `~/.mozilla`, `~/.zen`, `~/.config/zen` are unreachable); tested 2026-11-08 by forcing the temp dir under the home (refused, exit 2, temp dir removed). No cookie, login or real profile is ever read or kept. The profile's prefs are the flake's real Zen `settings` through an **allowlist** (`ui.*`, `layout.*`, `font.*`, `reader.*`, `zen.view.*`, `toolkit.legacyUserProfileCustomizations.stylesheets` only, plain values, strictly anchored), written **before** the script's own fixed block (proxy, telemetry, updates), so a flake can neither change the proxy nor weaken the content sandbox or set a homepage (tested: `network.proxy.type`, `security.sandbox.content.level`, `browser.startup.homepage` and a multi-line value were dropped and listed in `report.txt`). `claude-guard` blocks any Bash command that names the absolute path unless it is one plain command (the same rule as `schedule-precheck`; self-tests in `claude-guard.sh`), so no `VAR=` prefix, `timeout`, chain, pipe, redirect or substitution rides the exclusion |
@@ -225,8 +225,8 @@ Allow, ask and deny summary (full lists are in the Nix file):
     the read-only nix commands;
   - `git add/commit/fetch/ls-remote` (commits on master prompt via the guard);
   - `gh pr/issue create` and the gh read commands;
-  - the main checkout's `docs/schedules/bin/schedule-precheck` (absolute path, excluded from the sandbox) and, on REDRUM, `/run/current-system/sw/bin/schedule-precheck`;
-  - `/run/current-system/sw/bin/theme-shots` (absolute path, excluded from the sandbox; GOD-KILLER);
+  - the main checkout's `docs/schedules/bin/schedule-precheck` (absolute path, excluded from the sandbox) and, on MENTICIDE, `/run/current-system/sw/bin/schedule-precheck`;
+  - `/run/current-system/sw/bin/theme-shots` (absolute path, excluded from the sandbox; THEOCIDE);
   - read-only `systemctl`/`journalctl`/network/GPU diagnostics;
   - mcp-nixos;
   - WebFetch to GitHub, Claude docs, nixos.org and t2linux.
@@ -286,13 +286,13 @@ flake.modules.nixos."secret-guard" = { pkgs, ... }:
   from all modules concatenate per event (checked by eval: an extra
   `PreToolUse` and a `Stop` entry land after `claude-guard`, on both hosts).
   `claude-guard` is `mkBefore`, so it stays first.
-- **Wiring:** the fragment goes in the GOD-KILLER and/or REDRUM NixOS lists in
+- **Wiring:** the fragment goes in the THEOCIDE and/or MENTICIDE NixOS lists in
   `modules/hosts/host.nix`. It must only be imported on hosts that also import
   `claude-code-policy`, otherwise eval fails with "option does not exist"
-  (LittleNix has no policy).
+  (REGICIDE has no policy).
 - **Commands** are absolute store paths (`${script}/bin/…`), never a path in the
   repo or a home directory: hooks run **outside** the sandbox, as the session's
-  user (cairo, or `t3code` on REDRUM, whose home is `/var/lib/t3code`).
+  user (cairo, or `t3code` on MENTICIDE, whose home is `/var/lib/t3code`).
   Anything the script needs at runtime goes in its `runtimeInputs`. A secret
   (such as an ntfy token) is read at runtime from a root-placed file, never
   interpolated into the JSON. The JSON is world-readable in the store and in
@@ -333,12 +333,12 @@ Recommendation per task type:
 | TODO item in its own worktree (`todo/<slug>`): edit, build, commit, open PR | **Auto** (default since 2026-11-05; Accept edits if you want to see the push card) | Edits and builds need no prompts and the classifier answers the push. In Auto a person is no longer the gate on a push or merge: the classifier is, and it is a model judgment. The hard protection for `master` is GitHub branch protection (require a PR, no force pushes), to be set after the repo is public |
 | Policy, secrets, host networking/SSH/boot, or first run after a policy change | **Supervised** | See every edit before it lands |
 | Scheduled or triage threads (read, file issues) and the workers they launch | **Auto** (never Full access: a worker launched from a Full access dispatcher inherits it and its push is refused, so the launch sets `runtimeMode: "auto"`) | Reads, gh issue/PR creation and builds are allow-listed; the classifier answers the push. Merges stay a deliberate human instruction |
-| Troubleshooting on REDRUM (status, logs) | **Accept edits** | `systemctl`/`journalctl` are allow-listed; restarts prompt |
-| A `switch`/`test`/`dry` that a thread needs to continue | A **Supervised child thread** for that one step (`t3_thread_launch`, `runtimeMode: "approval-required"`), or the human in a terminal | The guard refuses activation in Auto and Full access. The child's card is the human's approval; on GOD-KILLER the sudo password then goes through the desktop askpass, so it only completes at the machine. From a phone, the human runs the switch in the T3 terminal or over SSH to REDRUM ([workflow.md](workflow.md#activating-a-system-switch-test-dry-revert)) |
+| Troubleshooting on MENTICIDE (status, logs) | **Accept edits** | `systemctl`/`journalctl` are allow-listed; restarts prompt |
+| A `switch`/`test`/`dry` that a thread needs to continue | A **Supervised child thread** for that one step (`t3_thread_launch`, `runtimeMode: "approval-required"`), or the human in a terminal | The guard refuses activation in Auto and Full access. The child's card is the human's approval; on THEOCIDE the sudo password then goes through the desktop askpass, so it only completes at the machine. From a phone, the human runs the switch in the T3 terminal or over SSH to MENTICIDE ([workflow.md](workflow.md#activating-a-system-switch-test-dry-revert)) |
 | Open-ended investigation with many novel commands | **Auto** | The classifier handles one-off commands. Costs extra model calls on a Pro quota *(cost not measured)* |
 | Anything | not **Full access** | Asks become blocks (no pushes possible), and the Edit tool may write anywhere not on the deny list. It is not faster than Accept edits under this policy |
 
-## REDRUM (`t3code` user)
+## MENTICIDE (`t3code` user)
 
 - **Same managed file.** `~/` resolves to `/var/lib/t3code`, so the gh token
   and Claude login stay denied. No `disableBypassPermissionsMode`: you chose
@@ -348,17 +348,17 @@ Recommendation per task type:
   `0750 cairo:users` on T2 hosts. The firmware's world-readable, hash-pinned
   store copies (`modules/system/t2-firmware.nix`) are hidden inside the sandbox
   by `Read(//nix/store/*-brcm-firmware*/**)`. The guard covers unsandboxed
-  commands. REDRUM builds stay on GOD-KILLER.
+  commands. MENTICIDE builds stay on THEOCIDE.
 - **Read-only troubleshooting:** `t3code` is in `systemd-journal`, so
   `journalctl -u <unit>` works. `systemctl status` already works for any user.
   It has no polkit rights and no sudo, so restarts must be run by you.
   `/home/cairo` stays unreadable (0700).
 - **Git identity** (`user.name`/`user.email`) and the gh credential helper
   come from `GIT_CONFIG_*` env vars in the unit, so they reach sandboxed git.
-  *(untested on REDRUM)*
+  *(untested on MENTICIDE)*
 - bubblewrap/socat are on the service `path`. `failIfUnavailable` means a
   broken sandbox shows up as T3 failing to start Claude, not as silently
-  unsandboxed agents. *(untested on REDRUM: user namespaces for a system
+  unsandboxed agents. *(untested on MENTICIDE: user namespaces for a system
   user, which NixOS allows by default.)*
 
 ## Residual risks (known, accepted)
@@ -383,10 +383,10 @@ Recommendation per task type:
   cat|dump-path|export` and `nix-store --dump|--export` could
   read the firmware store paths. The guard blocks these when the command names
   a firmware path. A path built from a variable or `$(…)` evades it.
-- **REDRUM's `t3code` reads the whole system journal** (`systemd-journal`
+- **MENTICIDE's `t3code` reads the whole system journal** (`systemd-journal`
   group), including other services' logs. A service that logs a token or a
-  secret's contents exposes it to REDRUM agents. Keep secrets out of logs.
-- **LittleNix has no managed policy** and no Claude Code. If an agent tool is
+  secret's contents exposes it to MENTICIDE agents. Keep secrets out of logs.
+- **REGICIDE has no managed policy** and no Claude Code. If an agent tool is
   ever added there, import `claude-code-policy` in the same change.
 - **`~/.nixos/.git` is writable from the sandbox** (except `config` and `hooks`;
   see issue #20 for the untested `commondir` redirect). Destructive git and
@@ -402,7 +402,7 @@ Recommendation per task type:
   - whether T3 surfaces the `ask` prompts raised by hooks the same way as
     rule prompts;
   - the classifier's quota cost in Auto;
-  - everything on REDRUM.
+  - everything on MENTICIDE.
 
 ## Skills and reviewer subagents
 
@@ -435,16 +435,16 @@ follows:
 
 ## After the switch (human)
 
-1. `./rebuild.sh switch GOD-KILLER`, and on REDRUM `./rebuild.sh switch REDRUM`
-   from REDRUM itself (see [workflow.md](workflow.md)).
+1. `./rebuild.sh switch THEOCIDE`, and on MENTICIDE `./rebuild.sh switch MENTICIDE`
+   from MENTICIDE itself (see [workflow.md](workflow.md)).
 2. Start a **new** thread: Claude Code reads managed settings at startup.
 3. Check that `~/.claude/settings.json` now has empty permission lists:
    `jq .permissions ~/.claude/settings.json`.
 4. On both hosts, `jq '{h: .allowManagedHooksOnly, s: .sandbox.enabled}'
    /etc/claude-code/managed-settings.json` prints `true`/`true`.
-5. On REDRUM: `sudo -u t3code test -r /var/lib/firmware-src/REDRUM/brcm` must
+5. On MENTICIDE: `sudo -u t3code test -r /var/lib/firmware-src/MENTICIDE/brcm` must
    fail, and `sudo -u t3code journalctl -n 1 --no-pager` must print a line.
-6. Run the smoke test below. On REDRUM, run it in a thread on REDRUM's T3
+6. Run the smoke test below. On MENTICIDE, run it in a thread on MENTICIDE's T3
    server (as `t3code`).
 
 ## Smoke test (re-runnable)
@@ -462,8 +462,8 @@ you record which steps prompted.**
 | 4 | `cat ~/.ssh/known_hosts` | blocked by the guard, no prompt | same |
 | 5 | Read tool on `~/.config/gh/hosts.yml` | denied, no prompt | same |
 | 6 | `git commit --allow-empty -m "smoke test"` on the thread's branch (run it in a worktree thread, not on `master` in `~/.nixos`), then `git reset --soft HEAD~1` | commit runs with no prompt. The reset is sandboxed and runs | same |
-| 7 | `nix eval --impure --raw .#nixosConfigurations.REDRUM.config.system.build.toplevel.drvPath` | no prompt (excluded + allowed) | runs |
-| 8 | `nixos-rebuild build --flake .#GOD-KILLER --impure` | no prompt | runs |
+| 7 | `nix eval --impure --raw .#nixosConfigurations.MENTICIDE.config.system.build.toplevel.drvPath` | no prompt (excluded + allowed) | runs |
+| 8 | `nixos-rebuild build --flake .#THEOCIDE --impure` | no prompt | runs |
 | 9 | `systemctl is-active nix-daemon` and `journalctl -u nix-daemon -n 1 --no-pager` | no prompt, `active` | runs |
 | 10 | `gh pr list --state all --limit 1` (a plain command: chained, piped or with `; echo $?` it is not excluded, runs in the sandbox and fails with "run gh auth login") | no prompt; lists a PR | runs |
 | 11 | `curl -s -o /dev/null -w '%{http_code}' https://example.com` | refused by sandbox network (`000`), no prompt | same |
@@ -476,9 +476,9 @@ you record which steps prompted.**
 | 18 | `echo '{}' > .mcp.json` | blocked by the guard | blocked |
 | 19 | mcp-nixos `nix` (`{"action":"channels"}`) | no prompt | runs |
 | 20 | `ls /var/lib/firmware-src` then `cat /var/lib/firmware-src/*/brcm/*.txt` | `ls` sandboxed (empty); `cat` blocked by the guard or the secret-guard hook | same |
-| 21 | `./rebuild.sh check GOD-KILLER` and `./rebuild.sh generations` | no prompt | runs |
-| 22 | `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it; approving runs a harmless dry-activate and shows the GUI sudo password prompt) | **blocked** by the guard |
-| 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (REDRUM, or GOD-KILLER if it has the import) | `0` (store copies hidden), no prompt | same |
+| 21 | `./rebuild.sh check THEOCIDE` and `./rebuild.sh generations` | no prompt | runs |
+| 22 | `./rebuild.sh dry THEOCIDE` | **prompt** (deny it; approving runs a harmless dry-activate and shows the GUI sudo password prompt) | **blocked** by the guard |
+| 23 | `find /nix/store -maxdepth 3 -path "*-brcm-firmware*/*" -type f \| wc -l` (MENTICIDE, or THEOCIDE if it has the import) | `0` (store copies hidden), no prompt | same |
 | 24 | `jq ".hooks \| map_values(length)" /etc/claude-code/managed-settings.json`, once the secrets/notifications fragments are merged | one `PreToolUse` entry per hook module plus `claude-guard`; their events listed; a secret-guard or notification hook visibly fires on the next prompt/stop | same |
 | 25 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --revision ""` (plain command, absolute path; needs the script in `~/.nixos`, i.e. after the owner's switch/fast-forward) | no prompt; prints a JSON report (`status` `no-revision`), no `Unix domain socket` error | runs |
 | 26 | Edit tool on `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck`, and on `~/.config/nixos-schedules/allow-overrides` | blocked by the guard ("human-only"), no prompt | blocked |
@@ -488,8 +488,8 @@ you record which steps prompted.**
 | 30 | `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.sshCommand GIT_CONFIG_VALUE_0=id /home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run` | blocked by the guard (not one plain command); **must not** reach the script. If the guard is bypassed and it runs unsandboxed, the script's rebuilt environment still drops the variables, but `nix shell` in the shebang would see them: then add `env -i` to the shebang | same |
 | 31 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck unswitched --dry-run --host "$(id)"`, and the same with backticks, `&& id`, `\| cat`, `> /tmp/x` and a newline | each blocked by the guard, no prompt | same |
 | 32 | `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck mark-launched "bad key" t` and `... health evil msg` | exit 0 with `{"ok": false, "error": "usage: …"}`; nothing is filed | same |
-| 33 | In an **Auto** thread: `./rebuild.sh switch GOD-KILLER` (then `./rebuild.sh test REDRUM` and `sudo nixos-rebuild switch`) | each **blocked by the guard** with the "Supervised child thread" message, no card, nothing activated. If one runs or prompts, the hook does not report `auto` as the mode string: read the hook input and fix the `case $mode` list | not applicable (steps 13, 14, 22) |
-| 34 | In a **Supervised** thread: `./rebuild.sh dry GOD-KILLER` | **prompt** (deny it, or approve a harmless dry-activate with the askpass dialog). Also check `./rebuild.sh check GOD-KILLER` and `git commit -m "mentions rebuild.sh switch"` still run with no prompt in Auto | not applicable |
+| 33 | In an **Auto** thread: `./rebuild.sh switch THEOCIDE` (then `./rebuild.sh test MENTICIDE` and `sudo nixos-rebuild switch`) | each **blocked by the guard** with the "Supervised child thread" message, no card, nothing activated. If one runs or prompts, the hook does not report `auto` as the mode string: read the hook input and fix the `case $mode` list | not applicable (steps 13, 14, 22) |
+| 34 | In a **Supervised** thread: `./rebuild.sh dry THEOCIDE` | **prompt** (deny it, or approve a harmless dry-activate with the askpass dialog). Also check `./rebuild.sh check THEOCIDE` and `git commit -m "mentions rebuild.sh switch"` still run with no prompt in Auto | not applicable |
 | 35 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree>` (a plain command, absolute worktree path; needs the switch of the PR that adds it; one site takes about a minute) | no prompt; prints `evaluating userContent …`, then per shot `ok`, `REJECTED (…)` or `FAIL (capture failed: …)`; writes `.log/theme-shots/google-search-{before,after}.png`, `userContent.css`, `report.txt`; **no** `Unix domain socket` or `strictAllowlist` error | runs |
 | 36 | `/run/current-system/sw/bin/theme-shots google /home/cairo/.t3/worktrees/.nixos/<this worktree> /tmp/x`, `… .log`, `… .log/other`, `… ../x`, `… ".log/a;id"` (quoted, so the guard lets it through to the script) and with a worktree such as `/etc` or `relative/dir`; also `theme-shots bogus <worktree>` | each exits 2 with the reason (`output dir must be …/.log/theme-shots or below`, `output dir has characters outside […]` for the quoted `;`, `worktree must be exactly …` / `must be an absolute path`, `unknown site`), nothing written. Also: another thread's worktree path as `WORKTREE` exits 2 with `run it from inside the worktree` | same |
 | 37 | in the worktree: `mkdir -p .log && ln -sfn /tmp .log/evil`, then `theme-shots google <worktree> .log/evil/x` (remove the link after) | exits 2 (`output dir must be …/.log/theme-shots or below`); nothing is written under `/tmp` | same |
@@ -497,7 +497,7 @@ you record which steps prompted.**
 | 39 | after the WebDriver capture is switched: `theme-shots instagram <worktree>` (plain command), then in a **separate** plain Bash command `pgrep -af 'geckodriver\|zen'` | the run ends with no `geckodriver`/`zen-bin` process left (only the `pgrep`'s own shell matches), and `report.txt` shows a load/screenshot reason for any shot that is not `ok` (`capture failed: load: …`) instead of an empty tail | runs |
 
 Steps 35-38 (added with theme-shots) were run 2026-11-09 in a fresh **Supervised**
-thread after the GOD-KILLER switch of PR #56, Claude Code 2.1.317 (T3 version not
+thread after the THEOCIDE switch of PR #56, Claude Code 2.1.317 (T3 version not
 recorded). The guard and argument checks all matched; the live-site part did not:
 
 - 36: every refusal exited 2 with the stated reason and wrote nothing. The wording
@@ -542,7 +542,7 @@ end (1400x1000 viewport with the window rect 1594x1016, `user.js` restored by ge
 and the PAC prefs intact in `prefs.js` after quit), a 127.0.0.1 page not reachable
 (0 server hits, `proxyConnectFailure` in 2 s), no process left behind.
 
-Third round, 2026-11-09, **Supervised** thread, GOD-KILLER switched with PR #58 (the
+Third round, 2026-11-09, **Supervised** thread, THEOCIDE switched with PR #58 (the
 WebDriver capture), one site per command:
 
 - Live sites under WebDriver (was "not verified"): all ran. instagram 2/2 ok (twice),
@@ -554,7 +554,7 @@ WebDriver capture), one site per command:
   seen: nothing to add to `ALLOWED_DOMAINS`. Details and the Instagram theme finding in
   [theme-shots.md](theme-shots.md#limits-read-before-trusting-a-shot).
 - Browser-final-URL check (PR #59), **confirmed live, 2026-11-10**, **Supervised** thread,
-  GOD-KILLER switched with #59, one plain `theme-shots google <worktree>` command: it ran
+  THEOCIDE switched with #59, one plain `theme-shots google <worktree>` command: it ran
   with no approval card, both phases `REJECTED` with `the browser ended at
   https://www.google.com/sorry/index` (9 s each, query string not in the verdict), kept as
   `*.REJECTED.png`, exit 4, summary `0 ok, 2 rejected, 0 failed`. Both PNGs are the
@@ -578,7 +578,7 @@ WebDriver capture), one site per command:
   read the parent PIDs, because the pattern also matches a normal Zen. Not verified: the
   `EXIT`-trap path (it needs a run killed mid-shot).
 - Loopback, **confirmed 2026-11-11** in a **Supervised** thread: the human ran
-  `python3 -m http.server 49222 --bind 127.0.0.1` in a normal terminal on GOD-KILLER, and
+  `python3 -m http.server 49222 --bind 127.0.0.1` in a normal terminal on THEOCIDE, and
   from the agent's sandboxed Bash `bash -c 'echo > /dev/tcp/127.0.0.1/49222'` was
   **refused at once** (`Connection refused`; a host listener would have accepted it) and the
   listener logged no request. With `ip addr` showing only `lo` and `ps -e` showing 5
@@ -606,15 +606,15 @@ Full access, all 24 steps as above (T3 version not recorded). Steps 25-32 (added
 with the schedule policy): run 2026-11-04 in Accept edits only, Claude Code 2.1.308, `~/.nixos`
 switched at `670a156`; all matched except 27 (corrected above), no approval cards
 on any step; Full access not run. Step 33 (added with the Auto refusal): run
-2026-11-06 in an Auto thread on GOD-KILLER switched at `d782e32`; `rebuild.sh
+2026-11-06 in an Auto thread on THEOCIDE switched at `d782e32`; `rebuild.sh
 switch|test|dry`, `sudo nixos-rebuild switch` and `bash -c "./rebuild.sh switch …"`
 were each refused by `claude-guard` with the Supervised-child-thread message, while
-`./rebuild.sh check GOD-KILLER` and a commit whose message mentions `rebuild.sh
+`./rebuild.sh check THEOCIDE` and a commit whose message mentions `rebuild.sh
 switch` ran normally. Step 34 (added with the Auto refusal): run 2026-11-06 in a
 thread launched with `t3_thread_launch` `runtimeMode: "approval-required"` from an
-Auto thread, in the main checkout; `./rebuild.sh dry GOD-KILLER` showed a T3
+Auto thread, in the main checkout; `./rebuild.sh dry THEOCIDE` showed a T3
 approval card (the human denied it: "User declined tool execution", and
-`claude-guard` did not block it), while `./rebuild.sh check GOD-KILLER` ran with no
+`claude-guard` did not block it), while `./rebuild.sh check THEOCIDE` ran with no
 prompt and the checkout stayed clean. So the launch value gives a genuinely
 Supervised child, and an Auto thread may launch one. If a step disagrees, update
 this table and the policy in the same change.

@@ -1,9 +1,9 @@
 { inputs, ... }:
 let
 	system = "x86_64-linux";
-	# REDRUM is built from the pinned nixpkgs (see modules/hosts/REDRUM/T2-PIN.md),
+	# MENTICIDE is built from the pinned nixpkgs (see modules/hosts/MENTICIDE/T2-PIN.md),
 	# so the build toolchain below must come from the same pins for a stable hash.
-	pkgs = inputs.nixpkgs-redrum.legacyPackages.${system};
+	pkgs = inputs.nixpkgs-menticide.legacyPackages.${system};
 
 	# Actual Budget Tweaks (aelxxs/actual-budget-tweaks) layers optional UI
 	# tweaks onto Actual Budget's web interface: themes, live sidebar, budget
@@ -44,7 +44,7 @@ let
 	# reactflux.nix for the same pattern, not yet normalised).
 	#
 	# Why it needs normalising (found 2026-11-06, when three fetches of the same
-	# derivation gave three hashes: REDRUM W7+saec… then ZoJaD+u…, GOD-KILLER
+	# derivation gave three hashes: MENTICIDE W7+saec… then ZoJaD+u…, THEOCIDE
 	# 4qTSmVb…): the store's index files carry a `checkedAt` timestamp per file
 	# (555 files here), and the registry metadata cache holds live dist-tags and
 	# etags. Neither is needed for `--frozen-lockfile --offline`, so the

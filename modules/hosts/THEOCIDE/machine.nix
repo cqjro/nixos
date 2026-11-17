@@ -1,14 +1,14 @@
 { inputs, ... }:
 {
-	flake.modules.nixos."GOD-KILLER" = { pkgs, ... }: {
+	flake.modules.nixos."THEOCIDE" = { pkgs, ... }: {
 		# Home-Manager
 		home-manager = {
 			extraSpecialArgs = { inherit inputs; };
 			users.cairo = { ... }: {
 				imports = with inputs.self.modules.homeManager;
 					[
-						GOD-KILLER
-						GOD-KILLER-monitors
+						THEOCIDE
+						THEOCIDE-monitors
 						environment
 						hyprland
 						mpv
@@ -96,7 +96,7 @@
 		# Use latest kernel
 		boot.kernelPackages = pkgs.linuxPackages_latest;
 
-		networking.hostName = "GOD-KILLER"; # Define your hostname.
+		networking.hostName = "THEOCIDE"; # Define your hostname.
 		networking.nftables.enable = true;
 
 		services.resolved.enable = true; # apparently this fixes slow steam downloads

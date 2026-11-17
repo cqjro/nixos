@@ -62,7 +62,7 @@
 # environment is a tier-2 review item.
 
 URLS=@urls@
-ATTR='nixosConfigurations.GOD-KILLER.config.home-manager.users.cairo.programs.zen-browser.profiles.default'
+ATTR='nixosConfigurations.THEOCIDE.config.home-manager.users.cairo.programs.zen-browser.profiles.default'
 ZEN=zen-twilight
 # the installed Zen behind a stub that answers --version like Firefox (geckodriver refuses a
 # binary whose --version is "Mozilla Zen ..."); built in modules/theme/theme-shots.nix
@@ -205,7 +205,7 @@ clean() {
 		"SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt" "$@"
 }
 
-echo "theme-shots: evaluating the Zen profile (userContent + settings) from $wt (GOD-KILLER)"
+echo "theme-shots: evaluating the Zen profile (userContent + settings) from $wt (THEOCIDE)"
 if ! clean timeout 900 nix eval --json --no-write-lock-file --no-accept-flake-config \
 	--apply 'p: { css = p.userContent; settings = p.settings; }' "git+file://$wt#$ATTR" \
 	>"$work/eval.json" 2>"$work/nix.err" </dev/null; then

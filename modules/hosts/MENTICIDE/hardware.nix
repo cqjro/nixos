@@ -1,6 +1,6 @@
 { ... }:
 {
-	flake.modules.nixos."REDRUM-hardware" = { config, lib, modulesPath, ... }: {
+	flake.modules.nixos."MENTICIDE-hardware" = { config, lib, modulesPath, ... }: {
 		imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
 		boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "usbhid" "usb_storage" "sd_mod" ];

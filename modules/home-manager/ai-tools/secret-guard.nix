@@ -14,7 +14,7 @@
 	# `claude-guard` stays first in PreToolUse.
 	#
 	# Import this fragment only on hosts that also import `claude-code-policy`
-	# (GOD-KILLER, REDRUM); the option does not exist on LittleNix.
+	# (THEOCIDE, MENTICIDE); the option does not exist on REGICIDE.
 	flake.modules.nixos."secret-guard" = { pkgs, ... }:
 	let
 		guard = pkgs.writeShellApplication {

@@ -1,7 +1,7 @@
 # TODO
 
 Personal action items — not tracked as issues. Server items follow the
-[server module pattern](README.md#creating-a-server-module-redrum): free local
+[server module pattern](README.md#creating-a-server-module-menticide): free local
 port, dedicated user, Cloudflare tunnel ingress, README + Homepage updates.
 
 **Effort score:** a 1–10 estimate combining build time and complexity.
@@ -13,7 +13,7 @@ port, dedicated user, Cloudflare tunnel ingress, README + Homepage updates.
 
 Where an item is a *concept* rather than a defined implementation, a **Proposed
 approach** line sketches how it could be built. The obvious "follow the existing
-pattern" solutions (e.g. a new server module = the 5-step REDRUM recipe) are not
+pattern" solutions (e.g. a new server module = the 5-step MENTICIDE recipe) are not
 repeated as proposals.
 
 ## System
@@ -23,8 +23,8 @@ repeated as proposals.
       noreply identities, gitleaks clean, trufflehog findings all false
       positives). `master` is protected by a ruleset (pull request required, no
       force pushes, no deletion, empty bypass list), and the account-level
-      interaction limit (collaborators only, 6 months) is set. GOD-KILLER and
-      REDRUM are switched on the new repo. These owner-only steps are left —
+      interaction limit (collaborators only, 6 months) is set. THEOCIDE and
+      MENTICIDE are switched on the new repo. These owner-only steps are left —
       **1/10** (detail in [`docs/firmware.md`](docs/firmware.md)). Delete this
       item when all are done
   - [ ] **Interaction limit renewal:** it lapses about **2027-05-05**; renew it
@@ -35,15 +35,15 @@ repeated as proposals.
   - [ ] **Confirm secret scanning and push protection** are on (repo Settings →
         Code security); optionally disable Actions (the repo has no workflows)
   - [ ] **schedules:** all three tasks are live, with workers launching in `auto`.
-        Still to do: REDRUM bootstrap via `unswitched-changes.md`
+        Still to do: MENTICIDE bootstrap via `unswitched-changes.md`
   - [ ] Optional: Claude re-login (secrets 4.4)
   - [ ] Delete the six test labels from the early test run if unwanted
   - [ ] **Cleanup now that it is public:** delete `~/.nixos.pre-rewrite` (and
         `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
         optionally archive `nixos-archive` on GitHub; token expiry reminders (the
-        GOD-KILLER token was made 2026-11-03, 30-90 days; the REDRUM `t3code`
+        THEOCIDE token was made 2026-11-03, 30-90 days; the MENTICIDE `t3code`
         token expires 2027-02-02)
-  - [ ] LittleNix is parked (`docs/firmware.md` "LittleNix (parked)"): its files
+  - [ ] REGICIDE is parked (`docs/firmware.md` "REGICIDE (parked)"): its files
         stay in the private archive repo; extract them only if you want to
         build or reinstall it
   - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
@@ -60,11 +60,11 @@ repeated as proposals.
         failures all matter, or only approvals
   - [ ] Choose the transport: ntfy.sh with a private topic (recommended; the topic
         is the credential, approval text transits a third party) or self-hosted
-        on REDRUM (`modules/server/ntfy.nix`, optional, human-run `tailscale
+        on MENTICIDE (`modules/server/ntfy.nix`, optional, human-run `tailscale
         serve`)
-  - [ ] Create the topic file on GOD-KILLER, subscribe the phone app, copy the
-        topic to REDRUM for `t3code`, and run test 6.2 (hooks under T3, Supervised
-        thread, then REDRUM); quiet hours if wanted
+  - [ ] Create the topic file on THEOCIDE, subscribe the phone app, copy the
+        topic to MENTICIDE for `t3code`, and run test 6.2 (hooks under T3, Supervised
+        thread, then MENTICIDE); quiet hours if wanted
   - *Note:* only Supervised threads prompt at all (Full access has nothing to
     approve), so approval pushes depend on the modes you actually run
 
@@ -179,10 +179,10 @@ repeated as proposals.
     over the receiver. Upstream flags it as pre-stable, so verify the MX
     mouse's SmartShift/DPI/thumb-wheel behaviours before dropping any other tool.
 
-## Server (REDRUM)
+## Server (MENTICIDE)
 
 - [ ] **Immich** — self-hosted photos and videos (replacement/supplement for
-      current photo handling) — **6/10** (follow the REDRUM recipe; the real
+      current photo handling) — **6/10** (follow the MENTICIDE recipe; the real
       work is the ML/`external_media` and large-storage decisions, plus
       Postgres/Redis, which no current module runs)
 
@@ -194,21 +194,21 @@ repeated as proposals.
     `nrc.gov` returns 403 to non-browser clients, so copy the exact feed link
     from <https://www.nrc.gov/public-involve/rss> in a browser, add it to
     `rss-feeds.json` (`"category": "Nuclear"`), and check that Miniflux (on
-    REDRUM) can actually fetch it before relying on it.
+    MENTICIDE) can actually fetch it before relying on it.
   - *Proposed approach:* the workflow is the work.
     Miniflux + ReactFlux already cover the server/browser side. For KOReader,
     point it at Miniflux's Fever API (Miniflux exposes `/fever/`) or generate
     per-feed EPUBs; then decide the desktop front-end (Glance reader widget vs a
     dedicated app). Define a "done" reading loop: subscribe → triage in
     Miniflux → long-form to KOReader.
-  - **When finalizing, provision the two missing tunnel credentials on REDRUM.**
+  - **When finalizing, provision the two missing tunnel credentials on MENTICIDE.**
     Miniflux and ReactFlux are wired (`miniflux.nix:42-44`,
     `reactflux.nix:147-149`) but their credential files were never created, so
     both `cloudflared-tunnel-*.service` units fail at runtime with
-    `status=243/CREDENTIALS … No such file or directory` (seen on the REDRUM
+    `status=243/CREDENTIALS … No such file or directory` (seen on the MENTICIDE
     2026-10-20 switch; not a build failure). Follow
     [README → Cloudflare Tunnels](README.md#cloudflare-tunnels) steps 2–3, i.e.
-    on REDRUM:
+    on MENTICIDE:
     ```bash
     nix shell nixpkgs#cloudflared -c cloudflared tunnel login
     sudo cloudflared tunnel create miniflux
@@ -227,10 +227,10 @@ repeated as proposals.
 - [ ] **Pi-hole** — network-wide DNS ad blocking — **5/10**
   - *Decision to make:* Pi-hole is a *network* service, not a tunneled app, so
     it doesn't fit the Cloudflare pattern — it needs DHCP/DNS ownership on the
-    LAN. Either (a) run Pi-hole on REDRUM as LAN DNS and point the router's
+    LAN. Either (a) run Pi-hole on MENTICIDE as LAN DNS and point the router's
     DHCP at it, or (b) use `AdGuard Home`/blocky which integrate more cleanly
-    with NixOS (`services.adguardhome`). Confirm whether REDRUM is always-on and
-    on the same subnet before choosing; REDRUM already runs Tailscale, which
+    with NixOS (`services.adguardhome`). Confirm whether MENTICIDE is always-on and
+    on the same subnet before choosing; MENTICIDE already runs Tailscale, which
     helps remote clients but not LAN DNS.
 
 - [ ] **Glance** — rework the Glance config (`modules/server/glance.nix`) into
@@ -247,14 +247,14 @@ repeated as proposals.
   - *Proposed approach:* two halves. **Ingest:** Apple Health exports as XML
     (Health app → "Export All Health Data"); parse to a DB. Bevel/MacroFactor
     export CSV/JSON — normalize all sources into one schema keyed by timestamp +
-    source. **Store/dashboards:** Postgres (or SQLite) on REDRUM + Grafana
+    source. **Store/dashboards:** Postgres (or SQLite) on MENTICIDE + Grafana
     (fits the Glance-style homelab) or a self-hosted app; wire a Grafana panel
     and link it into Glance/Homepage. Start with Apple Health only, add the
     wearable/MacroFactor imports incrementally.
 
 - [ ] **Calibre server** — set up a proper Calibre server instance (content
-      server on REDRUM) — **4/10** (nixpkgs ships `calibre-web`; follow the
-      REDRUM recipe with the calibre library on disk)
+      server on MENTICIDE) — **4/10** (nixpkgs ships `calibre-web`; follow the
+      MENTICIDE recipe with the calibre library on disk)
   - [ ] Figure out a good comic reading workflow connecting Calibre to KOReader
     - *Proposed approach:* run `calibre-web` (not `calibre-server`) for the web
       UI + OPDS; expose an OPDS catalog that KOReader's OPDS browser can point
@@ -263,7 +263,7 @@ repeated as proposals.
       sync to pull them; verify KOReader renders CBZ directly.
 
 - [ ] **Audiobook media server** — stand up a platform to host and stream
-      audiobooks (podcast-style progress + resumable playback) on REDRUM — **6/10**
+      audiobooks (podcast-style progress + resumable playback) on MENTICIDE — **6/10**
   - *Proposed approach:* the mature self-hosted options are
     **Audiobookshelf** (books + podcasts, mobile apps, progress sync, OPDS-ish)
     or **Jellyfin** with an audiobook library (but Jellyfin's audiobook UX is
@@ -272,28 +272,28 @@ repeated as proposals.
     disk, tunnel hostname). Decide first whether this should *share* the Calibre
     library above or stay separate, and whether to merge with the `Calibre server`
     item into one "books" stack (e-reader + audio) exposed via a single OPDS
-    entry point. `nixpkgs` ships `audiobookshelf`; follow the REDRUM recipe
+    entry point. `nixpkgs` ships `audiobookshelf`; follow the MENTICIDE recipe
     (port 8087 is the next free after the ABT sidecar's 8086).
 
-- [ ] **T3 Code on REDRUM** — the REDRUM server (`modules/server/t3code.nix`,
+- [ ] **T3 Code on MENTICIDE** — the MENTICIDE server (`modules/server/t3code.nix`,
       port 8088) is published over Tailscale Serve (no Cloudflare tunnel); finish
       the setup — **3/10**
-  - [ ] Switch REDRUM, then log in Claude Code and `gh` as the `t3code` user
+  - [ ] Switch MENTICIDE, then log in Claude Code and `gh` as the `t3code` user
         (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`; README →
-        "T3 Code on REDRUM")
-  - [ ] Pair GOD-KILLER and the phone and confirm threads from both machines
-        show up in one client (2026-11-06: REDRUM has its own `t3code`-owned
-        clone and a tested build; GOD-KILLER's T3 terminal gives a real tty with
+        "T3 Code on MENTICIDE")
+  - [ ] Pair THEOCIDE and the phone and confirm threads from both machines
+        show up in one client (2026-11-06: MENTICIDE has its own `t3code`-owned
+        clone and a tested build; THEOCIDE's T3 terminal gives a real tty with
         working `sudo -v`; still to confirm: the shared project view and a phone
         token with terminal scope)
 
 - [ ] **Secrets: remaining steps after the repo went public** — the steps left
       from the secrets audit (`docs/secrets.md` section 4 and the private audit);
       `cqjro/nixos` became public on 2026-11-05 — **3/10**
-  - [ ] REDRUM's `t3code` user needs its own fine-grained token (limited to
-        `cqjro/nixos`, Contents + Pull requests) when REDRUM is re-cloned:
+  - [ ] MENTICIDE's `t3code` user needs its own fine-grained token (limited to
+        `cqjro/nixos`, Contents + Pull requests) when MENTICIDE is re-cloned:
         `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
-        (`docs/secrets.md` 4.1; GOD-KILLER's broad login is already replaced and
+        (`docs/secrets.md` 4.1; THEOCIDE's broad login is already replaced and
         revoked). The Claude re-login (4.4) is optional
   - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
         are locally managed (`hostname → port` ingress rules), and they are
