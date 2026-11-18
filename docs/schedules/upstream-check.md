@@ -28,7 +28,28 @@ fix goes to a worker on a branch, not to the root checkout.
   `mcp__t3-code__*` tools (T3 already passes `--allowedTools "mcp__t3-code__*"`).
   Nothing else. It writes nothing in the repo. Every command in the prompt must be a
   plain command (exclusion does not apply to chained ones).
-- **Cost on a quiet week:** one short turn plus project instructions.
+- **Cost on a quiet day:** one short turn plus project instructions, and a table of about
+  20 lines to relay. The script renders it (`markdown` in the report), so the model
+  never composes evidence.
+- **Report format:** every run prints one table with a line per registry row (rows are the
+  entries of `upstream-probes.json`, so a number missing from the registry, like 7, is
+  simply absent), then a `Checked …` summary line, the open `upstream-fix` issues, any
+  issue events and the last-success age; the prompt adds the `Next:` line.
+
+  | Row | Workaround | Status | Evidence |
+  | --- | --- | --- | --- |
+  | 1 | MENTICIDE nixpkgs pin | Not fixed | nixos-hardware#2027 open, 7 comments, updated 2026-10-08 |
+  | 10 | opencode from previous nixpkgs | **Fixed** | nixos-unstable#opencode substitutes from cache |
+
+  Statuses come from the probes, never from the model: **Fixed** (every probe of the row
+  signals a fix, or its single probe does), Fix candidate (a `fixWhen: any` row fired on one
+  probe only, weaker), Needs you (a `notify-only` row with a fix signal), Not fixed
+  (including partial progress, spelled out in Evidence), Error (the probe failed: Evidence
+  names the failing call and HTTP status, not the message) and Skipped (`--skip-nix`, never
+  used by the schedule). A fix signal is still not proof (the worker re-verifies). Evidence
+  is built only from the probe config and script-collected fields; upstream text (titles,
+  comments, file names) is never copied. `label` in `upstream-probes.json` is the short
+  Workaround name.
 
 ## Prompt
 
@@ -52,18 +73,17 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
 2. If the command fails (the tool result reports an error or a non-zero exit), or the
    report's `errors` list is non-empty: run
    /home/cairo/.nixos/docs/schedules/bin/schedule-precheck health upstream "<first error, one line, without double quotes, $, backticks or backslashes>"
-   once, report the failure in two lines, and stop. Do not diagnose.
+   once, report the failure in two lines, then (only if the report has a `markdown`
+   list) print it as in step 3, and stop. Do not diagnose.
 
-3. If `changed` is false: reply with exactly one line:
-   "upstream: no changes (last success <daysSinceLastSuccess> days ago)" and stop.
+3. Report, on every run, changed or not. The script already rendered it: `markdown` is a
+   list of lines. If `warnings` is non-empty, quote each warning first. Then print every
+   element of `markdown`, in order, one per line, exactly as written: a table
+   (`| Row | Workaround | Status | Evidence |`, one line per registry row), then summary
+   lines. Do not reword, reorder, shorten, add or drop rows, and add no evidence of your
+   own: you only relay. A quiet day prints the same table.
 
-4. Otherwise write a short report (if `warnings` is non-empty, quote each warning first):
-   - One line per finding that is not `blocked`: `row N | status | one-line evidence`,
-     using only fields from `details` (state, comments, which patterns are present).
-   - For every `issueEvent`, give the issue number and what happened.
-   - If `daysSinceLastSuccess` is above 14, say the schedule was stale.
-
-5. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
+4. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
    - Take the FIRST id in `actionable` only. At most one worker per run.
    - Skip it only if t3_thread_list shows a thread on branch auto/upstream-<slug> that
      is still active (status running, waiting, starting, preparing or queued), or
@@ -77,7 +97,9 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
    - Report the thread link. Rows whose `action` is notify-only never get a worker:
      say "needs you" and name the issue.
 
-6. Finish with "Next: review <list of PRs/issues>" or "Next: nothing". Stop.
+5. Finish with one line "Next: review <list of PRs/issues>" or "Next: nothing" (PRs and issues
+   from the report and the worker you launched; rows whose Status is "Needs you" or
+   "**Fixed**" with no worker are worth naming). Stop.
 ```
 
 ## `schedule_task` JSON
@@ -112,6 +134,11 @@ MENTICIDE variant (the live one): the same prompt with every
 launched from MENTICIDE use the same briefs. They never build THEOCIDE (`./rebuild.sh eval
 THEOCIDE` instead, see worker-briefs.md), so a fix that touches THEOCIDE is only
 evaluated by the worker; the host is built when you review the PR and switch.
+
+The table is rendered by the **packaged** script, so a change to the report shape reaches the
+live task only after the PR is merged and MENTICIDE is switched. Update the live prompt
+(`update_scheduled_task`) only then: the new prompt prints `markdown`, which the old script
+does not produce.
 
 ## Suggested wording for the standing instruction (handoff to the workflow thread)
 

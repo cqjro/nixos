@@ -24,8 +24,9 @@ T3 scheduler (fixed_time, fresh thread per run)
             • polls GitHub / evaluates origin/master in a throw-away worktree
             • files or updates ONE GitHub issue per finding (labelled, deduped)
             • prints a JSON report: changed? actionable?
-       2. changed = false  → one line, stop                  ← the common case
-       3. changed = true   → short summary of the report
+       2. upstream: always print the script-rendered table   ← every run, changed or not
+          buildflags/unswitched: changed = false → one line, stop  ← the common case
+       3. changed = true   → short summary of the report (upstream: after the table)
        4. actionable ≠ []  → t3_thread_launch ONE worker (worktree, auto/<slug>, from origin/master)
             └─ worker: verify → edit → build → gh pr create "Fixes #N" → watch the PR
                  └─ human reviews, squash-merges, then switches the host
@@ -68,7 +69,12 @@ schedule-precheck health SCHEDULE MESSAGE…
   `tree-match`, `path-exists`, `nix-dry-build` (is `nixos-unstable#mcp-nixos`
   substitutable from the cache?). A probe returns a *fix signal*, never proof.
   Statuses: `baseline` (first sight), `blocked` (unchanged), `changed`,
-  `fix-candidate`, `error`. It warns when the row numbers in the registry table
+  `fix-candidate`, `error`. The report also carries `rows` (one entry per probe row with a
+  display status, `Not fixed` / `**Fixed**` / `Fix candidate` / `Needs you` / `Error` /
+  `Skipped`, and one line of evidence), `openIssues` (open `upstream-fix` issues) and
+  `markdown`: the whole report table as a list of lines, which the prompt prints verbatim on
+  every run. The table is rendered here, not by the model, and only from probe config and
+  collected fields (see [`upstream-check.md`](./upstream-check.md), "Report format"). It warns when the row numbers in the registry table
   (found in `docs/agents/upstream-registry.md`, then `README.md`) and the probe file
   disagree. `./rebuild.sh check` already compares the registry with the README mirror;
   this is the equivalent check for the probe file.
@@ -258,7 +264,9 @@ is true would cut the LLM floor to zero.
 
 ## Idle and failed runs
 
-- **Nothing changed:** `changed: false` → the prompt prints one line and stops.
+- **Nothing changed:** for `buildflags` and `unswitched`, `changed: false` → the prompt prints
+  one line and stops. `upstream` prints its table anyway (a quiet day is the same table plus
+  the `Next: nothing` line); `changed` then only drives the issue-event line and workers.
 - **Script failed** (exit 3, or `errors` non-empty): the prompt runs
   `schedule-precheck health <schedule> "<last lines>"` once and stops. That files
   at most one `schedule-health` issue per schedule per month and comments on
@@ -266,8 +274,9 @@ is true would cut the LLM floor to zero.
 - **A tool call is blocked or denied:** the prompt says stop immediately and
   list the blocked command. Never retry variants: unattended threads cannot answer
   approval cards, and probing around a deny rule is exactly what we do not want.
-- **Stale:** the report carries `daysSinceLastSuccess`; the prompt mentions it
-  when above 14.
+- **Stale:** the report carries `daysSinceLastSuccess` (the age of the *previous* success;
+  it used to be recorded after this run's heartbeat and so was always 0); the upstream table
+  ends with `Last success: N days ago` and says so when above 14.
 - **Worker already running:** the `worker-launched` label (set by `mark-launched`)
   and a `t3_thread_list` check on the branch name prevent a second launch.
 - **One failed probe** does not stop the others; it is recorded as `error` with

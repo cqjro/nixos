@@ -9,7 +9,9 @@
 
 Both print one JSON report on stdout. `changed` is false when nothing new
 happened, and the scheduled prompt then stops after one line, so the model only
-does real work when there is something to do. Issue bookkeeping (one GitHub
+does real work when there is something to do. `upstream` also renders its report table
+(one line per registry row, whether or not anything changed) into `markdown`, a list of
+lines the prompt prints verbatim. Issue bookkeeping (one GitHub
 issue per finding, updated in place) is done here, not by the model, and only
 from structured fields this script produced: upstream text never reaches an
 issue body, which keeps prompt injection out of the loop.
@@ -333,6 +335,86 @@ def probe(p):
 	raise RuntimeError(f"unknown probe type {t}")
 
 
+def _clip(text, n=100):
+	"""Printable ASCII only, one line, bounded: anything upstream-influenced goes through here."""
+	return re.sub(r"[^\x20-\x7e]+", " ", str(text)).strip()[:n]
+
+
+def probe_evidence(p, d):
+	"""One short evidence phrase for a probe, built only from the probe config (trusted, in the
+	repo) and fields this script collected. Free text from upstream is never copied: names are
+	pattern-checked and counted, never quoted raw."""
+	t = p["type"]
+	repo = p["repo"].split("/")[-1] if "repo" in p else ""
+	if t == "issue":
+		out = f"{repo}#{p['number']} {_clip(str(d['state']).lower(), 10)}"
+		if d["state"] == "CLOSED" and re.fullmatch(r"[A-Z_]{1,20}", d.get("stateReason") or ""):
+			return out + f" ({d['stateReason'].lower().replace('_', ' ')})"
+		upd = re.match(r"\d{4}-\d{2}-\d{2}", d.get("updatedAt") or "")
+		return out + f", {int(d['comments'])} comments" + (f", updated {upd.group(0)}" if upd else "")
+	if t == "file":
+		name = "/".join(p["path"].split("/")[-2:])
+		if d.get("exists") is False:
+			return f"{repo} {name} not found"
+		parts = []
+		if d.get("contains"):
+			have = [s for s, v in d["contains"].items() if v]
+			lack = [s for s, v in d["contains"].items() if not v]
+			parts += ([f"has {', '.join(have)}"] if have else []) + ([f"missing {', '.join(lack)}"] if lack else [])
+		if d.get("absent"):
+			parts.append("unfixed text gone" if all(d["absent"].values()) else "unfixed text still present")
+		return f"{name}: " + ("; ".join(parts) if parts else "present")
+	if t == "tree-match":
+		hits = d["hits"]
+		where = f"{repo} {p['path']}"
+		if not hits:
+			return f"{where}: no {p['pattern']} entry"
+		safe = [h for h in hits if re.fullmatch(r"[\w.+-]{1,60}", h)][:3]
+		return f"{where}: {len(hits)} match {p['pattern']}" + (f" ({', '.join(safe)})" if safe else "")
+	if t == "path-exists":
+		return f"{repo} {p['path']} " + ("present" if d.get("exists") else "missing")
+	if t == "nix-dry-build":
+		return p["flakeref"].rsplit("/", 1)[-1] + (" would build from source" if d["willBuild"] else " substitutes from cache")
+	return t
+
+
+def display_status(row, status, signals, skipped=False):
+	"""The report's status vocabulary. The script only ever sees a fix SIGNAL, never proof: a row
+	counts as Fixed when all its probes agree (or it has one), and as a Fix candidate when a
+	fixWhen:any row fired on a single probe, which is weaker evidence."""
+	if status == "error":
+		return "Error"
+	if skipped or not signals:
+		return "Skipped"
+	if status == "fix-candidate":
+		if row["action"] == "notify-only":
+			return "Needs you"
+		return "Fix candidate" if row.get("fixWhen") == "any" else "**Fixed**"
+	return "Not fixed"
+
+
+def render_upstream_markdown(rows, open_issues, issues, events, ran_at):
+	"""The fixed table the scheduled prompt relays verbatim (one list element per line)."""
+	def cell(text):
+		return str(text).replace("|", "/").replace("\n", " ")
+
+	lines = ["| Row | Workaround | Status | Evidence |", "| --- | --- | --- | --- |"]
+	lines += [f"| {r['registryRow']} | {cell(r['label'])} | {r['status']} | {cell(r['evidence'])} |" for r in rows]
+	order = ["Not fixed", "**Fixed**", "Fix candidate", "Needs you", "Error", "Skipped"]
+	counts = ", ".join(f"{sum(1 for r in rows if r['status'] == s)} {s}" for s in order if any(r["status"] == s for r in rows))
+	lines += ["", f"Checked {ran_at}: {len(rows)} rows ({counts})."]
+	if issues.unavailable:
+		lines.append("Open upstream-fix issues: unknown (issue bookkeeping is off).")
+	elif open_issues:
+		lines.append("Open upstream-fix issues: " + "; ".join(
+			f"#{i['number']} row {i['row']} ({i['state'].lower()}{', worker launched' if i['workerLaunched'] else ''})" for i in open_issues) + ".")
+	else:
+		lines.append("Open upstream-fix issues: none.")
+	if events:
+		lines.append("Issue events: " + "; ".join(events) + ".")
+	return lines
+
+
 def cmd_upstream(a, root, state, issues):
 	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
 	seen = state.load("upstream-state.json", {"rows": {}})
@@ -346,18 +428,24 @@ def cmd_upstream(a, root, state, issues):
 	if rownums and set(rownums) != probed:
 		report["errors"].append(f"registry rows {sorted(set(rownums) ^ probed)} in {rowfile} and upstream-probes.json disagree")
 	issues.ensure_labels()
+	rows_out = []
 	for row in cfg["rows"]:
 		rid = row["id"]
 		prev = seen["rows"].get(rid)
-		fps, signals, details, err = [], [], [], None
+		fps, signals, details, evidence, err = [], [], [], [], None
 		try:
 			for p in row["probes"]:
 				if p["type"] == "nix-dry-build" and a.skip_nix:
+					evidence.append("nix probe skipped (--skip-nix)")
 					continue
 				fp, f, d = probe(p)
 				fps.append(fp)
 				signals.append(f)
 				details.append(d)
+				try:
+					evidence.append(probe_evidence(p, d))
+				except Exception:  # noqa: BLE001 - evidence is cosmetic and must never change a row's status
+					evidence.append("evidence unavailable")
 		except Exception as e:  # noqa: BLE001 - a failing probe must not stop the others
 			err = str(e)
 		join = any if row.get("fixWhen") == "any" else all
@@ -379,6 +467,16 @@ def cmd_upstream(a, root, state, issues):
 			"action": row["action"], "slug": row["slug"], "details": details}
 		if err:
 			f["error"] = err
+		# an error row names the failing call and an HTTP status, never the message text itself
+		http = re.search(r"HTTP (\d{3})", err or "")
+		text = ("probe failed: " + re.sub(r"[^A-Za-z0-9_ .#/=-]", "", err.split(":")[0])[:60].strip() + (f" (HTTP {http.group(1)})" if http else "")) if err else "; ".join(evidence)
+		if status == "changed":
+			text += " (changed since last run)"
+		elif status == "baseline":
+			text += " (first seen)"
+		rows_out.append({"id": rid, "registryRow": row["registryRow"], "label": row.get("label", row["title"]),
+			"status": display_status(row, status, signals, skipped=a.skip_nix and any(p["type"] == "nix-dry-build" for p in row["probes"])),
+			"evidence": text})
 		key = f"upstream-fix:{rid}"
 		existing = issues.find(key)
 		f["issue"] = {"number": existing["number"], "state": existing["state"]} if existing else None
@@ -413,6 +511,28 @@ def cmd_upstream(a, root, state, issues):
 	report["changed"] = bool(report["errors"] or report["actionable"]) or any(
 		f["status"] == "changed" or f.get("issueEvent") or (f["status"] == "fix-candidate" and f["prevStatus"] != "fix-candidate")
 		for f in report["findings"])
+	# The fixed table: every probe row on every run, rendered here so the model only relays it.
+	by_id = {f["id"]: f for f in report["findings"]}
+	events = []
+	for r in rows_out:
+		f = by_id[r["id"]]
+		if f["issue"] and f["issue"].get("number") and r["status"] != "Error":
+			r["evidence"] += f"; issue #{f['issue']['number']} {f.get('issueEvent') or f['issue']['state'].lower()}"
+		if f.get("issueEvent"):
+			events.append(f"row {r['registryRow']}: {f['issueEvent']}" + (f" #{f['issue']['number']}" if f.get("issue") and f["issue"].get("number") else ""))
+	for n in sorted(set(rownums) - probed):  # a registry row with no probe entry (the drift error above)
+		rows_out.append({"id": None, "registryRow": n, "label": "(no probe entry)", "status": "Error",
+			"evidence": "row is in the registry but not in upstream-probes.json"})
+	rows_out.sort(key=lambda r: r["registryRow"])
+	report["rows"] = rows_out
+	open_issues = []
+	for k, i in issues.load().items():
+		m = re.fullmatch(r"upstream-fix:row-(\d+)", k)
+		if m and i["state"] == "OPEN" and i.get("number"):
+			open_issues.append({"number": i["number"], "row": int(m.group(1)), "state": i["state"],
+				"workerLaunched": any(l["name"] == "worker-launched" for l in i.get("labels", []))})
+	report["openIssues"] = sorted(open_issues, key=lambda i: i["number"])
+	report["markdown"] = render_upstream_markdown(rows_out, report["openIssues"], issues, events, report["ranAt"])
 	if not a.dry_run:
 		state.save("upstream-state.json", seen)
 	return report
@@ -797,12 +917,16 @@ def main():
 		report["warnings"] = [f"issue bookkeeping is off (report-only): {issues.unavailable}. The gh token needs Issues: read and write on {issues.repo}."]
 	# heartbeat for the staleness check
 	hb = state.load("heartbeat.json", {})
+	last = hb.get(a.command)  # the PREVIOUS success: read before this run records its own
 	if not report["errors"] and not a.dry_run:
 		hb[a.command] = report["ranAt"]
 		state.save("heartbeat.json", hb)
-	report["lastSuccess"] = hb.get(a.command)
-	if hb.get(a.command):
-		report["daysSinceLastSuccess"] = round((datetime.now(timezone.utc) - datetime.strptime(hb[a.command], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds() / 86400, 1)
+	report["lastSuccess"] = last
+	if last:
+		days = round((datetime.now(timezone.utc) - datetime.strptime(last, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds() / 86400, 1)
+		report["daysSinceLastSuccess"] = days
+		if report.get("markdown"):
+			report["markdown"].append(f"Last success: {days} days ago" + (" (the schedule was stale)." if days > 14 else "."))
 	print(json.dumps(report, indent=1))
 	return 0
 

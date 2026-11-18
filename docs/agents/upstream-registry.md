@@ -33,5 +33,8 @@ Notes:
 - A `# TODO-remove:` comment at the workaround site is required, and the same
   row must exist in the README's "Pending upstream fixes" table — update both
   in the commit that adds the workaround, and delete from both when removing it.
+- The probe entry in `docs/schedules/upstream-probes.json` needs a short `label` (the
+  "Workaround" cell of the daily report table, e.g. `opencode from previous nixpkgs`).
+  The scheduled check lists every row here each day; row numbers may have gaps (no row 7).
 - Archive-to-`modules/_archive/` is for *retired* modules. A module disabled
   pending an upstream fix stays in place and gets a registry row instead.
