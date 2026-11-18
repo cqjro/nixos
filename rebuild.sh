@@ -182,11 +182,13 @@ activate() {
     run_logged "$LOG_DIR/nixos-$action.log" "${cmd[@]}" || exit 1
 }
 
-# MENTICIDE has too little disk to build another host (a THEOCIDE build once
-# filled it), so a build there is refused for anything but MENTICIDE itself.
+# Which machine may build which host: THEOCIDE builds any host; every other
+# machine builds only itself (a THEOCIDE build once filled MENTICIDE's disk).
 build_host() {
-    if [ "$(this_host)" = MENTICIDE ] && [ "$1" != MENTICIDE ]; then
-        die "Refusing to build $1 on MENTICIDE: it does not have the disk. Use './rebuild.sh eval $1' here, or build $1 on THEOCIDE."
+    local me
+    me=$(this_host)
+    if [ "$me" != THEOCIDE ] && [ "$1" != "$me" ]; then
+        die "Refusing to build $1 on $me: only THEOCIDE builds other hosts. Use './rebuild.sh eval $1' here, or build $1 on THEOCIDE."
     fi
     run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1"
 }

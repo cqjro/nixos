@@ -350,6 +350,7 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
   `test`/`dry`/`switch` need your approval in T3 *and* your password in a GUI
   dialog. Remote hosts (MENTICIDE) are built by the agent but activated by you in
   a terminal. See [Change workflow](#change-workflow).
+- **Garbage collection** — every host runs a weekly `nix.gc` (generations older than 30 days) and `min-free`/`max-free` (GC below 5 GiB free, up to 20 GiB), from `modules/essentials/nix-gc.nix`.
 - **Agent docs** — `AGENTS.md` is the shared guide for any agent; `CLAUDE.md`
   imports it (`@AGENTS.md`) and adds Claude-only notes; long reference material
   is in `docs/agents/` and is read on demand, keeping per-thread context small.
@@ -445,7 +446,7 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
   | --- | --- | --- |
   | `check [HOST...]` | script syntax, tracked secrets/firmware, whitespace, registry sync, eval of each host | none |
   | `eval HOST` | evaluate only (prints the drvPath) | none |
-  | `build HOST` | build + closure diff against the running system (refused on MENTICIDE for any other host: use `eval`) | none |
+  | `build HOST` | build + closure diff against the running system (only THEOCIDE may build another host; elsewhere use `eval`) | none |
   | `test HOST [--target USER@IP]` | activate without a boot entry/generation | sudo (GUI askpass) |
   | `dry HOST [--target USER@IP]` | dry-activate: what a switch would restart | sudo |
   | `revert` | re-activate the recorded generation after a `test` | sudo |
@@ -896,7 +897,7 @@ from the connections list.
 The repo is one project on both servers: MENTICIDE has its own clone (owned by
 `t3code` in `/var/lib/t3code`) and MENTICIDE builds were tested from it, so a
 thread started on the MENTICIDE environment can edit, check, evaluate and build
-MENTICIDE like one on THEOCIDE (every other host is eval-only there: its disk cannot take the build). T3 does not move
+MENTICIDE like one on THEOCIDE (every other host is eval-only there: only THEOCIDE builds other hosts). T3 does not move
 code between machines: GitHub is the hub, a thread stays on the server that runs
 it, and a branch lives on one machine at a time (push, then fetch on the other).
 

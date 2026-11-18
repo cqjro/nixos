@@ -179,10 +179,11 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
 - **Which machine builds what.** THEOCIDE may build THEOCIDE, MENTICIDE and
   CHRONOCIDE (the 4 GB MacBook Air builds on THEOCIDE, see
   [`docs/hosts/CHRONOCIDE.md`](docs/hosts/CHRONOCIDE.md)).
-  **On MENTICIDE never run `./rebuild.sh build` (or `nix build`) for THEOCIDE,
-  REGICIDE or CHRONOCIDE: its disk fills.** It may build MENTICIDE only and
-  runs `./rebuild.sh eval HOST` for the others (`rebuild.sh` refuses the build there). Remote hosts are
-  never switched or test-activated by agents (a remote activation needs a
+  **Only THEOCIDE builds other hosts; every other machine builds only itself.
+  On MENTICIDE (or REGICIDE) never run `./rebuild.sh build` or `nix build` for
+  another host: a THEOCIDE build filled MENTICIDE's disk.** Use
+  `./rebuild.sh eval HOST` there (`rebuild.sh` refuses the build).
+  Remote hosts are never switched or test-activated by agents (a remote activation needs a
   terminal for the sudo password). The MENTICIDE clone is `t3code`-owned and
   agent-writable, so it is never the source of a privileged switch.
 - **Test without recording.** `./rebuild.sh test HOST` (local only,
@@ -286,8 +287,8 @@ pairing and T3 on MENTICIDE: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.
   ([security.md](docs/agents/security.md#adding-hooks-merge-point)), never
   home-manager `programs.claude-code.settings.hooks`, a project
   `.claude/settings.json` or a skill: those are silently ignored.
-- **On MENTICIDE, never build another host** (`./rebuild.sh build` or `nix
-  build` for THEOCIDE, REGICIDE, CHRONOCIDE): it fills the disk. Use
+- **Only THEOCIDE builds other hosts; elsewhere never build another host** (`./rebuild.sh build` or `nix
+  build`; MENTICIDE's disk was filled this way). Use
   `./rebuild.sh eval HOST`.
 - Pushes go over HTTPS through the `gh` credential helper (no SSH agent in T3
   threads).

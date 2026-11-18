@@ -122,7 +122,7 @@ merge, push to master, or switch any host.
 4. Verify with the workflow tooling, from this worktree: `./rebuild.sh check <affected hosts>`
    (tier 0: syntax, secrets/firmware, whitespace, registry sync, eval), then
    `./rebuild.sh build <host>` for each affected host this machine may build. On MENTICIDE
-   never build THEOCIDE, REGICIDE or CHRONOCIDE (disk fills); use `./rebuild.sh eval HOST`. Empty output with exit 0 is
+   never build another host (only THEOCIDE does); use `./rebuild.sh eval HOST`. Empty output with exit 0 is
    success; read .log/nixos-build.log on failure.
 5. Finish with the `ship-pr` skill (docs/agents/review.md tiers: tier 1 reviewer always,
    tier 2 only when the diff touches the lockout surface). The push and `gh pr create`
@@ -208,7 +208,7 @@ or switch any host. Never close an issue yourself.
    instead of making it.
 4. Verify: `./rebuild.sh check <affected hosts>` (the warning must be gone and no new
    one introduced), then `./rebuild.sh build <host>` for each affected host this machine
-   may build (on MENTICIDE never build THEOCIDE, REGICIDE or CHRONOCIDE; use `./rebuild.sh eval HOST`).
+   may build (on MENTICIDE never build another host; use `./rebuild.sh eval HOST`).
    A fix is not done until the host builds.
 5. Finish with the `ship-pr` skill (review tiers in docs/agents/review.md). The push and
    `gh pr create` are ask rules; if declined, stop with the branch committed locally.

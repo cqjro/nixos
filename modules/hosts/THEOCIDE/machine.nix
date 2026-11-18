@@ -110,13 +110,6 @@
 		# nix.optimise.automatic = true;
 		# nix.optimise.dates = [ "03:45" ];
 
-		# Automatic Garbage Collection
-		# nix.gc = {
-		# 	automatic = true;
-		# 	dates = "weekly";
-		# 	options = "--delete-older-than 30d";
-		# };
-
 		environment.sessionVariables = {
 			GTK_CSD = "0";
 		};
