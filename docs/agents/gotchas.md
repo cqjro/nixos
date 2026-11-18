@@ -177,3 +177,9 @@ and a one-line pointer in the AGENTS.md index.
   pattern and the prompt is blocked before the model sees it. Start the message
   with `[allow-secret-pattern]` (square brackets included); a real full token is
   a strong match and is never bypassed.
+
+- **Build `result` links pin whole closures** — `./rebuild.sh build` leaves a
+  `result` symlink in the checkout, which is a GC root, so every worktree that
+  ever built a host keeps a full system closure alive past the weekly
+  `nh clean` (`modules/server/nix-gc.nix`). When a branch is merged, remove its
+  worktree (or at least its `result` link) before assuming the disk will recover.
