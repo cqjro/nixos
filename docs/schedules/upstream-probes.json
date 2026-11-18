@@ -1,8 +1,9 @@
 {
-	"_comment": "Structured mirror of the 'Pending upstream fixes' registry (docs/agents/upstream-registry.md, mirrored in README.md). One entry per registry row; schedule-precheck warns when the row numbers disagree. A probe reports a fix SIGNAL, never proof: the worker re-verifies upstream itself. action: auto-pr = a worker may open a removal PR; notify-only = file the issue and stop (needs a human-run switch or kernel testing).",
+	"_comment": "Structured mirror of the 'Pending upstream fixes' registry (docs/agents/upstream-registry.md, mirrored in README.md). One entry per registry row; schedule-precheck warns when the row numbers disagree. A probe reports a fix SIGNAL, never proof: the worker re-verifies upstream itself. action: auto-pr = a worker may open a removal PR; notify-only = file the issue and stop (needs a human-run switch or kernel testing). label = the short workaround name shown in the report table.",
 	"rows": [
 		{
 			"id": "row-1",
+			"label": "MENTICIDE nixpkgs pin",
 			"registryRow": 1,
 			"slug": "menticide-t2-pin",
 			"title": "MENTICIDE nixpkgs pin (t2linux patchset vs linux >= 6.18.47)",
@@ -13,6 +14,7 @@
 		},
 		{
 			"id": "row-2",
+			"label": "qidi-studio FHS env",
 			"registryRow": 2,
 			"slug": "qidi-studio-fhs-env",
 			"title": "qidi-studio FHS env override (libsoup_3, libpng, CA, GIO TLS)",
@@ -30,6 +32,7 @@
 		},
 		{
 			"id": "row-3",
+			"label": "qidi-studio User-Agent patch",
 			"registryRow": 3,
 			"slug": "qidi-studio-ua-patch",
 			"title": "qidi-studio webview User-Agent binary patch (QIDIStudio#244)",
@@ -40,6 +43,7 @@
 		},
 		{
 			"id": "row-4",
+			"label": "nixdatifier diskusage timeout",
 			"registryRow": 4,
 			"slug": "nixdatifier-diskusage-timeout",
 			"title": "nixdatifier diskusage timeout patch",
@@ -56,6 +60,7 @@
 		},
 		{
 			"id": "row-5",
+			"label": "nixdatifier window border",
 			"registryRow": 5,
 			"slug": "nixdatifier-window-border",
 			"title": "nixdatifier window border recolour",
@@ -72,6 +77,7 @@
 		},
 		{
 			"id": "row-6",
+			"label": "Xodus Nexus pinned AppImage",
 			"registryRow": 6,
 			"slug": "xodus-nexus-package",
 			"title": "Xodus Nexus pinned AppImage",
@@ -84,6 +90,7 @@
 		},
 		{
 			"id": "row-8",
+			"label": "LearnHarness pinned AppImage",
 			"registryRow": 8,
 			"slug": "learnharness-package",
 			"title": "LearnHarness pinned AppImage",
@@ -96,6 +103,7 @@
 		},
 		{
 			"id": "row-9",
+			"label": "t3code Hyprland capture helper",
 			"registryRow": 9,
 			"slug": "t3code-hyprland-capture-helper",
 			"title": "t3code native Hyprland capture helper (t3-hyprland-snap-shot)",
@@ -108,6 +116,7 @@
 		},
 		{
 			"id": "row-10",
+			"label": "opencode from previous nixpkgs",
 			"registryRow": 10,
 			"slug": "opencode-previous-nixpkgs",
 			"title": "opencode from the previous nixpkgs instead of the main nixpkgs",
@@ -118,6 +127,7 @@
 		},
 		{
 			"id": "row-11",
+			"label": "Stylix rofi target disabled",
 			"registryRow": 11,
 			"slug": "stylix-rofi-font",
 			"title": "Stylix rofi target sets the renamed programs.rofi.font",
@@ -134,6 +144,7 @@
 		},
 		{
 			"id": "row-12",
+			"label": "Stylix opencode tui override",
 			"registryRow": 12,
 			"slug": "stylix-opencode-tui",
 			"title": "Stylix opencode target writes the ignored programs.opencode.tui",
@@ -150,6 +161,7 @@
 		},
 		{
 			"id": "row-13",
+			"label": "tether avahi publish options",
 			"registryRow": 13,
 			"slug": "tether-avahi-publish",
 			"title": "tether module sets obsolete services.avahi.publish options",
@@ -166,6 +178,7 @@
 		},
 		{
 			"id": "row-14",
+			"label": "DWSIM from the upstream .deb",
 			"registryRow": 14,
 			"slug": "dwsim-nixpkgs-package",
 			"title": "DWSIM repackaged from the upstream .deb (rewrite the module if nixpkgs adds it)",
@@ -176,6 +189,7 @@
 		},
 		{
 			"id": "row-15",
+			"label": "Aura browser pinned commit",
 			"registryRow": 15,
 			"slug": "aura-browser-nixpkgs",
 			"title": "Aura browser pinned to a pre-bigscreen-ui commit (use the nixpkgs package if it lands)",
