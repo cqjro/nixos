@@ -13,8 +13,12 @@ picking the T3 environment in the client.
 | Thread runs on | Edit config for | `eval` | `build` | `test` / `dry` | `switch` |
 | --- | --- | --- | --- | --- | --- |
 | THEOCIDE (home, fast) | any host | any host | THEOCIDE, MENTICIDE, CHRONOCIDE (REGICIDE only once its firmware is imported here) | THEOCIDE locally (card in a Supervised thread plus the askpass dialog at the desk, or the human in a terminal incl. T3's); MENTICIDE only by the human from a terminal (`--target`) | THEOCIDE, from merged `master`, human-approved (same routes) |
-| MENTICIDE (away, always on) | any host | any host — **eval-only for THEOCIDE** | MENTICIDE only (never THEOCIDE: too slow, and pointless) | human, over SSH | human, over SSH |
+| MENTICIDE (away, always on) | any host | any host — **eval-only for THEOCIDE** | MENTICIDE only (**never THEOCIDE, REGICIDE or CHRONOCIDE**: the disk fills; `rebuild.sh build` refuses) | human, over SSH | human, over SSH |
 
+- **Never `./rebuild.sh build` or `nix build` another host on MENTICIDE.** A
+  THEOCIDE build there filled the disk. Use `./rebuild.sh eval HOST`; the build
+  runs on THEOCIDE. `rebuild.sh` enforces this for `build`/`switch` (`build_host`),
+  but a raw `nix build` is not guarded.
 - MENTICIDE agents run as the `t3code` system user and cannot sudo, so every
   activation on MENTICIDE is the human's (`ssh menticide`, then `./rebuild.sh test|switch MENTICIDE`).
 - MENTICIDE has its own clone of the repo, owned by `t3code` in its home

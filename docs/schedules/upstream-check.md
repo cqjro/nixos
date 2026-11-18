@@ -131,8 +131,8 @@ MENTICIDE variant (the live one): the same prompt with every
 `/home/cairo/.nixos/docs/schedules/bin/schedule-precheck` replaced by
 `/run/current-system/sw/bin/schedule-precheck`, and the schedule
 `{ "type": "fixed_time", "timeOfDay": "06:30" }` (no `weekdays` means every day). Workers
-launched from MENTICIDE use the same briefs. They never build THEOCIDE (`./rebuild.sh eval
-THEOCIDE` instead, see worker-briefs.md), so a fix that touches THEOCIDE is only
+launched from MENTICIDE use the same briefs. They never build THEOCIDE, REGICIDE or CHRONOCIDE (`./rebuild.sh eval
+HOST` instead, see worker-briefs.md), so a fix that touches THEOCIDE is only
 evaluated by the worker; the host is built when you review the PR and switch.
 
 The table is rendered by the **packaged** script, so a change to the report shape reaches the
