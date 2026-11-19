@@ -1,8 +1,9 @@
 # Worker threads
 
 A scheduled run never fixes anything itself. When the script reports something
-`actionable`, the dispatcher launches one ordinary top-level thread with
-`t3_thread_launch`, in its own worktree, on its own branch. The worker does the
+`actionable`, the dispatcher launches ordinary top-level threads with
+`t3_thread_launch` (one per upstream row, no limit; one per group of up to three
+warning issues), in its own worktree, on its own branch. The worker does the
 work and opens a PR. It never merges, pushes to `master`, switches a host, or
 bumps `flake.lock`.
 
@@ -124,7 +125,11 @@ merge, push to master, or switch any host.
    `./rebuild.sh build <host>` for each affected host this machine may build. On MENTICIDE
    never build another host (only THEOCIDE does); use `./rebuild.sh eval HOST`. Empty output with exit 0 is
    success; read .log/nixos-build.log on failure.
-5. Finish with the `ship-pr` skill (docs/agents/review.md tiers: tier 1 reviewer always,
+5. Other upstream workers may be running at the same time and edit the same registry,
+   README and probe files. Before `ship-pr`, `git fetch origin` and rebase on
+   origin/master (resolve conflicts by keeping the other rows' removals; never renumber
+   rows), then re-run `./rebuild.sh check` so the registry row numbers still match.
+   Finish with the `ship-pr` skill (docs/agents/review.md tiers: tier 1 reviewer always,
    tier 2 only when the diff touches the lockout surface). The push and `gh pr create`
    are ask rules: the approval card is the human's go-ahead, and if it is declined, stop
    with the branch committed locally. Title: "Remove <short name> workaround (registry
