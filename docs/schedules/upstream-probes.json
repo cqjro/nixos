@@ -132,23 +132,6 @@
 			]
 		},
 		{
-			"id": "row-13",
-			"label": "tether avahi publish options",
-			"registryRow": 13,
-			"slug": "tether-avahi-publish",
-			"title": "tether module sets obsolete services.avahi.publish options",
-			"action": "auto-pr",
-			"probes": [
-				{
-					"type": "file",
-					"repo": "zackb/tether",
-					"path": "nix/module.nix",
-					"ref": "HEAD",
-					"mustContain": ["disable-publishing"]
-				}
-			]
-		},
-		{
 			"id": "row-14",
 			"label": "DWSIM from the upstream .deb",
 			"registryRow": 14,
