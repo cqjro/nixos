@@ -1,6 +1,6 @@
 { ... }:
 {
-	# Store hygiene for the headless server: MENTICIDE filled its disk after a few
+	# Store hygiene for every host (shared): MENTICIDE filled its disk after a few
 	# rebuilds because nothing ever collected old generations. Three layers:
 	#
 	# 1. Weekly `nh clean all`: drops generations older than 14 days but ALWAYS
@@ -37,5 +37,12 @@
 			automatic = true;
 			dates = [ "Sun 04:30" ];
 		};
+
+		# Laptops and desktops are often off at Sunday 03:00. Both timers are
+		# Persistent (nixpkgs default), so a missed run fires at the next boot or
+		# wake; the random delay stops that catch-up from landing the instant the
+		# machine comes up, while someone is logging in.
+		systemd.timers.nh-clean.timerConfig.RandomizedDelaySec = "30min";
+		systemd.timers.nix-optimise.timerConfig.RandomizedDelaySec = "30min";
 	};
 }

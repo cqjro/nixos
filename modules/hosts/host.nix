@@ -14,6 +14,7 @@
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos."nix-gc"
 				inputs.self.modules.nixos.environment
 				inputs.self.modules.nixos.users
 				inputs.self.modules.nixos.printing
@@ -64,6 +65,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos."nix-gc"
 				inputs.self.modules.nixos.environment
 				inputs.self.modules.nixos.users
 				inputs.self.modules.nixos.printing
@@ -104,6 +106,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos."nix-gc"
 				inputs.self.modules.nixos.environment
 				inputs.self.modules.nixos.users
 				inputs.self.modules.nixos.dbus
@@ -138,6 +141,7 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos.nixpkgs
 				inputs.self.modules.nixos.time
 				inputs.self.modules.nixos.experimental-features
+				inputs.self.modules.nixos."nix-gc"
 				inputs.self.modules.nixos.config-revision
 				inputs.self.modules.nixos."MENTICIDE"
 				inputs.self.modules.nixos."MENTICIDE-hardware"
@@ -163,7 +167,6 @@ inputs.self.modules.nixos.games
 				inputs.self.modules.nixos."miniflux-rss-sync"
 				inputs.self.modules.nixos.reactflux
 				inputs.self.modules.nixos.t3code
-				inputs.self.modules.nixos."nix-gc"
 				inputs.self.modules.nixos."schedule-precheck"
 				inputs.self.modules.nixos.claude-code-policy
 				inputs.self.modules.nixos."secret-guard"
