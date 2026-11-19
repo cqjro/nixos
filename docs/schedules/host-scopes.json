@@ -6,6 +6,7 @@
 		{ "glob": "modules/server/**", "hosts": ["MENTICIDE"] },
 		{ "glob": "modules/_archive/**", "hosts": [] },
 		{ "glob": "modules/scripts/sync_playlist.py", "hosts": ["MENTICIDE"] },
+		{ "glob": "modules/scripts/setup_auth.py", "hosts": [] },
 		{ "glob": "modules/scripts/abt-browser-shim.js", "hosts": ["MENTICIDE"] },
 		{ "glob": "docs/**", "hosts": [] },
 		{ "glob": ".claude/**", "hosts": [] },

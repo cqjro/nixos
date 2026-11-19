@@ -215,7 +215,9 @@ matches the rest of the config out of the box.
   (with a Homelab tab listing every exposed app), and a systemd YouTube
   playlist-sync service (hourly; reads subscriptions via the Data API but checks
   each channel's RSS feed for new uploads to stay under the daily API quota)
-  backed by a `devShell` (`nix develop .#youtube-sync`).
+  backed by a `devShell` (`nix develop .#youtube-sync`). Its state (`config.json`,
+  `token.json`) lives in `/var/lib/youtube-sync/`; `nix run .#youtube-sync-auth`
+  mints a new OAuth token (see `docs/secrets.md` §4.8).
 - **System niceties** — Opt-in experimental features, auto-optimised store,
   Flatpak support, Minecraft + game launchers, Waydroid, iOS sideloading
   toolchain, `mtkclient`/`rockbox-utility` gadget firmware "doodads", VPN, and

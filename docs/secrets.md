@@ -158,8 +158,21 @@ not let an agent read or touch that directory).
 `client_secret.json`: Google Cloud Console → APIs & Services → Credentials →
 the OAuth client → add a new secret, download, replace, disable the old one.
 `token.json` (refresh token): revoke at myaccount.google.com → Security → Third-party
-access, then re-run `modules/server/youtube/setup_auth.py` to mint a new one.
-Neither file was ever committed.
+access, then mint a new one on a machine with a browser (THEOCIDE), from an empty
+scratch directory holding `client_secret.json`:
+
+```bash
+nix run /path/to/nixos#youtube-sync-auth        # writes ./token.json (0600)
+# no browser here (phone + SSH): add `-- --no-browser --port 8080`, see modules/scripts/setup_auth.py
+ssh MENTICIDE 'install -d -m 700 ~/yt-stage'     # private staging dir, not world-readable /tmp
+scp token.json MENTICIDE:yt-stage/token.json
+ssh -t MENTICIDE 'sudo install -o youtube-sync -g youtube-sync -m 600 ~/yt-stage/token.json /var/lib/youtube-sync/token.json && rm -rf ~/yt-stage'
+ssh -t MENTICIDE 'sudo systemctl start youtube-playlist-sync.service'
+rm token.json client_secret.json                 # on THEOCIDE
+```
+
+Both files live in `/var/lib/youtube-sync/` on MENTICIDE (next to `config.json`) and were
+never committed.
 
 ### 4.9 Anything you pasted into a thread
 
