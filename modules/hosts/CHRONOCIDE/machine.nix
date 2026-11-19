@@ -73,7 +73,6 @@
 		#   boot.loader.grub = { enable = true; efiSupport = true; efiInstallAsRemovable = true; device = "nodev"; };
 		#   boot.loader.efi.canTouchEfiVariables = false;
 		boot.loader.systemd-boot.enable = true;
-		boot.loader.systemd-boot.configurationLimit = 8; # the ESP is small
 		boot.loader.efi.canTouchEfiVariables = true;
 
 		# Kernel and Wi-Fi. The Broadcom `wl` driver (broadcom_sta) is fragile on

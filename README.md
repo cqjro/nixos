@@ -212,7 +212,9 @@ matches the rest of the config out of the box.
   a weekly `nix store optimise` dedupes afterwards. Both timers are persistent
   with a 30 min random delay, so a machine that was off at 03:00 runs them
   shortly after its next boot. Run a collection by hand with
-  `sudo systemctl start nh-clean.service`.
+  `sudo systemctl start nh-clean.service`. The boot menu is capped at the same 5
+  generations (`configurationLimit`); to go back further see
+  [`docs/rollback.md`](docs/rollback.md).
 - **Server stack on MENTICIDE** — Tailscale, Paperless-ngx (paperless storage, tied to
   the stylix `glance` theme only for the glance dashboard), Actual Budget
   (self-hosted finance) with **Actual Budget Tweaks** (a sidecar proxy that

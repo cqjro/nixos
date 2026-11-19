@@ -21,7 +21,7 @@
 	# Agents' `./rebuild.sh build` leaves a `result` symlink in the checkout; that
 	# is a GC root, so a full system closure per worktree stays alive until the
 	# link is removed (delete finished worktrees' `result`).
-	flake.modules.nixos."nix-gc" = { ... }: {
+	flake.modules.nixos."nix-gc" = { lib, ... }: {
 		programs.nh.clean = {
 			enable = true;
 			dates = "Sun 03:00";
@@ -32,6 +32,13 @@
 			min-free = 5 * 1024 * 1024 * 1024; # start a collection below 5 GiB free
 			max-free = 15 * 1024 * 1024 * 1024; # ...and stop at 15 GiB free
 		};
+
+		# Keep the boot menu in step with the generations nh clean keeps: nh clean
+		# never rewrites the bootloader, so without a cap the menu can list entries
+		# whose closure was already collected. Whichever loader a host uses applies
+		# its own option. To boot an older generation anyway: docs/rollback.md.
+		boot.loader.systemd-boot.configurationLimit = lib.mkDefault 5;
+		boot.loader.grub.configurationLimit = lib.mkDefault 5;
 
 		nix.optimise = {
 			automatic = true;
