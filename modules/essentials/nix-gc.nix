@@ -40,9 +40,8 @@
 
 		# Laptops and desktops are often off at Sunday 03:00. Both timers are
 		# Persistent (nixpkgs default), so a missed run fires at the next boot or
-		# wake; the random delay stops that catch-up from landing the instant the
-		# machine comes up, while someone is logging in.
+		# wake. nix.optimise already adds a 30 min random delay; give nh-clean the
+		# same so the catch-up does not land the instant someone logs in.
 		systemd.timers.nh-clean.timerConfig.RandomizedDelaySec = "30min";
-		systemd.timers.nix-optimise.timerConfig.RandomizedDelaySec = "30min";
 	};
 }
