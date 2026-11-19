@@ -46,7 +46,9 @@ the bootloader:
 
 - systemd-boot (MENTICIDE, REGICIDE, CHRONOCIDE): `bootctl list`, then
   `sudo bootctl set-oneshot <entry-id>`; the saved default returns after that boot.
-- GRUB (THEOCIDE): `sudo grub-reboot <entry>`.
+- GRUB (THEOCIDE): pick the entry in the GRUB menu at the console (always works).
+  `sudo grub-reboot <entry>` only takes effect if GRUB is set to `default = "saved"`,
+  which this repo does not do, so do not rely on it.
 
 `nixos-rebuild switch --rollback` only goes back one generation, so it does not
 help for anything older.
