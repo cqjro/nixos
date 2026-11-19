@@ -32,6 +32,7 @@ Read the others **when the task calls for them**:
 | [`docs/schedules/README.md`](docs/schedules/README.md) | scheduled threads: upstream/warning checks, the unswitched-changes notifier, worker briefs. Schedules never write to `~/.nixos` (private clone under `~/.local/state/nixos-schedules`) |
 | [`docs/hosts/CHRONOCIDE.md`](docs/hosts/CHRONOCIDE.md) | the MacBook Air host: its app/module include/exclude list, install order, build-host command and verify checklist; [`docs/hosts/niri.md`](docs/hosts/niri.md) for niri (the shared backup desktop: options, Hyprland mapping, what has no equivalent) |
 | [`docs/host-names.md`](docs/host-names.md) | naming or adding a host (meanings, former names `GOD-KILLER`/`LittleNix`/`REDRUM`, candidate list); [`docs/host-rename.md`](docs/host-rename.md) for the rename rollout and its outside-the-repo steps |
+| [`docs/rollback.md`](docs/rollback.md) | booting or activating a generation older than the newest 5, rooting one to keep it, rebuilding a cleaned one |
 | [`docs/agents/gotchas.md`](docs/agents/gotchas.md) | the area you touch appears in the [Gotchas](#gotchas) index |
 
 ## Quick commands

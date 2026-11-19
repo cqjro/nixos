@@ -1,6 +1,6 @@
 { ... }:
 {
-	# Store hygiene for the headless server: MENTICIDE filled its disk after a few
+	# Store hygiene for every host (shared): MENTICIDE filled its disk after a few
 	# rebuilds because nothing ever collected old generations. Three layers:
 	#
 	# 1. Weekly `nh clean all`: drops generations older than 14 days but ALWAYS
@@ -21,7 +21,7 @@
 	# Agents' `./rebuild.sh build` leaves a `result` symlink in the checkout; that
 	# is a GC root, so a full system closure per worktree stays alive until the
 	# link is removed (delete finished worktrees' `result`).
-	flake.modules.nixos."nix-gc" = { ... }: {
+	flake.modules.nixos."nix-gc" = { lib, ... }: {
 		programs.nh.clean = {
 			enable = true;
 			dates = "Sun 03:00";
@@ -33,9 +33,22 @@
 			max-free = 15 * 1024 * 1024 * 1024; # ...and stop at 15 GiB free
 		};
 
+		# Keep the boot menu in step with the generations nh clean keeps: nh clean
+		# never rewrites the bootloader, so without a cap the menu can list entries
+		# whose closure was already collected. Whichever loader a host uses applies
+		# its own option. To boot an older generation anyway: docs/rollback.md.
+		boot.loader.systemd-boot.configurationLimit = lib.mkDefault 5;
+		boot.loader.grub.configurationLimit = lib.mkDefault 5;
+
 		nix.optimise = {
 			automatic = true;
 			dates = [ "Sun 04:30" ];
 		};
+
+		# Laptops and desktops are often off at Sunday 03:00. Both timers are
+		# Persistent (nixpkgs default), so a missed run fires at the next boot or
+		# wake. nix.optimise already adds a 30 min random delay; give nh-clean the
+		# same so the catch-up does not land the instant someone logs in.
+		systemd.timers.nh-clean.timerConfig.RandomizedDelaySec = "30min";
 	};
 }
