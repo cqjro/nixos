@@ -220,7 +220,10 @@ by showing the way to finishing it. Use this block, after the answer itself:
 ```
 
 - **One ordered list, both perspectives.** Tag each step **Agent** (what this
-  thread will do next) or **You** (decisions, approvals, commands only the
+  thread will do next, only when it cannot yet because a **You** step or an
+  outside event comes first; otherwise do it now, see
+  [AGENTS.md "Keep going"](../../AGENTS.md#keep-going-do-not-hand-back-what-you-can-run))
+  or **You** (decisions, approvals, commands only the
   human can run, such as `switch`, sudo or anything on another machine).
   Order the steps by dependency, so the first one is always the next thing to
   happen, and mark the last one *(closes the thread)*.

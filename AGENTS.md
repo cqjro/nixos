@@ -207,6 +207,30 @@ GitHub (`cqjro/nixos`, `master`) is the hub between machines; full procedure in
   tier-1 review, Sonnet for 1–6, Opus to plan 7–10) — table in
   [`docs/agents/workflow.md`](docs/agents/workflow.md#model-and-effort-per-task).
 
+## Keep going (do not hand back what you can run)
+
+A thread finishes everything it is allowed to do before it ends a turn. The
+`Path to close` list below records what is *left*, never a menu of things this
+thread could have done itself.
+
+- **Run it, do not offer it.** Anything in "Allowed without a prompt" (see
+  Agent safety essentials), plus the review tiers, `link_pull_request` and doc
+  and TODO updates, is done now, in the same turn, in dependency order. Do not ask "want me to run check?" and do
+  not list it as a **You** step. A failing check or build you can fix is fixed
+  and re-run, not reported.
+- **Stop only for one of three things**, and say which: (1) a step only the
+  human can do (activation/sudo, an approval card such as `push`, another
+  machine, a secret, firmware, "merge it"); (2) a real decision, with a recommendation, that
+  defaults and the docs do not settle; (3) a hard blocker (a sandbox limit, a
+  missing file, a failure you tried to fix and cannot), with what you tried and
+  the exact error.
+- **Not reasons to stop:** finishing a sub-step, a long build, a small review
+  finding (fix it), a documented command you have not run before, wanting
+  confirmation of a choice the request already implies.
+- **Check before replying:** if the first step of your `Path to close` is
+  tagged **Agent**, you stopped early; do it. The first remaining step should be
+  a **You** step or a **Waiting on**.
+
 ## Path to close (end of every reply)
 
 Every thread should move toward being settled. End **every** reply to the
