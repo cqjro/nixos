@@ -7,7 +7,8 @@
 	#    keeps the newest 5, so rollback still works on a box nobody can reach
 	#    physically (plain `nix.gc.options = "--delete-older-than 14d"` would delete
 	#    the previous generation too if the last switch was over two weeks ago).
-	#    It also removes dead `result` GC roots. programs.nh.clean and
+	#    GC then frees paths once their `result` links are gone (see below).
+	#    programs.nh.clean and
 	#    nix.gc.automatic are mutually exclusive (nixpkgs warns when both are set),
 	#    so nix.gc stays off.
 	# 2. min-free/max-free: nix itself collects garbage mid-build when free space
