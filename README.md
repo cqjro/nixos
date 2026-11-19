@@ -350,7 +350,6 @@ Code, with `gh` for GitHub. T3 Code's window snapshots work on Hyprland because
   `test`/`dry`/`switch` need your approval in T3 *and* your password in a GUI
   dialog. Remote hosts (MENTICIDE) are built by the agent but activated by you in
   a terminal. See [Change workflow](#change-workflow).
-- **Garbage collection** — every host runs a weekly `nix.gc` (generations older than 30 days) and `min-free`/`max-free` (GC below 5 GiB free, up to 20 GiB), from `modules/essentials/nix-gc.nix`.
 - **Agent docs** — `AGENTS.md` is the shared guide for any agent; `CLAUDE.md`
   imports it (`@AGENTS.md`) and adds Claude-only notes; long reference material
   is in `docs/agents/` and is read on demand, keeping per-thread context small.
