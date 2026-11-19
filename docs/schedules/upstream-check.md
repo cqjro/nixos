@@ -86,7 +86,9 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
 4. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
    - Handle EVERY id in `actionable`, one worker per id, all in this run. There is no
      limit on how many; do not stop after the first. Each row has its own branch
-     (auto/upstream-<slug>), so the workers do not collide and run in parallel.
+     (auto/upstream-<slug>). The workers edit shared files (registry, README table,
+     probes), so their PRs may need a rebase after another one merges; the brief tells
+     each worker to rebase on origin/master before opening its PR.
    - Skip an id only if t3_thread_list shows a thread on branch auto/upstream-<slug> that
      is still active (status running, waiting, starting, preparing or queued), or
      `gh pr list --head auto/upstream-<slug>` (open PRs) is non-empty. Completed or
