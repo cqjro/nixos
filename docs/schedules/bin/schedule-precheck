@@ -37,7 +37,13 @@ free-form issue key that this script then trusts:
   - children never inherit the caller's working directory (run() defaults cwd to the
     passwd home), so a repo the agent left its shell in cannot supply git/gh config;
   - hosts, revisions, issue keys, thread ids and schedule names are validated against
-    fixed patterns or lists, and --max-new/--remind-hours are clamped.
+    fixed patterns or lists, and --max-new/--remind-hours are clamped;
+  - the `upstream` probe config is read from origin/master (merged config, like the registry
+    rows) and passed through validate_probes before any field becomes a gh or nix argument:
+    fixed patterns for repo/path/ref (no ".", ".." or empty components), flakeref only
+    github:NixOS/nixpkgs, a closed set of probe types, no groups in tree-match patterns, no
+    "@" or markup in text that reaches issues. A probed repo must be public. An invalid or
+    missing file falls back to the copy next to the script.
 Any new option of that kind must go through the same gate or validation, and a change
 to argument parsing is a tier-2 review item.
 
@@ -289,9 +295,23 @@ def table_rows(clone: Path):
 	return None, []
 
 
+_PUBLIC = {}
+
+
+def require_public(repo):
+	"""Probe config is merged-master text, so a probe must never read a private repo the owner's
+	token can see: hit names and booleans would land in the report and in public issues."""
+	if repo not in _PUBLIC:
+		_PUBLIC[repo] = gh(["api", f"repos/{repo}", "--jq", ".private"]).strip() == "false"
+	if not _PUBLIC[repo]:
+		raise RuntimeError("probe repo is not public")
+
+
 def probe(p):
 	"""Return (fingerprint dict, fix_signal bool, detail dict) for one probe."""
 	t = p["type"]
+	if "repo" in p:
+		require_public(p["repo"])
 	if t == "issue":
 		o = json.loads(gh(["issue", "view", str(p["number"]), "--repo", p["repo"], "--json", "state,stateReason,updatedAt,comments,title"]))
 		fp = {"state": o["state"], "stateReason": o.get("stateReason"), "comments": len(o["comments"]), "updatedAt": o["updatedAt"]}
@@ -326,7 +346,7 @@ def probe(p):
 				return {"exists": False}, False, {"ref": f"{p['repo']}:{p['path']}", "exists": False}
 			raise
 	if t == "nix-dry-build":
-		rc, out, err = run(["nix", "build", "--dry-run", "--no-link", p["flakeref"]], timeout=900)
+		rc, out, err = run(["nix", "build", "--dry-run", "--no-link", "--no-write-lock-file", p["flakeref"]], timeout=900)
 		text = out + err
 		if rc != 0:
 			raise RuntimeError(f"nix build --dry-run {p['flakeref']}: {(err.strip().splitlines() or [rc])[-1]}")
@@ -415,15 +435,110 @@ def render_upstream_markdown(rows, open_issues, issues, events, ran_at):
 	return lines
 
 
-def cmd_upstream(a, root, state, issues):
+REPO_RE = re.compile(r"[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}")
+PATH_RE = re.compile(r"[A-Za-z0-9_.+/-]{1,200}")
+REF_RE = re.compile(r"[A-Za-z0-9_./-]{1,100}")
+# nix is only ever pointed at nixpkgs: an unlocked third-party flake would be evaluated with the owner's token
+FLAKEREF_RE = re.compile(r"github:NixOS/nixpkgs/[A-Za-z0-9_.-]{1,100}#[A-Za-z0-9_.+-]{1,80}")
+PATTERN_RE = re.compile(r"[A-Za-z0-9_.^$*-]{1,60}")  # no groups, alternation or `+`: names are upstream-controlled
+TEXT_RE = re.compile(r"[\x20-\x7e]{1,200}")
+BAD_MD = re.compile(r"[<`\[\]]")  # markup that would render in a GitHub issue (HTML, code fence, link); a bare `>` is harmless
+
+
+def validate_probes(cfg):
+	"""Raise ValueError unless the probe config has exactly the shape the probes expect. The file
+	is read from origin/master (merged config, but a PR author or a bad merge must still not be
+	able to point gh at an odd URL or nix at an odd flake ref), so every field a probe turns into
+	an argument is checked against a fixed pattern. Messages never quote the offending value."""
+	def need(ok, msg):
+		if not ok:
+			raise ValueError(msg)
+
+	def safe(rx, v, what, ref=False):
+		ok = isinstance(v, str) and rx.fullmatch(v) and not v.startswith("-")
+		need(ok and all(c not in ("", ".", "..") and not (ref and c.endswith(".lock")) for c in v.split("/")), f"bad {what}")
+
+	def text(v, limit=200, at=False):
+		return (isinstance(v, str) and 0 < len(v) <= limit and TEXT_RE.fullmatch(v) is not None
+			and not BAD_MD.search(v) and "|" not in v and "://" not in v and (at or "@" not in v))
+
+	need(isinstance(cfg, dict) and isinstance(cfg.get("rows"), list) and cfg["rows"], "no rows")
+	ids, nums = set(), set()
+	for n, row in enumerate(cfg["rows"], 1):
+		need(isinstance(row, dict), f"entry {n} is not an object")
+		rid = row.get("id")
+		need(isinstance(rid, str) and re.fullmatch(r"row-[0-9]{1,3}", rid) and rid not in ids, f"entry {n}: bad or repeated id")
+		ids.add(rid)
+		num = row.get("registryRow")
+		need(type(num) is int and 0 < num < 1000 and num not in nums, f"{rid}: bad or repeated registryRow")
+		nums.add(num)
+		need(isinstance(row.get("slug"), str) and re.fullmatch(r"[a-z0-9-]{1,60}", row["slug"]), f"{rid}: bad slug")
+		need(text(row.get("title")), f"{rid}: bad title")
+		need("label" not in row or text(row["label"], 60), f"{rid}: bad label")
+		need(row.get("action") in ("auto-pr", "notify-only"), f"{rid}: bad action")
+		need(row.get("fixWhen", "all") in ("all", "any"), f"{rid}: bad fixWhen")
+		need(isinstance(row.get("probes"), list) and 0 < len(row["probes"]) <= 6, f"{rid}: bad probes list")
+		for p in row["probes"]:
+			need(isinstance(p, dict), f"{rid}: probe is not an object")
+			t = p.get("type")
+			if t == "issue":
+				safe(REPO_RE, p.get("repo"), f"{rid} repo")
+				need(type(p.get("number")) is int and 0 < p["number"] < 10**7, f"{rid}: bad issue number")
+			elif t in ("file", "tree-match", "path-exists"):
+				safe(REPO_RE, p.get("repo"), f"{rid} repo")
+				safe(PATH_RE, p.get("path"), f"{rid} path")
+				if t != "path-exists":
+					safe(REF_RE, p.get("ref"), f"{rid} ref", ref=True)
+				if t == "tree-match":
+					pat = p.get("pattern")
+					need(isinstance(pat, str) and PATTERN_RE.fullmatch(pat) and pat.count("*") <= 2, f"{rid}: bad pattern")
+					try:
+						re.compile(pat)
+					except Exception:  # noqa: BLE001 - re.error, OverflowError, RecursionError: all mean "unusable"
+						raise ValueError(f"{rid}: pattern does not compile") from None
+				if t == "file":
+					for k in ("mustContain", "mustNotContain"):
+						v = p.get(k, [])
+						# mustNotContain text is never printed raw (a match only becomes a boolean), so it may hold an `@`
+						need(isinstance(v, list) and len(v) <= 8 and all(text(s, at=(k == "mustNotContain")) for s in v), f"{rid}: bad {k}")
+			elif t == "nix-dry-build":
+				need(isinstance(p.get("flakeref"), str) and FLAKEREF_RE.fullmatch(p["flakeref"]) and ".." not in p["flakeref"], f"{rid}: bad flakeref")
+			else:
+				raise ValueError(f"{rid}: unknown probe type")
+
+
+def load_probes(clone, report):
+	"""The probe config comes from origin/master like the registry rows, so a new registry row
+	and its probe always arrive together; the copy next to this script only changes on a switch
+	and is the fallback (no clone, or master's file is unusable)."""
+	if clone is not None:
+		try:
+			text = git_show(clone, "docs/schedules/upstream-probes.json", rev="refs/remotes/origin/master")
+			if text is None:
+				raise ValueError("file missing at origin/master")
+			cfg = json.loads(text)
+			validate_probes(cfg)
+			report["probeSource"] = "origin/master"
+			return cfg
+		except (ValueError, RecursionError, OverflowError) as e:  # json.JSONDecodeError is a ValueError
+			report["errors"].append(f"probe config at origin/master unusable, using the packaged copy: {_clip(e, 120)}")
 	cfg = json.loads((HERE.parent / "upstream-probes.json").read_text())
+	validate_probes(cfg)
+	report["probeSource"] = "packaged copy"
+	return cfg
+
+
+def cmd_upstream(a, root, state, issues):
 	seen = state.load("upstream-state.json", {"rows": {}})
 	report = {"schedule": "upstream", "ranAt": now(), "findings": [], "errors": [], "changed": False}
+	clone = None
 	try:
-		rowfile, rownums = table_rows(ensure_clone(state, a.url))
+		clone = ensure_clone(state, a.url)
+		rowfile, rownums = table_rows(clone)
 	except Exception as e:  # noqa: BLE001 - registry drift check is advisory
 		rowfile, rownums = None, []
 		report["errors"].append(f"registry check skipped: {e}")
+	cfg = load_probes(clone, report)
 	probed = {r["registryRow"] for r in cfg["rows"]}
 	if rownums and set(rownums) != probed:
 		report["errors"].append(f"registry rows {sorted(set(rownums) ^ probed)} in {rowfile} and upstream-probes.json disagree")
@@ -469,7 +584,7 @@ def cmd_upstream(a, root, state, issues):
 			f["error"] = err
 		# an error row names the failing call and an HTTP status, never the message text itself
 		http = re.search(r"HTTP (\d{3})", err or "")
-		text = ("probe failed: " + re.sub(r"[^A-Za-z0-9_ .#/=-]", "", err.split(":")[0])[:60].strip() + (f" (HTTP {http.group(1)})" if http else "")) if err else "; ".join(evidence)
+		text = ("probe failed: " + re.sub(r"[^A-Za-z0-9_ .#/?=-]", "", err.split(":")[0])[:60].strip() + (f" (HTTP {http.group(1)})" if http else "")) if err else "; ".join(evidence)
 		if status == "changed":
 			text += " (changed since last run)"
 		elif status == "baseline":

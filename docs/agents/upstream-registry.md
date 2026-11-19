@@ -34,8 +34,11 @@ Notes:
 - A `# TODO-remove:` comment at the workaround site is required, and the same
   row must exist in the README's "Pending upstream fixes" table — update both
   in the commit that adds the workaround, and delete from both when removing it.
-- The probe entry in `docs/schedules/upstream-probes.json` needs a short `label` (the
+- The probe entry in `docs/schedules/upstream-probes.json` should have a short `label` (optional, falls back to the long title; the
   "Workaround" cell of the daily report table, e.g. `opencode from previous nixpkgs`).
   The scheduled check lists every row here each day; row numbers may have gaps (no row 7).
+  It reads the registry rows **and** `upstream-probes.json` from `origin/master`, so a row and
+  its probe entry take effect on merge (no host switch); a row merged without its probe entry
+  makes the run report an error and launch no worker.
 - Archive-to-`modules/_archive/` is for *retired* modules. A module disabled
   pending an upstream fix stays in place and gets a registry row instead.
