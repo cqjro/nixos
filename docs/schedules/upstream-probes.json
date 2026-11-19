@@ -115,23 +115,6 @@
 			]
 		},
 		{
-			"id": "row-11",
-			"label": "Stylix rofi target disabled",
-			"registryRow": 11,
-			"slug": "stylix-rofi-font",
-			"title": "Stylix rofi target sets the renamed programs.rofi.font",
-			"action": "auto-pr",
-			"probes": [
-				{
-					"type": "file",
-					"repo": "nix-community/stylix",
-					"path": "modules/rofi/hm.nix",
-					"ref": "master",
-					"mustContain": ["programs.rofi.settings.font"]
-				}
-			]
-		},
-		{
 			"id": "row-12",
 			"label": "Stylix opencode tui override",
 			"registryRow": 12,
