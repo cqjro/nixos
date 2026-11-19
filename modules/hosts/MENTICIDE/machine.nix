@@ -34,7 +34,9 @@
 						zoxide
 						bat
 						btop
-						opencode
+						# TODO-remove: opencode dropped on MENTICIDE. Its pinned nixpkgs-menticide only has OpenCode 1,
+						# which the shared opencode module (OpenCode 2 options) cannot configure. Re-add once MENTICIDE
+						# no longer needs its own nixpkgs, or its pin ships OpenCode 2.
 						nom
 						terminal-packages
 						nixdatifier
