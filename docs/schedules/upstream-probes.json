@@ -197,6 +197,22 @@
 			"probes": [
 				{ "type": "tree-match", "repo": "NixOS/nixpkgs", "path": "pkgs/kde/plasma", "ref": "nixos-unstable", "pattern": "^aura" }
 			]
+		},
+		{
+			"id": "row-16",
+			"registryRow": 16,
+			"slug": "modrinth-app-sqlite",
+			"title": "modrinth-app-unwrapped missing sqlite in buildInputs (override until nixos-unstable has the fix)",
+			"action": "auto-pr",
+			"probes": [
+				{
+					"type": "file",
+					"repo": "NixOS/nixpkgs",
+					"path": "pkgs/by-name/mo/modrinth-app-unwrapped/package.nix",
+					"ref": "nixos-unstable",
+					"mustContain": ["sqlite"]
+				}
+			]
 		}
 	],
 	"ignore": []
