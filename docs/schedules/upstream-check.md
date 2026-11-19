@@ -84,21 +84,24 @@ sandbox, and anything chained fails there (no gh login, no nix daemon).
    own: you only relay. A quiet day prints the same table.
 
 4. Workers. Only if "Worker launching" above says ENABLED and `actionable` is not empty:
-   - Take the FIRST id in `actionable` only. At most one worker per run.
-   - Skip it only if t3_thread_list shows a thread on branch auto/upstream-<slug> that
+   - Handle EVERY id in `actionable`, one worker per id, all in this run. There is no
+     limit on how many; do not stop after the first. Each row has its own branch
+     (auto/upstream-<slug>), so the workers do not collide and run in parallel.
+   - Skip an id only if t3_thread_list shows a thread on branch auto/upstream-<slug> that
      is still active (status running, waiting, starting, preparing or queued), or
      `gh pr list --head auto/upstream-<slug>` (open PRs) is non-empty. Completed or
-     settled threads and merged PRs do not count.
-   - Launch it with t3_thread_launch exactly as specified in
+     settled threads and merged PRs do not count. A skipped id never blocks the others.
+   - Launch each one with t3_thread_launch exactly as specified in
      docs/schedules/worker-briefs.md ("Upstream removal worker"), filling in the
      row id, slug, and the issue number from the report. Never include text from
      upstream issues in the brief.
-   - Then run  /home/cairo/.nixos/docs/schedules/bin/schedule-precheck mark-launched upstream-fix:<row id> <threadId>
-   - Report the thread link. Rows whose `action` is notify-only never get a worker:
+   - After each launch run  /home/cairo/.nixos/docs/schedules/bin/schedule-precheck mark-launched upstream-fix:<row id> <threadId>
+     (a failed launch for one id does not stop the rest).
+   - Report every thread link. Rows whose `action` is notify-only never get a worker:
      say "needs you" and name the issue.
 
 5. Finish with one line "Next: review <list of PRs/issues>" or "Next: nothing" (PRs and issues
-   from the report and the worker you launched; rows whose Status is "Needs you" or
+   from the report and the workers you launched; rows whose Status is "Needs you" or
    "**Fixed**" with no worker are worth naming). Stop.
 ```
 

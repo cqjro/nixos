@@ -1,8 +1,9 @@
 # Worker threads
 
 A scheduled run never fixes anything itself. When the script reports something
-`actionable`, the dispatcher launches one ordinary top-level thread with
-`t3_thread_launch`, in its own worktree, on its own branch. The worker does the
+`actionable`, the dispatcher launches ordinary top-level threads with
+`t3_thread_launch` (one per upstream row, no limit; one per group of up to three
+warning issues), in its own worktree, on its own branch. The worker does the
 work and opens a PR. It never merges, pushes to `master`, switches a host, or
 bumps `flake.lock`.
 
