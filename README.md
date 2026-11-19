@@ -688,6 +688,11 @@ agent procedure is in `docs/agents/workflow.md`.
    its commit and PR number. Older generations show the message from their
    old `HOST: <gen> … || message` commit.
 
+Agents finish everything they are allowed to run (checks, evals, builds,
+branch commits, PR creation, reviews) before ending a turn, and stop only for
+a human-only step, a real decision, or a hard blocker (AGENTS.md, "Keep
+going").
+
 Every agent reply ends with a **Path to close**: one ordered list of the
 remaining steps, each tagged *Agent* or *You*, ending with the step that
 closes the thread, plus any work delegated to other threads. Once nothing is
