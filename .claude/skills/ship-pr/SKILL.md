@@ -9,8 +9,8 @@ Stop and report at the first failure; do not push a branch that fails tier 0.
 
 1. **Scope.** `git diff --stat origin/master...HEAD` and the uncommitted state.
    Work out the affected hosts from `modules/hosts/host.nix` and each
-   `machine.nix` (which hosts import the changed fragments). On MENTICIDE, never
-   build THEOCIDE: use `./rebuild.sh eval THEOCIDE` instead.
+   `machine.nix` (which hosts import the changed fragments). Only THEOCIDE builds other
+   hosts; on any other machine never build another host (MENTICIDE's disk fills): use `./rebuild.sh eval HOST` instead.
 2. **Tier 0.** `./rebuild.sh check <hosts>` then `./rebuild.sh build <host>`
    for each host this machine may build. Empty output + exit 0 = success; on
    THEOCIDE summarise the closure diff (new/removed packages, size).

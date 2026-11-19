@@ -452,7 +452,7 @@ become GitHub issues and `auto/<slug>` worker branches with PRs; nothing pulls o
   | --- | --- | --- |
   | `check [HOST...]` | script syntax, tracked secrets/firmware, whitespace, registry sync, eval of each host | none |
   | `eval HOST` | evaluate only (prints the drvPath) | none |
-  | `build HOST` | build + closure diff against the running system | none |
+  | `build HOST` | build + closure diff against the running system (only THEOCIDE may build another host; elsewhere use `eval`) | none |
   | `test HOST [--target USER@IP]` | activate without a boot entry/generation | sudo (GUI askpass) |
   | `dry HOST [--target USER@IP]` | dry-activate: what a switch would restart | sudo |
   | `revert` | re-activate the recorded generation after a `test` | sudo |
@@ -661,7 +661,7 @@ agent procedure is in `docs/agents/workflow.md`.
 2. **Verify.** The agent runs `./rebuild.sh check` and `./rebuild.sh build`
    for the affected hosts:
    - **THEOCIDE** builds THEOCIDE and MENTICIDE.
-   - **MENTICIDE** builds only itself, and only *evaluates* THEOCIDE (`./rebuild.sh eval THEOCIDE`).
+   - **MENTICIDE** builds only itself, and only *evaluates* other hosts (`./rebuild.sh eval HOST`).
 3. **Try it without recording it.** `./rebuild.sh test HOST` activates the
    branch build but writes no boot entry or generation. `./rebuild.sh revert`
    or a reboot undoes it. `./rebuild.sh dry HOST` only reports what would
@@ -903,7 +903,7 @@ from the connections list.
 The repo is one project on both servers: MENTICIDE has its own clone (owned by
 `t3code` in `/var/lib/t3code`) and MENTICIDE builds were tested from it, so a
 thread started on the MENTICIDE environment can edit, check, evaluate and build
-MENTICIDE like one on THEOCIDE (THEOCIDE is eval-only there). T3 does not move
+MENTICIDE like one on THEOCIDE (every other host is eval-only there: only THEOCIDE builds other hosts). T3 does not move
 code between machines: GitHub is the hub, a thread stays on the server that runs
 it, and a branch lives on one machine at a time (push, then fetch on the other).
 
