@@ -115,17 +115,6 @@
 			]
 		},
 		{
-			"id": "row-10",
-			"label": "opencode from previous nixpkgs",
-			"registryRow": 10,
-			"slug": "opencode-previous-nixpkgs",
-			"title": "opencode from the previous nixpkgs instead of the main nixpkgs",
-			"action": "auto-pr",
-			"probes": [
-				{ "type": "nix-dry-build", "flakeref": "github:NixOS/nixpkgs/nixos-unstable#opencode" }
-			]
-		},
-		{
 			"id": "row-11",
 			"label": "Stylix rofi target disabled",
 			"registryRow": 11,

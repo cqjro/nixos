@@ -109,11 +109,6 @@
 		# 	url = "github:gmodena/nix-flatpak";
 		# };
 
-		# TODO-remove: opencode from the previous nixpkgs (nixos-unstable 2026-10-23)
-		# because its node_modules fixed-output hash is stale on the main nixpkgs;
-		# see the "Pending upstream fixes" registry (row 10).
-		nixpkgs-opencode.url = "github:nixos/nixpkgs/3ec636362e1816bc2f0888fa0fa2c69f1bc9e504";
-
 		nixpkgs-openconnect-sso.url = "github:nixos/nixpkgs/46397778ef1f73414b03ed553a3368f0e7e33c2f";
 
 		openconnect-sso = {
