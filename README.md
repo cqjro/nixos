@@ -654,7 +654,7 @@ agent procedure is in `docs/agents/workflow.md`.
 2. **Verify.** The agent runs `./rebuild.sh check` and `./rebuild.sh build`
    for the affected hosts:
    - **THEOCIDE** builds THEOCIDE and MENTICIDE.
-   - **MENTICIDE** builds only itself, and only *evaluates* THEOCIDE (`./rebuild.sh eval THEOCIDE`).
+   - **MENTICIDE** builds only itself, and only *evaluates* other hosts (`./rebuild.sh eval HOST`).
 3. **Try it without recording it.** `./rebuild.sh test HOST` activates the
    branch build but writes no boot entry or generation. `./rebuild.sh revert`
    or a reboot undoes it. `./rebuild.sh dry HOST` only reports what would

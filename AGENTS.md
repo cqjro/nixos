@@ -287,9 +287,7 @@ pairing and T3 on MENTICIDE: [`docs/agents/t3-claude.md`](docs/agents/t3-claude.
   ([security.md](docs/agents/security.md#adding-hooks-merge-point)), never
   home-manager `programs.claude-code.settings.hooks`, a project
   `.claude/settings.json` or a skill: those are silently ignored.
-- **Only THEOCIDE builds other hosts; elsewhere never build another host** (`./rebuild.sh build` or `nix
-  build`; MENTICIDE's disk was filled this way). Use
-  `./rebuild.sh eval HOST`.
+- **Never build another host off THEOCIDE** (rule in [Change workflow](#change-workflow)): use `./rebuild.sh eval HOST`.
 - Pushes go over HTTPS through the `gh` credential helper (no SSH agent in T3
   threads).
 - Bash runs in a sandbox that hides `/home` outside the worktree; reads outside

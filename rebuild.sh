@@ -149,6 +149,7 @@ parse_opts() {
 # so for remote builds we run it over SSH on the target instead)
 list_generations_json() {
     local remote=${1:-}
+    require_may_build "$host"
     if [ -n "$remote" ]; then
         ssh "$remote" "nixos-rebuild list-generations --json"
     else
@@ -168,6 +169,7 @@ activate() {
     if [ "$host" != "$(this_host)" ] && [ -z "$remote" ]; then
         die "'$host' is not this machine ($(this_host)); pass --target USER@IP"
     fi
+    require_may_build "$host"
     if [ -n "$remote" ]; then
         [ -t 0 ] || die "A remote $action needs a terminal for the sudo password; run ./rebuild.sh yourself."
         # Remote rebuild: no local sudo. nixos-rebuild SSHes out as the target user
@@ -184,12 +186,17 @@ activate() {
 
 # Which machine may build which host: THEOCIDE builds any host; every other
 # machine builds only itself (a THEOCIDE build once filled MENTICIDE's disk).
-build_host() {
+# test/dry/switch with --target build locally too, so activate() checks as well.
+require_may_build() {
     local me
     me=$(this_host)
     if [ "$me" != THEOCIDE ] && [ "$1" != "$me" ]; then
         die "Refusing to build $1 on $me: only THEOCIDE builds other hosts. Use './rebuild.sh eval $1' here, or build $1 on THEOCIDE."
     fi
+}
+
+build_host() {
+    require_may_build "$1"
     run_logged "$LOG_DIR/nixos-build.log" nixos-rebuild build --flake ".#$1"
 }
 

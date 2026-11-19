@@ -24,9 +24,9 @@ purely from a clean worktree (the firmware module is merged: REGICIDE evaluated 
   `/run/current-system/sw/bin/schedule-precheck` (`modules/server/schedule-precheck.nix`),
   created from a THEOCIDE thread with `schedule_task` and the linked MENTICIDE
   `environmentId`. Evaluation is host independent, so MENTICIDE evaluates all three hosts
-  (about 7 s for MENTICIDE, 15 s for THEOCIDE); it never builds THEOCIDE. It launches
+  (about 7 s for MENTICIDE, 15 s for THEOCIDE); it never builds another host. It launches
   workers itself (`Worker launching: ENABLED`); those verify a THEOCIDE fix with
-  `./rebuild.sh eval THEOCIDE` only, and the host is built when you review the PR and
+  `./rebuild.sh eval HOST` only, and the host is built when you review the PR and
   switch. The THEOCIDE task (`scheduled-task:9828e1b1-b716-4950-b14a-c02274829bf9`) is
   to be **disabled** once the MENTICIDE one exists, not run alongside it. Cost to watch on
   the first run: MENTICIDE's `t3code` user fetches every flake input of the THEOCIDE and
