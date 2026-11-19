@@ -214,6 +214,17 @@
 					"mustContain": ["sqlite"]
 				}
 			]
+		},
+		{
+			"id": "row-17",
+			"label": "t3code productName (keyring key name)",
+			"registryRow": 17,
+			"slug": "t3code-product-name",
+			"title": "t3code desktop package.json lost productName (keyring key lookup name changed)",
+			"action": "notify-only",
+			"probes": [
+				{ "type": "file", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code/unwrapped.nix", "ref": "nixos-unstable", "mustContain": ["productName"] }
+			]
 		}
 	],
 	"ignore": []

@@ -116,6 +116,19 @@
 				postInstall = (old.postInstall or "") + ''
 					install -Dm755 ${hyprlandCaptureHelper}/bin/t3-hyprland-snap-shot \
 						"$out"/libexec/t3code/native/hyprland-snap-shot/target/release/t3-hyprland-snap-shot
+
+					# TODO-remove: 0.1.8 dropped "productName" from the desktop
+					# package.json (0.1.0 and 0.1.6 had "T3 Code (Beta)"). Electron names the
+					# app productName-or-name and Chromium uses that name as the keyring
+					# lookup attribute, so without it safeStorage looks for a "t3code" key,
+					# finds none, creates a new one and can no longer decrypt the saved
+					# connections and the local-server credentials (empty UI: no
+					# environments, projects, settings or theme). Restore the old name so the
+					# existing "T3 Code (Beta)" key is found again.
+					# See docs/agents/upstream-registry.md row 17.
+					pkg="$out"/libexec/t3code/apps/desktop/package.json
+					${pkgs.jq}/bin/jq '.productName = "T3 Code (Beta)"' "$pkg" > "$pkg.new"
+					mv "$pkg.new" "$pkg"
 				'';
 			});
 		};
