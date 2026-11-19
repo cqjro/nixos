@@ -335,6 +335,8 @@ Read the matching entry before touching that area.
 - **MENTICIDE is built from pinned nixpkgs** (`cac0c1ef`); security-relevant
   packages (cloudflared, tailscale, t3code) are overridden explicitly.
 - **Do not add `nix flake check` to `rebuild.sh`.**
+- **Build `result` links pin whole closures** — GC cannot free what a worktree's
+  `result` symlink still roots; remove finished worktrees.
 - **The `rebuild` zsh alias is a frozen store copy** — use `./rebuild.sh`.
 - **Flakes only see tracked files** — `rebuild.sh` stages with `git add --all`.
 - **`system.stateVersion` differs per host** — leave it alone.

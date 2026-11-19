@@ -83,7 +83,7 @@ modules/
 │   ├── languages/     #   latex, language toolchains
 │   └── terminal/      #   zsh, ghostty, nvim, starship, yazi, btop, nom, ...
 ├── scripts/           # Helper scripts (window focus, pip move, keybind cheatsheet, theme-shots)
-├── server/            # MENTICIDE services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, youtube
+├── server/            # MENTICIDE services: paperless, beszel, glance, homepage, actual-budget, linkwarden, miniflux, reactflux, cloudflared, tailscale, nix-gc, youtube
 ├── system/            # System-level config: games, minecraft, bigscreen, waydroid, ios-sideloading, tether, flatpak, rss-sources, vpn...
 └── theme/             # Everything color-related
     └── webstyling/    #   Per-site CSS themes for the browser
@@ -205,6 +205,12 @@ matches the rest of the config out of the box.
 - **Zen Browser** (twilight) — managed profiles with pinned tabs *per workspace*
   (`Entertainment`, `Nix`, `Browsing`), container isolation, ublock-origin /
   Proton Pass / Dark Reader / Stylus, and the webstyling stack above.
+- **Store hygiene on MENTICIDE** (`modules/server/nix-gc.nix`) — weekly
+  `nh clean` (Sunday 03:00) drops generations older than 14 days but always
+  keeps the newest 5 so rollback survives a quiet month; `min-free`/`max-free`
+  make nix collect dead paths mid-build when under 5 GiB free (until 15 GiB);
+  a weekly `nix store optimise` dedupes afterwards. Run a collection by hand
+  with `sudo systemctl start nh-clean.service`.
 - **Server stack on MENTICIDE** — Tailscale, Paperless-ngx (paperless storage, tied to
   the stylix `glance` theme only for the glance dashboard), Actual Budget
   (self-hosted finance) with **Actual Budget Tweaks** (a sidecar proxy that
