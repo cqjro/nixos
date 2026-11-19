@@ -63,7 +63,7 @@ schedule-precheck mark-launched KEY THREAD_ID
 schedule-precheck health SCHEDULE MESSAGE…
 ```
 
-- **`upstream`** reads `upstream-probes.json` (one entry per registry row) and
+- **`upstream`** reads `upstream-probes.json` from `origin/master` (one entry per registry row) and
   runs each probe: `issue` (state/comments/updatedAt via `gh issue view`),
   `file` (blob SHA, plus `mustContain`/`mustNotContain` against the raw file),
   `tree-match`, `path-exists`, `nix-dry-build` (is `nixos-unstable#mcp-nixos`
@@ -87,12 +87,23 @@ schedule-precheck health SCHEDULE MESSAGE…
   is one finding. Evaluating `origin/master` instead of the checkout means a
   half-edited tree can never produce a false report, and only merged work is
   judged. `ignore` entries in the probe file silence known noise with a reason.
-- **The script and `upstream-probes.json` come from the switched checkout, not from
-  `origin/master`.** Only the registry rows (and the `unswitched`/`buildflags` trees) are read
-  from the fresh clone. So a merged change to either file reaches the schedule only after the
-  human fast-forwards `~/.nixos` (`git pull --ff-only`; a switch is not needed). Row 9 was
-  merged without a probe entry, the fix merged, and the next run still stopped on the
-  mismatch until `~/.nixos` was pulled. A health issue the human has closed is never
+- **The script comes from the switched checkout (or the packaged copy on MENTICIDE); the
+  probe config comes from `origin/master`.** The registry rows, `upstream-probes.json` (for
+  `upstream`) and the `unswitched`/`buildflags` trees are read from the fresh clone, so a new
+  registry row and its probe entry reach the schedule together, as soon as they are merged.
+  Before 2026-11-18 the probe file came from the switched checkout and the packaged copy:
+  row 9 was merged without a probe entry and the run stopped on the mismatch until `~/.nixos`
+  was pulled, and row 16 did the same on MENTICIDE until it was switched. The file is
+  `validate_probes`-checked before use (ids, repo/path/ref patterns without `.`/`..`/empty
+  components, a closed set of probe types, `tree-match` patterns without groups, text fields
+  without `@`/markup, flake refs only `github:NixOS/nixpkgs/<ref>#<attr>`: it decides what `gh`
+  and `nix` are asked and what reaches issues). Every probed repo must also be **public**
+  (`gh api repos/<r> --jq .private`, cached per run), so a merged probe cannot use the owner's
+  token to read a private repo into a report or issue. If master's copy is
+  missing or invalid the run reports an error and falls back to the copy next to the script
+  (`probeSource` in the report says which). A change to the **script** still reaches the
+  schedule only after a pull (THEOCIDE) or a switch (MENTICIDE); `buildflags` still reads its
+  `ignore` list from the script's copy of the file. A health issue the human has closed is never
   reopened, so a repeat failure is then reported only in the run's reply.
 - **Once the repo is public, issue and PR text is untrusted input.** The script only loads
   issues that carry the `scheduled` label (strangers cannot add labels), writes the issue

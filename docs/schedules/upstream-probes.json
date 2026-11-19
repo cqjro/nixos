@@ -171,7 +171,7 @@
 					"type": "file",
 					"repo": "zackb/tether",
 					"path": "nix/module.nix",
-					"ref": "master",
+					"ref": "HEAD",
 					"mustContain": ["disable-publishing"]
 				}
 			]
@@ -200,6 +200,7 @@
 		},
 		{
 			"id": "row-16",
+			"label": "modrinth-app sqlite override",
 			"registryRow": 16,
 			"slug": "modrinth-app-sqlite",
 			"title": "modrinth-app-unwrapped missing sqlite in buildInputs (override until nixos-unstable has the fix)",
