@@ -29,7 +29,9 @@ Stop and report at the first failure; do not push a branch that fails tier 0.
    descriptive subject.
 7. **Push and PR** — only when the human has said to:
    `./rebuild.sh push`, then fill `.github/pull_request_template.md` into a
-   temp file (outside the repo, e.g. `$TMPDIR`) and
-   `gh pr create --base master --title "<what changed>" --body-file <file>`.
+   file with the Write tool (outside the repo, in the scratchpad; never a
+   heredoc, and no backticks or `$(` in the command line) and run
+   `gh pr create --base master --title "<what changed>" --body-file <absolute path>`
+   as one plain command (see gotchas.md, "plain-command exclusions").
    Call T3 `link_pull_request` with the URL. If asked to babysit, call
    `watch_pull_request` and end the turn.

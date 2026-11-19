@@ -351,7 +351,7 @@ Read the matching entry before touching that area.
   `actual-budget-tweaks.nix` / `reactflux.nix` (both reproducible since
   2026-11-06; a hash changes only with the source rev, lockfile or pnpm).
 - **`rebuild.sh` output is in `.log/` when piped; `gh`, `git push` and
-  `theme-shots` must be plain commands** (chained or piped, they run sandboxed
+  `theme-shots` must be plain commands** (chained, piped or containing a backtick/`$(`, they run sandboxed
   and fail to authenticate); sandbox `/dev/null` placeholders in `git status` (use
   `--no-track`, stage by path); `gh auth status` needs `[allow-secret-pattern]`
   to paste.

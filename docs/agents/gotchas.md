@@ -163,8 +163,16 @@ and a one-line pointer in the AGENTS.md index.
   file instead. Likewise `gh`, `git push`, `./rebuild.sh` and the absolute-path
   `/run/current-system/sw/bin/theme-shots` leave the sandbox
   only as plain commands (`sandbox.excludedCommands`): chained with `&&`/`;`,
-  piped or with a long inline `--body`, they run sandboxed and `gh` fails with
-  "run gh auth login". Use `--body-file` for PR bodies.
+  piped, or containing **command substitution (a backtick or `$(`)** anywhere,
+  even inside quotes, they run sandboxed and `gh` fails with "run gh auth login"
+  (exit 4). Read vs write does not matter: plain `gh issue view`, `gh issue
+  comment --body "..."` and `gh pr create` all authenticate (re-tested
+  2026-11-18 against a nonexistent issue). Length, newlines, parentheses, quoted
+  `|` and a lone `$VAR` are fine. Markdown bodies are full of backticks, so
+  never put one inline: write the body with the Write tool (not a heredoc or
+  `cat >`, which is a second command) and pass `--body-file <absolute path>`
+  (e.g. the scratchpad). Do not use `$TMPDIR` in the path: the sandbox and the
+  excluded command see different values.
 
 - **Sandbox placeholders in `git status`** — inside a sandboxed worktree,
   `/dev/null` placeholder files (`.zshrc`, `.mcp.json`, `.claude/settings.json`,
