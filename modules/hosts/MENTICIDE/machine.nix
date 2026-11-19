@@ -34,7 +34,7 @@
 						zoxide
 						bat
 						btop
-						# TODO-remove: opencode dropped on MENTICIDE. Its pinned nixpkgs-menticide only has OpenCode 1,
+						# TODO-remove: registry row 18. opencode dropped on MENTICIDE. Its pinned nixpkgs-menticide only has OpenCode 1,
 						# which the shared opencode module (OpenCode 2 options) cannot configure. Re-add once MENTICIDE
 						# no longer needs its own nixpkgs, or its pin ships OpenCode 2.
 						nom

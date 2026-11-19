@@ -214,6 +214,17 @@
 			"probes": [
 				{ "type": "file", "repo": "NixOS/nixpkgs", "path": "pkgs/by-name/t3/t3code/unwrapped.nix", "ref": "nixos-unstable", "mustContain": ["productName"] }
 			]
+		},
+		{
+			"id": "row-18",
+			"label": "opencode dropped on MENTICIDE",
+			"registryRow": 18,
+			"slug": "menticide-opencode",
+			"title": "opencode not imported on MENTICIDE (pinned nixpkgs only has OpenCode 1; re-add once the row-1 pin is gone)",
+			"action": "notify-only",
+			"probes": [
+				{ "type": "issue", "repo": "NixOS/nixos-hardware", "number": 2027 }
+			]
 		}
 	],
 	"ignore": []
