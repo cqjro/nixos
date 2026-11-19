@@ -149,7 +149,6 @@ parse_opts() {
 # so for remote builds we run it over SSH on the target instead)
 list_generations_json() {
     local remote=${1:-}
-    require_may_build "$host"
     if [ -n "$remote" ]; then
         ssh "$remote" "nixos-rebuild list-generations --json"
     else
