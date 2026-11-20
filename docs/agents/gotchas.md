@@ -80,12 +80,15 @@ and a one-line pointer in the AGENTS.md index.
   `youtube-sync` user's home, mode 0700). Before 2026-11-18 they lived in a stale
   hand-made clone at `/var/lib/nixos-config/modules/server/youtube/`; that path is
   dead, and `config.json` holds `target_playlist_id` (lose it and the script
-  creates a new playlist). `token.json` is rewritten on every refresh with a
-  plain truncating `open(..., "w")`, so a crash mid-write leaves it empty
-  (`JSONDecodeError … char 0`): mint a new one (`docs/secrets.md` §4.8,
-  `nix run .#youtube-sync-auth`). `setup_auth.py` is `modules/scripts/setup_auth.py`;
-  the copy in `modules/_archive/youtube-support/` is the retired original — don't
-  edit it. Check health with `journalctl -u youtube-playlist-sync` and the quota
+  creates a new playlist). `token.json` held an empty file on 2026-11-18
+  (`JSONDecodeError … char 0`): the script used to rewrite it on every hourly
+  refresh with a truncating `open(..., "w")`, so an interrupted write could empty
+  it. Now the refreshed access token stays in memory and the file is only
+  replaced (atomically, a failed save is a journal warning, not a failure) when
+  Google rotates the refresh token. If it is ever lost, mint a new one
+  (`docs/secrets.md` §4.8, `nix run .#youtube-sync-auth`). `setup_auth.py` is
+  `modules/scripts/setup_auth.py`; the copy in `modules/_archive/youtube-support/`
+  is the retired original — don't edit it. Check health with `journalctl -u youtube-playlist-sync` and the quota
   graph in Google Cloud Console (YouTube Data API v3 → Quotas).
 - **MENTICIDE is built from pinned nixpkgs** (`nixpkgs-menticide`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
