@@ -64,6 +64,35 @@ def load_config(path: str) -> dict:
     return cfg
 
 
+def save_token(token_file: str, creds: Credentials) -> None:
+    """Replace token_file atomically (temp file, fsync, rename).
+
+    A crash or a full disk leaves the old file intact instead of a truncated one,
+    and a failed save is logged, not fatal: the run continues with the in-memory
+    credentials. If the refresh token had changed, the next run may need a new
+    token.json (setup_auth.py), which the journal warning points at.
+    """
+    tmp = f"{token_file}.tmp"
+    try:
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            os.fchmod(f.fileno(), 0o600)
+            f.write(creds.to_json())
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, token_file)
+    except OSError as e:
+        log.warning(
+            "Could not save the new refresh token to '%s' (%s); the old file is "
+            "untouched. If the next run fails with invalid_grant, re-run "
+            "setup_auth.py.", token_file, e,
+        )
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
 def get_credentials(token_file: str) -> Credentials:
     if not os.path.exists(token_file):
         raise SystemExit(
@@ -79,13 +108,15 @@ def get_credentials(token_file: str) -> Credentials:
 
     if creds.expired and creds.refresh_token:
         log.info("Access token expired, refreshing...")
+        old_refresh_token = creds.refresh_token
         creds.refresh(Request())
-        # Persist the refreshed access token so we don't have to do this
-        # every single run (not strictly required, refresh_token itself
-        # doesn't expire in normal use, but this avoids an extra refresh
-        # call next time within the same access-token lifetime).
-        with open(token_file, "w") as f:
-            f.write(creds.to_json())
+        # The new access token lives in memory only: it is valid for ~1h and the
+        # timer runs hourly, so a saved one would be expired by the next run anyway.
+        # The file is rewritten only if Google issued a new refresh token, the one
+        # thing that must not be lost. (Rewriting it on every run once left an
+        # empty token.json after an interrupted write.)
+        if creds.refresh_token != old_refresh_token:
+            save_token(token_file, creds)
         return creds
 
     raise SystemExit(
