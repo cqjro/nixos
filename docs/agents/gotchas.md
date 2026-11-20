@@ -75,12 +75,18 @@ and a one-line pointer in the AGENTS.md index.
   channel's public RSS feed and falls back to a 1-unit `playlistItems.list` only
   for channels whose feed fails; `youtube.com/feeds` is flaky (404/500, sticky
   per channel — some feeds failed 12/12 in testing), so the timer is hourly.
-  The script is Nix-managed (store path); only `config.json` / `token.json` are
-  hand-placed in `/var/lib/nixos-config/modules/server/youtube/`, and the old
-  hand-copied `sync_playlist.py` there is unused. The copy in
-  `modules/_archive/youtube-support/` is the retired original — don't edit it.
-  Check health with `journalctl -u youtube-playlist-sync` and the quota graph
-  in Google Cloud Console (YouTube Data API v3 → Quotas).
+  The script is Nix-managed (store path, symlinked into the state dir); only
+  `config.json` / `token.json` are hand-placed in `/var/lib/youtube-sync/` (the
+  `youtube-sync` user's home, mode 0700). Before 2026-11-18 they lived in a stale
+  hand-made clone at `/var/lib/nixos-config/modules/server/youtube/`; that path is
+  dead, and `config.json` holds `target_playlist_id` (lose it and the script
+  creates a new playlist). `token.json` is rewritten on every refresh with a
+  plain truncating `open(..., "w")`, so a crash mid-write leaves it empty
+  (`JSONDecodeError … char 0`): mint a new one (`docs/secrets.md` §4.8,
+  `nix run .#youtube-sync-auth`). `setup_auth.py` is `modules/scripts/setup_auth.py`;
+  the copy in `modules/_archive/youtube-support/` is the retired original — don't
+  edit it. Check health with `journalctl -u youtube-playlist-sync` and the quota
+  graph in Google Cloud Console (YouTube Data API v3 → Quotas).
 - **MENTICIDE is built from pinned nixpkgs** (`nixpkgs-menticide`, rev `cac0c1ef`)
   because `linux >= 6.18.47` breaks the t2linux patchset. Do not "fix" this
   without reading `modules/hosts/MENTICIDE/T2-PIN.md` and re-checking
