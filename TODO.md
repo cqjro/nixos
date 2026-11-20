@@ -18,37 +18,6 @@ repeated as proposals.
 
 ## System
 
-- [ ] **Finish the repo move** — `cqjro/nixos` has been **public since
-      2026-11-05** (history verified: no firmware paths, no tripwire strings, only
-      noreply identities, gitleaks clean, trufflehog findings all false
-      positives). `master` is protected by a ruleset (pull request required, no
-      force pushes, no deletion, empty bypass list), and the account-level
-      interaction limit (collaborators only, 6 months) is set. THEOCIDE and
-      MENTICIDE are switched on the new repo. These owner-only steps are left —
-      **1/10** (detail in [`docs/firmware.md`](docs/firmware.md)). Delete this
-      item when all are done
-  - [ ] **Interaction limit renewal:** it lapses about **2027-05-05**; renew it
-        (account Settings → Moderation options → Interaction limits) in early
-        April. The worker briefs never fetch comments (`--json title,body`), which
-        covers worker reads during a gap; strangers can still comment, and you
-        still see it
-  - [ ] **Confirm secret scanning and push protection** are on (repo Settings →
-        Code security); optionally disable Actions (the repo has no workflows)
-  - [ ] **schedules:** all three tasks are live, with workers launching in `auto`.
-        Still to do: MENTICIDE bootstrap via `unswitched-changes.md`
-  - [ ] Optional: Claude re-login (secrets 4.4)
-  - [ ] Delete the six test labels from the early test run if unwanted
-  - [ ] **Cleanup now that it is public:** delete `~/.nixos.pre-rewrite` (and
-        `~/nixos-archive-private` once no longer needed; keep `~/private-backup`);
-        optionally archive `nixos-archive` on GitHub; token expiry reminders (the
-        THEOCIDE token was made 2026-11-03, 30-90 days; the MENTICIDE `t3code`
-        token expires 2027-02-02)
-  - [ ] REGICIDE is parked (`docs/firmware.md` "REGICIDE (parked)"): its files
-        stay in the private archive repo; extract them only if you want to
-        build or reinstall it
-  - *Why a new repo:* GitHub cannot be made to forget the old commits, so the
-    old repo stays private as the archive and the public one never contains them.
-
 - [ ] **Agent notifications: decide the setup** — the `agent-notify` hooks are
       installed on both hosts and the desktop popups are verified (they appear in
       `~/.local/state/agent-notify/events.log`); what is left is deciding how
@@ -68,8 +37,34 @@ repeated as proposals.
   - *Note:* only Supervised threads prompt at all (Full access has nothing to
     approve), so approval pushes depend on the modes you actually run
 
-- [ ] **Zen Browser userContent styling** — fix `userContent.css` site theming — **3/10**
-      (per-site CSS already proven; 10 existing `webstyling/*.nix` files are the template)
+- [ ] **Zen Browser userContent styling** — fix the Claude theme and style the
+      remaining site in `userContent.css` — **3/10** (Google, YouTube, Reddit and
+      Wikipedia are done; the existing `webstyling/*.nix` files are the template)
+  - [ ] **Fix the Claude (claude.ai) styling**
+        (`modules/theme/webstyling/claude-web-styling.nix`; it exists but is not
+        in the flat Stylix pass the other sites got, and Claude re-injects its
+        palette after hydration, so some surfaces still show Claude's own colors)
+    - [ ] Collect manual screenshots of claude.ai (it is login-only, so
+          `theme-shots` cannot reach the chat UI): new chat, an open conversation
+          with code blocks, the sidebar and project list, settings, a modal and a
+          menu, an artifact, and a streaming response. Mark each surface that still
+          shows Claude's own colors or the wrong contrast
+    - [ ] Fix the override layer: the `data-theme`/`data-mode` selectors Claude
+          re-applies after hydration, the `hsl(var(--token))` triples, and the
+          legacy `--claude-*` aliases, so every token resolves to a Stylix
+          `baseXX` color (no hardcoded colors)
+    - [ ] Fix the surface-level problems from the screenshots: message bubbles,
+          input box and send button, code-block and inline-code colors,
+          sidebar hover/active states, buttons, menus, modals, tooltips and
+          scrollbars; use Stylix fonts and the flat radii of the Reddit/YouTube
+          passes
+    - [ ] Check light and dark scheme behavior (`zen.view.window.scheme`) and that
+          nothing becomes unreadable (links, disabled text, selection)
+    - [ ] Deliver the RAW/OLD/NEW comparison from
+          [`docs/agents/theme-shots.md`](docs/agents/theme-shots.md), built from
+          your screenshots because there is no logged-out page list for claude.ai
+          (decide whether the login page should be added to
+          `theme-shots-urls.txt`, which also needs its domains in the PAC)
   - [ ] Instagram (deferred: not in use)
 
 - [ ] **`theme-shots-login` helper (optional)** — let site-styling threads see
@@ -224,6 +219,45 @@ repeated as proposals.
     (README step 4). If the JSONs already exist, it is an ownership/permission
     problem (`root:root 0600`), not a missing tunnel.
 
+- [ ] **Self-hosted Obsidian vault** — replace the GitHub sync with a vault
+      hosted on MENTICIDE so it is available on every device, and migrate the
+      current vault to it — **5/10** (a server module plus a one-time migration;
+      the mobile clients and the backup path are the real work)
+  - *Proposed approach:* **Obsidian Self-hosted LiveSync** (community plugin) on
+    top of **CouchDB** (`services.couchdb` in nixpkgs): near-real-time sync with
+    end-to-end encryption, and the plugin has desktop, Android and iOS clients,
+    which Syncthing handles poorly on iOS. Follow the MENTICIDE recipe (loopback
+    port — CouchDB defaults to 5984 — dedicated user, data under `/var/lib/couchdb`,
+    admin credentials in a root-owned runtime file the human creates, never in
+    the repo). Mobile clients need HTTPS, so expose it through a Cloudflare tunnel
+    hostname (own login, and CORS set for `app://obsidian.md`,
+    `capacitor://localhost` and `http://localhost`) or Tailscale Serve with a
+    certificate (the logged-certificate trade-off is in the Secrets item below).
+    Alternative if a server database is unwanted: Syncthing with a MENTICIDE
+    relay (plain files, no server database, but weak on iOS).
+  - [ ] Decide the sync method (LiveSync vs Syncthing) and whether the vault needs
+        to be reachable off the tailnet; the answer fixes the exposure (tunnel vs
+        Tailscale only)
+  - [ ] Write the `modules/server/obsidian-livesync.nix` module (CouchDB, tunnel
+        or Tailscale Serve, README + Homepage + Glance entries)
+  - [ ] **Migrate the vault:** take a full copy of the current GitHub-synced vault
+        first (keep the git history as a fallback), set up LiveSync from the
+        desktop with that vault as the source, add the other devices one at a time
+        (fetch from the server, never push an empty vault over it), confirm
+        attachments and plugin settings arrive, then turn off the Obsidian Git
+        plugin and archive the GitHub repo
+  - [ ] **Periodic backups** of the vault, to Proton Drive or to GitHub (or
+        both). CouchDB stores the notes as chunked, encrypted documents, so a dump
+        of the database alone is not a readable backup. Options: (a) a systemd
+        timer that exports the CouchDB database and also writes a plain-file copy
+        of the vault (a headless LiveSync client, or restoring into a scratch
+        vault), then (b) pushes the plain copy to a **private** GitHub repo, or (c)
+        uploads an encrypted archive with `rclone` (it has a Proton Drive backend,
+        still marked beta) or `restic`. Credentials live in runtime files the human
+        creates; prune old copies and run one restore test before relying on it
+  - [ ] Decide whether the vault backup is also copied off MENTICIDE (the machine
+        holding the live data should not be the only home of its backup)
+
 - [ ] **Pi-hole** — network-wide DNS ad blocking — **5/10**
   - *Decision to make:* Pi-hole is a *network* service, not a tunneled app, so
     it doesn't fit the Cloudflare pattern — it needs DHCP/DNS ownership on the
@@ -275,34 +309,14 @@ repeated as proposals.
     entry point. `nixpkgs` ships `audiobookshelf`; follow the MENTICIDE recipe
     (port 8087 is the next free after the ABT sidecar's 8086).
 
-- [ ] **T3 Code on MENTICIDE** — the MENTICIDE server (`modules/server/t3code.nix`,
-      port 8088) is published over Tailscale Serve (no Cloudflare tunnel); finish
-      the setup — **3/10**
-  - [ ] Switch MENTICIDE, then log in Claude Code and `gh` as the `t3code` user
-        (`sudo -u t3code -H claude`, `sudo -u t3code -H gh auth login`; README →
-        "T3 Code on MENTICIDE")
-  - [ ] Pair THEOCIDE and the phone and confirm threads from both machines
-        show up in one client (2026-11-06: MENTICIDE has its own `t3code`-owned
-        clone and a tested build; THEOCIDE's T3 terminal gives a real tty with
-        working `sudo -v`; still to confirm: the shared project view and a phone
-        token with terminal scope)
-
 - [ ] **Secrets: remaining steps after the repo went public** — the steps left
       from the secrets audit (`docs/secrets.md` section 4 and the private audit);
       `cqjro/nixos` became public on 2026-11-05 — **3/10**
-  - [ ] MENTICIDE's `t3code` user needs its own fine-grained token (limited to
-        `cqjro/nixos`, Contents + Pull requests) when MENTICIDE is re-cloned:
-        `sudo -u t3code -H bash -c 'read -rs T; printf %s "$T" | gh auth login --with-token'`
-        (`docs/secrets.md` 4.1; THEOCIDE's broad login is already replaced and
-        revoked). The Claude re-login (4.4) is optional
-  - [ ] Hostnames (`*.cqjro.ca`): they are in the modules because the tunnels
-        are locally managed (`hostname → port` ingress rules), and they are
-        **not** in certificate logs today (only the wildcard is), so a public repo
-        is their first publication. **Decided 2026-11-05: keep them in the repo.**
-        Every service has its own login, so Cloudflare Access (below) is optional
-        hardening, not a condition of the flip. Alternative if the names ever must
-        stay private: placeholders in the repo plus a local override (`--impure`),
-        or Cloudflare-managed tunnels
+  - [ ] Optional hardening for the public `*.cqjro.ca` hostnames (decided
+        2026-11-05 to keep them in the repo: the tunnels are locally managed, so the
+        names are in the modules, and every service has its own login; if they ever
+        must stay private, use placeholders plus a local override or
+        Cloudflare-managed tunnels)
     - [ ] Optional: put Cloudflare Access (Zero Trust, free tier) in front of the
           browser-only apps (not required before the flip): Cloudflare
           dashboard → Zero Trust → Access → Applications → Add an application →
