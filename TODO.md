@@ -90,6 +90,27 @@ repeated as proposals.
   - [ ] Add the page list for the logged-in pages and a `docs/agents/theme-shots.md`
         section; delete the profile directory after each styling session
 
+- [ ] **T3 Code keyring name: decide whether to follow `t3code`** — nixpkgs
+      0.1.8 deliberately dropped `productName` (the desktop app is now named
+      `t3code`, like the official builds), so the keyring key is looked up as
+      `t3code`; the `jq` workaround in `modules/home-manager/ai-tools/t3code.nix`
+      keeps the old `T3 Code (Beta)` key working. Keeping it costs nothing, so
+      this is a decision, not a fix (registry row 17) — **3/10**
+  - *Decision:* keep the workaround (default), or migrate once and follow
+    upstream. No deadline; revisit if nixpkgs changes the naming again (the
+    row-17 probe fires when `del(.productName)` leaves `unwrapped.nix`)
+  - [ ] If migrating — **You**, THEOCIDE, no agent (it touches the secret): back up
+        `~/.local/share/keyrings`, close T3 Code, copy the key from
+        `application = T3 Code (Beta)` to `application = t3code` with
+        `secret-tool` (never print it; a `t3code` entry may already exist from
+        the 0.1.8 runs, decide whether to overwrite it)
+  - [ ] **Agent**: one branch removes the `jq` step and its `# TODO-remove:`
+        comment in `t3code.nix`, registry row 17 (both tables) and the
+        `row-17` probe; `./rebuild.sh check THEOCIDE` and `build THEOCIDE`
+  - [ ] **You**: merge, `./rebuild.sh switch THEOCIDE`, start T3 Code and
+        confirm environments, projects and theme are back; if not, the old key
+        is untouched, so restore the workaround
+
 - [ ] **Game window control** — figure out the optimal way of controlling
       games on different windows (focus, moving between monitors/workspaces)
       and revise the Hyprland keybinds to do so — **6/10**
