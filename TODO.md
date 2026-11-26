@@ -299,6 +299,21 @@ repeated as proposals.
   - [ ] Include data exported from Bevel
   - [ ] Include food data exported from MacroFactor
   - [ ] Include workout data exported from MacroFactor workouts
+  - [ ] **Gym tracking: adopt OpenGym and migrate away from MacroFactor** —
+        move workout logging to OpenGym without losing the data reaching Apple
+        Health/Bevel
+    - [ ] Check whether OpenGym writes workouts into Apple Health, so the data
+          is available in Bevel
+    - [ ] Check whether OpenGym has live events (e.g. Live Activities / lock
+          screen or Watch session while a workout is running)
+    - [ ] Check whether OpenGym's workout events track heart rate, and whether
+          that heart rate is written into Apple Health/Bevel
+    - [ ] **Replace MacroFactor for nutrition and recipe tracking** — must keep
+          photo-based macro logging (take a picture of a meal to log macros),
+          plus recipe tracking. Candidate: use Bevel alone for nutrition and
+          keep the health data on MENTICIDE, synced from Apple Health. Decide
+          this before cancelling MacroFactor, and export its history first;
+          once migrated, the MacroFactor import items above go away
   - *Proposed approach:* two halves. **Ingest:** Apple Health exports as XML
     (Health app → "Export All Health Data"); parse to a DB. Bevel/MacroFactor
     export CSV/JSON — normalize all sources into one schema keyed by timestamp +
