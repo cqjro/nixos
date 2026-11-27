@@ -129,12 +129,16 @@
 		# 	inputs.nixpkgs.follows = "nixpkgs";
 		# };
 
-		# archived: only referenced by a commented-out fragment in
-		# modules/system/ios-sideloading.nix
-		# iloader = {
-		# 	url = "github:nab138/iloader";
-		# 	inputs.nixpkgs.follows = "nixpkgs";
-		# };
+		# TODO-remove: iloader from the fix/gsa-client-info branch of
+		# nab138/iloader#1205 (redhat-ware fork, commit 094e74e, version 2.4.3)
+		# because iloader 2.4.2 (the nixpkgs version) cannot sign in to Apple IDs
+		# since 2026-11-19 (HTTP 503 / 403 / -22410); see the "Pending upstream
+		# fixes" registry (row 19). Switch back to nixpkgs `pkgs.iloader` once it
+		# ships the fix.
+		iloader = {
+			url = "github:redhat-ware/iloader/094e74ee9efa16a5ced90b1fefde975c9ebdc48b";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
 
 		noctalia = {
 			url = "github:noctalia-dev/noctalia";
